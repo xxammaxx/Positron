@@ -1,7 +1,6 @@
 // Positron — Datenbank-Verbindung (better-sqlite3)
 
 import Database from 'better-sqlite3';
-import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import os from 'node:os';
 import fs from 'node:fs';
@@ -28,6 +27,12 @@ export function openDatabase(dbPath?: string): Database.Database {
   // Migrationen ausführen
   applyMigrations(db);
 
+  // Graceful Shutdown vorbereiten
+  registerDatabase(db);
+  if (resolvedPath !== ':memory:') {
+    installShutdownHandlers();
+  }
+
   return db;
 }
 
@@ -52,7 +57,7 @@ const MIGRATIONS: Migration[] = [
   { version: 1, name: 'initial-schema', up: SCHEMA_V1 },
 ];
 
-function applyMigrations(db: Database.Database): void {
+export function applyMigrations(db: Database.Database): void {
   // Sicherstellen, dass die Migrations-Tabelle existiert (Teil von SCHEMA_V1,
   // aber wir rufen applyMigrations vorsichtshalber nochmal eigens auf)
   db.exec(`

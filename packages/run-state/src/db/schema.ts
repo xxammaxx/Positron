@@ -23,7 +23,8 @@ CREATE TABLE IF NOT EXISTS issues (
   title TEXT NOT NULL,
   state TEXT NOT NULL DEFAULT 'open',
   labels_json TEXT NOT NULL DEFAULT '[]' CHECK (json_valid(labels_json)),
-  last_seen_at TEXT NOT NULL DEFAULT (datetime('now'))
+  last_seen_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(repo_id, number)
 );
 
 -- Positron-Runs (pro Issue)
@@ -37,7 +38,8 @@ CREATE TABLE IF NOT EXISTS runs (
   autonomy_level INTEGER NOT NULL DEFAULT 0,
   attempt INTEGER NOT NULL DEFAULT 0,
   started_at TEXT,
-  finished_at TEXT
+  finished_at TEXT,
+  FOREIGN KEY (repo_id, issue_number) REFERENCES issues(repo_id, number) ON DELETE RESTRICT
 );
 
 -- Ereignisprotokoll pro Run (append-only)
