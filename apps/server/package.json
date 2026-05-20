@@ -1,4 +1,5 @@
 {
+  "private": true,
   "files": ["dist"],
   "main": "./dist/index.js",
   "name": "@positron/server",
