@@ -25,6 +25,6 @@ describe('generateBranchName', () => {
   });
 
   test('Titel nur aus Sonderzeichen', () => {
-    expect(generateBranchName(9, '!!!???---')).toBe('positron/issue-9-');
+    expect(generateBranchName(9, '!!!???---')).toBe('positron/issue-9');
   });
 });

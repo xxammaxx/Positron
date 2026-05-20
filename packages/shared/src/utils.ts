@@ -8,16 +8,14 @@ import { BRANCH_PREFIX, MAX_BRANCH_SLUG_LENGTH } from './constants.js';
 export function generateBranchName(issueNumber: number, title: string): string {
   const slug = title
     .toLowerCase()
-    // Deutsche Umlaute und ß normalisieren
-    .replace(/ä/g, 'ae')
-    .replace(/ö/g, 'oe')
-    .replace(/ü/g, 'ue')
-    .replace(/ß/g, 'ss')
+    .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, MAX_BRANCH_SLUG_LENGTH)
     .replace(/-+$/, '');
-  return `${BRANCH_PREFIX}-${issueNumber}-${slug}`;
+
+  const base = `${BRANCH_PREFIX}-${issueNumber}`;
+  return slug ? `${base}-${slug}` : base;
 }
 
 // Secret-Redaction ------------------------------------------------------------
@@ -43,17 +41,34 @@ export function redactSecrets(input: string, rules: readonly RedactionRule[] = D
 }
 
 export function redactValue(input: unknown): string {
+  if (input === undefined || input === null) return '[REDACTABLE]';
+  if (typeof input === 'symbol') return '[REDACTABLE]';
   const text = typeof input === 'string' ? input : safeStringify(input);
+  if (typeof text !== 'string' || text.length === 0) return '[REDACTABLE]';
   return redactSecrets(text);
 }
 
+/** JSON.stringify ohne Exception, behandelt undefined/Symbol/zirkulär */
 function safeStringify(value: unknown): string {
-  try { return JSON.stringify(value); } catch { return String(value); }
+  if (value instanceof Error) {
+    return `${value.name}: ${value.message}`;
+  }
+  try {
+    const json = JSON.stringify(value);
+    return json ?? String(value);
+  } catch {
+    return String(value);
+  }
 }
 
 // ID-Generierung -------------------------------------------------------------
 
-export function createRunId(): string {
+/** Generiert eine eindeutige Run-ID mit injizierbarem Generator (Standard: crypto.randomUUID). */
+export function createRunId(generateId: IdGenerator = defaultIdGenerator): string {
+  return generateId();
+}
+
+function defaultIdGenerator(): string {
   return randomUUID();
 }
 

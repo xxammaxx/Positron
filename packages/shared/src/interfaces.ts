@@ -1,5 +1,7 @@
 // Positron — Gemeinsame Interfaces (Datenmodell)
 
+import type { Phase, RunStatus, AutonomyLevel, EventLevel } from './types.js';
+
 export interface Repository {
   id: string;
   owner: string;
@@ -26,9 +28,9 @@ export interface RunRecord {
   repoId: string;
   issueNumber: number;
   branch: string | null;
-  phase: string;
-  status: string;
-  autonomyLevel: number;
+  phase: Phase;
+  status: RunStatus;
+  autonomyLevel: AutonomyLevel;
   attempt: number;
   startedAt: string | null;
   finishedAt: string | null;
@@ -37,8 +39,8 @@ export interface RunRecord {
 export interface RunEventRecord {
   id: string;
   runId: string;
-  phase: string;
-  level: string;
+  phase: Phase;
+  level: EventLevel;
   message: string;
   payload: Record<string, unknown> | null;
   createdAt: string;

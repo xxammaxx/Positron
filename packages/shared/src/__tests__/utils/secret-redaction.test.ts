@@ -70,4 +70,19 @@ describe('redactValue', () => {
     obj.self = obj;
     expect(() => redactValue(obj)).not.toThrow();
   });
+
+  test('behandelt undefined ohne Crash', () => {
+    expect(() => redactValue(undefined)).not.toThrow();
+    expect(redactValue(undefined)).toBe('[REDACTABLE]');
+  });
+
+  test('behandelt Symbol ohne Crash', () => {
+    expect(() => redactValue(Symbol('test'))).not.toThrow();
+  });
+
+  test('extrahiert Error-Namen und Message', () => {
+    const r = redactValue(new TypeError('Ungültiger Token ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ123456'));
+    expect(r).toContain('TypeError');
+    expect(r).not.toContain('ghp_');
+  });
 });
