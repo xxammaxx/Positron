@@ -19,6 +19,7 @@ import {
   GitHubNetworkError, GitHubUnknownError, GitHubError,
 } from './errors.js';
 import { redactSecrets } from '@positron/shared';
+import type { GitHubAdapter } from './adapter.js';
 
 // ---------------------------------------------------------------------------
 // Error Mapping
@@ -59,7 +60,7 @@ export function mapRequestError(err: RequestError): GitHubError {
 // Real GitHub Adapter
 // ---------------------------------------------------------------------------
 
-export class RealGitHubAdapter {
+export class RealGitHubAdapter implements GitHubAdapter {
   private octokit: Octokit;
 
   constructor(octokit?: Octokit) {

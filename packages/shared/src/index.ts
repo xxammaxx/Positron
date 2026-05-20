@@ -11,3 +11,5 @@ export {
 } from './constants.js';
 export type { RedactionRule, IdGenerator } from './utils.js';
 export { generateBranchName, redactSecrets, redactValue, createRunId, DEFAULT_REDACTION_RULES } from './utils.js';
+export type { LiveGitHubE2EConfig, LiveGitHubE2EResult } from './live-e2e.js';
+export { loadLiveGitHubE2EConfig, shouldSkipLiveGitHubE2E, shouldSkipLiveGitHubWriteE2E, generateLiveRunId, liveE2EMarker, isAsciiOnly } from './live-e2e.js';
