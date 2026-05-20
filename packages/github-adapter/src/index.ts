@@ -22,3 +22,13 @@ export {
   GitHubNetworkError, GitHubUnknownError,
 } from './errors.js';
 export { renderAccepted, renderStatusUpdate, renderBlocked, renderDone } from './templates.js';
+
+// Issue #12 — Status Sync
+export {
+  renderSyncAccepted, renderSyncPhaseUpdate, renderSyncTestReport,
+  renderSyncBlocked, renderSyncFailed, renderSyncDone, syncMarker, truncateComment,
+} from './sync-templates.js';
+export { GitHubStatusSyncService } from './sync-service.js';
+export type { GitHubStatusSyncInput, GitHubStatusSyncResult } from './sync-service.js';
+export { getLabelsForPhase, LABEL_LIFECYCLE } from './label-lifecycle.js';
+export type { PhaseLabels } from './label-lifecycle.js';
