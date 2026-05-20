@@ -18,9 +18,11 @@
     "typecheck": "tsc -b --pretty false"
   },
   "dependencies": {
-    "@positron/shared": "^0.1.0"
+    "@positron/shared": "^0.1.0",
+    "better-sqlite3": "^11.0.0"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.0",
     "typescript": "^5.8.0",
     "vitest": "^4.0.0"
   }
