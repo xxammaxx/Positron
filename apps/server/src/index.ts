@@ -11,6 +11,8 @@ import type { RunState, RunEventData } from '@positron/run-state';
 import { FakeGitHubAdapter, createRealGitHubAdapter } from '@positron/github-adapter';
 import type { GitHubAdapter } from '@positron/github-adapter';
 import { renderAccepted } from '@positron/github-adapter';
+import { FakeGitWorkspaceAdapter } from '@positron/sandbox';
+import type { GitWorkspaceAdapter } from '@positron/sandbox';
 
 /** GitHub Adapter Modus: "fake" (Standard/Test) oder "real" (mit GITHUB_TOKEN) */
 type GitHubMode = 'fake' | 'real';
@@ -26,6 +28,11 @@ function resolveAdapter(): { adapter: GitHubAdapter; mode: GitHubMode } {
 // In-Memory Store (MVP)
 const runs = new Map<string, RunState>();
 const events = new Map<string, RunEventData[]>();
+let workspaceAdapter: GitWorkspaceAdapter = new FakeGitWorkspaceAdapter();
+
+export function setWorkspaceAdapter(adapter: GitWorkspaceAdapter): void {
+  workspaceAdapter = adapter;
+}
 
 function storeEvent(event: RunEventData): void {
   const list = events.get(event.runId) ?? [];
@@ -41,7 +48,7 @@ function getEvents(runId: string): RunEventData[] {
 // Orchestrator
 // ---------------------------------------------------------------------------
 
-function executePhase(run: RunState): RunState {
+async function executePhase(run: RunState): Promise<RunState> {
   let current = run;
   let result;
 
@@ -53,7 +60,18 @@ function executePhase(run: RunState): RunState {
       result = transition(current, 'REPO_SYNC', 'Repo synced', 'INFO');
       break;
     case 'REPO_SYNC':
-      result = transition(current, 'ISSUE_CONTEXT', 'Context loaded', 'INFO');
+      try {
+        const ws = await workspaceAdapter.prepareWorkspace({
+          repository: { owner: 'xxammaxx', repo: current.repoId, remoteUrl: `https://github.com/xxammaxx/${current.repoId}.git` },
+          issueNumber: current.issueNumber,
+          issueTitle: `Issue #${current.issueNumber}`,
+          runId: current.id,
+        });
+        current.branch = ws.branchName;
+        result = transition(current, 'ISSUE_CONTEXT', `Workspace: ${ws.workspacePath}`);
+      } catch (err) {
+        result = markFailed(current, 'FAILED_TRANSIENT', `Repo sync failed: ${String(err)}`);
+      }
       break;
     case 'ISSUE_CONTEXT':
       result = transition(current, 'WEB_RESEARCH', 'Research phase', 'INFO');
@@ -106,11 +124,11 @@ function executePhase(run: RunState): RunState {
   }
 }
 
-function runFullPipeline(run: RunState): RunState {
+async function runFullPipeline(run: RunState): Promise<RunState> {
   let current = run;
   const maxSteps = 20;
   for (let i = 0; i < maxSteps; i++) {
-    const next = executePhase(current);
+    const next = await executePhase(current);
     if (next.phase === current.phase || next.phase === 'DONE' || next.phase.startsWith('FAILED')) {
       runs.set(next.id, next);
       return next;
@@ -147,10 +165,10 @@ export function createApp(adapter?: GitHubAdapter) {
   });
 
   // Run starten
-  app.post('/api/repos/:repoId/runs', (req, res) => {
+  app.post('/api/repos/:repoId/runs', async (req, res) => {
     const { issueNumber, autonomyLevel } = req.body;
     const run = createRun(req.params.repoId, issueNumber ?? 1, autonomyLevel ?? 2);
-    const completed = runFullPipeline(run);
+    const completed = await runFullPipeline(run);
     const evts = getEvents(completed.id);
     res.json({ run: completed, events: evts, eventCount: evts.length });
   });
