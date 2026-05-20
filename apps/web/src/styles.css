@@ -1,0 +1,9 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-positron-bg: #0f172a;
+  --color-positron-panel: #111827;
+  --color-positron-accent: #38bdf8;
+}

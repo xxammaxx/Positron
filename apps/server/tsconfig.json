@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "src",
+    "outDir": "dist",
+    "tsBuildInfoFile": "dist/.tsbuildinfo"
+  },
+  "include": ["src"],
+  "references": [
+    { "path": "../../packages/shared" },
+    { "path": "../../packages/github-adapter" },
+    { "path": "../../packages/speckit-adapter" },
+    { "path": "../../packages/opencode-adapter" },
+    { "path": "../../packages/run-state" },
+    { "path": "../../packages/sandbox" }
+  ]
+}
