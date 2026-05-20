@@ -13,3 +13,17 @@ export type {
 
 export { RealGitWorkspaceAdapter } from './real-adapter.js';
 export { FakeGitWorkspaceAdapter } from './fake-adapter.js';
+
+// Test Command Detection & Execution
+export { TestCommandDetector } from './detector.js';
+export type {
+  TestCommandKind, TestCommandStatus, DetectedTestCommand,
+  TestCommandDetectionResult,
+} from './detector.js';
+
+export { TestRunner } from './test-runner.js';
+export type {
+  TestCommandExecutionResult, TestReport, RunOptions,
+} from './test-runner.js';
+
+export { renderTestReportMarkdown, renderTestReportComment } from './test-templates.js';

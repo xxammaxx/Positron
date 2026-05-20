@@ -13,6 +13,8 @@ import type { GitHubAdapter } from '@positron/github-adapter';
 import { renderAccepted } from '@positron/github-adapter';
 import { FakeGitWorkspaceAdapter } from '@positron/sandbox';
 import type { GitWorkspaceAdapter } from '@positron/sandbox';
+import { TestCommandDetector, TestRunner } from '@positron/sandbox';
+import type { TestReport } from '@positron/sandbox';
 
 /** GitHub Adapter Modus: "fake" (Standard/Test) oder "real" (mit GITHUB_TOKEN) */
 type GitHubMode = 'fake' | 'real';
@@ -102,7 +104,24 @@ async function executePhase(run: RunState): Promise<RunState> {
       result = transition(current, 'TEST', 'Implementation done');
       break;
     case 'TEST':
-      result = transition(current, 'VERIFY', 'Tests passed', 'INFO');
+      try {
+        const wsPath = current.branch ? `/tmp/positron-ws-${current.id.slice(0, 8)}` : '/tmp';
+        const detector = new TestCommandDetector();
+        const detection = await detector.detect(wsPath);
+        if (detection.commands.length === 0) {
+          // Keine Commands erkannt — trotzdem als INFO durch (MVP-Stub)
+          result = transition(current, 'VERIFY', 'Keine Test-Kommandos erkannt (MVP)', 'INFO');
+        } else {
+          const runner = new TestRunner();
+          const report = await runner.runDetectedCommands({
+            runId: current.id, workspacePath: wsPath,
+            commands: detection.commands, mode: 'standard',
+          });
+          result = transition(current, 'VERIFY', `Tests ${report.status}`, report.status === 'PASS' ? 'INFO' : 'ERROR');
+        }
+      } catch {
+        result = transition(current, 'VERIFY', 'Test-Ausführung fehlgeschlagen (MVP)', 'WARN');
+      }
       break;
     case 'VERIFY':
       current.branch = current.branch ?? generateBranchName(current.issueNumber, `run-${current.id.slice(0, 8)}`);

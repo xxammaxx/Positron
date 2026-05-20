@@ -20,10 +20,9 @@ export interface RunCommandOptions {
   maxBuffer?: number;
 }
 
-/** Nur diese Git-Kommandos sind erlaubt */
+/** Nur diese Kommandos sind erlaubt */
 const ALLOWED_COMMANDS = new Set([
-  'git',
-  'git-lfs',
+  'git', 'git-lfs', 'npm', 'npx', 'node',
 ]);
 
 /** Git-Subkommandos: erlaubt */
@@ -90,18 +89,20 @@ function validateCommand(command: string, args: string[], cwd: string): void {
     throw new GitCommandPolicyError(`Forbidden command: ${command}`);
   }
 
-  const sub = args[0];
-  if (FORBIDDEN_SUBCOMMANDS.has(sub)) {
-    throw new GitCommandPolicyError(`Forbidden subcommand: git ${sub}`);
-  }
-
-  if (sub && !ALLOWED_SUBCOMMANDS.has(sub)) {
-    throw new GitCommandPolicyError(`Unknown subcommand: git ${sub}`);
+  // Git-spezifische Subcommand-Validierung
+  if (command === 'git') {
+    const sub = args[0];
+    if (FORBIDDEN_SUBCOMMANDS.has(sub)) {
+      throw new GitCommandPolicyError(`Forbidden subcommand: git ${sub}`);
+    }
+    if (sub && !ALLOWED_SUBCOMMANDS.has(sub)) {
+      throw new GitCommandPolicyError(`Unknown subcommand: git ${sub}`);
+    }
   }
 
   // Shell-Metacharacters in args
   for (const arg of args) {
-    if (/[;|&`$(){}[\]#!<>~]/.test(arg)) {
+    if (/[;|&`$#!<>~]/.test(arg)) {
       throw new GitCommandPolicyError(`Shell metacharacter in argument: ${arg}`);
     }
   }
