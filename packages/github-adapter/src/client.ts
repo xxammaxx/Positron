@@ -3,7 +3,7 @@
 import { Octokit } from '@octokit/rest';
 import { retry } from '@octokit/plugin-retry';
 import { throttling } from '@octokit/plugin-throttling';
-import { redactSecrets } from '@positron/shared';
+import { redactSecrets, redactValue } from '@positron/shared';
 
 const MyOctokit = Octokit.plugin(retry, throttling);
 
@@ -17,33 +17,53 @@ export function createGitHubClient(options: GitHubClientOptions = {}): Octokit {
   const token = options.token ?? process.env.GITHUB_TOKEN;
   if (!token) throw new Error('GITHUB_TOKEN ist nicht gesetzt');
 
-  return new MyOctokit({
+  const octokit = new MyOctokit({
     auth: token,
     userAgent: options.userAgent ?? 'positron-github-adapter/0.1.0',
-    request: {
-      retries: 2,
-    },
+    request: { retries: 2 },
     throttle: {
-      onRateLimit: (retryAfter: number, opts: Record<string, unknown>, client: Octokit, retryCount: number) => {
-        client.log.warn(`GitHub rate limit: ${String(opts.method ?? '?')} ${String(opts.url ?? '?')}`);
+      onRateLimit(retryAfter: number, opts: { method: string; url: string }, client: Octokit, retryCount: number) {
+        client.log.warn(`Rate limit: ${opts.method} ${opts.url}`);
         return retryCount < 2;
       },
-      onSecondaryRateLimit: (retryAfter: number, opts: Record<string, unknown>, client: Octokit) => {
-        client.log.warn(`GitHub secondary rate limit: ${String(opts.method ?? '?')} ${String(opts.url ?? '?')}`);
+      onSecondaryRateLimit(_retryAfter: number, opts: { method: string; url: string }, client: Octokit) {
+        client.log.warn(`Secondary rate limit: ${opts.method} ${opts.url}`);
         return false;
       },
     },
   });
+
+  return createSafeLogger(octokit);
 }
 
-/** Erstellt einen sicheren Logger, der Secrets redactet. */
+/** Wrappt den Logger, sodass alle Log-Ausgaben (message + additionalInfo) redacted werden. */
 export function createSafeLogger(octokit: Octokit): Octokit {
   const orig = octokit.log;
-  const s = (msg: string) => redactSecrets(msg);
-  const info = (msg: string, data?: object) => orig.info(s(msg), data);
-  const warn = (msg: string, data?: object) => orig.warn(s(msg), data);
-  const error = (msg: string, data?: object) => orig.error(s(msg), data);
-  const debug = (msg: string, data?: object) => orig.debug(s(msg), data);
-  octokit.log = { info, warn, error, debug } as Octokit['log'];
+
+  function redactedLogArgs(msg: string, additionalInfo?: unknown): [string, string?] {
+    const safeMsg = redactSecrets(msg);
+    const safeInfo = additionalInfo !== undefined ? redactValue(additionalInfo) : undefined;
+    return [safeMsg, safeInfo];
+  }
+
+  octokit.log = {
+    info: (msg, info) => {
+      const [m, i] = redactedLogArgs(msg, info);
+      orig.info(m, i as object | undefined);
+    },
+    warn: (msg, info) => {
+      const [m, i] = redactedLogArgs(msg, info);
+      orig.warn(m, i as object | undefined);
+    },
+    error: (msg, info) => {
+      const [m, i] = redactedLogArgs(msg, info);
+      orig.error(m, i as object | undefined);
+    },
+    debug: (msg, info) => {
+      const [m, i] = redactedLogArgs(msg, info);
+      orig.debug(m, i as object | undefined);
+    },
+  } as Octokit['log'];
+
   return octokit;
 }

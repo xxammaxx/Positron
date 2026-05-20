@@ -1,6 +1,7 @@
 // Positron — Issue Polling und Verwaltung
 
 import type { Octokit } from '@octokit/rest';
+import { RequestError } from '@octokit/request-error';
 
 export interface PollState {
   since?: string;
@@ -26,40 +27,52 @@ interface GitHubIssue {
   pull_request?: unknown;
 }
 
-/** Ruft offene Issues ab (inkrementell via since). Filtert Pull Requests heraus. */
-export async function pollIssues(
-  octokit: Octokit,
-  owner: string,
-  repo: string,
-  state: PollState = {},
-): Promise<PolledIssue[]> {
-  const response = await octokit.rest.issues.listForRepo({
-    owner,
-    repo,
-    state: 'open',
-    sort: 'updated' as const,
-    direction: 'asc' as const,
-    since: state.since,
-    per_page: 100,
-    headers: {
-      ...(state.etag ? { 'if-none-match': state.etag } : {}),
-    },
-  });
-
-  state.etag = response.headers.etag ?? undefined;
-
-  const realIssues = (response.data as GitHubIssue[]).filter(i => !i.pull_request);
-  const newest = realIssues.at(-1)?.updated_at;
-  if (newest) state.since = newest;
-
-  return realIssues.map(issue => ({
+/** Labelt Issues aus Rohdaten in PolledIssue um. */
+function mapIssue(issue: GitHubIssue): PolledIssue {
+  return {
     number: issue.number,
     title: issue.title,
     state: issue.state,
     labels: issue.labels.map(l => (typeof l === 'string' ? l : l.name ?? '')),
     updatedAt: issue.updated_at,
     url: issue.html_url,
-  }));
+  };
+}
+
+/** Ruft alle offenen Issues ab (paginiert). Filtert Pull Requests und behandelt 304. */
+export async function pollIssues(
+  octokit: Octokit,
+  owner: string,
+  repo: string,
+  state: PollState = {},
+): Promise<PolledIssue[]> {
+  try {
+    const allIssues = await octokit.paginate(octokit.rest.issues.listForRepo, {
+      owner, repo,
+      state: 'open' as const,
+      sort: 'updated' as const,
+      direction: 'asc' as const,
+      since: state.since,
+      per_page: 100,
+      headers: {
+        ...(state.etag ? { 'if-none-match': state.etag } : {}),
+      },
+    }, (response) => {
+      state.etag = response.headers.etag ?? undefined;
+      return (response.data as GitHubIssue[]).filter(i => !i.pull_request);
+    });
+
+    const newest = allIssues.at(-1)?.updated_at;
+    if (newest) state.since = newest;
+
+    return allIssues.map(mapIssue);
+  } catch (err) {
+    // 304 Not Modified — keine neuen Issues
+    if (err instanceof RequestError && err.status === 304) {
+      return [];
+    }
+    throw err;
+  }
 }
 
 /** Filtert Issues mit einem bestimmten Label. */

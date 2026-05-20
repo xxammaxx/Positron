@@ -1,5 +1,7 @@
 {
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "main": "./dist/index.js",
   "name": "@positron/github-adapter",
   "version": "0.1.0",
@@ -20,6 +22,7 @@
   "dependencies": {
     "@octokit/plugin-retry": "^7.0.0",
     "@octokit/plugin-throttling": "^9.0.0",
+    "@octokit/request-error": "^7.1.0",
     "@octokit/rest": "^22.0.0",
     "@positron/shared": "^0.1.0"
   },

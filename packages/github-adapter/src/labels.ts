@@ -36,8 +36,12 @@ export async function syncManagedLabels(
         owner, repo, issue_number: issueNumber, name,
       });
       removed.push(name);
-    } catch {
-      // Label existiert nicht mehr — ignoriere
+    } catch (err: unknown) {
+      // 404 = Label existiert nicht mehr — harmlos ignorieren
+      if (err && typeof err === 'object' && 'status' in err && (err as { status: number }).status === 404) {
+        continue;
+      }
+      throw err;
     }
   }
 
