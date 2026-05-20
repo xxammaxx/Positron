@@ -1,4 +1,24 @@
-// Positron GitHub Adapter Package
-import { POSITRON_VERSION } from '@positron/shared';
+// Positron GitHub Adapter — Barrel Export
+export { createGitHubClient, createSafeLogger } from './client.js';
+export type { GitHubClientOptions } from './client.js';
+export { pollIssues, filterByLabel, isPullRequest } from './issues.js';
+export type { PollState, PolledIssue } from './issues.js';
+export { syncManagedLabels } from './labels.js';
+export { writeComment, commentMarker } from './comments.js';
 
-export const GITHUB_ADAPTER_VERSION = POSITRON_VERSION;
+// Neue Exports (Issue #9)
+export type {
+  GitHubIssueRef, GitHubIssueSummary, GitHubIssueComment,
+  GitHubCommentResult, GitHubRepositorySummary,
+  GitHubIssueClaimResult, ClaimOptions,
+} from './types.js';
+export type { GitHubAdapter } from './adapter.js';
+export { RealGitHubAdapter, createRealGitHubAdapter, mapRequestError } from './real-adapter.js';
+export { FakeGitHubAdapter } from './fake-adapter.js';
+export {
+  GitHubError, GitHubAuthError, GitHubPermissionError, GitHubNotFoundError,
+  GitHubIssuesDisabledError, GitHubValidationError,
+  GitHubRateLimitError, GitHubSecondaryRateLimitError,
+  GitHubNetworkError, GitHubUnknownError,
+} from './errors.js';
+export { renderAccepted, renderStatusUpdate, renderBlocked, renderDone } from './templates.js';

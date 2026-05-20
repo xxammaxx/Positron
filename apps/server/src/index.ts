@@ -8,6 +8,20 @@ import { executeTasks } from '@positron/opencode-adapter';
 import { generateBranchName } from '@positron/shared';
 import type { Phase, RunStatus } from '@positron/shared';
 import type { RunState, RunEventData } from '@positron/run-state';
+import { FakeGitHubAdapter, createRealGitHubAdapter } from '@positron/github-adapter';
+import type { GitHubAdapter } from '@positron/github-adapter';
+import { renderAccepted } from '@positron/github-adapter';
+
+/** GitHub Adapter Modus: "fake" (Standard/Test) oder "real" (mit GITHUB_TOKEN) */
+type GitHubMode = 'fake' | 'real';
+
+function resolveAdapter(): { adapter: GitHubAdapter; mode: GitHubMode } {
+  const mode = (process.env.GITHUB_MODE ?? 'fake') as GitHubMode;
+  if (mode === 'real') {
+    return { adapter: createRealGitHubAdapter(), mode: 'real' };
+  }
+  return { adapter: new FakeGitHubAdapter(), mode: 'fake' };
+}
 
 // In-Memory Store (MVP)
 const runs = new Map<string, RunState>();
@@ -114,20 +128,22 @@ function runFullPipeline(run: RunState): RunState {
 // REST API
 // ---------------------------------------------------------------------------
 
-export function createApp() {
+export function createApp(adapter?: GitHubAdapter) {
+  const github = adapter ?? resolveAdapter().adapter;
   const app = express();
   app.use(express.json());
 
   // Repository registrieren
   app.post('/api/repos', (_req, res) => {
-    res.json({ id: 'repo-1', status: 'registered' });
+    res.json({ id: 'repo-1', status: 'registered', mode: github instanceof FakeGitHubAdapter ? 'fake' : 'real' });
   });
 
-  // Issues abrufen
-  app.get('/api/repos/:id/issues', (req, res) => {
-    res.json({
-      issues: [{ number: 1, title: 'Test Issue', labels: ['positron:ready'] }],
-    });
+  // Issues abrufen (echt via Adapter)
+  app.get('/api/repos/:id/issues', async (req, _res, next) => {
+    try {
+      const issues = await github.listOpenIssues('test-owner', req.params.id);
+      _res.json({ issues });
+    } catch (err) { next(err); }
   });
 
   // Run starten
@@ -159,7 +175,7 @@ export function createApp() {
   return app;
 }
 
-export function createServer() {
-  const app = createApp();
+export function createServer(adapter?: GitHubAdapter) {
+  const app = createApp(adapter);
   return http.createServer(app);
 }
