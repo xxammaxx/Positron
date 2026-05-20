@@ -1,4 +1,2 @@
-// Positron Sandbox Package
-import { POSITRON_VERSION } from '@positron/shared';
-
-export const SANDBOX_VERSION = POSITRON_VERSION;
+// Sandbox — Stub für MVP
+export function createWorktree(): string { return '/tmp/positron-worktree'; }

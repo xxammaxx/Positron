@@ -1,4 +1,2 @@
-// Positron OpenCode Adapter Package
-import { POSITRON_VERSION } from '@positron/shared';
-
-export const OPENCODE_ADAPTER_VERSION = POSITRON_VERSION;
+// OpenCode Adapter — Stub für MVP
+export function executeTasks(): string { return 'OpenCode stub: implementation simulated.'; }
