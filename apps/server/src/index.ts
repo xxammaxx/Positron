@@ -690,6 +690,8 @@ export function createApp(options: ServerOptions = {}) {
   return app;
 }
 
+export { runFullPipeline };
+
 export function createServer(options: ServerOptions = {}) {
   const app = createApp(options);
   return http.createServer(app);
