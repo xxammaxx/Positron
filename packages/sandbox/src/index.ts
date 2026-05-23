@@ -34,3 +34,10 @@ export {
   isAllowedSpecKitCommand, isBlockedSpecKitCommand,
   validateSpecKitCommand, SpecKitCommandPolicyError,
 } from './speckit-policy.js';
+
+// OpenCode Command Policy (Issue #16)
+export {
+  ALLOWED_OPENCODE_COMMANDS, BLOCKED_OPENCODE_COMMANDS,
+  ALLOWED_SLASH_COMMANDS,
+  validateOpenCodeCommand, OpenCodeCommandPolicyError,
+} from './opencode-policy.js';

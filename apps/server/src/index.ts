@@ -6,9 +6,10 @@ import { createRun, transition, markFailed, resumeFromEvents } from '@positron/r
 import { runSpecify, runPlan, runTasks } from '@positron/speckit-adapter';
 import { RealSpecKitAdapter, FakeSpecKitAdapter } from '@positron/speckit-adapter';
 import { executeTasks } from '@positron/opencode-adapter';
+import { RealOpenCodeAdapter, FakeOpenCodeAdapter } from '@positron/opencode-adapter';
 import { generateBranchName, createRunId, loadRepositoryConfig, normalizeRepositoryConfig, buildRemoteUrl } from '@positron/shared';
 import type { Phase, RunStatus } from '@positron/shared';
-import type { RepositoryConfig, SpecKitAdapter } from '@positron/shared';
+import type { RepositoryConfig, SpecKitAdapter, OpenCodeAdapter } from '@positron/shared';
 import type { RunState, RunEventData } from '@positron/run-state';
 import { FakeGitHubAdapter, createRealGitHubAdapter, GitHubStatusSyncService } from '@positron/github-adapter';
 import type { GitHubAdapter } from '@positron/github-adapter';
@@ -27,6 +28,7 @@ interface ServerOptions {
   repository?: RepositoryConfig;
   workspaceAdapter?: GitWorkspaceAdapter;
   speckitAdapter?: SpecKitAdapter;
+  opencodeAdapter?: OpenCodeAdapter;
 }
 
 function resolveAdapter(adapter?: GitHubAdapter): { adapter: GitHubAdapter; mode: GitHubMode } {
@@ -58,6 +60,7 @@ const runs = new Map<string, RunState>();
 const events = new Map<string, RunEventData[]>();
 let workspaceAdapter: GitWorkspaceAdapter = new FakeGitWorkspaceAdapter();
 let speckitAdapter: SpecKitAdapter = new FakeSpecKitAdapter();
+let opencodeAdapter: OpenCodeAdapter = new FakeOpenCodeAdapter();
 
 export function setWorkspaceAdapter(adapter: GitWorkspaceAdapter): void {
   workspaceAdapter = adapter;
@@ -67,13 +70,24 @@ export function setSpecKitAdapter(adapter: SpecKitAdapter): void {
   speckitAdapter = adapter;
 }
 
+export function setOpenCodeAdapter(adapter: OpenCodeAdapter): void {
+  opencodeAdapter = adapter;
+}
+
 function resolveSpecKitAdapter(injected?: SpecKitAdapter): SpecKitAdapter {
   if (injected) return injected;
-  // Wenn explizit real mode, benutze RealSpecKitAdapter
   if (process.env.POSITRON_SPECKIT_MODE === 'real') {
     return new RealSpecKitAdapter();
   }
   return speckitAdapter;
+}
+
+function resolveOpenCodeAdapter(injected?: OpenCodeAdapter): OpenCodeAdapter {
+  if (injected) return injected;
+  if (process.env.POSITRON_OPENCODE_MODE === 'real') {
+    return new RealOpenCodeAdapter();
+  }
+  return opencodeAdapter;
 }
 
 function storeEvent(event: RunEventData): void {
@@ -134,6 +148,7 @@ async function executePhase(
   repository: RepositoryConfig,
   workspace: GitWorkspaceAdapter,
   speckit: SpecKitAdapter,
+  opencode: OpenCodeAdapter,
   syncService?: GitHubStatusSyncService,
 ): Promise<RunState> {
   let current = run;
@@ -247,10 +262,22 @@ async function executePhase(
     case 'REVIEW':
       result = transition(current, 'IMPLEMENT', 'Review passed');
       break;
-    case 'IMPLEMENT':
-      executeTasks();
-      result = transition(current, 'TEST', 'Implementation done');
+    case 'IMPLEMENT': {
+      const wsPath = current.branch ? `/tmp/positron-ws-${current.id.slice(0, 8)}` : '/tmp';
+      const input = { runId: current.id, workspacePath: wsPath, issueTitle: `Issue #${current.issueNumber}`, issueNumber: current.issueNumber, mode: 'safe-cli' as const, autonomyLevel: current.autonomyLevel };
+      try {
+        const ir = await opencode.runImplement(input);
+        if (ir.status === 'blocked') {
+          storeEvent({ id: createRunId(), runId: current.id, phase: 'IMPLEMENT', level: 'WARN', message: `Implement blocked: ${ir.blockedReason ?? 'policy'}`, payload: { result: ir }, createdAt: new Date().toISOString() });
+        }
+        result = transition(current, 'TEST', ir.summary, ir.status === 'success' ? 'INFO' : 'WARN');
+      } catch (err) {
+        storeEvent({ id: createRunId(), runId: current.id, phase: 'IMPLEMENT', level: 'WARN', message: `Implement error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
+        executeTasks(); // legacy stub fallback
+        result = transition(current, 'TEST', 'Implementation done (legacy fallback)', 'INFO');
+      }
       break;
+    }
     case 'TEST':
       try {
         const wsPath = current.branch ? `/tmp/positron-ws-${current.id.slice(0, 8)}` : '/tmp';
@@ -313,12 +340,13 @@ async function runFullPipeline(
   repository: RepositoryConfig,
   workspace: GitWorkspaceAdapter,
   speckit: SpecKitAdapter,
+  opencode: OpenCodeAdapter,
   syncService?: GitHubStatusSyncService,
 ): Promise<RunState> {
   let current = run;
   const maxSteps = 20;
   for (let i = 0; i < maxSteps; i++) {
-    const next = await executePhase(current, repository, workspace, speckit, syncService);
+    const next = await executePhase(current, repository, workspace, speckit, opencode, syncService);
     if (next.phase === current.phase || next.phase === 'DONE' || next.phase.startsWith('FAILED')) {
       // Sync terminal state
       if (syncService) {
@@ -378,6 +406,7 @@ export function createApp(options: ServerOptions = {}) {
   const github = resolveAdapter(options.adapter).adapter;
   const activeWorkspaceAdapter = options.workspaceAdapter ?? workspaceAdapter;
   const activeSpecKitAdapter = resolveSpecKitAdapter(options.speckitAdapter);
+  const activeOpenCodeAdapter = resolveOpenCodeAdapter(options.opencodeAdapter);
   const syncService = new GitHubStatusSyncService(github);
   const app = express();
   app.use(express.json());
@@ -399,7 +428,7 @@ export function createApp(options: ServerOptions = {}) {
   app.post('/api/repos/:repoId/runs', async (req, res) => {
     const { issueNumber, autonomyLevel } = req.body;
     const run = createRun(repository.repo, issueNumber ?? 1, autonomyLevel ?? 2);
-    const completed = await runFullPipeline(run, repository, activeWorkspaceAdapter, activeSpecKitAdapter, syncService);
+    const completed = await runFullPipeline(run, repository, activeWorkspaceAdapter, activeSpecKitAdapter, activeOpenCodeAdapter, syncService);
     const evts = getEvents(completed.id);
     res.json({ run: completed, events: evts, eventCount: evts.length });
   });

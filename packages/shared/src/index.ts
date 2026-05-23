@@ -31,3 +31,14 @@ export {
   SpecKitArtifactNotFoundError, SpecKitTimeoutError,
   SpecKitUnsupportedCommandError,
 } from './speckit-errors.js';
+
+// OpenCode Types & Errors (Issue #16)
+export type {
+  OpenCodePhase, OpenCodeCommandStatus, OpenCodeHealth,
+  OpenCodeCommandResult, OpenCodeRunInput, OpenCodeAdapter,
+} from './opencode-types.js';
+export {
+  OpenCodeError, OpenCodeNotInstalledError, OpenCodeCommandNotAllowedError,
+  OpenCodeCommandFailedError, OpenCodeWorkspaceInvalidError,
+  OpenCodeTimeoutError, OpenCodeUnsupportedCommandError,
+} from './opencode-errors.js';

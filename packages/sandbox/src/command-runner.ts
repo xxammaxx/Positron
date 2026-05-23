@@ -4,6 +4,7 @@ import { spawn } from 'node:child_process';
 import { statSync } from 'node:fs';
 import { redactSecrets } from '@positron/shared';
 import { validateSpecKitCommand, SpecKitCommandPolicyError } from './speckit-policy.js';
+import { validateOpenCodeCommand, OpenCodeCommandPolicyError } from './opencode-policy.js';
 
 export interface CommandResult {
   command: string;
@@ -23,7 +24,7 @@ export interface RunCommandOptions {
 
 /** Nur diese Kommandos sind erlaubt */
 const ALLOWED_COMMANDS = new Set([
-  'git', 'git-lfs', 'npm', 'npx', 'node', 'specify',
+  'git', 'git-lfs', 'npm', 'npx', 'node', 'specify', 'opencode',
 ]);
 
 /** Git-Subkommandos: erlaubt */
@@ -107,6 +108,18 @@ function validateCommand(command: string, args: string[], cwd: string): void {
       validateSpecKitCommand(command, args, cwd);
     } catch (err) {
       if (err instanceof SpecKitCommandPolicyError) {
+        throw new GitCommandPolicyError(err.message);
+      }
+      throw err;
+    }
+  }
+
+  // OpenCode Subcommand-Validierung (Issue #16)
+  if (command === 'opencode') {
+    try {
+      validateOpenCodeCommand(command, args, cwd);
+    } catch (err) {
+      if (err instanceof OpenCodeCommandPolicyError) {
         throw new GitCommandPolicyError(err.message);
       }
       throw err;
