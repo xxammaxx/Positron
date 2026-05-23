@@ -18,7 +18,8 @@
     "typecheck": "tsc -b --pretty false"
   },
   "dependencies": {
-    "@positron/shared": "^0.1.0"
+    "@positron/shared": "^0.1.0",
+    "@positron/sandbox": "^0.1.0"
   },
   "devDependencies": {
     "typescript": "^5.8.0",

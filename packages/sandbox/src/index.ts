@@ -27,3 +27,10 @@ export type {
 } from './test-runner.js';
 
 export { renderTestReportMarkdown, renderTestReportComment } from './test-templates.js';
+
+// Spec Kit Command Policy (Issue #15)
+export {
+  ALLOWED_SPECKIT_COMMANDS, BLOCKED_SPECKIT_COMMANDS,
+  isAllowedSpecKitCommand, isBlockedSpecKitCommand,
+  validateSpecKitCommand, SpecKitCommandPolicyError,
+} from './speckit-policy.js';

@@ -3,6 +3,7 @@
 import { spawn } from 'node:child_process';
 import { statSync } from 'node:fs';
 import { redactSecrets } from '@positron/shared';
+import { validateSpecKitCommand, SpecKitCommandPolicyError } from './speckit-policy.js';
 
 export interface CommandResult {
   command: string;
@@ -22,7 +23,7 @@ export interface RunCommandOptions {
 
 /** Nur diese Kommandos sind erlaubt */
 const ALLOWED_COMMANDS = new Set([
-  'git', 'git-lfs', 'npm', 'npx', 'node',
+  'git', 'git-lfs', 'npm', 'npx', 'node', 'specify',
 ]);
 
 /** Git-Subkommandos: erlaubt */
@@ -97,6 +98,18 @@ function validateCommand(command: string, args: string[], cwd: string): void {
     }
     if (sub && !ALLOWED_SUBCOMMANDS.has(sub)) {
       throw new GitCommandPolicyError(`Unknown subcommand: git ${sub}`);
+    }
+  }
+
+  // Spec Kit Subcommand-Validierung (Issue #15)
+  if (command === 'specify') {
+    try {
+      validateSpecKitCommand(command, args, cwd);
+    } catch (err) {
+      if (err instanceof SpecKitCommandPolicyError) {
+        throw new GitCommandPolicyError(err.message);
+      }
+      throw err;
     }
   }
 

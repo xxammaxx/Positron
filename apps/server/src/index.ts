@@ -4,12 +4,15 @@ import express from 'express';
 import http from 'node:http';
 import { createRun, transition, markFailed, resumeFromEvents } from '@positron/run-state';
 import { runSpecify, runPlan, runTasks } from '@positron/speckit-adapter';
+import { RealSpecKitAdapter, FakeSpecKitAdapter } from '@positron/speckit-adapter';
 import { executeTasks } from '@positron/opencode-adapter';
-import { generateBranchName } from '@positron/shared';
+import { generateBranchName, createRunId, loadRepositoryConfig, normalizeRepositoryConfig, buildRemoteUrl } from '@positron/shared';
 import type { Phase, RunStatus } from '@positron/shared';
+import type { RepositoryConfig, SpecKitAdapter } from '@positron/shared';
 import type { RunState, RunEventData } from '@positron/run-state';
-import { FakeGitHubAdapter, createRealGitHubAdapter } from '@positron/github-adapter';
+import { FakeGitHubAdapter, createRealGitHubAdapter, GitHubStatusSyncService } from '@positron/github-adapter';
 import type { GitHubAdapter } from '@positron/github-adapter';
+import type { GitHubStatusSyncInput, GitHubStatusSyncResult, EvidenceItem } from '@positron/github-adapter';
 import { renderAccepted } from '@positron/github-adapter';
 import { FakeGitWorkspaceAdapter } from '@positron/sandbox';
 import type { GitWorkspaceAdapter } from '@positron/sandbox';
@@ -19,7 +22,18 @@ import type { TestReport } from '@positron/sandbox';
 /** GitHub Adapter Modus: "fake" (Standard/Test) oder "real" (mit GITHUB_TOKEN) */
 type GitHubMode = 'fake' | 'real';
 
-function resolveAdapter(): { adapter: GitHubAdapter; mode: GitHubMode } {
+interface ServerOptions {
+  adapter?: GitHubAdapter;
+  repository?: RepositoryConfig;
+  workspaceAdapter?: GitWorkspaceAdapter;
+  speckitAdapter?: SpecKitAdapter;
+}
+
+function resolveAdapter(adapter?: GitHubAdapter): { adapter: GitHubAdapter; mode: GitHubMode } {
+  if (adapter) {
+    return { adapter, mode: adapter instanceof FakeGitHubAdapter ? 'fake' : 'real' };
+  }
+
   const mode = (process.env.GITHUB_MODE ?? 'fake') as GitHubMode;
   if (mode === 'real') {
     return { adapter: createRealGitHubAdapter(), mode: 'real' };
@@ -27,13 +41,39 @@ function resolveAdapter(): { adapter: GitHubAdapter; mode: GitHubMode } {
   return { adapter: new FakeGitHubAdapter(), mode: 'fake' };
 }
 
+function resolveRepositoryConfig(repository?: RepositoryConfig): RepositoryConfig {
+  if (repository) {
+    return normalizeRepositoryConfig(repository);
+  }
+
+  const loaded = loadRepositoryConfig(process.env);
+  if (!loaded) {
+    throw new Error('POSITRON_REPO_OWNER and POSITRON_REPO_NAME must be configured');
+  }
+  return loaded;
+}
+
 // In-Memory Store (MVP)
 const runs = new Map<string, RunState>();
 const events = new Map<string, RunEventData[]>();
 let workspaceAdapter: GitWorkspaceAdapter = new FakeGitWorkspaceAdapter();
+let speckitAdapter: SpecKitAdapter = new FakeSpecKitAdapter();
 
 export function setWorkspaceAdapter(adapter: GitWorkspaceAdapter): void {
   workspaceAdapter = adapter;
+}
+
+export function setSpecKitAdapter(adapter: SpecKitAdapter): void {
+  speckitAdapter = adapter;
+}
+
+function resolveSpecKitAdapter(injected?: SpecKitAdapter): SpecKitAdapter {
+  if (injected) return injected;
+  // Wenn explizit real mode, benutze RealSpecKitAdapter
+  if (process.env.POSITRON_SPECKIT_MODE === 'real') {
+    return new RealSpecKitAdapter();
+  }
+  return speckitAdapter;
 }
 
 function storeEvent(event: RunEventData): void {
@@ -47,10 +87,55 @@ function getEvents(runId: string): RunEventData[] {
 }
 
 // ---------------------------------------------------------------------------
+// Safe GitHub Sync (never crashes the orchestrator)
+// ---------------------------------------------------------------------------
+
+/** Wraps a sync operation so failures are logged but never block the run */
+async function safeSync(
+  syncService: GitHubStatusSyncService,
+  operation: () => Promise<GitHubStatusSyncResult>,
+  runId: string,
+  context: Phase,
+): Promise<GitHubStatusSyncResult | null> {
+  try {
+    const result = await operation();
+    if (result.status === 'failed') {
+      storeEvent({
+        id: createRunId(),
+        runId,
+        phase: context,
+        level: 'WARN',
+        message: `GitHub sync failed: ${result.reason ?? 'unknown'}`,
+        payload: null,
+        createdAt: new Date().toISOString(),
+      });
+    }
+    return result;
+  } catch (err) {
+    storeEvent({
+      id: createRunId(),
+      runId,
+      phase: context,
+      level: 'ERROR',
+      message: `GitHub sync error: ${String(err).slice(0, 200)}`,
+      payload: null,
+      createdAt: new Date().toISOString(),
+    });
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Orchestrator
 // ---------------------------------------------------------------------------
 
-async function executePhase(run: RunState): Promise<RunState> {
+async function executePhase(
+  run: RunState,
+  repository: RepositoryConfig,
+  workspace: GitWorkspaceAdapter,
+  speckit: SpecKitAdapter,
+  syncService?: GitHubStatusSyncService,
+): Promise<RunState> {
   let current = run;
   let result;
 
@@ -59,15 +144,30 @@ async function executePhase(run: RunState): Promise<RunState> {
       result = transition(current, 'CLAIMED', 'Issue claimed', 'INFO');
       break;
     case 'CLAIMED':
+      // Sync: Run Accepted → GitHub comment + labels
+      if (syncService) {
+        const syncInput: GitHubStatusSyncInput = {
+          runId: current.id, owner: repository.owner, repo: repository.repo,
+          issueNumber: current.issueNumber, phase: 'CLAIMED', status: 'active',
+          branchName: current.branch ?? undefined,
+        };
+        await safeSync(syncService, () => syncService.syncRunAccepted(syncInput), current.id, 'CLAIMED');
+      }
       result = transition(current, 'REPO_SYNC', 'Repo synced', 'INFO');
       break;
     case 'REPO_SYNC':
       try {
-        const ws = await workspaceAdapter.prepareWorkspace({
-          repository: { owner: 'xxammaxx', repo: current.repoId, remoteUrl: `https://github.com/xxammaxx/${current.repoId}.git` },
+        const workspaceRepository = {
+          owner: repository.owner,
+          repo: repository.repo,
+          remoteUrl: repository.remoteUrl ?? buildRemoteUrl(repository.owner, repository.repo),
+        };
+        const ws = await workspace.prepareWorkspace({
+          repository: workspaceRepository,
           issueNumber: current.issueNumber,
           issueTitle: `Issue #${current.issueNumber}`,
           runId: current.id,
+          baseBranch: repository.defaultBranch,
         });
         current.branch = ws.branchName;
         result = transition(current, 'ISSUE_CONTEXT', `Workspace: ${ws.workspacePath}`);
@@ -81,21 +181,69 @@ async function executePhase(run: RunState): Promise<RunState> {
     case 'WEB_RESEARCH':
       result = transition(current, 'SPECIFY', `Research: best practices validated`);
       break;
-    case 'SPECIFY':
-      runSpecify();
-      result = transition(current, 'PLAN', 'Spec generated');
+    case 'SPECIFY': {
+      const wsPath = current.branch ? `/tmp/positron-ws-${current.id.slice(0, 8)}` : '/tmp';
+      const input = { runId: current.id, workspacePath: wsPath, issueTitle: `Issue #${current.issueNumber}`, issueNumber: current.issueNumber, mode: 'artifact-only' as const };
+      try {
+        const sr = await speckit.runSpecify(input);
+        if (sr.status === 'blocked') {
+          storeEvent({ id: createRunId(), runId: current.id, phase: 'SPECIFY', level: 'WARN', message: `Specify blocked: ${sr.blockedReason ?? 'agent slash command required'}`, payload: { result: sr }, createdAt: new Date().toISOString() });
+          // Trotzdem weitermachen — Spec ist optional via Artefakt-Detection
+          result = transition(current, 'PLAN', sr.summary, 'INFO');
+        } else {
+          result = transition(current, 'PLAN', sr.summary, sr.status === 'success' ? 'INFO' : 'WARN');
+        }
+      } catch (err) {
+        storeEvent({ id: createRunId(), runId: current.id, phase: 'SPECIFY', level: 'WARN', message: `Specify error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
+        runSpecify(); // Legacy stub als Fallback
+        result = transition(current, 'PLAN', 'Spec generated (legacy stub fallback)', 'INFO');
+      }
       break;
-    case 'PLAN':
-      runPlan();
-      result = transition(current, 'TASKS', 'Plan generated');
+    }
+    case 'PLAN': {
+      const wsPath = current.branch ? `/tmp/positron-ws-${current.id.slice(0, 8)}` : '/tmp';
+      const input = { runId: current.id, workspacePath: wsPath, issueTitle: `Issue #${current.issueNumber}`, issueNumber: current.issueNumber, mode: 'artifact-only' as const };
+      try {
+        const pr = await speckit.runPlan(input);
+        if (pr.status === 'blocked') {
+          storeEvent({ id: createRunId(), runId: current.id, phase: 'PLAN', level: 'WARN', message: `Plan blocked: ${pr.blockedReason ?? 'agent slash command required'}`, payload: { result: pr }, createdAt: new Date().toISOString() });
+        }
+        result = transition(current, 'TASKS', pr.summary, pr.status === 'success' ? 'INFO' : 'WARN');
+      } catch (err) {
+        storeEvent({ id: createRunId(), runId: current.id, phase: 'PLAN', level: 'WARN', message: `Plan error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
+        runPlan(); // Legacy stub als Fallback
+        result = transition(current, 'TASKS', 'Plan generated (legacy stub fallback)', 'INFO');
+      }
       break;
-    case 'TASKS':
-      runTasks();
-      result = transition(current, 'ANALYZE', 'Tasks generated');
+    }
+    case 'TASKS': {
+      const wsPath = current.branch ? `/tmp/positron-ws-${current.id.slice(0, 8)}` : '/tmp';
+      const input = { runId: current.id, workspacePath: wsPath, issueTitle: `Issue #${current.issueNumber}`, issueNumber: current.issueNumber, mode: 'artifact-only' as const };
+      try {
+        const tr = await speckit.runTasks(input);
+        if (tr.status === 'blocked') {
+          storeEvent({ id: createRunId(), runId: current.id, phase: 'TASKS', level: 'WARN', message: `Tasks blocked: ${tr.blockedReason ?? 'agent slash command required'}`, payload: { result: tr }, createdAt: new Date().toISOString() });
+        }
+        result = transition(current, 'ANALYZE', tr.summary, tr.status === 'success' ? 'INFO' : 'WARN');
+      } catch (err) {
+        storeEvent({ id: createRunId(), runId: current.id, phase: 'TASKS', level: 'WARN', message: `Tasks error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
+        runTasks(); // Legacy stub als Fallback
+        result = transition(current, 'ANALYZE', 'Tasks generated (legacy stub fallback)', 'INFO');
+      }
       break;
-    case 'ANALYZE':
-      result = transition(current, 'REVIEW', 'Analysis complete');
+    }
+    case 'ANALYZE': {
+      const wsPath = current.branch ? `/tmp/positron-ws-${current.id.slice(0, 8)}` : '/tmp';
+      const input = { runId: current.id, workspacePath: wsPath, issueTitle: `Issue #${current.issueNumber}`, issueNumber: current.issueNumber, mode: 'artifact-only' as const };
+      try {
+        const ar = await speckit.runAnalyze(input);
+        result = transition(current, 'REVIEW', ar.summary, 'INFO');
+      } catch (err) {
+        storeEvent({ id: createRunId(), runId: current.id, phase: 'ANALYZE', level: 'WARN', message: `Analyze error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
+        result = transition(current, 'REVIEW', 'Analysis complete', 'INFO');
+      }
       break;
+    }
     case 'REVIEW':
       result = transition(current, 'IMPLEMENT', 'Review passed');
       break;
@@ -117,6 +265,23 @@ async function executePhase(run: RunState): Promise<RunState> {
             runId: current.id, workspacePath: wsPath,
             commands: detection.commands, mode: 'standard',
           });
+          // Sync: Test Report → GitHub comment + labels
+          if (syncService && report) {
+            const syncInput: GitHubStatusSyncInput = {
+              runId: current.id, owner: repository.owner, repo: repository.repo,
+              issueNumber: current.issueNumber, phase: 'TEST', status: report.status,
+              branchName: current.branch ?? undefined, workspacePath: wsPath, testReport: report,
+            };
+            if (report.status === 'BLOCKED') {
+              await safeSync(syncService, () => syncService.syncBlocked({
+                ...syncInput, error: { type: 'blocked', message: report.summary },
+              }), current.id, 'TEST');
+            } else if (report.status === 'FAIL') {
+              await safeSync(syncService, () => syncService.syncTestReport(syncInput), current.id, 'TEST');
+            } else {
+              await safeSync(syncService, () => syncService.syncTestReport(syncInput), current.id, 'TEST');
+            }
+          }
           result = transition(current, 'VERIFY', `Tests ${report.status}`, report.status === 'PASS' ? 'INFO' : 'ERROR');
         }
       } catch {
@@ -143,12 +308,38 @@ async function executePhase(run: RunState): Promise<RunState> {
   }
 }
 
-async function runFullPipeline(run: RunState): Promise<RunState> {
+async function runFullPipeline(
+  run: RunState,
+  repository: RepositoryConfig,
+  workspace: GitWorkspaceAdapter,
+  speckit: SpecKitAdapter,
+  syncService?: GitHubStatusSyncService,
+): Promise<RunState> {
   let current = run;
   const maxSteps = 20;
   for (let i = 0; i < maxSteps; i++) {
-    const next = await executePhase(current);
+    const next = await executePhase(current, repository, workspace, speckit, syncService);
     if (next.phase === current.phase || next.phase === 'DONE' || next.phase.startsWith('FAILED')) {
+      // Sync terminal state
+      if (syncService) {
+        const syncInput: GitHubStatusSyncInput = {
+          runId: next.id, owner: repository.owner, repo: repository.repo,
+          issueNumber: next.issueNumber, phase: next.phase, status: next.phase === 'DONE' ? 'done' : 'failed',
+          branchName: next.branch ?? undefined,
+          evidence: buildEvidence(next),
+        };
+        if (next.phase === 'DONE') {
+          await safeSync(syncService, () => syncService.syncDone(syncInput), next.id, 'DONE');
+        } else if (next.phase === 'FAILED_BLOCKED') {
+          await safeSync(syncService, () => syncService.syncBlocked({
+            ...syncInput, error: { type: 'blocked', message: 'Run blocked: max steps or policy violation' },
+          }), next.id, 'FAILED_BLOCKED');
+        } else if (next.phase.startsWith('FAILED')) {
+          await safeSync(syncService, () => syncService.syncFailed({
+            ...syncInput, error: { type: 'failed', message: `Run failed in phase ${next.phase}` },
+          }), next.id, next.phase);
+        }
+      }
       runs.set(next.id, next);
       return next;
     }
@@ -157,16 +348,37 @@ async function runFullPipeline(run: RunState): Promise<RunState> {
   // Timeout
   const result = markFailed(current, 'FAILED_BLOCKED', 'Max steps exceeded');
   storeEvent(result.event);
+  // Sync timeout
+  if (syncService) {
+    const syncInput: GitHubStatusSyncInput = {
+      runId: result.run.id, owner: repository.owner, repo: repository.repo,
+      issueNumber: result.run.issueNumber, phase: 'FAILED_BLOCKED', status: 'blocked',
+      branchName: result.run.branch ?? undefined,
+      error: { type: 'blocked', message: 'Max steps exceeded (timeout)' },
+    };
+    await safeSync(syncService, () => syncService.syncBlocked(syncInput), result.run.id, 'FAILED_BLOCKED');
+  }
   runs.set(result.run.id, result.run);
   return result.run;
+}
+
+/** Build evidence items from run state for sync comments */
+function buildEvidence(run: RunState): EvidenceItem[] {
+  const items: EvidenceItem[] = [{ kind: 'run-phase', status: 'pass', summary: `Phase: ${run.phase}` }];
+  if (run.branch) items.push({ kind: 'branch', status: 'pass', summary: `Branch: ${run.branch}` });
+  return items;
 }
 
 // ---------------------------------------------------------------------------
 // REST API
 // ---------------------------------------------------------------------------
 
-export function createApp(adapter?: GitHubAdapter) {
-  const github = adapter ?? resolveAdapter().adapter;
+export function createApp(options: ServerOptions = {}) {
+  const repository = resolveRepositoryConfig(options.repository);
+  const github = resolveAdapter(options.adapter).adapter;
+  const activeWorkspaceAdapter = options.workspaceAdapter ?? workspaceAdapter;
+  const activeSpecKitAdapter = resolveSpecKitAdapter(options.speckitAdapter);
+  const syncService = new GitHubStatusSyncService(github);
   const app = express();
   app.use(express.json());
 
@@ -178,7 +390,7 @@ export function createApp(adapter?: GitHubAdapter) {
   // Issues abrufen (echt via Adapter)
   app.get('/api/repos/:id/issues', async (req, _res, next) => {
     try {
-      const issues = await github.listOpenIssues('test-owner', req.params.id);
+      const issues = await github.listOpenIssues(repository.owner, repository.repo);
       _res.json({ issues });
     } catch (err) { next(err); }
   });
@@ -186,8 +398,8 @@ export function createApp(adapter?: GitHubAdapter) {
   // Run starten
   app.post('/api/repos/:repoId/runs', async (req, res) => {
     const { issueNumber, autonomyLevel } = req.body;
-    const run = createRun(req.params.repoId, issueNumber ?? 1, autonomyLevel ?? 2);
-    const completed = await runFullPipeline(run);
+    const run = createRun(repository.repo, issueNumber ?? 1, autonomyLevel ?? 2);
+    const completed = await runFullPipeline(run, repository, activeWorkspaceAdapter, activeSpecKitAdapter, syncService);
     const evts = getEvents(completed.id);
     res.json({ run: completed, events: evts, eventCount: evts.length });
   });
@@ -212,7 +424,7 @@ export function createApp(adapter?: GitHubAdapter) {
   return app;
 }
 
-export function createServer(adapter?: GitHubAdapter) {
-  const app = createApp(adapter);
+export function createServer(options: ServerOptions = {}) {
+  const app = createApp(options);
   return http.createServer(app);
 }
