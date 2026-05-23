@@ -644,6 +644,49 @@ export function createApp(options: ServerOptions = {}) {
     res.json({ status: 'ok', runs: runs.size });
   });
 
+  // Adapter Health Status (Issue #22)
+  app.get('/api/adapters/health', async (_req, res) => {
+    try {
+      const speckitHealth = await activeSpecKitAdapter.healthCheck('/tmp');
+      const opencodeHealth = await activeOpenCodeAdapter.healthCheck('/tmp');
+      res.json({
+        github: { available: !(github instanceof FakeGitHubAdapter), mode: github instanceof FakeGitHubAdapter ? 'fake' : 'real' },
+        specKit: speckitHealth,
+        openCode: opencodeHealth,
+      });
+    } catch (err) {
+      res.json({ error: String(err) });
+    }
+  });
+
+  // Merge Status (Issue #22)
+  app.get('/api/runs/:id/merge-status', (_req, res) => {
+    const run = runs.get(_req.params.id);
+    if (!run) { res.status(404).json({ error: 'Not found' }); return; }
+
+    const mergeAllowed = process.env.POSITRON_ENABLE_MERGE === 'true';
+    const mergeKillSwitch = process.env.POSITRON_MERGE_KILL_SWITCH === 'true';
+    const mergeDryRun = process.env.POSITRON_MERGE_DRY_RUN === 'true';
+    const testEvent = getEvents(run.id).find(e => e.phase === 'TEST' && e.level === 'INFO');
+
+    res.json({
+      enabled: mergeAllowed,
+      killSwitch: mergeKillSwitch,
+      dryRun: mergeDryRun,
+      runStatus: run.status,
+      hasTestEvidence: !!testEvent,
+      branch: run.branch,
+      canMerge: mergeAllowed && !mergeKillSwitch && run.status === 'active' && !!testEvent && !!run.branch,
+      blockedReasons: [
+        !mergeAllowed && 'POSITRON_ENABLE_MERGE not set',
+        mergeKillSwitch && 'Kill-Switch active',
+        run.status !== 'active' && `Run status is ${run.status}`,
+        !testEvent && 'No passing test evidence',
+        !run.branch && 'No branch',
+      ].filter(Boolean),
+    });
+  });
+
   return app;
 }
 

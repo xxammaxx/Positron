@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { registerRepo, checkHealth } from './api.js';
+import { registerRepo, checkHealth } from './dashboard-api.js';
 import { IssueQueue } from './components/IssueQueue.js';
 import { RunList } from './components/RunList.js';
+import { RunDetailPage } from './components/RunDetailPage.js';
+import { AdapterHealthPanel } from './components/AdapterHealthPanel.js';
+import { SafetyControls } from './components/SafetyControls.js';
 import { StatusBadge } from './components/StatusBadge.js';
 import type { RepoInfo, HealthStatus } from './types.js';
 
@@ -11,6 +14,7 @@ export default function App() {
   const [runKey, setRunKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [initLoading, setInitLoading] = useState(true);
+  const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -37,50 +41,61 @@ export default function App() {
     <div className="min-h-screen bg-slate-950 text-slate-100">
       {/* Header */}
       <header className="bg-slate-900 border-b border-slate-800 px-6 py-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-sky-400">Positron</h1>
-            <span className="text-xs text-slate-500 font-mono">Issue Orchestrator</span>
+            <button
+              onClick={() => setSelectedRunId(null)}
+              className="text-2xl font-bold text-sky-400 hover:text-sky-300 transition"
+            >
+              Positron
+            </button>
+            <span className="text-xs text-slate-500 font-mono">Operator Cockpit</span>
           </div>
           <div className="flex items-center gap-4">
-            {repo && (
-              <div className="flex items-center gap-2">
-                <StatusBadge status={repo.status} />
-                <span className="text-xs text-slate-400">{repo.mode} mode</span>
-              </div>
-            )}
+            {repo && <StatusBadge status={repo.mode === 'real' ? 'active' : 'pending'} />}
             {health && (
-              <div className="text-xs text-slate-500 font-mono">
-                {health.runs} runs · {health.status}
-              </div>
+              <span className="text-xs text-slate-500 font-mono">{health.runs} runs</span>
             )}
           </div>
         </div>
       </header>
 
-      {error && (
-        <div className="bg-red-900 text-red-200 px-6 py-2 text-sm">{error}</div>
+      {error && <div className="bg-red-900 text-red-200 px-6 py-2 text-sm">{error}</div>}
+
+      {/* Main Content */}
+      {selectedRunId ? (
+        <main className="max-w-7xl mx-auto">
+          <RunDetailPage runId={selectedRunId} onBack={() => { setSelectedRunId(null); refreshRuns(); }} />
+        </main>
+      ) : (
+        <main className="max-w-7xl mx-auto px-6 py-6">
+          {/* Top Row: Safety + Adapters */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+            <div className="lg:col-span-2">
+              <SafetyControls />
+            </div>
+            <AdapterHealthPanel />
+          </div>
+
+          {/* Main Grid: Issues + Runs */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <section className="bg-slate-900 rounded-xl p-4 border border-slate-800">
+              {repo
+                ? <IssueQueue repoId={repo.id} onRunStarted={refreshRuns} />
+                : <div className="text-amber-400 p-4">No repository configured.</div>
+              }
+            </section>
+
+            <section className="bg-slate-900 rounded-xl p-4 border border-slate-800">
+              <RunList key={runKey} onSelectRun={setSelectedRunId} />
+            </section>
+          </div>
+        </main>
       )}
-
-      {/* Dashboard Grid */}
-      <main className="max-w-6xl mx-auto px-6 py-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left: Issue Queue */}
-        <section className="bg-slate-900 rounded-xl p-4 border border-slate-800">
-          {repo
-            ? <IssueQueue repoId={repo.id} onRunStarted={refreshRuns} />
-            : <div className="text-amber-400 p-4">No repository configured.</div>
-          }
-        </section>
-
-        {/* Right: Runs */}
-        <section className="bg-slate-900 rounded-xl p-4 border border-slate-800">
-          <RunList key={runKey} />
-        </section>
-      </main>
 
       {/* Footer */}
       <footer className="text-center text-xs text-slate-600 py-4 border-t border-slate-900">
-        Positron MVP · {health ? `${health.runs} runs` : ''}
+        Positron Operator Cockpit · {health ? `${health.runs} runs` : ''} · ready
       </footer>
     </div>
   );

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { listIssues, startRun } from '../api.js';
+import { listIssues, startRun } from '../dashboard-api.js';
 import type { GitHubIssueSummary } from '../types.js';
 
 export function IssueQueue({ repoId, onRunStarted }: {
