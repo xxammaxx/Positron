@@ -397,15 +397,35 @@ async function executePhase(
       break;
     }
     case 'MERGE': {
+      // --- Safety Gates (Issue #21) ---
       const mergeAllowed = process.env.POSITRON_ENABLE_MERGE === 'true';
+      const mergeDryRun = process.env.POSITRON_MERGE_DRY_RUN === 'true';
+      const mergeKillSwitch = process.env.POSITRON_MERGE_KILL_SWITCH === 'true';
+
+      // Kill-Switch: sofortiger Abbruch aller Merges
+      if (mergeKillSwitch) {
+        result = transition(current, 'DONE', 'Merge BLOCKED: Kill-Switch aktiv (POSITRON_MERGE_KILL_SWITCH=true)', 'WARN');
+        break;
+      }
 
       if (!mergeAllowed) {
         result = transition(current, 'DONE', 'Merge skipped (POSITRON_ENABLE_MERGE not set)', 'INFO');
         break;
       }
 
-      // Find the PR that was created for this run (from store or scan)
-      // For now, if we have a branch, try to find and merge the PR
+      // Run-Status-Gate: kein Merge bei blocked/failed
+      if (current.status === 'blocked' || current.status === 'failed') {
+        result = transition(current, 'DONE', `Merge blocked: Run status is ${current.status}`, 'WARN');
+        break;
+      }
+
+      // Test-Evidence-Gate: erfordert PASS im TEST-Event
+      const testEvent = getEvents(current.id).find(e => e.phase === 'TEST' && e.level === 'INFO');
+      if (!testEvent) {
+        result = transition(current, 'DONE', 'Merge blocked: No passing test evidence found', 'WARN');
+        break;
+      }
+
       const branch = current.branch;
       if (!branch) {
         result = transition(current, 'DONE', 'Merge skipped (no branch)', 'INFO');
@@ -424,6 +444,13 @@ async function executePhase(
         }
 
         const pr = prs[0];
+
+        // Dry-Run: Merge simulieren ohne echten API-Call
+        if (mergeDryRun) {
+          result = transition(current, 'DONE', `[DRY-RUN] Would merge PR #${pr.number} (${pr.htmlUrl})`, 'INFO');
+          break;
+        }
+
         const mergeResult = await github.mergePullRequest({
           owner: repository.owner, repo: repository.repo,
           prNumber: pr.number, strategy: 'squash',

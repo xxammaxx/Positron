@@ -14,6 +14,8 @@ Jede mutierende Aktion in Positron ist durch ein explizites Environment-Gate ges
 | Commit | Immer aktiv (lokal) | ✅ Erlaubt |
 | Push | `POSITRON_ENABLE_PUSH=true` | ❌ Blockiert |
 | Auto-Merge | `POSITRON_ENABLE_MERGE=true` | ❌ Blockiert |
+| Auto-Merge Dry-Run | `POSITRON_MERGE_DRY_RUN=true` | ❌ Simuliert |
+| Auto-Merge Kill-Switch | `POSITRON_MERGE_KILL_SWITCH=true` | ❌ Blockiert sofort |
 | Spec Kit CLI (real) | `POSITRON_SPECKIT_MODE=real` | ❌ Blockiert |
 | OpenCode CLI (real) | `POSITRON_OPENCODE_MODE=real` | ❌ Blockiert |
 | Live E2E Tests | `POSITRON_ENABLE_LIVE_GITHUB_TESTS=true` | ❌ Blockiert |
@@ -52,12 +54,37 @@ Auto-Merge ist nur erlaubt, wenn **ALLE** Bedingungen erfüllt sind:
 
 ## Not-Aus / Kill-Switch
 
-| Methode | Wirkung |
-|--------|---------|
-| `POSITRON_ENABLE_MERGE=false` | Auto-Merge deaktiviert, Pipeline läuft weiter |
-| `POSITRON_ENABLE_PUSH=false` | Push deaktiviert, Commits bleiben lokal |
-| Server-Stop | Gesamte Pipeline gestoppt |
-| Branch Protection (GitHub) | Merge wird von GitHub abgelehnt |
+| Methode | Wirkung | Gültigkeit |
+|--------|---------|-----------|
+| `POSITRON_MERGE_KILL_SWITCH=true` | Alle Merges sofort blockiert | Nächster Run |
+| `POSITRON_ENABLE_MERGE=false` | Auto-Merge deaktiviert | Nächster Run |
+| `POSITRON_ENABLE_PUSH=false` | Push deaktiviert | Nächster Run |
+| Server-Stop | Gesamte Pipeline gestoppt | Sofort |
+| GitHub Branch Protection | Merge wird von GitHub abgelehnt | Permanent |
+
+### Kill-Switch-Verhalten
+
+Wenn `POSITRON_MERGE_KILL_SWITCH=true` gesetzt ist, wird die MERGE-Phase sofort mit einer WARN-Meldung beendet. Der Rest der Pipeline läuft normal weiter — nur der Merge wird blockiert. Dies erlaubt sicheres Deployen ohne Merge-Risiko.
+
+### Dry-Run-Modus
+
+`POSITRON_MERGE_DRY_RUN=true` simuliert den Merge ohne echten API-Call. Die MERGE-Phase loggt `[DRY-RUN] Would merge PR #N (URL)` und transitioniert zu DONE. Nützlich für:
+- Testen der Merge-Gates ohne echten Merge
+- Validierung der Pipeline vor Produktionseinsatz
+- Demonstration der Funktionalität
+
+### Merge-Gates (implementiert in Code)
+
+| Gate | Prüfung | Bei Fehler |
+|------|---------|-----------|
+| Kill-Switch | `POSITRON_MERGE_KILL_SWITCH` | DONE (WARN) |
+| Enable-Flag | `POSITRON_ENABLE_MERGE` | DONE (INFO) |
+| Run-Status | Nicht BLOCKED/FAILED | DONE (WARN) |
+| Test-Evidence | TEST-Phase mit PASS | DONE (WARN) |
+| Branch existiert | `current.branch` nicht null | DONE (INFO) |
+| PR existiert | Offener PR via head-Filter | DONE (INFO) |
+| PR mergeable | GitHub API 200/405 | DONE (WARN) |
+| Dry-Run | `POSITRON_MERGE_DRY_RUN` | DONE (INFO) |
 
 ## Rollback / Revert
 
