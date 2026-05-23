@@ -7,6 +7,19 @@
 
 ALL 26 live E2E tests executed and passed against real GitHub repository `xxammaxx/positron-e2e-test`.
 
+## Final Live-Run Summary
+
+| Field | Value |
+|-------|-------|
+| Repository | `xxammaxx/positron-e2e-test` |
+| Issue | `#1` — „Positron Live E2E Fixture – Größe prüfen" |
+| Run ID | `live-e2e-20260523-lzbhzn` |
+| Final Label | `positron:done` |
+| Comments Written | 4 (accepted, test report, done, unicode/redaction validation) |
+| Spec Kit Validation | Health + Detect only (CLI v0.8.12 found) |
+| OpenCode Validation | Health + Dry-Run only (CLI v1.15.5 found) |
+| Orchestrator-Level E2E | **Not yet live-tested** (service-level only) |
+
 ---
 
 ## GitHub Live Validation
