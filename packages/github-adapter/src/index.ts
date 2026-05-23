@@ -11,6 +11,7 @@ export type {
   GitHubIssueRef, GitHubIssueSummary, GitHubIssueComment,
   GitHubCommentResult, GitHubRepositorySummary,
   GitHubIssueClaimResult, ClaimOptions,
+  GitHubPullRequest, CreatePROptions, PRListOptions, GitHubPRFile,
 } from './types.js';
 export type { GitHubAdapter } from './adapter.js';
 export { RealGitHubAdapter, createRealGitHubAdapter, mapRequestError } from './real-adapter.js';
@@ -27,8 +28,9 @@ export { renderAccepted, renderStatusUpdate, renderBlocked, renderDone } from '.
 export {
   renderSyncAccepted, renderSyncPhaseUpdate, renderSyncTestReport,
   renderSyncBlocked, renderSyncFailed, renderSyncDone, syncMarker, truncateComment,
+  renderEvidenceSection, renderLlmMetadataSection,
 } from './sync-templates.js';
 export { GitHubStatusSyncService } from './sync-service.js';
-export type { GitHubStatusSyncInput, GitHubStatusSyncResult } from './sync-service.js';
+export type { GitHubStatusSyncInput, GitHubStatusSyncResult, EvidenceItem, SafeLlmRunMetadata } from './sync-service.js';
 export { getLabelsForPhase, LABEL_LIFECYCLE } from './label-lifecycle.js';
 export type { PhaseLabels } from './label-lifecycle.js';

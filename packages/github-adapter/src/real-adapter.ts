@@ -10,6 +10,7 @@ import type {
   GitHubIssueRef, GitHubIssueSummary, GitHubIssueComment,
   GitHubCommentResult, GitHubRepositorySummary,
   GitHubIssueClaimResult, ClaimOptions,
+  GitHubPullRequest, CreatePROptions, PRListOptions, GitHubPRFile,
 } from './types.js';
 import { renderAccepted } from './templates.js';
 import {
@@ -226,6 +227,94 @@ export class RealGitHubAdapter implements GitHubAdapter {
   }
 
   getClient(): Octokit { return this.octokit; }
+
+  // --- Pull Request Methods (Issue #17) ---
+
+  async createPullRequest(options: CreatePROptions): Promise<GitHubPullRequest> {
+    try {
+      // Idempotenz: Prüfe ob bereits ein offener PR für diesen Head-Branch existiert
+      const existing = await this.octokit.rest.pulls.list({
+        owner: options.owner, repo: options.repo,
+        state: 'open', head: `${options.owner}:${options.head}`,
+      });
+
+      if (existing.data.length > 0) {
+        const pr = existing.data[0];
+        return {
+          id: pr.id, number: pr.number,
+          title: pr.title, body: pr.body ?? null,
+          state: pr.state as 'open' | 'closed',
+          head: { ref: pr.head.ref, sha: pr.head.sha },
+          base: { ref: pr.base.ref, sha: pr.base.sha },
+          htmlUrl: pr.html_url, createdAt: pr.created_at,
+          updatedAt: pr.updated_at, draft: pr.draft ?? false,
+        };
+      }
+    } catch (err) {
+      if (err instanceof RequestError) throw mapRequestError(err);
+      throw err;
+    }
+
+    // Kein existierender PR → erstellen
+    try {
+      const created = await this.octokit.rest.pulls.create({
+        owner: options.owner, repo: options.repo,
+        title: options.title, head: options.head, base: options.base,
+        body: options.body, draft: options.draft,
+      });
+
+      return {
+        id: created.data.id, number: created.data.number,
+        title: created.data.title, body: created.data.body ?? null,
+        state: created.data.state as 'open' | 'closed',
+        head: { ref: created.data.head.ref, sha: created.data.head.sha },
+        base: { ref: created.data.base.ref, sha: created.data.base.sha },
+        htmlUrl: created.data.html_url, createdAt: created.data.created_at,
+        updatedAt: created.data.updated_at, draft: created.data.draft ?? false,
+      };
+    } catch (err) {
+      if (err instanceof RequestError) throw mapRequestError(err);
+      throw err;
+    }
+  }
+
+  async listPullRequests(options: PRListOptions): Promise<GitHubPullRequest[]> {
+    try {
+      const result = await this.octokit.rest.pulls.list({
+        owner: options.owner, repo: options.repo,
+        state: options.state ?? 'open', head: options.head,
+      });
+
+      return result.data.map(pr => ({
+        id: pr.id, number: pr.number,
+        title: pr.title, body: pr.body ?? null,
+        state: pr.state as 'open' | 'closed',
+        head: { ref: pr.head.ref, sha: pr.head.sha },
+        base: { ref: pr.base.ref, sha: pr.base.sha },
+        htmlUrl: pr.html_url, createdAt: pr.created_at,
+        updatedAt: pr.updated_at, draft: pr.draft ?? false,
+      }));
+    } catch (err) {
+      if (err instanceof RequestError) throw mapRequestError(err);
+      throw err;
+    }
+  }
+
+  async listPullRequestFiles(owner: string, repo: string, prNumber: number): Promise<GitHubPRFile[]> {
+    try {
+      const result = await this.octokit.rest.pulls.listFiles({ owner, repo, pull_number: prNumber });
+
+      return result.data.map(f => ({
+        sha: f.sha, filename: f.filename,
+        status: f.status as GitHubPRFile['status'],
+        additions: f.additions, deletions: f.deletions, changes: f.changes,
+        patch: f.patch, previousFilename: f.previous_filename,
+      }));
+    } catch (err) {
+      if (err instanceof RequestError) throw mapRequestError(err);
+      throw err;
+    }
+  }
 }
 
 /** Factory: Erstellt RealGitHubAdapter oder wirft Error wenn Token fehlt */

@@ -4,6 +4,7 @@ import type {
   GitHubIssueRef, GitHubIssueSummary, GitHubIssueComment,
   GitHubCommentResult, GitHubRepositorySummary,
   GitHubIssueClaimResult, ClaimOptions,
+  GitHubPullRequest, CreatePROptions, PRListOptions, GitHubPRFile,
 } from './types.js';
 import type { GitHubAdapter } from './adapter.js';
 
@@ -12,7 +13,9 @@ export class FakeGitHubAdapter implements GitHubAdapter {
   private issues = new Map<string, GitHubIssueSummary>();
   private comments = new Map<string, GitHubIssueComment[]>();
   private labels = new Map<string, string[]>();
+  private pullRequests = new Map<string, GitHubPullRequest[]>();
   private nextCommentId = 1;
+  private nextPRId = 1;
 
   addRepo(repo: GitHubRepositorySummary): void {
     this.repos.set(`${repo.owner}/${repo.name}`, repo);
@@ -105,5 +108,53 @@ export class FakeGitHubAdapter implements GitHubAdapter {
     const { id } = await this.createIssueComment(ref, options.commentBody);
 
     return { status: 'claimed', issue, commentId: id };
+  }
+
+  // --- Pull Request Methods (Issue #17) ---
+
+  async createPullRequest(options: CreatePROptions): Promise<GitHubPullRequest> {
+    // Idempotenz: existierenden PR zurückgeben
+    const key = `${options.owner}/${options.repo}`;
+    const existing = (this.pullRequests.get(key) ?? [])
+      .filter(pr => pr.head.ref === options.head && pr.state === 'open');
+
+    if (existing.length > 0) return existing[0];
+
+    const pr: GitHubPullRequest = {
+      id: this.nextPRId, number: this.nextPRId,
+      title: options.title, body: options.body ?? null,
+      state: 'open', draft: options.draft ?? false,
+      head: { ref: options.head, sha: 'fake-sha-head' },
+      base: { ref: options.base, sha: 'fake-sha-base' },
+      htmlUrl: `https://github.com/${options.owner}/${options.repo}/pull/${this.nextPRId}`,
+      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+    };
+    this.nextPRId++;
+
+    const prs = this.pullRequests.get(key) ?? [];
+    prs.push(pr);
+    this.pullRequests.set(key, prs);
+
+    return pr;
+  }
+
+  async listPullRequests(options: PRListOptions): Promise<GitHubPullRequest[]> {
+    const key = `${options.owner}/${options.repo}`;
+    let prs = this.pullRequests.get(key) ?? [];
+
+    if (options.state && options.state !== 'all') {
+      prs = prs.filter(pr => pr.state === options.state);
+    }
+    if (options.head) {
+      prs = prs.filter(pr => pr.head.ref === options.head);
+    }
+    return prs;
+  }
+
+  async listPullRequestFiles(_owner: string, _repo: string, _prNumber: number): Promise<GitHubPRFile[]> {
+    return [
+      { sha: 'fake-sha', filename: 'src/index.ts', status: 'modified', additions: 10, deletions: 3, changes: 13 },
+      { sha: 'fake-sha2', filename: 'test/index.test.ts', status: 'added', additions: 42, deletions: 0, changes: 42 },
+    ];
   }
 }

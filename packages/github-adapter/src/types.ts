@@ -53,3 +53,47 @@ export interface ClaimOptions {
   readyLabel?: string;
   commentBody: string;
 }
+
+// --- Pull Request Types (Issue #17) ---
+
+export interface GitHubPullRequest {
+  id: number;
+  number: number;
+  title: string;
+  body: string | null;
+  state: 'open' | 'closed' | 'merged';
+  head: { ref: string; sha: string };
+  base: { ref: string; sha: string };
+  htmlUrl: string;
+  createdAt: string;
+  updatedAt: string;
+  draft: boolean;
+}
+
+export interface GitHubPRFile {
+  sha: string | null;
+  filename: string;
+  status: 'added' | 'modified' | 'removed' | 'renamed' | 'changed';
+  additions: number;
+  deletions: number;
+  changes: number;
+  patch?: string;
+  previousFilename?: string;
+}
+
+export interface CreatePROptions {
+  owner: string;
+  repo: string;
+  title: string;
+  head: string;
+  base: string;
+  body?: string;
+  draft?: boolean;
+}
+
+export interface PRListOptions {
+  owner: string;
+  repo: string;
+  head?: string;
+  state?: 'open' | 'closed' | 'all';
+}

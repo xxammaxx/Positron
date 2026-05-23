@@ -4,6 +4,7 @@ import type {
   GitHubIssueRef, GitHubIssueSummary, GitHubIssueComment,
   GitHubCommentResult, GitHubRepositorySummary,
   GitHubIssueClaimResult, ClaimOptions,
+  GitHubPullRequest, CreatePROptions, PRListOptions, GitHubPRFile,
 } from './types.js';
 
 export interface GitHubAdapter {
@@ -26,4 +27,15 @@ export interface GitHubAdapter {
   removeIssueLabel(ref: GitHubIssueRef, label: string): Promise<void>;
 
   claimIssue(ref: GitHubIssueRef, options: ClaimOptions): Promise<GitHubIssueClaimResult>;
+
+  // --- Pull Request Methods (Issue #17) ---
+
+  /** Erstellt einen Pull Request. Idempotent: prüft zuerst ob bereits ein offener PR existiert. */
+  createPullRequest(options: CreatePROptions): Promise<GitHubPullRequest>;
+
+  /** Listet Pull Requests mit optionalem Head-Filter (für Idempotenz-Prüfung). */
+  listPullRequests(options: PRListOptions): Promise<GitHubPullRequest[]>;
+
+  /** Listet die geänderten Dateien eines Pull Requests. */
+  listPullRequestFiles(owner: string, repo: string, prNumber: number): Promise<GitHubPRFile[]>;
 }
