@@ -199,51 +199,99 @@ async function executePhase(
       break;
     case 'SPECIFY': {
       const wsPath = current.branch ? `/tmp/positron-ws-${current.id.slice(0, 8)}` : '/tmp';
+      const realSpeckit = process.env.POSITRON_ENABLE_REAL_SPECKIT === 'true';
+
+      if (realSpeckit) {
+        try {
+          // Step 1: specify init (safe-cli mode, only once)
+          const initResult = await speckit.initialize({
+            runId: current.id, workspacePath: wsPath,
+            issueTitle: `Issue #${current.issueNumber}`, issueNumber: current.issueNumber,
+            mode: 'safe-cli', aiAgent: 'opencode',
+          });
+          if (initResult.status === 'success') {
+            storeEvent({ id: createRunId(), runId: current.id, phase: 'SPECIFY', level: 'INFO', message: `Spec Kit initialized: ${initResult.summary}`, payload: null, createdAt: new Date().toISOString() });
+
+            // Step 2: opencode run --command speckit.specify
+            const specResult = await opencode.runSlashCommand('speckit.specify', {
+              runId: current.id, workspacePath: wsPath,
+              issueTitle: `Issue #${current.issueNumber}`, issueNumber: current.issueNumber,
+              mode: 'safe-cli',
+            });
+            result = transition(current, 'PLAN', `Real Spec Kit: ${specResult.summary}`, specResult.status === 'success' ? 'INFO' : 'WARN');
+            break;
+          }
+        } catch (err) {
+          storeEvent({ id: createRunId(), runId: current.id, phase: 'SPECIFY', level: 'WARN', message: `Real Spec Kit error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
+        }
+      }
+
+      // Fallback: artifact-only detection
       const input = { runId: current.id, workspacePath: wsPath, issueTitle: `Issue #${current.issueNumber}`, issueNumber: current.issueNumber, mode: 'artifact-only' as const };
       try {
         const sr = await speckit.runSpecify(input);
-        if (sr.status === 'blocked') {
-          storeEvent({ id: createRunId(), runId: current.id, phase: 'SPECIFY', level: 'WARN', message: `Specify blocked: ${sr.blockedReason ?? 'agent slash command required'}`, payload: { result: sr }, createdAt: new Date().toISOString() });
-          // Trotzdem weitermachen — Spec ist optional via Artefakt-Detection
-          result = transition(current, 'PLAN', sr.summary, 'INFO');
-        } else {
-          result = transition(current, 'PLAN', sr.summary, sr.status === 'success' ? 'INFO' : 'WARN');
-        }
+        result = transition(current, 'PLAN', sr.summary, sr.status === 'success' ? 'INFO' : 'WARN');
       } catch (err) {
         storeEvent({ id: createRunId(), runId: current.id, phase: 'SPECIFY', level: 'WARN', message: `Specify error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
-        runSpecify(); // Legacy stub als Fallback
+        runSpecify();
         result = transition(current, 'PLAN', 'Spec generated (legacy stub fallback)', 'INFO');
       }
       break;
     }
     case 'PLAN': {
       const wsPath = current.branch ? `/tmp/positron-ws-${current.id.slice(0, 8)}` : '/tmp';
+      const realSpeckit = process.env.POSITRON_ENABLE_REAL_SPECKIT === 'true';
+
+      if (realSpeckit) {
+        try {
+          const planResult = await opencode.runSlashCommand('speckit.plan', {
+            runId: current.id, workspacePath: wsPath,
+            issueTitle: `Issue #${current.issueNumber}`, issueNumber: current.issueNumber,
+            mode: 'safe-cli',
+          });
+          result = transition(current, 'TASKS', `Real Spec Kit: ${planResult.summary}`, planResult.status === 'success' ? 'INFO' : 'WARN');
+          break;
+        } catch (err) {
+          storeEvent({ id: createRunId(), runId: current.id, phase: 'PLAN', level: 'WARN', message: `Real Spec Kit error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
+        }
+      }
+
       const input = { runId: current.id, workspacePath: wsPath, issueTitle: `Issue #${current.issueNumber}`, issueNumber: current.issueNumber, mode: 'artifact-only' as const };
       try {
         const pr = await speckit.runPlan(input);
-        if (pr.status === 'blocked') {
-          storeEvent({ id: createRunId(), runId: current.id, phase: 'PLAN', level: 'WARN', message: `Plan blocked: ${pr.blockedReason ?? 'agent slash command required'}`, payload: { result: pr }, createdAt: new Date().toISOString() });
-        }
         result = transition(current, 'TASKS', pr.summary, pr.status === 'success' ? 'INFO' : 'WARN');
       } catch (err) {
         storeEvent({ id: createRunId(), runId: current.id, phase: 'PLAN', level: 'WARN', message: `Plan error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
-        runPlan(); // Legacy stub als Fallback
+        runPlan();
         result = transition(current, 'TASKS', 'Plan generated (legacy stub fallback)', 'INFO');
       }
       break;
     }
     case 'TASKS': {
       const wsPath = current.branch ? `/tmp/positron-ws-${current.id.slice(0, 8)}` : '/tmp';
+      const realSpeckit = process.env.POSITRON_ENABLE_REAL_SPECKIT === 'true';
+
+      if (realSpeckit) {
+        try {
+          const tasksResult = await opencode.runSlashCommand('speckit.tasks', {
+            runId: current.id, workspacePath: wsPath,
+            issueTitle: `Issue #${current.issueNumber}`, issueNumber: current.issueNumber,
+            mode: 'safe-cli',
+          });
+          result = transition(current, 'ANALYZE', `Real Spec Kit: ${tasksResult.summary}`, tasksResult.status === 'success' ? 'INFO' : 'WARN');
+          break;
+        } catch (err) {
+          storeEvent({ id: createRunId(), runId: current.id, phase: 'TASKS', level: 'WARN', message: `Real Spec Kit error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
+        }
+      }
+
       const input = { runId: current.id, workspacePath: wsPath, issueTitle: `Issue #${current.issueNumber}`, issueNumber: current.issueNumber, mode: 'artifact-only' as const };
       try {
         const tr = await speckit.runTasks(input);
-        if (tr.status === 'blocked') {
-          storeEvent({ id: createRunId(), runId: current.id, phase: 'TASKS', level: 'WARN', message: `Tasks blocked: ${tr.blockedReason ?? 'agent slash command required'}`, payload: { result: tr }, createdAt: new Date().toISOString() });
-        }
         result = transition(current, 'ANALYZE', tr.summary, tr.status === 'success' ? 'INFO' : 'WARN');
       } catch (err) {
         storeEvent({ id: createRunId(), runId: current.id, phase: 'TASKS', level: 'WARN', message: `Tasks error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
-        runTasks(); // Legacy stub als Fallback
+        runTasks();
         result = transition(current, 'ANALYZE', 'Tasks generated (legacy stub fallback)', 'INFO');
       }
       break;
