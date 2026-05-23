@@ -20,7 +20,8 @@
     "typecheck": "tsc -b --pretty false",
     "test": "vitest run",
     "test:watch": "vitest",
-    "clean": "tsc -b --clean"
+    "clean": "tsc -b --clean",
+    "coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "typescript": "^5.8.0",

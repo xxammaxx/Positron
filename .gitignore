@@ -26,3 +26,4 @@ Thumbs.db
 positron.db
 positron.db-wal
 positron.db-shm
+coverage/
