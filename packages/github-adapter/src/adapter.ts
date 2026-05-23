@@ -5,6 +5,7 @@ import type {
   GitHubCommentResult, GitHubRepositorySummary,
   GitHubIssueClaimResult, ClaimOptions,
   GitHubPullRequest, CreatePROptions, PRListOptions, GitHubPRFile,
+  MergePROptions, MergePRResult,
 } from './types.js';
 
 export interface GitHubAdapter {
@@ -38,4 +39,12 @@ export interface GitHubAdapter {
 
   /** Listet die geänderten Dateien eines Pull Requests. */
   listPullRequestFiles(owner: string, repo: string, prNumber: number): Promise<GitHubPRFile[]>;
+
+  // --- Merge Methods (Issue #20) ---
+
+  /** Holt einen einzelnen Pull Request (für Status-Prüfung). */
+  getPullRequest(owner: string, repo: string, prNumber: number): Promise<GitHubPullRequest>;
+
+  /** Merged einen Pull Request. Prüft mergeable state vorher. */
+  mergePullRequest(options: MergePROptions): Promise<MergePRResult>;
 }

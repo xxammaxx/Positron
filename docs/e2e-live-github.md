@@ -1,54 +1,49 @@
 # E2E Live GitHub Validation
 
 ## Purpose
-
-This document describes Positron's live E2E test mode that validates the complete
-Issue-to-Run cycle against a real GitHub test repository. Live tests ensure that
-all MVP components work together correctly with the real GitHub API.
+Validate the end-to-end Issue-to-Run flow against a real GitHub test repository without turning live GitHub access into a default behavior.
 
 ## What This Validates
+- Repository metadata reads
+- Issue reads
+- Issue comment reads
+- Label reads and label transitions
+- Issue claiming through GitHub comments and labels
+- Workspace preparation from a configured repository
+- Test command detection
+- Test command execution
+- Test report comment writing
+- Final status comment writing
+- Comment deduplication by HTML marker
+- Unicode preservation in comment text
+- ASCII-only machine markers
+- Secret redaction before posting comments
 
-The live E2E test validates the following chain end-to-end:
-
-```
-Real GitHub Test Repo
-  → Real Issue with positron:ready
-  → Positron detects Issue (getIssue)
-  → Positron claims Issue (syncRunAccepted)
-  → positron:running label set, positron:ready removed
-  → Accepted comment written with marker
-  → Local workspace created (clone repo)
-  → Branch positron/issue-<n>-<slug> created
-  → Tests detected from package.json
-  → Tests executed
-  → TestReport generated
-  → TestReport comment written with marker
-  → Done/Failed/Blocked comment written
-  → Labels reflect final state
-  → Deduplication prevents duplicate comments
-  → German umlauts preserved in comment text
-  → ASCII-only machine-readable markers
-  → Secret redaction applied to comment bodies
-```
-
-## What This Does NOT Validate
-
-- Pull Request creation (Issue #14+)
-- Git commit / push
-- Real LLM calls (stubs only in MVP)
-- Auto-fix / auto-repair
+## What This Does Not Validate
+- Pull request creation
+- Git commit or push
+- OpenCode real adapter
+- Spec Kit real adapter
+- Auto-fix or auto-repair
 - Auto-merge
 - Webhooks
-- Comment updates (PATCH) — MVP uses create-only with dedup
-- Spec Kit real adapter
-- OpenCode real adapter
-- Pagination for >100 comments (dedup scans first page only)
+- Comment PATCH / update
+- Pagination beyond 100 comments
+- Retry systems for GitHub sync
+- Automatic test repository creation
 
 ## Required Test Repository
+- Use one dedicated repository only.
+- The repository must already exist before the test runs.
+- The repository should contain at minimum:
+  - `package.json`
+  - `README.md`
+  - a `test` script that exits `0`
+  - optionally a `build` script
+- The issue to be exercised must be open and labeled `positron:ready`.
+- Suggested issue title: `Positron Live E2E Fixture – Größe prüfen`
 
-The test repository must be a dedicated repository used exclusively for live E2E testing.
-
-### Minimal Test Repository Structure
+Example fixture `package.json`:
 
 ```json
 {
@@ -61,25 +56,17 @@ The test repository must be a dedicated repository used exclusively for live E2E
 }
 ```
 
-### Required Issue State
-
-The test issue must:
-- Be open
-- Have `positron:ready` label
-- Have a clear title, e.g., "Positron Live E2E Fixture – Größe prüfen"
-- NOT have `positron:running` label initially
-
 ## Required Environment Variables
 
-### Read-Only Mode
+### Read-only mode
 ```bash
 export POSITRON_ENABLE_LIVE_GITHUB_TESTS=true
 export GITHUB_TOKEN=github_pat_...
-export POSITRON_TEST_OWNER=xxammaxx
-export POSITRON_TEST_REPO=positron-live-e2e-fixture
+export POSITRON_TEST_OWNER=<owner>
+export POSITRON_TEST_REPO=<repo>
 ```
 
-### Write Mode (additionally required)
+### Write mode
 ```bash
 export POSITRON_LIVE_TEST_ALLOW_WRITE=true
 export POSITRON_TEST_ISSUE_NUMBER=1
@@ -87,216 +74,143 @@ export POSITRON_TEST_ISSUE_NUMBER=1
 
 ### Optional
 ```bash
-export POSITRON_LIVE_TEST_ALLOW_CREATE_ISSUE=true   # Allow creating test issues
-export POSITRON_LIVE_TEST_ALLOW_CLEANUP=true         # Reset labels after test
+export POSITRON_LIVE_TEST_ALLOW_CREATE_ISSUE=true
+export POSITRON_LIVE_TEST_ALLOW_CLEANUP=true
 ```
 
-## Read-Only Mode
+## Repository Owner/Repo Configuration
+- The orchestrator reads `POSITRON_REPO_OWNER` and `POSITRON_REPO_NAME` from configuration instead of hardcoding an owner string.
+- `POSITRON_REPO_DEFAULT_BRANCH` and `POSITRON_REPO_REMOTE_URL` are optional overrides.
+- Owner and repo are validated before use:
+  - no slashes
+  - no path traversal
+  - no URL values
+  - only GitHub-safe identifier characters
+- Live E2E uses the same ownership model:
+  - `POSITRON_TEST_OWNER`
+  - `POSITRON_TEST_REPO`
+  - `POSITRON_TEST_ISSUE_NUMBER`
 
-When `POSITRON_ENABLE_LIVE_GITHUB_TESTS=true` is set but `POSITRON_LIVE_TEST_ALLOW_WRITE` is NOT:
+## Read-only Mode
+When live tests are enabled but `POSITRON_LIVE_TEST_ALLOW_WRITE` is not set:
+- The repository is read
+- The issue is read
+- Comments are listed
+- Labels are listed
+- No comments are created
+- No labels are changed
 
-- Repository metadata is read
-- Issue details are read
-- Issue comments are read
-- Labels are read
-- **No comments are written**
-- **No labels are changed**
-
-This is a safe smoke test that verifies connectivity and authentication.
+This mode should skip cleanly when the repo, issue, or token gates are missing.
 
 ## Write Mode
-
-When `POSITRON_LIVE_TEST_ALLOW_WRITE=true` is additionally set:
-
-1. **Issue claiming**: `syncRunAccepted` writes accepted comment, sets `positron:running`, removes `positron:ready`
-2. **Workspace**: RealGitWorkspaceAdapter clones the test repo, creates branch
-3. **Test detection**: TestCommandDetector reads package.json scripts
-4. **Test execution**: TestRunner executes detected commands
-5. **Status sync**: TestReport, Done/Failed/Blocked comments written
-6. **Deduplication**: Second run with same runId produces zero new comments
-7. **Verification**: Labels, comments, markers verified
+When `POSITRON_LIVE_TEST_ALLOW_WRITE=true` is present:
+1. Read the issue
+2. Confirm the issue is the explicit target
+3. Confirm `positron:ready`
+4. Generate a live run ID
+5. Claim the issue
+6. Verify `positron:running` and removal of `positron:ready`
+7. Prepare the workspace
+8. Detect test commands
+9. Run the detected commands
+10. Write the test report comment
+11. Write the final done / failed / blocked comment
+12. Re-run the same sync path and verify deduplication
+13. Verify Unicode, ASCII markers, and redaction in the written comment bodies
 
 ## Safety Gates
-
 | Gate | Purpose | Default |
-|------|---------|---------|
+|---|---|---|
 | `POSITRON_ENABLE_LIVE_GITHUB_TESTS` | Master enable switch | disabled |
 | `POSITRON_LIVE_TEST_ALLOW_WRITE` | Prevent accidental writes | disabled |
-| `POSITRON_TEST_OWNER` | Limit to specific repository | none |
-| `POSITRON_TEST_REPO` | Limit to specific repository | none |
-| `POSITRON_TEST_ISSUE_NUMBER` | Limit to specific issue | none |
-| `POSITRON_LIVE_TEST_ALLOW_CREATE_ISSUE` | Prevent issue creation | disabled |
-| `POSITRON_LIVE_TEST_ALLOW_CLEANUP` | Prevent label reset | disabled |
-
-**Default behavior**: All live tests SKIP — never fail. The normal test suite
-must remain green with zero live test dependencies.
+| `POSITRON_TEST_OWNER` | Target repository owner | none |
+| `POSITRON_TEST_REPO` | Target repository name | none |
+| `POSITRON_TEST_ISSUE_NUMBER` | Explicit issue target | none |
+| `POSITRON_LIVE_TEST_ALLOW_CREATE_ISSUE` | Reserve auto-creation for a later issue | disabled |
+| `POSITRON_LIVE_TEST_ALLOW_CLEANUP` | Reserve cleanup behavior for a later issue | disabled |
 
 ## Expected Labels
-
-During a write E2E run, the following label transitions occur on the test issue:
-
 | Phase | Labels Added | Labels Removed |
-|-------|-------------|----------------|
-| Initial | `positron:ready` | — |
-| CLAIMED | `positron:running` | `positron:ready` |
-| TEST | `positron:testing` | — |
-| DONE (pass) | `positron:done` | `positron:running`, `positron:testing` |
-| FAILED | `positron:blocked` | `positron:running`, `positron:testing` |
-| BLOCKED | `positron:blocked` | `positron:running`, `positron:testing` |
+|---|---|---|
+| CLAIMED | `positron:running` | `positron:ready`, `positron:done`, `positron:blocked`, `positron:failed` |
+| REPO_SYNC | `positron:repo-sync` | `positron:testing`, `positron:done`, `positron:failed` |
+| TEST | `positron:testing` | `positron:repo-sync`, `positron:failed` |
+| DONE | `positron:done` | `positron:running`, `positron:repo-sync`, `positron:research`, `positron:testing`, `positron:blocked`, `positron:failed` |
+| FAILED | `positron:failed` | `positron:running`, `positron:repo-sync`, `positron:research`, `positron:testing`, `positron:done`, `positron:blocked` |
+| BLOCKED | `positron:blocked` | `positron:running`, `positron:repo-sync`, `positron:research`, `positron:testing`, `positron:done`, `positron:failed` |
 
 ## Expected Comments
+Live GitHub comments should carry both:
+- the normal Positron sync marker: `<!-- positron:run=<runId>;phase=<phase>;kind=<kind> -->`
+- the live harness marker: `<!-- positron:live-e2e=true -->`
 
-Comments written during a write E2E run include HTML marker comments for deduplication:
-
-```html
-<!-- positron:run=<runId>;phase=<phase>;kind=<kind> -->
-<!-- positron:live-e2e=true;run=<runId> -->
-```
-
-Comment kinds:
-- `accepted` — Run accepted, workspace preparation starting
-- `phase-update` — Phase transition (optional, not always in E2E)
-- `test-report` — Test execution results table
-- `done` — Run completed successfully
-- `failed` — Run failed
-- `blocked` — Run blocked
+Recommended kinds:
+- `accepted`
+- `phase-update`
+- `test-report`
+- `done`
+- `failed`
+- `blocked`
 
 ## Deduplication Behavior
-
-The `GitHubStatusSyncService` checks existing comments for marker matches before
-writing. A second sync call with the same `runId + phase + kind` will be detected
-as a duplicate and skipped:
-
-```
-Sync 1 with runId=X, phase=CLAIMED, kind=accepted → comment created
-Sync 2 with runId=X, phase=CLAIMED, kind=accepted → SKIPPED (duplicate)
-Sync 3 with runId=Y, phase=CLAIMED, kind=accepted → comment created (new runId)
-```
+- Deduplication is marker-based, not prose-based.
+- If a second write uses the same `runId`, `phase`, and `kind`, the sync service should skip the duplicate comment.
+- A different `runId` must create a new comment.
 
 ## Unicode Validation
-
-- **Preserved**: German umlauts in comment text bodies (titles, summaries, messages)
-- **ASCII-only**: Machine-readable markers (`<!-- positron:... -->`), branch names, workspace paths
-- **Validation**: `isAsciiOnly()` verifies all markers are pure ASCII
+- Comment prose may contain German umlauts and other non-ASCII characters.
+- Machine markers must remain ASCII-only.
+- Branch names must remain ASCII-safe even if the issue title contains umlauts.
 
 ## Secret Redaction Validation
-
-All comment bodies pass through `redactSecrets()` from `@positron/shared` before
-posting to GitHub. This redacts:
-- GitHub tokens (`ghp_*`, `github_pat_*`)
-- OpenAI keys (`sk-*`)
-- Anthropic keys (`anthropic_*`)
-- Gemini keys (`gemini_*`)
-- Bearer tokens
-- Generic `api_key=value` patterns
-
-**The E2E test uses FAKE keys for redaction verification — never real tokens.**
+- Comments are passed through `redactSecrets()` before posting.
+- Live E2E uses fake secrets only.
+- The comment body must not contain the fake secret after sync.
 
 ## Cleanup Policy
-
-### Standard (no cleanup flag)
-- Comments remain on the test issue as evidence
-- Labels remain in final state
-
-### With `POSITRON_LIVE_TEST_ALLOW_CLEANUP=true`
-- Labels are reset to `positron:ready` (removing `positron:done`/`positron:blocked`/`positron:running`)
-- Comments are NOT deleted (GitHub retains comment history)
-
-### Never Allowed
-- Issue closing
-- Issue deletion
-- Comment deletion
-- Branch pushing
-- Repository modification
+- Comments remain as evidence.
+- Labels are part of the evidence trail and are not deleted by default.
+- `POSITRON_LIVE_TEST_ALLOW_CLEANUP=true` is reserved for explicit cleanup follow-up and is not part of the default path.
 
 ## How to Run
 
-### Normal Test Suite (always safe)
+### Normal test suite
 ```bash
 npm test
-# Live E2E tests are skipped — no GitHub access needed
-# Expected: 27+ passed, 1 skipped (live E2E)
 ```
+Live E2E tests should skip cleanly when the live flags are missing.
 
-### Read-Only Live Test
+### Live read-only smoke test
 ```bash
 POSITRON_ENABLE_LIVE_GITHUB_TESTS=true \
 GITHUB_TOKEN=github_pat_... \
-POSITRON_TEST_OWNER=xxammaxx \
-POSITRON_TEST_REPO=positron-live-e2e-fixture \
-npm test -- --runInBand
+POSITRON_TEST_OWNER=<owner> \
+POSITRON_TEST_REPO=<repo> \
+npx vitest run apps/server/src/__tests__/live-github-e2e.test.ts
 ```
 
-### Write Live Test
-```bash
-POSITRON_ENABLE_LIVE_GITHUB_TESTS=true \
-POSITRON_LIVE_TEST_ALLOW_WRITE=true \
-GITHUB_TOKEN=github_pat_... \
-POSITRON_TEST_OWNER=xxammaxx \
-POSITRON_TEST_REPO=positron-live-e2e-fixture \
-POSITRON_TEST_ISSUE_NUMBER=1 \
-npm test -- --runInBand
-```
-
-### With Cleanup
+### Live write test
 ```bash
 POSITRON_ENABLE_LIVE_GITHUB_TESTS=true \
 POSITRON_LIVE_TEST_ALLOW_WRITE=true \
-POSITRON_LIVE_TEST_ALLOW_CLEANUP=true \
 GITHUB_TOKEN=github_pat_... \
-POSITRON_TEST_OWNER=xxammaxx \
-POSITRON_TEST_REPO=positron-live-e2e-fixture \
+POSITRON_TEST_OWNER=<owner> \
+POSITRON_TEST_REPO=<repo> \
 POSITRON_TEST_ISSUE_NUMBER=1 \
-npm test -- --runInBand
+npx vitest run apps/server/src/__tests__/live-github-e2e.test.ts
 ```
-
-**Important**: Always use `--runInBand` for live tests to avoid parallel runs
-that could interfere with each other.
 
 ## Troubleshooting
-
-### Tests skip with "ENABLE_LIVE_GITHUB_TESTS is not set"
-→ Set `POSITRON_ENABLE_LIVE_GITHUB_TESTS=true`
-
-### Tests skip with "GITHUB_TOKEN is not set"
-→ Set `GITHUB_TOKEN=...` (fine-grained PAT with Issues R/W + Metadata R)
-
-### Tests skip with "OWNER and REPO must both be set"
-→ Set `POSITRON_TEST_OWNER` and `POSITRON_TEST_REPO`
-
-### Tests skip with "ALLOW_WRITE is not set"
-→ Set `POSITRON_LIVE_TEST_ALLOW_WRITE=true` for write operations
-
-### Tests skip with "ISSUE_NUMBER must be set"
-→ Set `POSITRON_TEST_ISSUE_NUMBER=<n>` for write operations
-
-### Rate limit errors (403)
-→ Wait for rate limit reset (check `x-ratelimit-reset` header)
-→ The E2E test uses ~8-12 API calls per run; well within limits
-
-### Build errors about @positron/shared
-→ Run `npm run build` first to compile all packages
-
-### Workspace clone fails
-→ Ensure the test repository is public or the token has Contents Read permission
-→ Ensure git is installed and configured
+- If tests skip, check that `POSITRON_ENABLE_LIVE_GITHUB_TESTS=true` is set.
+- If read-only tests skip, check `GITHUB_TOKEN`, `POSITRON_TEST_OWNER`, and `POSITRON_TEST_REPO`.
+- If write tests skip, check `POSITRON_LIVE_TEST_ALLOW_WRITE=true` and `POSITRON_TEST_ISSUE_NUMBER`.
+- If GitHub returns rate-limit errors, re-run later and avoid parallel mutating requests.
+- If the repository or issue is wrong, fix the config and rerun rather than retrying against the wrong target.
 
 ## Known Limitations
-
-1. **No comment updates**: MVP uses create-only with dedup; duplicate markers are skipped
-2. **~25k comment limit**: Large test reports are truncated
-3. **No pagination in dedup**: Only first 100 comments are scanned
-4. **No retry for GitHub sync**: Sync failures in orchestrator path are fire-and-forget
-5. **RealGitHubAdapter vs interface**: Recently fixed — now properly implements GitHubAdapter
-6. **No automatic cleanup**: Labels must be reset manually or with `ALLOW_CLEANUP=true`
-7. **Single test issue**: Only one issue number can be configured per test run
-8. **Sequential execution required**: Live tests must run with `--runInBand`
-
-## Next Steps After Validation
-
-After Issue #13 is validated:
-- **Issue #14**: Spec Kit Real Adapter
-- **Issue #15**: OpenCode Real Adapter  
-- **Issue #16**: Real LLM Calls
-- **Issue #17**: PR Creation
-- **Issue #18**: Code Coverage Tracking
+- This issue does not create the test repository automatically.
+- This issue does not create pull requests.
+- This issue does not commit or push code.
+- This issue does not implement comment PATCH/updates.
+- Pagination beyond 100 comments is not covered.
+- Retry logic for GitHub sync is still intentionally minimal.

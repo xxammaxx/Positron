@@ -97,3 +97,18 @@ export interface PRListOptions {
   head?: string;
   state?: 'open' | 'closed' | 'all';
 }
+
+export interface MergePROptions {
+  owner: string;
+  repo: string;
+  prNumber: number;
+  strategy?: 'merge' | 'squash' | 'rebase';
+  commitTitle?: string;
+  commitMessage?: string;
+}
+
+export interface MergePRResult {
+  merged: boolean;
+  sha?: string;
+  message?: string;
+}

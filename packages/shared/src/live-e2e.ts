@@ -1,5 +1,7 @@
 // Positron — Live E2E Test Configuration (Issue #13)
 
+import { isValidOwner, isValidRepo } from './repository-config.js';
+
 /**
  * Configuration for live GitHub E2E tests.
  * All fields default to safe (disabled) values.
@@ -29,16 +31,17 @@ export interface LiveGitHubE2EConfig {
  * explicitly enabled via environment flags.
  */
 export function loadLiveGitHubE2EConfig(env: Record<string, string | undefined> = process.env): LiveGitHubE2EConfig {
+  const owner = trimEnv(env['POSITRON_TEST_OWNER']) ?? '';
+  const repo = trimEnv(env['POSITRON_TEST_REPO']) ?? '';
+
   return {
     enabled: env['POSITRON_ENABLE_LIVE_GITHUB_TESTS'] === 'true',
     allowWrite: env['POSITRON_LIVE_TEST_ALLOW_WRITE'] === 'true',
     allowCreateIssue: env['POSITRON_LIVE_TEST_ALLOW_CREATE_ISSUE'] === 'true',
-    owner: env['POSITRON_TEST_OWNER'] ?? '',
-    repo: env['POSITRON_TEST_REPO'] ?? '',
-    issueNumber: env['POSITRON_TEST_ISSUE_NUMBER']
-      ? parseInt(env['POSITRON_TEST_ISSUE_NUMBER'], 10)
-      : undefined,
-    tokenPresent: typeof env['GITHUB_TOKEN'] === 'string' && env['GITHUB_TOKEN'].length > 0,
+    owner,
+    repo,
+    issueNumber: parsePositiveInteger(env['POSITRON_TEST_ISSUE_NUMBER']),
+    tokenPresent: Boolean(trimEnv(env['GITHUB_TOKEN'])),
     allowCleanup: env['POSITRON_LIVE_TEST_ALLOW_CLEANUP'] === 'true',
   };
 }
@@ -58,6 +61,9 @@ export function shouldSkipLiveGitHubE2E(config: LiveGitHubE2EConfig): string | n
   }
   if (!config.owner || !config.repo) {
     return 'POSITRON_TEST_OWNER and POSITRON_TEST_REPO must both be set';
+  }
+  if (!isValidOwner(config.owner) || !isValidRepo(config.repo)) {
+    return 'POSITRON_TEST_OWNER and POSITRON_TEST_REPO must be valid GitHub owner/repo values';
   }
   return null;
 }
@@ -87,8 +93,7 @@ export function shouldSkipLiveGitHubWriteE2E(config: LiveGitHubE2EConfig): strin
  * The random component uses lowercase alphanumeric characters.
  * Guaranteed ASCII-only, safe for HTML comment markers.
  */
-export function generateLiveRunId(): string {
-  const now = new Date();
+export function generateLiveRunId(now: Date = new Date()): string {
   const datePart = now.toISOString().slice(0, 10).replace(/-/g, '');
   const randomPart = Math.random().toString(36).slice(2, 8);
   return `live-e2e-${datePart}-${randomPart}`;
@@ -100,7 +105,8 @@ export function generateLiveRunId(): string {
  * Guaranteed ASCII-only for reliable machine parsing.
  */
 export function liveE2EMarker(runId: string): string {
-  return `<!-- positron:live-e2e=true;run=${runId} -->`;
+  void runId;
+  return '<!-- positron:live-e2e=true -->';
 }
 
 /**
@@ -115,8 +121,10 @@ export function isAsciiOnly(value: string): boolean {
  * Captures the outcome of a live test run for reporting.
  */
 export interface LiveGitHubE2EResult {
-  status: 'passed' | 'failed' | 'skipped';
+  status: 'passed' | 'failed' | 'skipped' | 'blocked';
   runId: string;
+  owner?: string;
+  repo?: string;
   issueNumber?: number;
   commentsWritten: number;
   labelsAdded: string[];
@@ -124,4 +132,17 @@ export interface LiveGitHubE2EResult {
   workspacePrepared: boolean;
   testReportStatus?: 'PASS' | 'FAIL' | 'BLOCKED';
   reason?: string;
+}
+
+function trimEnv(value: string | undefined): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function parsePositiveInteger(value: string | undefined): number | undefined {
+  const trimmed = trimEnv(value);
+  if (!trimmed) return undefined;
+  const parsed = Number.parseInt(trimmed, 10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
 }

@@ -5,7 +5,7 @@ export type Phase =
   | 'QUEUED' | 'CLAIMED' | 'REPO_SYNC' | 'ISSUE_CONTEXT'
   | 'WEB_RESEARCH' | 'SPECIFY' | 'CLARIFY_OPTIONAL'
   | 'PLAN' | 'TASKS' | 'ANALYZE' | 'REVIEW' | 'IMPLEMENT'
-  | 'TEST' | 'VERIFY' | 'COMMIT' | 'PR_CREATE' | 'DONE'
+  | 'TEST' | 'VERIFY' | 'COMMIT' | 'PR_CREATE' | 'MERGE' | 'DONE'
   | 'FAILED_TRANSIENT' | 'FAILED_BLOCKED' | 'FAILED_UNSAFE';
 
 /** Terminale Phasen (keine weiteren Übergänge) */
@@ -28,12 +28,12 @@ export type PositronLabel =
   | 'positron:ready' | 'positron:running' | 'positron:research'
   | 'positron:repo-sync' | 'positron:planning' | 'positron:implementing'
   | 'positron:testing' | 'positron:blocked'
-  | 'positron:failed' | 'positron:pr-created' | 'positron:done';
+  | 'positron:failed'   | 'positron:pr-created' | 'positron:merged' | 'positron:done';
 
 export const ALL_PHASES: readonly Phase[] = [
   'QUEUED', 'CLAIMED', 'REPO_SYNC', 'ISSUE_CONTEXT',
   'WEB_RESEARCH', 'SPECIFY', 'CLARIFY_OPTIONAL',
   'PLAN', 'TASKS', 'ANALYZE', 'REVIEW', 'IMPLEMENT',
-  'TEST', 'VERIFY', 'COMMIT', 'PR_CREATE', 'DONE',
+  'TEST', 'VERIFY', 'COMMIT', 'PR_CREATE', 'MERGE', 'DONE',
   'FAILED_TRANSIENT', 'FAILED_BLOCKED', 'FAILED_UNSAFE',
 ] as const;

@@ -7,7 +7,7 @@ import type { EvidenceItem, SafeLlmRunMetadata } from './sync-types.js';
 import { redactSecrets } from '@positron/shared';
 import {
   renderSyncAccepted, renderSyncPhaseUpdate, renderSyncTestReport,
-  renderSyncBlocked, renderSyncFailed, renderSyncDone, renderSyncPrCreated,
+  renderSyncBlocked, renderSyncFailed, renderSyncDone, renderSyncPrCreated, renderSyncMerged,
   syncMarker, truncateComment,
 } from './sync-templates.js';
 import { getLabelsForPhase } from './label-lifecycle.js';
@@ -174,6 +174,17 @@ export class GitHubStatusSyncService {
       );
       const { commentId, commentUrl, skipped } = await this.syncComment(input, comment);
       const labels = await this.syncLabels(this.ref(input), 'PR_CREATED');
+      return { status: skipped ? 'skipped' : 'synced', labelsAdded: labels.added, labelsRemoved: labels.removed, commentId, commentUrl };
+    } catch (err) {
+      return { status: 'failed', labelsAdded: [], labelsRemoved: [], reason: redactSecrets(String(err)) };
+    }
+  }
+
+  async syncMerged(input: GitHubStatusSyncInput): Promise<GitHubStatusSyncResult> {
+    try {
+      const comment = renderSyncMerged(input.runId, input.prNumber, input.prUrl, input.branchName);
+      const { commentId, commentUrl, skipped } = await this.syncComment(input, comment);
+      const labels = await this.syncLabels(this.ref(input), 'MERGED');
       return { status: skipped ? 'skipped' : 'synced', labelsAdded: labels.added, labelsRemoved: labels.removed, commentId, commentUrl };
     } catch (err) {
       return { status: 'failed', labelsAdded: [], labelsRemoved: [], reason: redactSecrets(String(err)) };

@@ -12,6 +12,7 @@ export type {
   GitHubCommentResult, GitHubRepositorySummary,
   GitHubIssueClaimResult, ClaimOptions,
   GitHubPullRequest, CreatePROptions, PRListOptions, GitHubPRFile,
+  MergePROptions, MergePRResult,
 } from './types.js';
 export type { GitHubAdapter } from './adapter.js';
 export { RealGitHubAdapter, createRealGitHubAdapter, mapRequestError } from './real-adapter.js';

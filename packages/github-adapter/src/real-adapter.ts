@@ -11,6 +11,7 @@ import type {
   GitHubCommentResult, GitHubRepositorySummary,
   GitHubIssueClaimResult, ClaimOptions,
   GitHubPullRequest, CreatePROptions, PRListOptions, GitHubPRFile,
+  MergePROptions, MergePRResult,
 } from './types.js';
 import { renderAccepted } from './templates.js';
 import {
@@ -313,6 +314,48 @@ export class RealGitHubAdapter implements GitHubAdapter {
     } catch (err) {
       if (err instanceof RequestError) throw mapRequestError(err);
       throw err;
+    }
+  }
+
+  // --- Merge Methods (Issue #20) ---
+
+  async getPullRequest(owner: string, repo: string, prNumber: number): Promise<GitHubPullRequest> {
+    try {
+      const { data: pr } = await this.octokit.rest.pulls.get({ owner, repo, pull_number: prNumber });
+      return {
+        id: pr.id, number: pr.number,
+        title: pr.title, body: pr.body ?? null,
+        state: pr.state as 'open' | 'closed' | 'merged',
+        head: { ref: pr.head.ref, sha: pr.head.sha },
+        base: { ref: pr.base.ref, sha: pr.base.sha },
+        htmlUrl: pr.html_url, createdAt: pr.created_at,
+        updatedAt: pr.updated_at, draft: pr.draft ?? false,
+      };
+    } catch (err) {
+      if (err instanceof RequestError) throw mapRequestError(err);
+      throw err;
+    }
+  }
+
+  async mergePullRequest(options: MergePROptions): Promise<MergePRResult> {
+    try {
+      const { data } = await this.octokit.rest.pulls.merge({
+        owner: options.owner, repo: options.repo,
+        pull_number: options.prNumber,
+        merge_method: options.strategy ?? 'squash',
+        commit_title: options.commitTitle,
+        commit_message: options.commitMessage,
+      });
+      return { merged: data.merged, sha: data.sha, message: data.message };
+    } catch (err: any) {
+      if (err instanceof RequestError) {
+        // 405 = not mergeable (conflicts, checks not passed)
+        if (err.status === 405) {
+          return { merged: false, message: err.message };
+        }
+        throw mapRequestError(err);
+      }
+      return { merged: false, message: err?.message ?? String(err) };
     }
   }
 }

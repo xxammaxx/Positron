@@ -204,3 +204,20 @@ export function renderSyncPrCreated(
 
   return header.join('\n');
 }
+
+/** Renderer für Merge-Kommentar (Issue #20) */
+export function renderSyncMerged(
+  runId: string, prNumber?: number, prUrl?: string, mergeSha?: string,
+): string {
+  return [
+    syncMarker(runId, 'MERGED', 'merged'),
+    '',
+    '## Pull Request Merged',
+    '',
+    prUrl && prNumber ? `**Pull Request:** [#${prNumber}](${prUrl})` : '',
+    mergeSha ? `**Merge SHA:** \`${mergeSha.slice(0, 7)}\`` : '',
+    '',
+    '---',
+    '',
+  ].filter(Boolean).join('\n');
+}

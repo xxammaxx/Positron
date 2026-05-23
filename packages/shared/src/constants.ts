@@ -4,8 +4,9 @@ import type { PositronLabel } from './types.js';
 
 export const POSITRON_LABELS: readonly PositronLabel[] = [
   'positron:ready', 'positron:running', 'positron:research',
-  'positron:planning', 'positron:implementing', 'positron:testing',
-  'positron:blocked', 'positron:pr-created', 'positron:done',
+  'positron:repo-sync', 'positron:planning', 'positron:implementing',
+  'positron:testing', 'positron:blocked',
+  'positron:failed', 'positron:pr-created', 'positron:merged', 'positron:done',
 ] as const;
 
 export const POSITRON_LABEL_PREFIX = 'positron:';

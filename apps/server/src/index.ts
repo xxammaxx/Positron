@@ -373,7 +373,6 @@ async function executePhase(
           body,
         });
 
-        // Sync PR-Erstellung via StatusSyncService
         if (syncService) {
           const syncInput: GitHubStatusSyncInput = {
             runId: current.id, owner: repository.owner, repo: repository.repo,
@@ -385,7 +384,7 @@ async function executePhase(
           await safeSync(syncService, () => syncService.syncPrCreated(syncInput), current.id, 'PR_CREATE');
         }
 
-        result = transition(current, 'DONE', `PR #${pr.number} created: ${pr.htmlUrl}`, 'INFO');
+        result = transition(current, 'MERGE', `PR #${pr.number} created: ${pr.htmlUrl}`, 'INFO');
       } catch (err) {
         storeEvent({
           id: createRunId(), runId: current.id, phase: 'PR_CREATE',
@@ -394,6 +393,64 @@ async function executePhase(
           payload: null, createdAt: new Date().toISOString(),
         });
         result = markFailed(current, 'FAILED_BLOCKED', `PR creation failed: ${String(err).slice(0, 100)}`);
+      }
+      break;
+    }
+    case 'MERGE': {
+      const mergeAllowed = process.env.POSITRON_ENABLE_MERGE === 'true';
+
+      if (!mergeAllowed) {
+        result = transition(current, 'DONE', 'Merge skipped (POSITRON_ENABLE_MERGE not set)', 'INFO');
+        break;
+      }
+
+      // Find the PR that was created for this run (from store or scan)
+      // For now, if we have a branch, try to find and merge the PR
+      const branch = current.branch;
+      if (!branch) {
+        result = transition(current, 'DONE', 'Merge skipped (no branch)', 'INFO');
+        break;
+      }
+
+      try {
+        const prs = await github.listPullRequests({
+          owner: repository.owner, repo: repository.repo,
+          head: `${repository.owner}:${branch}`, state: 'open',
+        });
+
+        if (prs.length === 0) {
+          result = transition(current, 'DONE', 'Merge skipped (no open PR found)', 'INFO');
+          break;
+        }
+
+        const pr = prs[0];
+        const mergeResult = await github.mergePullRequest({
+          owner: repository.owner, repo: repository.repo,
+          prNumber: pr.number, strategy: 'squash',
+          commitTitle: `Positron: Issue #${current.issueNumber} — Automated changes`,
+          commitMessage: `Run: ${current.id.slice(0, 8)}`,
+        });
+
+        if (mergeResult.merged) {
+          if (syncService) {
+            const syncInput: GitHubStatusSyncInput = {
+              runId: current.id, owner: repository.owner, repo: repository.repo,
+              issueNumber: current.issueNumber, phase: 'MERGE', status: 'success',
+              branchName: mergeResult.sha, prNumber: pr.number, prUrl: pr.htmlUrl,
+            };
+            await safeSync(syncService, () => syncService.syncMerged(syncInput), current.id, 'MERGE');
+          }
+          result = transition(current, 'DONE', `PR #${pr.number} merged: ${mergeResult.sha?.slice(0, 7)}`, 'INFO');
+        } else {
+          result = transition(current, 'DONE', `PR #${pr.number} not mergeable: ${mergeResult.message ?? 'unknown'}`, 'WARN');
+        }
+      } catch (err) {
+        storeEvent({
+          id: createRunId(), runId: current.id, phase: 'MERGE',
+          level: 'WARN', message: `Merge failed: ${String(err).slice(0, 200)}`,
+          payload: null, createdAt: new Date().toISOString(),
+        });
+        result = transition(current, 'DONE', `Merge failed: ${String(err).slice(0, 100)}`, 'WARN');
       }
       break;
     }

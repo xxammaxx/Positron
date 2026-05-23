@@ -43,6 +43,10 @@ export const LABEL_LIFECYCLE: Record<string, PhaseLabels> = {
     add: ['positron:pr-created'],
     remove: ['positron:running', 'positron:repo-sync', 'positron:research', 'positron:testing', 'positron:blocked', 'positron:failed'],
   },
+  MERGED: {
+    add: ['positron:merged'],
+    remove: ['positron:pr-created', 'positron:running', 'positron:done', 'positron:blocked', 'positron:failed'],
+  },
 };
 
 /** Berechnet Labels für eine Phase */

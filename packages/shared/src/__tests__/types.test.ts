@@ -2,8 +2,8 @@ import { describe, expect, test } from 'vitest';
 import { ALL_PHASES, POSITRON_LABELS, POSITRON_VERSION, MAX_FIX_LOOPS, MAX_DIFF_SIZE, POLLING_INTERVAL_MS, BRANCH_PREFIX, MAX_BRANCH_SLUG_LENGTH } from '../index.js';
 
 describe('types', () => {
-  test('ALL_PHASES enthält 20 Phasen', () => {
-    expect(ALL_PHASES.length).toBe(20);
+  test('ALL_PHASES enthält 21 Phasen', () => {
+    expect(ALL_PHASES.length).toBe(21);
     expect(ALL_PHASES).toContain('QUEUED');
     expect(ALL_PHASES).toContain('DONE');
     expect(ALL_PHASES).toContain('FAILED_UNSAFE');
@@ -15,8 +15,8 @@ describe('types', () => {
 });
 
 describe('constants', () => {
-  test('POSITRON_LABELS sind 11 (ready, running, research, repo-sync, planning, implementing, testing, blocked, failed, pr-created, done)', () => {
-    expect(POSITRON_LABELS.length).toBe(11);
+  test('POSITRON_LABELS sind 12 (ready, running, research, repo-sync, planning, implementing, testing, blocked, failed, pr-created, merged, done)', () => {
+    expect(POSITRON_LABELS.length).toBe(12);
   });
 
   test('POSITRON_LABELS enthält positron:ready', () => {

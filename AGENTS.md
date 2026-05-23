@@ -55,3 +55,13 @@ docs(issue-<n>): <Beschreibung>
 - `npm test` in jedem Package
 - `npx vitest run` für Unit/Integration
 - `npx playwright test` für E2E
+
+## MCP Usage Gate
+
+Before implementation work, inspect the active OpenCode MCP configuration and document which MCP servers are available, connected, failed, or intentionally unused.
+
+Prefer the smallest sufficient MCP set for the task.
+
+Write-capable MCP tools require explicit task relevance and must be documented before use.
+
+Secrets must never be written into repository files, issue comments, logs, or generated documentation.

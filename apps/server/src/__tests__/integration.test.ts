@@ -4,12 +4,13 @@ import type http from 'node:http';
 
 let server: http.Server;
 let baseUrl: string;
+const repository = { owner: 'test-owner', repo: 'test-repo' };
 
 beforeAll(async () => {
-  server = createServer();
-  await new Promise<void>((resolve) => server.listen(0, () => resolve()));
+  server = createServer({ repository });
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', () => resolve()));
   const addr = server.address() as { port: number };
-  baseUrl = `http://localhost:${addr.port}`;
+  baseUrl = `http://127.0.0.1:${addr.port}`;
 });
 
 afterAll(() => {
@@ -32,9 +33,10 @@ describe('POST /api/repos/:repoId/runs', () => {
   test('vollständiger Run durchläuft alle Phasen bis DONE', async () => {
     const res = await post('/api/repos/repo-1/runs', { issueNumber: 42, autonomyLevel: 2 });
     expect(res.status).toBe(200);
-    const body = await res.json() as { run: { phase: string; status: string; attempt: number }; events: Array<{ phase: string }>; eventCount: number };
+    const body = await res.json() as { run: { phase: string; status: string; attempt: number; repoId: string }; events: Array<{ phase: string }>; eventCount: number };
     expect(body.run.phase).toBe('DONE');
     expect(body.run.status).toBe('done');
+    expect(body.run.repoId).toBe('test-repo');
     expect(body.eventCount).toBeGreaterThanOrEqual(14);
   });
 

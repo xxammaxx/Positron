@@ -171,6 +171,16 @@ describe('shouldSkipLiveGitHubE2E', () => {
     };
     expect(shouldSkipLiveGitHubE2E(config)).toBeNull();
   });
+
+  it('returns reason when owner/repo are invalid', () => {
+    const config: LiveGitHubE2EConfig = {
+      enabled: true, allowWrite: false, allowCreateIssue: false,
+      owner: '../evil', repo: 'repo', tokenPresent: true, allowCleanup: false,
+    };
+    const reason = shouldSkipLiveGitHubE2E(config);
+    expect(reason).toBeTruthy();
+    expect(reason).toContain('valid GitHub owner/repo values');
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -238,12 +248,12 @@ describe('shouldSkipLiveGitHubWriteE2E', () => {
 
 describe('generateLiveRunId', () => {
   it('generates a string with correct prefix', () => {
-    const id = generateLiveRunId();
+    const id = generateLiveRunId(new Date('2026-05-21T00:00:00.000Z'));
     expect(id).toMatch(/^live-e2e-\d{8}-[a-z0-9]{6}$/);
   });
 
   it('is ASCII-only', () => {
-    const id = generateLiveRunId();
+    const id = generateLiveRunId(new Date('2026-05-21T00:00:00.000Z'));
     expect(isAsciiOnly(id)).toBe(true);
   });
 
@@ -264,7 +274,7 @@ describe('generateLiveRunId', () => {
 describe('liveE2EMarker', () => {
   it('generates correct marker format', () => {
     const marker = liveE2EMarker('live-e2e-20260520-abc123');
-    expect(marker).toBe('<!-- positron:live-e2e=true;run=live-e2e-20260520-abc123 -->');
+    expect(marker).toBe('<!-- positron:live-e2e=true -->');
   });
 
   it('is ASCII-only', () => {
@@ -272,11 +282,9 @@ describe('liveE2EMarker', () => {
     expect(isAsciiOnly(marker)).toBe(true);
   });
 
-  it('throws if runId contains non-ASCII', () => {
-    // ASCII-only assertion — marker generation doesn't validate,
-    // but markers must be ASCII. Document the contract.
+  it('is ASCII-only even if runId contains non-ASCII', () => {
     const marker = liveE2EMarker('test-ümlaut');
-    expect(isAsciiOnly(marker)).toBe(false);
+    expect(isAsciiOnly(marker)).toBe(true);
   });
 });
 

@@ -5,6 +5,7 @@ import type {
   GitHubCommentResult, GitHubRepositorySummary,
   GitHubIssueClaimResult, ClaimOptions,
   GitHubPullRequest, CreatePROptions, PRListOptions, GitHubPRFile,
+  MergePROptions, MergePRResult,
 } from './types.js';
 import type { GitHubAdapter } from './adapter.js';
 
@@ -156,5 +157,25 @@ export class FakeGitHubAdapter implements GitHubAdapter {
       { sha: 'fake-sha', filename: 'src/index.ts', status: 'modified', additions: 10, deletions: 3, changes: 13 },
       { sha: 'fake-sha2', filename: 'test/index.test.ts', status: 'added', additions: 42, deletions: 0, changes: 42 },
     ];
+  }
+
+  // --- Merge Methods (Issue #20) ---
+
+  async getPullRequest(owner: string, repo: string, prNumber: number): Promise<GitHubPullRequest> {
+    const key = `${owner}/${repo}`;
+    const prs = this.pullRequests.get(key) ?? [];
+    const pr = prs.find(p => p.number === prNumber);
+    if (!pr) throw new Error(`PR #${prNumber} not found`);
+    return pr;
+  }
+
+  async mergePullRequest(options: MergePROptions): Promise<MergePRResult> {
+    const key = `${options.owner}/${options.repo}`;
+    const prs = this.pullRequests.get(key) ?? [];
+    const pr = prs.find(p => p.number === options.prNumber);
+    if (!pr) return { merged: false, message: 'PR not found' };
+    if (pr.state !== 'open') return { merged: false, message: `PR is ${pr.state}` };
+    pr.state = 'merged' as any;
+    return { merged: true, sha: 'fake-merge-sha' };
   }
 }
