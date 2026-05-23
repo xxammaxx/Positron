@@ -158,4 +158,27 @@ export class RealGitWorkspaceAdapter implements GitWorkspaceAdapter {
       throw new Error(`Not a git repository: ${workspacePath}`);
     }
   }
+
+  // --- Push/Commit Methods (Issue #19) ---
+
+  async commit(workspacePath: string, message: string): Promise<{ sha: string }> {
+    await this.validateWorkspacePath(workspacePath);
+    await runCommand('git', ['add', '-A'], workspacePath);
+    await runCommand('git', ['commit', '-m', message], workspacePath, { timeoutMs: 30_000 });
+    const sha = await this.getHeadSha(workspacePath);
+    return { sha };
+  }
+
+  async push(options: import('./adapter.js').PushOptions): Promise<{ pushed: boolean; ref: string }> {
+    const { workspacePath, branch, remote, force } = options;
+    await this.validateWorkspacePath(workspacePath);
+
+    if (force) {
+      throw new Error('Force push is blocked by Positron policy');
+    }
+
+    const r = remote ?? 'origin';
+    await runCommand('git', ['push', r, branch], workspacePath, { timeoutMs: 120_000 });
+    return { pushed: true, ref: `refs/heads/${branch}` };
+  }
 }

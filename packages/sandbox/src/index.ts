@@ -41,3 +41,10 @@ export {
   ALLOWED_SLASH_COMMANDS,
   validateOpenCodeCommand, OpenCodeCommandPolicyError,
 } from './opencode-policy.js';
+
+// Commit & Push Policy (Issue #19)
+export {
+  ALLOWED_BRANCH_PATTERN, PROTECTED_BRANCHES, BLOCKED_PUSH_FLAGS,
+  guardBranch, generateCommitMessage, evaluatePushPolicy, isValidPositronBranch,
+} from './commit-policy.js';
+export type { CommitContext, BranchGuardResult, PushPolicyResult } from './commit-policy.js';

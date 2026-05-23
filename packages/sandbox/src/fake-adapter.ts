@@ -81,6 +81,22 @@ export class FakeGitWorkspaceAdapter implements GitWorkspaceAdapter {
     validatePath(workspacePath);
   }
 
+  // --- Push/Commit Methods (Issue #19) ---
+
+  private commits = new Map<string, { sha: string; message: string }>();
+
+  async commit(workspacePath: string, message: string): Promise<{ sha: string }> {
+    const sha = `fake-commit-${Date.now().toString(16)}`;
+    this.commits.set(workspacePath, { sha, message });
+    this.shas.set(workspacePath, sha);
+    return { sha };
+  }
+
+  async push(options: import('./adapter.js').PushOptions): Promise<{ pushed: boolean; ref: string }> {
+    if (options.force) throw new Error('Force push blocked');
+    return { pushed: true, ref: `refs/heads/${options.branch}` };
+  }
+
   // Test-Hilfsmethoden
   setDirty(workspacePath: string, file: string): void {
     this.statuses.set(workspacePath, {

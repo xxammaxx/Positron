@@ -318,8 +318,47 @@ async function executePhase(
       break;
     case 'VERIFY':
       current.branch = current.branch ?? generateBranchName(current.issueNumber, `run-${current.id.slice(0, 8)}`);
-      result = transition(current, 'PR_CREATE', 'Verified, PR ready');
+      result = transition(current, 'COMMIT', 'Verified, commit ready');
       break;
+    case 'COMMIT': {
+      const branch = current.branch ?? generateBranchName(current.issueNumber, `run-${current.id.slice(0, 8)}`);
+      const pushAllowed = process.env.POSITRON_ENABLE_PUSH === 'true';
+
+      // Commit Message generieren
+      const commitMsg = `feat(issue-${current.issueNumber}): Positron automated changes [Run: ${current.id.slice(0, 8)}]`;
+
+      try {
+        // Diff vor Commit erfassen
+        let diffSummary = '';
+        try {
+          const diff = await workspace.getDiff('/tmp/positron-ws-' + current.id.slice(0, 8));
+          diffSummary = `${diff.filesChanged} files, +${diff.insertions ?? 0}/-${diff.deletions ?? 0}`;
+        } catch { /* diff optional */ }
+
+        // Commit
+        const commitResult = await workspace.commit('/tmp/positron-ws-' + current.id.slice(0, 8), commitMsg);
+
+        // Push nur mit Allow-Flag
+        let pushResult = '';
+        if (pushAllowed) {
+          await workspace.push({ workspacePath: '/tmp/positron-ws-' + current.id.slice(0, 8), branch });
+          pushResult = ', pushed';
+        } else {
+          pushResult = ', push skipped (POSITRON_ENABLE_PUSH not set)';
+        }
+
+        const summary = `Committed: ${commitResult.sha.slice(0, 7)}${pushResult}${diffSummary ? ' (' + diffSummary + ')' : ''}`;
+        result = transition(current, 'PR_CREATE', summary, 'INFO');
+      } catch (err) {
+        storeEvent({
+          id: createRunId(), runId: current.id, phase: 'COMMIT',
+          level: 'ERROR', message: `Commit/Push failed: ${String(err).slice(0, 200)}`,
+          payload: null, createdAt: new Date().toISOString(),
+        });
+        result = transition(current, 'PR_CREATE', `Commit skipped: ${String(err).slice(0, 100)}`, 'WARN');
+      }
+      break;
+    }
     case 'PR_CREATE': {
       const branch = current.branch ?? generateBranchName(current.issueNumber, `run-${current.id.slice(0, 8)}`);
       const evidence = buildEvidence(current);

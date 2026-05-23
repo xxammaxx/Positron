@@ -45,6 +45,29 @@ export interface GitDiffSummary {
   deletions?: number;
 }
 
+// ---- Push/Commit Types (Issue #19) ----
+
+export interface CommitOptions {
+  workspacePath: string;
+  message: string;
+  author?: string;
+}
+
+export interface PushOptions {
+  workspacePath: string;
+  branch: string;
+  remote?: string;
+  force?: boolean;
+}
+
+export interface CommitPushResult {
+  committed: boolean;
+  pushed: boolean;
+  headSha?: string;
+  branch: string;
+  diff?: GitDiffSummary;
+}
+
 export interface GitWorkspaceAdapter {
   prepareWorkspace(input: PrepareWorkspaceInput): Promise<PreparedWorkspace>;
   getStatus(workspacePath: string): Promise<GitStatusSummary>;
@@ -52,4 +75,12 @@ export interface GitWorkspaceAdapter {
   getCurrentBranch(workspacePath: string): Promise<string>;
   getHeadSha(workspacePath: string): Promise<string>;
   validateWorkspacePath(workspacePath: string): Promise<void>;
+
+  // --- Push/Commit Methods (Issue #19) ---
+
+  /** Stage alle Änderungen und committe mit der gegebenen Message */
+  commit(workspacePath: string, message: string): Promise<{ sha: string }>;
+
+  /** Push den Branch zum Remote (default: origin). Blockiert force und main/master. */
+  push(options: PushOptions): Promise<{ pushed: boolean; ref: string }>;
 }

@@ -2,8 +2,8 @@ import { describe, expect, test } from 'vitest';
 import { ALL_PHASES, POSITRON_LABELS, POSITRON_VERSION, MAX_FIX_LOOPS, MAX_DIFF_SIZE, POLLING_INTERVAL_MS, BRANCH_PREFIX, MAX_BRANCH_SLUG_LENGTH } from '../index.js';
 
 describe('types', () => {
-  test('ALL_PHASES enthält 19 Phasen', () => {
-    expect(ALL_PHASES.length).toBe(19);
+  test('ALL_PHASES enthält 20 Phasen', () => {
+    expect(ALL_PHASES.length).toBe(20);
     expect(ALL_PHASES).toContain('QUEUED');
     expect(ALL_PHASES).toContain('DONE');
     expect(ALL_PHASES).toContain('FAILED_UNSAFE');
@@ -15,7 +15,33 @@ describe('types', () => {
 });
 
 describe('constants', () => {
-  test('POSITRON_LABELS sind 9', () => { expect(POSITRON_LABELS.length).toBe(9); });
+  test('POSITRON_LABELS sind 11 (ready, running, research, repo-sync, planning, implementing, testing, blocked, failed, pr-created, done)', () => {
+    expect(POSITRON_LABELS.length).toBe(11);
+  });
+
+  test('POSITRON_LABELS enthält positron:ready', () => {
+    expect(POSITRON_LABELS).toContain('positron:ready');
+  });
+
+  test('POSITRON_LABELS enthält positron:failed', () => {
+    expect(POSITRON_LABELS).toContain('positron:failed');
+  });
+
+  test('POSITRON_LABELS enthält positron:repo-sync', () => {
+    expect(POSITRON_LABELS).toContain('positron:repo-sync');
+  });
+
+  test('POSITRON_LABELS enthält positron:blocked', () => {
+    expect(POSITRON_LABELS).toContain('positron:blocked');
+  });
+
+  test('POSITRON_LABELS enthält positron:done', () => {
+    expect(POSITRON_LABELS).toContain('positron:done');
+  });
+
+  test('POSITRON_LABELS ohne Duplikate', () => {
+    expect(new Set(POSITRON_LABELS).size).toBe(POSITRON_LABELS.length);
+  });
   test('MAX_FIX_LOOPS = 3', () => { expect(MAX_FIX_LOOPS).toBe(3); });
   test('MAX_DIFF_SIZE = 400', () => { expect(MAX_DIFF_SIZE).toBe(400); });
   test('POLLING_INTERVAL_MS = 60_000', () => { expect(POLLING_INTERVAL_MS).toBe(60_000); });
