@@ -7,7 +7,7 @@ import { runSpecify, runPlan, runTasks } from '@positron/speckit-adapter';
 import { RealSpecKitAdapter, FakeSpecKitAdapter } from '@positron/speckit-adapter';
 import { executeTasks } from '@positron/opencode-adapter';
 import { RealOpenCodeAdapter, FakeOpenCodeAdapter } from '@positron/opencode-adapter';
-import { generateBranchName, createRunId, loadRepositoryConfig, normalizeRepositoryConfig, buildRemoteUrl } from '@positron/shared';
+import { generateBranchName, createRunId, loadRepositoryConfig, normalizeRepositoryConfig, buildRemoteUrl, MAX_FIX_LOOPS } from '@positron/shared';
 import type { Phase, RunStatus } from '@positron/shared';
 import type { RepositoryConfig, SpecKitAdapter, OpenCodeAdapter } from '@positron/shared';
 import type { RunState, RunEventData } from '@positron/run-state';
@@ -505,9 +505,30 @@ async function runFullPipeline(
 ): Promise<RunState> {
   let current = run;
   const maxSteps = 20;
+  let attempt = 0;
+  const maxAttempts = MAX_FIX_LOOPS;
+  const fixLoopEnabled = process.env.POSITRON_ENABLE_FIX_LOOP === 'true';
+
   for (let i = 0; i < maxSteps; i++) {
     const next = await executePhase(current, repository, workspace, speckit, opencode, github, syncService);
     if (next.phase === current.phase || next.phase === 'DONE' || next.phase.startsWith('FAILED')) {
+      // --- Fix-Loop (Issue #26) ---
+      // Nur bei transienten Fehlern und wenn Fix-Loop enabled
+      if (fixLoopEnabled && next.phase === 'FAILED_TRANSIENT' && attempt < maxAttempts) {
+        attempt++;
+        storeEvent({
+          id: createRunId(), runId: next.id, phase: 'TEST' as Phase,
+          level: 'WARN',
+          message: `Fix-Loop retry ${attempt}/${maxAttempts} after transient failure`,
+          payload: null, createdAt: new Date().toISOString(),
+        });
+        // Restart from TEST phase with incremented attempt
+        const retryTransition = transition(next, 'TEST', `Fix-Loop retry ${attempt}/${maxAttempts}`, 'WARN');
+        current = retryTransition.run;
+        current.attempt = attempt;
+        continue;
+      }
+
       // Sync terminal state
       if (syncService) {
         const syncInput: GitHubStatusSyncInput = {
