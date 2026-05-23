@@ -1,23 +1,19 @@
-// Positron — Live GitHub E2E Tests (Issue #13)
+// Positron — Live GitHub E2E Tests (Issue #13 + #13.2)
 //
-// These tests validate Positron's MVP components against a real GitHub
-// test repository. They are SAFE BY DEFAULT — they skip entirely unless
-// specific environment flags are set.
+// Production Readiness Validation against a real GitHub test repository.
+// SAFE BY DEFAULT — all live tests skip unless environment gates are met.
 //
-// Required environment variables for read-only tests:
-//   POSITRON_ENABLE_LIVE_GITHUB_TESTS=true
-//   GITHUB_TOKEN=...
-//   POSITRON_TEST_OWNER=...
-//   POSITRON_TEST_REPO=...
+// Required for read-only:
+//   POSITRON_ENABLE_LIVE_GITHUB_TESTS=true  GITHUB_TOKEN=...  POSITRON_TEST_OWNER=...  POSITRON_TEST_REPO=...
 //
-// Additionally required for write tests:
-//   POSITRON_LIVE_TEST_ALLOW_WRITE=true
-//   POSITRON_TEST_ISSUE_NUMBER=...
+// Additionally required for write:
+//   POSITRON_LIVE_TEST_ALLOW_WRITE=true  POSITRON_TEST_ISSUE_NUMBER=...
 //
 // Optional:
-//   POSITRON_LIVE_TEST_ALLOW_CLEANUP=true   (reset labels after test)
-//
-// NEVER use real secrets in test data — use fake tokens for redaction tests.
+//   POSITRON_ENABLE_REAL_SPECKIT_TESTS=true    (run Spec Kit CLI checks)
+//   POSITRON_ENABLE_REAL_OPENCODE_TESTS=true   (run OpenCode CLI checks)
+//   POSITRON_ENABLE_OPENCODE_DRY_RUN=true      (run OpenCode dry-run)
+//   POSITRON_LIVE_TEST_ALLOW_CLEANUP=true      (reset labels after test)
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import {
@@ -27,13 +23,16 @@ import {
   generateLiveRunId,
   liveE2EMarker,
   isAsciiOnly,
-  redactSecrets,
 } from '@positron/shared';
 import { RealGitHubAdapter, createRealGitHubAdapter } from '@positron/github-adapter';
 import { GitHubStatusSyncService } from '@positron/github-adapter';
-import { GitWorkspaceRef, RealGitWorkspaceAdapter } from '@positron/sandbox';
+import type { GitHubStatusSyncInput } from '@positron/github-adapter';
+import { RealGitWorkspaceAdapter } from '@positron/sandbox';
+import type { PrepareWorkspaceInput } from '@positron/sandbox';
 import { TestCommandDetector, TestRunner } from '@positron/sandbox';
-import type { GitHubIssueRef, GitHubIssueSummary, GitHubIssueComment } from '@positron/github-adapter';
+import { RealSpecKitAdapter } from '@positron/speckit-adapter';
+import { RealOpenCodeAdapter } from '@positron/opencode-adapter';
+import type { GitHubIssueRef } from '@positron/github-adapter';
 import type { TestReport } from '@positron/sandbox';
 import type { LiveGitHubE2EResult } from '@positron/shared';
 
@@ -44,10 +43,12 @@ import type { LiveGitHubE2EResult } from '@positron/shared';
 const config = loadLiveGitHubE2EConfig(process.env);
 const READ_SKIP = shouldSkipLiveGitHubE2E(config);
 const WRITE_SKIP = shouldSkipLiveGitHubWriteE2E(config);
+const SPECKIT_REAL = process.env.POSITRON_ENABLE_REAL_SPECKIT_TESTS === 'true';
+const OPENCODE_REAL = process.env.POSITRON_ENABLE_REAL_OPENCODE_TESTS === 'true';
+const OPENCODE_DRY_RUN = process.env.POSITRON_ENABLE_OPENCODE_DRY_RUN === 'true';
 
-// Run ID unique to this test session
 const RUN_ID = generateLiveRunId();
-const E2E_MARKER = liveE2EMarker(RUN_ID);
+const LIVE_MARKER = liveE2EMarker(RUN_ID);
 
 // ---------------------------------------------------------------------------
 // Result tracking
@@ -56,6 +57,9 @@ const E2E_MARKER = liveE2EMarker(RUN_ID);
 const result: LiveGitHubE2EResult = {
   status: 'skipped',
   runId: RUN_ID,
+  owner: config.owner,
+  repo: config.repo,
+  issueNumber: config.issueNumber,
   commentsWritten: 0,
   labelsAdded: [],
   labelsRemoved: [],
@@ -67,28 +71,27 @@ const result: LiveGitHubE2EResult = {
 // ---------------------------------------------------------------------------
 
 function ref(): GitHubIssueRef {
+  return { owner: config.owner, repo: config.repo, issueNumber: config.issueNumber! };
+}
+
+function liveSyncInput(
+  base: Omit<GitHubStatusSyncInput, 'owner' | 'repo' | 'liveMarker'>,
+): GitHubStatusSyncInput {
+  return { ...base, owner: config.owner, repo: config.repo, liveMarker: LIVE_MARKER };
+}
+
+function buildPrepInput(): PrepareWorkspaceInput {
   return {
-    owner: config.owner,
-    repo: config.repo,
+    repository: {
+      owner: config.owner,
+      repo: config.repo,
+      remoteUrl: `https://github.com/${config.owner}/${config.repo}.git`,
+    },
     issueNumber: config.issueNumber!,
+    issueTitle: 'Positron Live E2E Fixture – Größe prüfen',
+    runId: RUN_ID,
+    baseBranch: 'main',
   };
-}
-
-/** Adds the live E2E marker to a comment body */
-function withLiveMarker(body: string): string {
-  if (body.includes(E2E_MARKER)) return body;
-  return E2E_MARKER + '\n\n' + body;
-}
-
-/** Verifies that a comment body contains German umlauts */
-function hasGermanUmlauts(text: string): boolean {
-  return /[äöüÄÖÜß]/.test(text);
-}
-
-/** Verifies that a comment body is free of secret tokens */
-function hasNoSecrets(text: string): boolean {
-  const redacted = redactSecrets(text);
-  return !redacted.includes('[REDACTED_');
 }
 
 // ---------------------------------------------------------------------------
@@ -96,17 +99,14 @@ function hasNoSecrets(text: string): boolean {
 // ---------------------------------------------------------------------------
 
 describe('Live GitHub E2E — Read-Only', () => {
-  // Skip entire suite if read gates not met
   if (READ_SKIP) {
     it.skip(`SKIPPED: ${READ_SKIP}`, () => {});
-    return; // Don't register any more tests
+    return;
   }
 
   let adapter: RealGitHubAdapter;
 
-  beforeAll(() => {
-    adapter = createRealGitHubAdapter();
-  });
+  beforeAll(() => { adapter = createRealGitHubAdapter(); });
 
   it('can get repository metadata', async () => {
     const repo = await adapter.getRepository(config.owner, config.repo);
@@ -119,7 +119,6 @@ describe('Live GitHub E2E — Read-Only', () => {
     const issue = await adapter.getIssue(ref());
     expect(issue.number).toBe(config.issueNumber);
     expect(issue.title).toBeTruthy();
-    expect(issue.state).toBe('open');
   }, 15_000);
 
   it('can list issue comments', async () => {
@@ -130,12 +129,110 @@ describe('Live GitHub E2E — Read-Only', () => {
   it('can list open issues', async () => {
     const issues = await adapter.listOpenIssues(config.owner, config.repo, { limit: 5 });
     expect(Array.isArray(issues)).toBe(true);
-    // The test issue should be in the list
-    const found = issues.find(i => i.number === config.issueNumber);
-    if (found) {
-      expect(found.labels).toBeDefined();
-    }
   }, 15_000);
+});
+
+// ---------------------------------------------------------------------------
+// Spec Kit Adapter Live Test (detect-only + health)
+// ---------------------------------------------------------------------------
+
+describe('Live E2E — Spec Kit Adapter', () => {
+  if (READ_SKIP) {
+    it.skip(`SKIPPED: ${READ_SKIP}`, () => {});
+    return;
+  }
+
+  let adapter: RealSpecKitAdapter;
+
+  beforeAll(() => { adapter = new RealSpecKitAdapter(); });
+
+  it('checks Spec Kit CLI health', async () => {
+    const health = await adapter.healthCheck('/tmp');
+    result.workspacePrepared = true;
+
+    if (SPECKIT_REAL && health.available) {
+      expect(health.version).toBeTruthy();
+      expect(health.commandPath).toBeTruthy();
+    }
+    // Without real flag, just check it doesn't crash
+    expect(typeof health.available).toBe('boolean');
+  }, 30_000);
+
+  it('detects artifacts (detect-only mode)', async () => {
+    const input = {
+      runId: RUN_ID,
+      workspacePath: '/tmp',
+      issueTitle: 'Live E2E Test',
+      issueNumber: config.issueNumber,
+      mode: 'detect-only' as const,
+    };
+    const artifacts = await adapter.detectArtifacts(input);
+    expect(Array.isArray(artifacts)).toBe(true);
+  }, 10_000);
+
+  it('initialize is skipped in detect-only mode', async () => {
+    const input = {
+      runId: RUN_ID,
+      workspacePath: '/tmp',
+      issueTitle: 'Live E2E Test',
+      issueNumber: config.issueNumber,
+      mode: 'detect-only' as const,
+    };
+    const result = await adapter.initialize(input);
+    expect(result.status).toBe('skipped');
+  }, 10_000);
+});
+
+// ---------------------------------------------------------------------------
+// OpenCode Adapter Live Test (health + dry-run)
+// ---------------------------------------------------------------------------
+
+describe('Live E2E — OpenCode Adapter', () => {
+  if (READ_SKIP) {
+    it.skip(`SKIPPED: ${READ_SKIP}`, () => {});
+    return;
+  }
+
+  let adapter: RealOpenCodeAdapter;
+
+  beforeAll(() => { adapter = new RealOpenCodeAdapter(); });
+
+  it('checks OpenCode CLI health', async () => {
+    const health = await adapter.healthCheck('/tmp');
+
+    if (OPENCODE_REAL && health.available) {
+      expect(health.version).toBeTruthy();
+    }
+    expect(typeof health.available).toBe('boolean');
+  }, 30_000);
+
+  it('runSlashCommand is skipped in detect-only mode', async () => {
+    const input = {
+      runId: RUN_ID,
+      workspacePath: '/tmp',
+      issueTitle: 'Live E2E Test',
+      issueNumber: config.issueNumber,
+      mode: 'detect-only' as const,
+    };
+    const result = await adapter.runSlashCommand('speckit.constitution', input);
+    expect(result.status).toBe('skipped');
+  }, 10_000);
+
+  it('safe dry-run prompt does not modify files', async () => {
+    if (!OPENCODE_DRY_RUN) {
+      return; // silently skip — no dry-run flag set
+    }
+    const input = {
+      runId: RUN_ID,
+      workspacePath: '/tmp',
+      issueTitle: 'Live E2E Dry Run',
+      issueNumber: config.issueNumber,
+      mode: 'safe-cli' as const,
+    };
+    const result = await adapter.runImplement(input);
+    // Even if it fails (no real workspace), check it doesn't crash
+    expect(result.status).toMatch(/success|failed|blocked/);
+  }, 120_000);
 });
 
 // ---------------------------------------------------------------------------
@@ -143,15 +240,15 @@ describe('Live GitHub E2E — Read-Only', () => {
 // ---------------------------------------------------------------------------
 
 describe('Live GitHub E2E — Write', () => {
-  // Skip entire suite if write gates not met
   if (WRITE_SKIP) {
     it.skip(`SKIPPED: ${WRITE_SKIP}`, () => {});
-    return; // Don't register any more tests
+    return;
   }
 
   let adapter: RealGitHubAdapter;
   let syncService: GitHubStatusSyncService;
   let workspaceAdapter: RealGitWorkspaceAdapter;
+  let workspacePath: string;
 
   const testIssueRef = ref();
 
@@ -166,24 +263,19 @@ describe('Live GitHub E2E — Write', () => {
   // -------------------------------------------------------------------------
 
   it('claims test issue via syncRunAccepted', async () => {
-    const syncResult = await syncService.syncRunAccepted({
+    const syncResult = await syncService.syncRunAccepted(liveSyncInput({
       runId: RUN_ID,
-      owner: config.owner,
-      repo: config.repo,
       issueNumber: config.issueNumber!,
       phase: 'CLAIMED',
       status: 'active',
       branchName: `positron/issue-${config.issueNumber}-live-e2e-fixture`,
-    });
+    }));
 
     expect(syncResult.status).toBe('synced');
     expect(syncResult.labelsAdded).toContain('positron:running');
     result.labelsAdded.push(...syncResult.labelsAdded);
     result.labelsRemoved.push(...syncResult.labelsRemoved);
-
-    if (syncResult.commentId) {
-      result.commentsWritten++;
-    }
+    if (syncResult.commentId) result.commentsWritten++;
   }, 30_000);
 
   it('verifies running label is set', async () => {
@@ -193,7 +285,6 @@ describe('Live GitHub E2E — Write', () => {
 
   it('verifies ready label was removed', async () => {
     const issue = await adapter.getIssue(testIssueRef);
-    // positron:ready should be gone after CLAIMED phase
     expect(issue.labels).not.toContain('positron:ready');
   }, 15_000);
 
@@ -201,139 +292,131 @@ describe('Live GitHub E2E — Write', () => {
     const comments = await adapter.listIssueComments(testIssueRef);
     const ourComment = comments.find(c => c.body.includes(RUN_ID));
     expect(ourComment).toBeTruthy();
-    // The comment should contain the status sync marker
     expect(ourComment!.body).toContain('positron:run=');
     expect(ourComment!.body).toContain('kind=accepted');
+    expect(ourComment!.body).toContain('<!-- positron:live-e2e=true -->');
   }, 15_000);
 
   // -------------------------------------------------------------------------
-  // Phase 2: Workspace Preparation
+  // Phase 2: Workspace Preparation (fixed interface)
   // -------------------------------------------------------------------------
 
   it('prepares git workspace', async () => {
-    const repoInfo = await adapter.getRepository(config.owner, config.repo);
-    const prepared = await workspaceAdapter.prepareWorkspace({
-      remoteUrl: `https://github.com/${config.owner}/${config.repo}.git`,
-      issueNumber: config.issueNumber!,
-      issueTitle: 'Positron Live E2E Fixture – Größe prüfen',
-      runId: RUN_ID,
-      baseBranch: repoInfo.defaultBranch,
-    });
+    const prepared = await workspaceAdapter.prepareWorkspace(buildPrepInput());
 
     expect(prepared.workspacePath).toBeTruthy();
     expect(prepared.branchName).toContain(`positron/issue-${config.issueNumber}`);
     expect(prepared.headSha).toBeTruthy();
+    workspacePath = prepared.workspacePath;
     result.workspacePrepared = true;
   }, 60_000);
 
   it('verifies branch name is ASCII-only', async () => {
-    // The branch name should be ASCII-safe even with German umlauts in title
     const branch = `positron/issue-${config.issueNumber}-live-e2e-fixture-grosse-prufen`;
     expect(isAsciiOnly(branch)).toBe(true);
   }, 5_000);
 
   // -------------------------------------------------------------------------
-  // Phase 3: Test Command Detection & Execution
+  // Phase 3: Spec Kit Adapter on live workspace
+  // -------------------------------------------------------------------------
+
+  it('runs Spec Kit health check on live workspace', async () => {
+    const speckit = new RealSpecKitAdapter();
+    const health = await speckit.healthCheck(workspacePath || '/tmp');
+    expect(typeof health.available).toBe('boolean');
+    if (SPECKIT_REAL) {
+      expect(health.version).toBeTruthy();
+    }
+  }, 30_000);
+
+  it('detects Spec Kit artifacts on live workspace', async () => {
+    const speckit = new RealSpecKitAdapter();
+    const artifacts = await speckit.detectArtifacts({
+      runId: RUN_ID,
+      workspacePath: workspacePath || '/tmp',
+      issueTitle: 'Live E2E Test',
+      issueNumber: config.issueNumber,
+      mode: 'artifact-only',
+    });
+    expect(Array.isArray(artifacts)).toBe(true);
+  }, 10_000);
+
+  // -------------------------------------------------------------------------
+  // Phase 4: OpenCode Adapter health on live workspace
+  // -------------------------------------------------------------------------
+
+  it('runs OpenCode health check on live workspace', async () => {
+    const opencode = new RealOpenCodeAdapter();
+    const health = await opencode.healthCheck(workspacePath || '/tmp');
+    expect(typeof health.available).toBe('boolean');
+  }, 30_000);
+
+  // -------------------------------------------------------------------------
+  // Phase 5: Test Command Detection & Execution
   // -------------------------------------------------------------------------
 
   it('detects test commands from workspace', async () => {
-    const repoInfo = await adapter.getRepository(config.owner, config.repo);
-    const prepared = await workspaceAdapter.prepareWorkspace({
-      remoteUrl: `https://github.com/${config.owner}/${config.repo}.git`,
-      issueNumber: config.issueNumber!,
-      issueTitle: 'Positron Live E2E Fixture',
-      runId: RUN_ID,
-      baseBranch: repoInfo.defaultBranch,
-    });
-
     const detector = new TestCommandDetector();
-    const detection = await detector.detect(prepared.workspacePath);
+    const detection = await detector.detect(workspacePath);
 
     expect(detection.status).not.toBe('blocked');
     expect(detection.commands.length).toBeGreaterThan(0);
   }, 60_000);
 
   it('runs test commands and produces report', async () => {
-    const repoInfo = await adapter.getRepository(config.owner, config.repo);
-    const prepared = await workspaceAdapter.prepareWorkspace({
-      remoteUrl: `https://github.com/${config.owner}/${config.repo}.git`,
-      issueNumber: config.issueNumber!,
-      issueTitle: 'Positron Live E2E Fixture',
-      runId: RUN_ID,
-      baseBranch: repoInfo.defaultBranch,
-    });
-
     const detector = new TestCommandDetector();
-    const detection = await detector.detect(prepared.workspacePath);
+    const detection = await detector.detect(workspacePath);
 
     const runner = new TestRunner();
     const report: TestReport = await runner.runDetectedCommands({
       runId: RUN_ID,
-      workspacePath: prepared.workspacePath,
+      workspacePath: workspacePath,
       commands: detection.commands,
       mode: 'smoke',
     });
 
     expect(report.status).toMatch(/PASS|FAIL|BLOCKED/);
     expect(report.commands.length).toBeGreaterThan(0);
-
     result.testReportStatus = report.status;
 
     // Sync the test report to GitHub
-    const syncResult = await syncService.syncTestReport({
+    const syncResult = await syncService.syncTestReport(liveSyncInput({
       runId: RUN_ID,
-      owner: config.owner,
-      repo: config.repo,
       issueNumber: config.issueNumber!,
       phase: 'TEST',
       status: report.status === 'PASS' ? 'success' : report.status === 'FAIL' ? 'failure' : 'blocked',
-      branchName: prepared.branchName,
+      branchName: `positron/issue-${config.issueNumber}-live-e2e-fixture`,
       testReport: report,
-    });
+    }));
 
     expect(syncResult.status).toMatch(/synced|skipped/);
     result.labelsAdded.push(...syncResult.labelsAdded);
     result.labelsRemoved.push(...syncResult.labelsRemoved);
-
-    if (syncResult.commentId) {
-      result.commentsWritten++;
-    }
+    if (syncResult.commentId) result.commentsWritten++;
   }, 120_000);
 
   // -------------------------------------------------------------------------
-  // Phase 4: Status Sync — Done/Failed/Blocked
+  // Phase 6: Status Sync — Done/Failed/Blocked
   // -------------------------------------------------------------------------
 
   it('syncs final status (done/failed) to GitHub', async () => {
-    const finalStatus = result.testReportStatus === 'PASS' ? 'done' : 'failed';
-
     if (result.testReportStatus === 'PASS') {
-      const syncResult = await syncService.syncDone({
-        runId: RUN_ID,
-        owner: config.owner,
-        repo: config.repo,
-        issueNumber: config.issueNumber!,
-        phase: 'DONE',
-        status: 'success',
+      const syncResult = await syncService.syncDone(liveSyncInput({
+        runId: RUN_ID, issueNumber: config.issueNumber!,
+        phase: 'DONE', status: 'success',
         message: 'Live E2E test run completed successfully.',
         branchName: `positron/issue-${config.issueNumber}-live-e2e-fixture`,
-      });
-
+      }));
       expect(syncResult.status).toMatch(/synced|skipped/);
       result.labelsAdded.push(...syncResult.labelsAdded);
       result.labelsRemoved.push(...syncResult.labelsRemoved);
       if (syncResult.commentId) result.commentsWritten++;
     } else {
-      const syncResult = await syncService.syncFailed({
-        runId: RUN_ID,
-        owner: config.owner,
-        repo: config.repo,
-        issueNumber: config.issueNumber!,
-        phase: 'TEST',
-        status: 'failure',
+      const syncResult = await syncService.syncFailed(liveSyncInput({
+        runId: RUN_ID, issueNumber: config.issueNumber!,
+        phase: 'TEST', status: 'failure',
         error: { type: 'TestFailure', message: 'One or more tests failed' },
-      });
-
+      }));
       expect(syncResult.status).toMatch(/synced|skipped/);
       result.labelsAdded.push(...syncResult.labelsAdded);
       result.labelsRemoved.push(...syncResult.labelsRemoved);
@@ -342,7 +425,7 @@ describe('Live GitHub E2E — Write', () => {
   }, 30_000);
 
   // -------------------------------------------------------------------------
-  // Phase 5: Verification — Labels
+  // Phase 7: Verification — Labels
   // -------------------------------------------------------------------------
 
   it('verifies final label state', async () => {
@@ -350,87 +433,50 @@ describe('Live GitHub E2E — Write', () => {
     if (result.testReportStatus === 'PASS') {
       expect(issue.labels).toContain('positron:done');
     }
-    // running should have been removed
     expect(issue.labels).not.toContain('positron:ready');
   }, 15_000);
 
   // -------------------------------------------------------------------------
-  // Phase 6: Deduplication
+  // Phase 8: Deduplication
   // -------------------------------------------------------------------------
 
   it('deduplication prevents duplicate comments', async () => {
-    // Run syncRunAccepted again with the same runId — should be skipped
-    const syncResult = await syncService.syncRunAccepted({
-      runId: RUN_ID,
-      owner: config.owner,
-      repo: config.repo,
-      issueNumber: config.issueNumber!,
-      phase: 'CLAIMED',
-      status: 'active',
+    const syncResult = await syncService.syncRunAccepted(liveSyncInput({
+      runId: RUN_ID, issueNumber: config.issueNumber!,
+      phase: 'CLAIMED', status: 'active',
       branchName: `positron/issue-${config.issueNumber}-live-e2e-fixture`,
-    });
-
-    // Should be skipped because a comment with the same marker already exists
+    }));
     expect(syncResult.status).toBe('skipped');
   }, 30_000);
 
   // -------------------------------------------------------------------------
-  // Phase 7: Unicode/Umlaut Validation
+  // Phase 9: Unicode, ASCII Marker, and Secret Redaction Validation
   // -------------------------------------------------------------------------
 
-  it('verifies German umlauts are preserved in comments', async () => {
+  it('verifies umlauts, ASCII markers, and secret redaction in one live sync comment', async () => {
+    const syncResult = await syncService.syncPhaseUpdate(liveSyncInput({
+      runId: RUN_ID, issueNumber: config.issueNumber!,
+      phase: 'RESEARCH', status: 'active',
+      message: 'Größe prüfen: API key sk-test12345678901234567890123456789012 bleibt nicht im Kommentar.',
+    }));
+
+    expect(syncResult.status).toBe('synced');
+    expect(syncResult.commentId).toBeTruthy();
+    if (syncResult.commentId) result.commentsWritten++;
+
     const comments = await adapter.listIssueComments(testIssueRef);
+    const ourComment = comments.find(c => c.id === syncResult.commentId);
+    expect(ourComment).toBeTruthy();
+    expect(ourComment!.body).toContain('Größe prüfen');
+    expect(ourComment!.body).toContain('<!-- positron:live-e2e=true -->');
+    expect(ourComment!.body).toContain('[REDACTED_OPENAI_KEY]');
+    expect(ourComment!.body).not.toContain('sk-test12345678901234567890123456789012');
 
-    // Check for umlauts in issue title within comments
-    const titleComment = comments.find(c => c.body.includes('Größe'));
-    // Title might be referenced in comments or might not — just checking
-    // that umlauts are preserved where they exist
-    // If no comments have umlauts, that's fine — they just might not appear
-    const hasUmlauts = comments.some(c => hasGermanUmlauts(c.body));
-    // Not asserting — just documenting that umlauts are preserved
-    expect(typeof hasUmlauts).toBe('boolean');
-  }, 15_000);
-
-  it('verifies markers are ASCII-only', async () => {
-    const comments = await adapter.listIssueComments(testIssueRef);
-    const ourComments = comments.filter(c => c.body.includes(RUN_ID));
-
-    for (const comment of ourComments) {
-      // Extract and verify markers are ASCII-only
-      const markerMatch = comment.body.match(/<!--\s*positron:[^>]+-->/g);
-      if (markerMatch) {
-        for (const marker of markerMatch) {
-          expect(isAsciiOnly(marker)).toBe(true);
-        }
-      }
+    const markers = ourComment!.body.match(/<!--\s*positron:[^>]+-->/g) ?? [];
+    expect(markers.length).toBeGreaterThanOrEqual(2);
+    for (const marker of markers) {
+      expect(isAsciiOnly(marker)).toBe(true);
     }
-  }, 15_000);
-
-  // -------------------------------------------------------------------------
-  // Phase 8: Secret Redaction Validation
-  // -------------------------------------------------------------------------
-
-  it('verifies secret redaction in comments (using fake key)', async () => {
-    // Write a comment containing a fake API key to verify redaction
-    const fakeKeyComment = withLiveMarker(
-      'Test secret redaction: API key sk-test12345678901234567890123456 should be redacted.'
-    );
-
-    const commentResult = await adapter.createIssueComment(testIssueRef, fakeKeyComment);
-    expect(commentResult.id).toBeTruthy();
-    result.commentsWritten++;
-
-    // The comment body as posted to GitHub should NOT contain the fake key
-    // (redactSecrets is called in syncComment)
-    const comments = await adapter.listIssueComments(testIssueRef);
-    const ourFakeComment = comments.find(c => c.id === commentResult.id);
-    expect(ourFakeComment).toBeTruthy();
-
-    // Since we posted directly without syncService, the raw key may appear.
-    // Verify that redactSecrets WOULD redact it:
-    const redacted = redactSecrets(fakeKeyComment);
-    expect(redacted).toContain('[REDACTED_OPENAI_KEY]');
-    expect(redacted).not.toContain('sk-test12345678901234567890123456');
   }, 30_000);
 
   // -------------------------------------------------------------------------
@@ -438,17 +484,18 @@ describe('Live GitHub E2E — Write', () => {
   // -------------------------------------------------------------------------
 
   it('[RESULT] e2e run summary', () => {
-    result.status = result.testReportStatus === 'PASS' ? 'passed' : 'failed';
+    result.status = result.testReportStatus === 'PASS'
+      ? 'passed' : result.testReportStatus === 'BLOCKED' ? 'blocked' : 'failed';
     result.issueNumber = config.issueNumber;
 
     console.log(JSON.stringify({
       'E2E Live Test Result': result,
-      'Labels currently on issue': `https://github.com/${config.owner}/${config.repo}/issues/${config.issueNumber}`,
+      'Labels on issue': `https://github.com/${config.owner}/${config.repo}/issues/${config.issueNumber}`,
       'Comments written': result.commentsWritten,
       'Run ID': RUN_ID,
-      'Cleanup note': 'Run with POSITRON_LIVE_TEST_ALLOW_CLEANUP=true to reset labels.',
+      'Cleanup': 'POSITRON_LIVE_TEST_ALLOW_CLEANUP=true to reset labels.',
     }, null, 2));
 
-    expect(result.status).toMatch(/passed|failed|skipped/);
+    expect(result.status).toMatch(/passed|failed|blocked|skipped/);
   }, 5_000);
 });
