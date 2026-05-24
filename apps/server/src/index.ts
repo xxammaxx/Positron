@@ -251,6 +251,7 @@ async function executePhase(
           baseBranch: repository.defaultBranch,
         });
         current.branch = ws.branchName;
+        current.workspacePath = ws.workspacePath;
         result = transition(current, 'ISSUE_CONTEXT', `Workspace: ${ws.workspacePath}`);
       } catch (err) {
         result = markFailed(current, 'FAILED_TRANSIENT', `Repo sync failed: ${String(err)}`);
@@ -263,7 +264,7 @@ async function executePhase(
       result = transition(current, 'SPECIFY', `Research: best practices validated`);
       break;
     case 'SPECIFY': {
-      const wsPath = current.branch ? `/tmp/positron-ws-${current.id.slice(0, 8)}` : '/tmp';
+      const wsPath = current.workspacePath ?? current.branch ?? '/tmp';
       const realSpeckit = process.env.POSITRON_ENABLE_REAL_SPECKIT === 'true';
 
       if (realSpeckit) {
@@ -304,7 +305,7 @@ async function executePhase(
       break;
     }
     case 'PLAN': {
-      const wsPath = current.branch ? `/tmp/positron-ws-${current.id.slice(0, 8)}` : '/tmp';
+      const wsPath = current.workspacePath ?? current.branch ?? '/tmp';
       const realSpeckit = process.env.POSITRON_ENABLE_REAL_SPECKIT === 'true';
 
       if (realSpeckit) {
@@ -333,7 +334,7 @@ async function executePhase(
       break;
     }
     case 'TASKS': {
-      const wsPath = current.branch ? `/tmp/positron-ws-${current.id.slice(0, 8)}` : '/tmp';
+      const wsPath = current.workspacePath ?? current.branch ?? '/tmp';
       const realSpeckit = process.env.POSITRON_ENABLE_REAL_SPECKIT === 'true';
 
       if (realSpeckit) {
@@ -362,7 +363,7 @@ async function executePhase(
       break;
     }
     case 'ANALYZE': {
-      const wsPath = current.branch ? `/tmp/positron-ws-${current.id.slice(0, 8)}` : '/tmp';
+      const wsPath = current.workspacePath ?? current.branch ?? '/tmp';
       const input = { runId: current.id, workspacePath: wsPath, issueTitle: `Issue #${current.issueNumber}`, issueNumber: current.issueNumber, mode: 'artifact-only' as const };
       try {
         const ar = await speckit.runAnalyze(input);
@@ -377,7 +378,7 @@ async function executePhase(
       result = transition(current, 'IMPLEMENT', 'Review passed');
       break;
     case 'IMPLEMENT': {
-      const wsPath = current.branch ? `/tmp/positron-ws-${current.id.slice(0, 8)}` : '/tmp';
+      const wsPath = current.workspacePath ?? current.branch ?? '/tmp';
       const input = { runId: current.id, workspacePath: wsPath, issueTitle: `Issue #${current.issueNumber}`, issueNumber: current.issueNumber, mode: 'safe-cli' as const, autonomyLevel: current.autonomyLevel };
       try {
         const ir = await opencode.runImplement(input);
@@ -394,7 +395,7 @@ async function executePhase(
     }
     case 'TEST':
       try {
-        const wsPath = current.branch ? `/tmp/positron-ws-${current.id.slice(0, 8)}` : '/tmp';
+        const wsPath = current.workspacePath ?? current.branch ?? '/tmp';
         const detector = new TestCommandDetector();
         const detection = await detector.detect(wsPath);
         if (detection.commands.length === 0) {
@@ -440,21 +441,24 @@ async function executePhase(
       // Commit Message generieren
       const commitMsg = `feat(issue-${current.issueNumber}): Positron automated changes [Run: ${current.id.slice(0, 8)}]`;
 
+      // Workspace path from run state (Issue #36)
+      const commitWsPath = current.workspacePath ?? `/tmp/positron-ws-${current.id.slice(0, 8)}`;
+
       try {
         // Diff vor Commit erfassen
         let diffSummary = '';
         try {
-          const diff = await workspace.getDiff('/tmp/positron-ws-' + current.id.slice(0, 8));
+          const diff = await workspace.getDiff(commitWsPath);
           diffSummary = `${diff.filesChanged} files, +${diff.insertions ?? 0}/-${diff.deletions ?? 0}`;
         } catch { /* diff optional */ }
 
         // Commit
-        const commitResult = await workspace.commit('/tmp/positron-ws-' + current.id.slice(0, 8), commitMsg);
+        const commitResult = await workspace.commit(commitWsPath, commitMsg);
 
         // Push nur mit Allow-Flag
         let pushResult = '';
         if (pushAllowed) {
-          await workspace.push({ workspacePath: '/tmp/positron-ws-' + current.id.slice(0, 8), branch });
+          await workspace.push({ workspacePath: commitWsPath, branch });
           pushResult = ', pushed';
         } else {
           pushResult = ', push skipped (POSITRON_ENABLE_PUSH not set)';

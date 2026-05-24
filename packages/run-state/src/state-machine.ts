@@ -48,6 +48,8 @@ export interface RunState {
   startedAt: string;
   finishedAt: string | null;
   lastError: string | null;
+  /** Workspace path from prepareWorkspace (Issue #36) */
+  workspacePath: string | null;
 }
 
 export interface RunEventData {
@@ -88,6 +90,7 @@ export function createRun(repoId: string, issueNumber: number, autonomyLevel: nu
     startedAt: new Date().toISOString(),
     finishedAt: null,
     lastError: null,
+    workspacePath: null,
   };
 }
 
@@ -188,6 +191,7 @@ export function resumeFromEvents(
     startedAt: first.createdAt,
     finishedAt: null,
     lastError: null,
+    workspacePath: null,
   };
 
   // Events sequenziell anwenden (vereinfacht: Phase aus Event übernehmen)

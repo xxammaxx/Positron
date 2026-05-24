@@ -86,11 +86,12 @@ Selbst wenn der Commit funktioniert hätte: Der Push hätte einen Remote-Branch 
 
 ## Entscheidung
 
-**Bereit für kontrollierten PR-Delivery-Mode: NEIN** ❌
+**Bereit für kontrollierten PR-Delivery-Mode: JA** ✅
 
-Der Workspace-Path-Mismatch muss behoben werden bevor ein weiterer Push-versuch sinnvoll ist.
+Der Workspace-Path-Mismatch wurde in Issue #36 behoben:
+- `workspacePath` wird jetzt in RunState gespeichert
+- Alle Phasen lesen `current.workspacePath` statt `/tmp/positron-ws-*`
+- Siehe `docs/operations/workspace-path-propagation.md`
 
 **Nächster Schritt:**
-Issue #36: Fix Workspace Path Propagation — Commit/Push verwendet falschen Pfad
-
-Hier muss die Pipeline so umgebaut werden, dass der `workspacePath` von `prepareWorkspace` durch die gesamte Pipeline propagiert wird, statt auf `/tmp/positron-ws-<id>` hartkodiert zu sein.
+Issue #37: Third Dogfood Run — Push-Gated PR Creation Retry
