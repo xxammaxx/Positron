@@ -65,3 +65,24 @@ Prefer the smallest sufficient MCP set for the task.
 Write-capable MCP tools require explicit task relevance and must be documented before use.
 
 Secrets must never be written into repository files, issue comments, logs, or generated documentation.
+
+## Researcher / Deep Research Guardrail
+
+GPT Researcher, Deep Research, broad web research, and research-report generation are optional tools, not workflow owners.
+
+The agent must not start a Researcher workflow unless the current issue explicitly asks for one.
+
+Default behavior by mode:
+
+- **Dogfood mode:** no Researcher, no broad research, execute and validate the existing pipeline.
+- **Implementation mode:** no broad research; only targeted documentation checks if required by an external API.
+- **Release mode:** summarize existing evidence; do not create new research tasks.
+- **Research mode:** allowed only if the issue is explicitly labeled or titled as research.
+
+If the issue is about a concrete bug, failing test, pipeline blocker, workspace path, push, PR, merge, UI behavior, or adapter integration, the agent must fix and test the issue instead of launching Researcher.
+
+Before using any research tool, the agent must write:
+
+"Research is required because: <specific external unknown>"
+
+If that reason is not specific, research is not allowed.
