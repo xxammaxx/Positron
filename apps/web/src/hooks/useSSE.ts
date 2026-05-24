@@ -1,0 +1,180 @@
+import { useEffect, useRef, useState, useCallback } from 'react';
+import type { RunEvent, Run } from '../types.js';
+
+const MAX_EVENTS = 500;
+const RECONNECT_BASE_MS = 500;
+const RECONNECT_MAX_MS = 30000;
+
+/**
+ * Vom Server gesendete SSE-Event-Typen:
+ * - initial: Initialer Run-State beim Verbinden
+ * - run-event: Neues Run-Event (Log-Eintrag)
+ * - run-update: Run-Phase/Status-Update
+ * - run-control: Control-Aktion (pause/resume/abort)
+ * - run-complete: Run abgeschlossen
+ * - heartbeats als SSE-Kommentare (:keepalive)
+ */
+const EVENT_TYPES = [
+  'initial', 'run-event', 'run-update', 'run-control', 'run-complete',
+] as const;
+
+type SSEEventType = (typeof EVENT_TYPES)[number];
+
+interface SSEState {
+  run: Run | null;
+  events: RunEvent[];
+}
+
+interface UseSSEResult {
+  events: RunEvent[];
+  isConnected: boolean;
+  error: string | null;
+  clearEvents: () => void;
+}
+
+export function useSSE(runId: string | null): UseSSEResult {
+  const [state, setState] = useState<SSEState>({ run: null, events: [] });
+  const [isConnected, setIsConnected] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
+  const retryCountRef = useRef(0);
+
+  const clearEvents = useCallback(() => {
+    setState({ run: null, events: [] });
+  }, []);
+
+  useEffect(() => {
+    if (!runId) {
+      setIsConnected(false);
+      setState({ run: null, events: [] });
+      setError(null);
+      return;
+    }
+
+    let reconnectTimer: ReturnType<typeof setTimeout>;
+    let currentEventSource: EventSource | null = null;
+    const cleanupHandlers: Array<() => void> = [];
+
+    function connect(): void {
+      if (currentEventSource) {
+        currentEventSource.close();
+      }
+
+      const es = new EventSource(`/api/runs/${runId}/events/stream`);
+      currentEventSource = es;
+      eventSourceRef.current = es;
+
+      es.onopen = () => {
+        setIsConnected(true);
+        setError(null);
+        retryCountRef.current = 0;
+      };
+
+      // Named Events via addEventListener
+      const handleInitial = (e: MessageEvent) => {
+        try {
+          const data = JSON.parse(e.data) as { run: Run; events: RunEvent[] };
+          setState({ run: data.run, events: data.events.slice(-MAX_EVENTS) });
+        } catch (err) {
+          console.warn('[SSE] Failed to parse initial event:', err);
+        }
+      };
+
+      const handleRunEvent = (e: MessageEvent) => {
+        try {
+          const data = JSON.parse(e.data) as RunEvent;
+          setState(prev => {
+            const next = [...prev.events, data];
+            return {
+              ...prev,
+              events: next.length > MAX_EVENTS
+                ? next.slice(next.length - MAX_EVENTS)
+                : next,
+            };
+          });
+        } catch {
+          console.warn('[SSE] Failed to parse run-event data');
+        }
+      };
+
+      const handleRunUpdate = (e: MessageEvent) => {
+        try {
+          const data = JSON.parse(e.data) as Partial<Run>;
+          setState(prev => ({
+            ...prev,
+            run: prev.run ? { ...prev.run, ...data } : prev.run,
+          }));
+        } catch {
+          console.warn('[SSE] Failed to parse run-update data');
+        }
+      };
+
+      const handleRunControl = (e: MessageEvent) => {
+        try {
+          const data = JSON.parse(e.data) as { action: string };
+          console.log('[SSE] Run control:', data.action);
+        } catch {
+          // ignore
+        }
+      };
+
+      const handleRunComplete = (e: MessageEvent) => {
+        try {
+          const data = JSON.parse(e.data) as { phase: string; status: string };
+          setState(prev => ({
+            ...prev,
+            run: prev.run ? { ...prev.run, ...data } : prev.run,
+          }));
+        } catch {
+          // ignore
+        }
+      };
+
+      // Add all event listeners
+      es.addEventListener('initial', handleInitial);
+      es.addEventListener('run-event', handleRunEvent);
+      es.addEventListener('run-update', handleRunUpdate);
+      es.addEventListener('run-control', handleRunControl);
+      es.addEventListener('run-complete', handleRunComplete);
+
+      cleanupHandlers.push(
+        () => es.removeEventListener('initial', handleInitial),
+        () => es.removeEventListener('run-event', handleRunEvent),
+        () => es.removeEventListener('run-update', handleRunUpdate),
+        () => es.removeEventListener('run-control', handleRunControl),
+        () => es.removeEventListener('run-complete', handleRunComplete),
+      );
+
+      es.onerror = () => {
+        setIsConnected(false);
+        es.close();
+
+        // Exponential backoff reconnect
+        const delay = Math.min(
+          RECONNECT_BASE_MS * Math.pow(2, retryCountRef.current),
+          RECONNECT_MAX_MS,
+        );
+        retryCountRef.current += 1;
+
+        setError(
+          `Connection lost. Reconnecting in ${Math.round(delay / 1000)}s...`,
+        );
+
+        reconnectTimer = setTimeout(connect, delay);
+      };
+    }
+
+    connect();
+
+    return () => {
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      cleanupHandlers.forEach(fn => fn());
+      if (currentEventSource) {
+        currentEventSource.close();
+      }
+      setIsConnected(false);
+    };
+  }, [runId]);
+
+  return { events: state.events, isConnected, error, clearEvents };
+}
