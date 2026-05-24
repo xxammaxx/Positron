@@ -1109,6 +1109,26 @@ async function runFullPipeline(
   return result.run;
 }
 
+/**
+ * Wandelt DB-Zeilen in RunState-Objekte um.
+ */
+function mapDbRows(rows: Array<Record<string, unknown>>): RunState[] {
+  return rows.map(row => ({
+    id: row.id as string,
+    repoId: row.repo_id as string,
+    issueNumber: row.issue_number as number,
+    branch: row.branch as string | null,
+    phase: row.phase as Phase,
+    status: row.status as RunStatus,
+    autonomyLevel: row.autonomy_level as number,
+    attempt: row.attempt as number,
+    startedAt: row.started_at as string,
+    finishedAt: row.finished_at as string | null,
+    lastError: row.last_error as string | null,
+    workspacePath: row.workspace_path as string | null,
+  }));
+}
+
 /** Build evidence items from run state for sync comments */
 function buildEvidence(run: RunState): EvidenceItem[] {
   const items: EvidenceItem[] = [{ kind: 'run-phase', status: 'pass', summary: `Phase: ${run.phase}` }];
@@ -1247,6 +1267,20 @@ export function createApp(options: ServerOptions = {}) {
     }
   });
 
+  // Repository-Liste abrufen
+  app.get('/api/repos', (_req, res) => {
+    try {
+      const repos = getDb().prepare(`
+        SELECT id, owner, name, full_name, default_branch, created_at, updated_at
+        FROM repositories
+        ORDER BY updated_at DESC
+      `).all();
+      res.json({ repos, total: (repos as Array<unknown>).length });
+    } catch (err) {
+      res.status(500).json({ error: 'Datenbankfehler', details: String(err) });
+    }
+  });
+
   // Issues abrufen (echt via Adapter)
   app.get('/api/repos/:id/issues', async (req, _res, next) => {
     try {
@@ -1272,9 +1306,44 @@ export function createApp(options: ServerOptions = {}) {
     }
   });
 
-  // Runs auflisten
-  app.get('/api/runs', (_req, res) => {
-    res.json({ runs: listRunsFromDb() });
+  // Runs auflisten (mit Pagination)
+  app.get('/api/runs', (req, res) => {
+    try {
+      const page  = Math.max(1, parseInt(req.query.page  as string) || 1);
+      const limit = Math.min(100, parseInt(req.query.limit as string) || 20);
+      const repoId = req.query.repoId as string | undefined;
+      const offset = (page - 1) * limit;
+
+      const database = getDb();
+
+      if (repoId) {
+        const runs = database.prepare(`
+          SELECT * FROM runs WHERE repo_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?
+        `).all(repoId, limit, offset);
+        const total = (database.prepare(
+          'SELECT COUNT(*) as c FROM runs WHERE repo_id = ?'
+        ).get(repoId) as { c: number }).c;
+        res.json({
+          runs: mapDbRows(runs as Array<Record<string, unknown>>),
+          pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+          total,
+        });
+      } else {
+        const runs = database.prepare(`
+          SELECT * FROM runs ORDER BY created_at DESC LIMIT ? OFFSET ?
+        `).all(limit, offset);
+        const total = (database.prepare(
+          'SELECT COUNT(*) as c FROM runs'
+        ).get() as { c: number }).c;
+        res.json({
+          runs: mapDbRows(runs as Array<Record<string, unknown>>),
+          pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+          total,
+        });
+      }
+    } catch (err) {
+      res.status(500).json({ error: 'Datenbankfehler', details: String(err) });
+    }
   });
 
   // Run-Details
@@ -1347,7 +1416,7 @@ export function createApp(options: ServerOptions = {}) {
       return;
     }
     // issueNumber optional — auf positive Ganzzahl prüfen
-    let issueNum = 56;
+    let issueNum = parseInt(process.env.POSITRON_DEFAULT_ISSUE_NUMBER ?? '56', 10);
     if (issueNumber !== undefined && issueNumber !== null) {
       const parsed = Number(issueNumber);
       if (!Number.isInteger(parsed) || parsed < 1 || parsed > 999999) {
@@ -1434,6 +1503,137 @@ export function createApp(options: ServerOptions = {}) {
         !run.branch && 'No branch',
       ].filter(Boolean),
     });
+  });
+
+  // Gate-Entscheidung (approve / revise)
+  app.post('/api/runs/:id/gate', express.json(), async (req, res) => {
+    const { id } = req.params;
+    const { decision, reason } = req.body as {
+      decision: 'approve' | 'revise';
+      reason?: string;
+    };
+
+    if (!['approve', 'revise'].includes(decision)) {
+      return res.status(400).json({ error: 'decision muss approve oder revise sein' });
+    }
+
+    const run = loadRunFromDb(id);
+    if (!run) return res.status(404).json({ error: 'Run nicht gefunden' });
+
+    const action = decision === 'approve' ? 'resume' : 'retry';
+
+    try {
+      storeEvent({
+        id: createRunId(), runId: id,
+        phase: run.phase, level: 'GATE',
+        message: `Gate-Entscheidung: ${decision}${reason ? ` — ${reason}` : ''}`,
+        payload: { decision, reason: reason ?? '' },
+        createdAt: new Date().toISOString(),
+      });
+
+      if (decision === 'approve') {
+        // Run zum nächsten Schritt fortsetzen
+        const targetPhase: Phase = run.phase === 'GATE_APPROVE' ? 'COMMIT' : 'MERGE';
+        const updatedRun = { ...run, phase: targetPhase, status: 'active' as RunStatus, lastError: null };
+        saveRunToDb(updatedRun);
+        runSignals.set(id, 'RESUME');
+        resumePhaseTarget.set(id, targetPhase);
+      } else {
+        // Zurück zur vorherigen Phase (revise)
+        const targetPhase: Phase = 'REVIEW';
+        const updatedRun = { ...run, phase: targetPhase, status: 'active' as RunStatus, lastError: null };
+        saveRunToDb(updatedRun);
+        runSignals.set(id, 'RETRY');
+      }
+
+      res.json({ ok: true, action });
+    } catch (err) {
+      res.status(500).json({ error: String(err) });
+    }
+  });
+
+  // Artefakt laden (Spec, Plan, Tasks, Review, Test-Results)
+  app.get('/api/runs/:id/artifacts/:kind', (req, res) => {
+    const { id, kind } = req.params;
+
+    const VALID_KINDS = ['spec', 'plan', 'tasks', 'review', 'test-results', 'diff'];
+    if (!VALID_KINDS.includes(kind)) {
+      return res.status(400).json({
+        error: `Ungültiger Artefakt-Typ. Erlaubt: ${VALID_KINDS.join(', ')}`,
+      });
+    }
+
+    try {
+      const artifact = getDb().prepare(`
+        SELECT id, run_id, kind, content, created_at
+        FROM artifacts
+        WHERE run_id = ? AND kind = ?
+        ORDER BY created_at DESC
+        LIMIT 1
+      `).get(id, kind) as Record<string, unknown> | undefined;
+
+      if (!artifact) {
+        return res.status(404).json({
+          error: `Kein Artefakt vom Typ '${kind}' für Run '${id}' gefunden`,
+        });
+      }
+
+      res.json({
+        artifact: {
+          content: artifact.content,
+          kind: artifact.kind,
+          createdAt: artifact.created_at,
+        },
+      });
+    } catch (err) {
+      res.status(500).json({ error: 'Datenbankfehler', details: String(err) });
+    }
+  });
+
+  // System-Metriken
+  app.get('/api/metrics', (_req, res) => {
+    try {
+      const database = getDb();
+      const total = (database.prepare('SELECT COUNT(*) as c FROM runs').get() as { c: number }).c;
+      const active = (database.prepare("SELECT COUNT(*) as c FROM runs WHERE status = 'active'").get() as { c: number }).c;
+      const done = (database.prepare("SELECT COUNT(*) as c FROM runs WHERE status = 'done'").get() as { c: number }).c;
+      const failed = (database.prepare("SELECT COUNT(*) as c FROM runs WHERE status = 'failed'").get() as { c: number }).c;
+      const blocked = (database.prepare("SELECT COUNT(*) as c FROM runs WHERE status = 'blocked'").get() as { c: number }).c;
+      const repositories = (database.prepare('SELECT COUNT(*) as c FROM repositories').get() as { c: number }).c;
+
+      const phaseDistribution = database.prepare(`
+        SELECT phase, COUNT(*) as count
+        FROM runs WHERE status = 'active'
+        GROUP BY phase ORDER BY count DESC
+      `).all();
+
+      const recentFailures = database.prepare(`
+        SELECT id, phase, started_at as startedAt, finished_at as finishedAt
+        FROM runs WHERE status = 'failed' OR status = 'blocked'
+        ORDER BY finished_at DESC LIMIT 5
+      `).all();
+
+      const avgRow = database.prepare(`
+        SELECT AVG(
+          CAST(strftime('%s', finished_at) AS INTEGER) -
+          CAST(strftime('%s', started_at) AS INTEGER)
+        ) * 1000 as avg_ms
+        FROM runs WHERE status = 'done'
+      `).get() as { avg_ms: number | null } | undefined;
+
+      res.json({
+        metrics: {
+          runs: { total, active, done, failed, blocked },
+          repositories: { total: repositories },
+          phaseDistribution,
+          recentFailures,
+          avgRunDurationMs: avgRow?.avg_ms ?? null,
+          timestamp: new Date().toISOString(),
+        },
+      });
+    } catch (err) {
+      res.status(500).json({ error: 'Metriken konnten nicht geladen werden', details: String(err) });
+    }
   });
 
   // Run Control (Issue #30)
