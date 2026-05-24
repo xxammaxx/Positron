@@ -185,12 +185,8 @@ export class GitHubStatusSyncService {
       const comment = renderSyncMerged(input.runId, input.prNumber, input.prUrl, input.branchName);
       const { commentId, commentUrl, skipped } = await this.syncComment(input, comment);
       const labels = await this.syncLabels(this.ref(input), 'MERGED');
-      // GitHub-Issue nach erfolgreichem Merge schließen (Task 2)
-      try {
-        await this.adapter.closeIssue(input.owner, input.repo, input.issueNumber);
-      } catch {
-        // Issue-Close darf den Sync nicht fehlschlagen lassen
-      }
+      // Issue-Close passiert NICHT hier — es wird im Orchestrator (server/index.ts) gesteuert
+      console.log(`[sync-service] Merge für Issue #${input.issueNumber} synchronisiert (closeIssue läuft im Orchestrator)`);
       return { status: skipped ? 'skipped' : 'synced', labelsAdded: labels.added, labelsRemoved: labels.removed, commentId, commentUrl };
     } catch (err) {
       return { status: 'failed', labelsAdded: [], labelsRemoved: [], reason: redactSecrets(String(err)) };

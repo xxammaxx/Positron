@@ -780,6 +780,17 @@ async function executePhase(
         break;
       }
 
+      if (pr.state !== 'open') {
+        storeEvent({
+          id: createRunId(), runId: current.id, phase: 'MERGE',
+          level: 'WARN', message: `PR #${pr.number} ist nicht offen (state: ${pr.state}), überspringe Merge`,
+          payload: { prNumber: pr.number, prState: pr.state },
+          createdAt: new Date().toISOString(),
+        });
+        result = transition(current, 'DONE', `PR #${pr.number} ist ${pr.state} — Merge übersprungen`, 'WARN');
+        break;
+      }
+
       // --- Dry-Run: Evaluate all gates, never merge (Issue #41) ---
       if (mergeDryRun) {
         // Fetch PR details with polling for conclusive mergeability (Issue #42)
