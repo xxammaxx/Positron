@@ -15,7 +15,7 @@ import { FakeGitHubAdapter, createRealGitHubAdapter, GitHubStatusSyncService } f
 import type { GitHubAdapter } from '@positron/github-adapter';
 import type { GitHubStatusSyncInput, GitHubStatusSyncResult, EvidenceItem } from '@positron/github-adapter';
 import { renderAccepted } from '@positron/github-adapter';
-import { FakeGitWorkspaceAdapter } from '@positron/sandbox';
+import { FakeGitWorkspaceAdapter, applyDogfoodFixtureChange } from '@positron/sandbox';
 import type { GitWorkspaceAdapter } from '@positron/sandbox';
 import { TestCommandDetector, TestRunner } from '@positron/sandbox';
 import type { TestReport } from '@positron/sandbox';
@@ -380,6 +380,20 @@ async function executePhase(
     case 'IMPLEMENT': {
       const wsPath = current.workspacePath ?? current.branch ?? '/tmp';
       const input = { runId: current.id, workspacePath: wsPath, issueTitle: `Issue #${current.issueNumber}`, issueNumber: current.issueNumber, mode: 'safe-cli' as const, autonomyLevel: current.autonomyLevel };
+
+      // Dogfood Fixture Change Provider (Issue #38)
+      // Nur aktiv mit POSITRON_ENABLE_DOGFOOD_FIXTURE_CHANGE=true
+      // Erzeugt eine deterministische Dateiänderung für PR-Validierung
+      const fixtureResult = applyDogfoodFixtureChange({ workspacePath: wsPath, runId: current.id, issueNumber: current.issueNumber });
+      if (fixtureResult.applied) {
+        storeEvent({
+          id: createRunId(), runId: current.id, phase: 'IMPLEMENT',
+          level: 'INFO', message: fixtureResult.summary,
+          payload: { fixtureFile: fixtureResult.filePath },
+          createdAt: new Date().toISOString(),
+        });
+      }
+
       try {
         const ir = await opencode.runImplement(input);
         if (ir.status === 'blocked') {
@@ -445,14 +459,23 @@ async function executePhase(
       const commitWsPath = current.workspacePath ?? `/tmp/positron-ws-${current.id.slice(0, 8)}`;
 
       try {
-        // Diff vor Commit erfassen
+        // Diff vor Commit erfassen — nur committen wenn echte Änderung
         let diffSummary = '';
+        let filesChanged = 0;
         try {
           const diff = await workspace.getDiff(commitWsPath);
-          diffSummary = `${diff.filesChanged} files, +${diff.insertions ?? 0}/-${diff.deletions ?? 0}`;
+          filesChanged = diff.filesChanged;
+          diffSummary = `${filesChanged} files, +${diff.insertions ?? 0}/-${diff.deletions ?? 0}`;
         } catch { /* diff optional */ }
 
-        // Commit
+        if (filesChanged === 0) {
+          // Keine Änderungen — sauber blocken (Issue #38)
+          result = markFailed(current, 'FAILED_BLOCKED',
+            `NO_CHANGES_TO_COMMIT: Branch ${branch} has no diff vs base`);
+          break;
+        }
+
+        // Commit nur bei vorhandenem Diff
         const commitResult = await workspace.commit(commitWsPath, commitMsg);
 
         // Push nur mit Allow-Flag
@@ -464,7 +487,7 @@ async function executePhase(
           pushResult = ', push skipped (POSITRON_ENABLE_PUSH not set)';
         }
 
-        const summary = `Committed: ${commitResult.sha.slice(0, 7)}${pushResult}${diffSummary ? ' (' + diffSummary + ')' : ''}`;
+        const summary = `Committed: ${commitResult.sha.slice(0, 7)}${pushResult} (${diffSummary})`;
         result = transition(current, 'PR_CREATE', summary, 'INFO');
       } catch (err) {
         storeEvent({

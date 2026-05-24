@@ -48,3 +48,5 @@ export {
   guardBranch, generateCommitMessage, evaluatePushPolicy, isValidPositronBranch,
 } from './commit-policy.js';
 export type { CommitContext, BranchGuardResult, PushPolicyResult } from './commit-policy.js';
+export { applyDogfoodFixtureChange, hasFixtureChanges } from './dogfood-fixture.js';
+export type { FixtureChangeInput, FixtureChangeResult } from './dogfood-fixture.js';

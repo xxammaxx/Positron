@@ -30,24 +30,27 @@ async function get(path: string) {
 }
 
 describe('POST /api/repos/:repoId/runs', () => {
-  test('vollständiger Run durchläuft alle Phasen bis DONE', async () => {
+  test('vollständiger Run durchläuft alle Phasen — blockiert bei NO_CHANGES_TO_COMMIT', async () => {
     const res = await post('/api/repos/repo-1/runs', { issueNumber: 42, autonomyLevel: 2 });
     expect(res.status).toBe(200);
-    const body = await res.json() as { run: { phase: string; status: string; attempt: number; repoId: string }; events: Array<{ phase: string }>; eventCount: number };
-    expect(body.run.phase).toBe('DONE');
-    expect(body.run.status).toBe('done');
+    const body = await res.json() as { run: { phase: string; status: string; attempt: number; repoId: string; lastError: string | null }; events: Array<{ phase: string }>; eventCount: number };
+    // Fake-Adapter erzeugt keine Dateiänderungen → NO_CHANGES_TO_COMMIT (Issue #38)
+    expect(body.run.phase).toBe('FAILED_BLOCKED');
+    expect(body.run.status).toBe('blocked');
     expect(body.run.repoId).toBe('test-repo');
+    expect(body.run.lastError).toContain('NO_CHANGES_TO_COMMIT');
     expect(body.eventCount).toBeGreaterThanOrEqual(14);
   });
 
-  test('zwei aufeinanderfolgende Runs', async () => {
+  test('zwei aufeinanderfolgende Runs — beide blockieren bei NO_CHANGES_TO_COMMIT', async () => {
     const r1 = await post('/api/repos/repo-1/runs', { issueNumber: 1 });
-    const b1 = await r1.json() as { run: { id: string; phase: string } };
-    expect(b1.run.phase).toBe('DONE');
+    const b1 = await r1.json() as { run: { id: string; phase: string; lastError: string | null } };
+    expect(b1.run.phase).toBe('FAILED_BLOCKED');
+    expect(b1.run.lastError).toContain('NO_CHANGES_TO_COMMIT');
 
     const r2 = await post('/api/repos/repo-2/runs', { issueNumber: 2 });
     const b2 = await r2.json() as { run: { id: string; phase: string } };
-    expect(b2.run.phase).toBe('DONE');
+    expect(b2.run.phase).toBe('FAILED_BLOCKED');
     expect(b2.run.id).not.toBe(b1.run.id);
   });
 });
@@ -75,7 +78,7 @@ describe('Run Resume', () => {
     const createBody = await create.json() as { run: { id: string } };
     const res = await get(`/api/runs/${createBody.run.id}`);
     const body = await res.json() as { run: { phase: string }; events: Array<unknown> };
-    expect(body.run.phase).toBe('DONE');
+    expect(body.run.phase).toBe('FAILED_BLOCKED');
     expect(body.events.length).toBeGreaterThan(0);
   });
 });
