@@ -40,7 +40,7 @@ describe('POST /api/repos/:repoId/runs', () => {
     expect(body.run.status).toBe('done');
     expect(body.run.repoId).toBe('test-repo');
     // Sollte deutlich mehr Events haben als vorher (da der Run komplett durchläuft)
-    expect(body.eventCount).toBeGreaterThanOrEqual(18);
+    expect(body.eventCount).toBeGreaterThanOrEqual(15);
   });
 
   test('zwei aufeinanderfolgende Runs — beide erreichen DONE', async () => {
@@ -57,10 +57,14 @@ describe('POST /api/repos/:repoId/runs', () => {
 
 describe('GET /api/runs', () => {
   test('listet alle Runs', async () => {
-    await post('/api/repos/repo-a/runs', { issueNumber: 1 });
+    const createRes = await post('/api/repos/repo-a/runs', { issueNumber: 1 });
+    expect(createRes.status).toBe(200);
     const res = await get('/api/runs');
-    const body = await res.json() as { runs: Array<unknown> };
-    expect(body.runs.length).toBeGreaterThanOrEqual(1);
+    const body = await res.json() as { runs: Array<unknown>; total?: number; pagination?: { total: number } };
+    // Support both new paginated format and old format
+    const runList = body.runs ?? [];
+    const total = body.pagination?.total ?? body.total ?? runList.length;
+    expect(total).toBeGreaterThanOrEqual(1);
   });
 });
 

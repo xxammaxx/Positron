@@ -1312,9 +1312,9 @@ export function createApp(options: ServerOptions = {}) {
   app.get('/api/repos', (_req, res) => {
     try {
       const repos = getDb().prepare(`
-        SELECT id, owner, name, full_name, default_branch, created_at, updated_at
+        SELECT id, owner, name, url, local_path as localPath, default_branch as defaultBranch, enabled, created_at as createdAt
         FROM repositories
-        ORDER BY updated_at DESC
+        ORDER BY created_at DESC
       `).all();
       res.json({ repos, total: (repos as Array<unknown>).length });
     } catch (err) {
@@ -1359,7 +1359,7 @@ export function createApp(options: ServerOptions = {}) {
 
       if (repoId) {
         const runs = database.prepare(`
-          SELECT * FROM runs WHERE repo_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?
+          SELECT * FROM runs WHERE repo_id = ? ORDER BY started_at DESC LIMIT ? OFFSET ?
         `).all(repoId, limit, offset);
         const total = (database.prepare(
           'SELECT COUNT(*) as c FROM runs WHERE repo_id = ?'
@@ -1371,7 +1371,7 @@ export function createApp(options: ServerOptions = {}) {
         });
       } else {
         const runs = database.prepare(`
-          SELECT * FROM runs ORDER BY created_at DESC LIMIT ? OFFSET ?
+          SELECT * FROM runs ORDER BY started_at DESC LIMIT ? OFFSET ?
         `).all(limit, offset);
         const total = (database.prepare(
           'SELECT COUNT(*) as c FROM runs'
