@@ -1,58 +1,74 @@
-# Positron
+# Positron v0.1.0-rc.1
 
-Positron ist ein lokales GitHub-Issue-Ausführungssystem für agentische Softwareentwicklung.
+**Supervised autonomous GitHub Issue-to-PR/merge runner.**
 
-Es überwacht GitHub-Issues, verwandelt jedes Issue in recherchierte und spezifizierte Entwicklungsartefakte, nutzt Spec Kit für die Planung, OpenCode für die kontrollierte Implementierung, führt Tests und Review-Schleifen aus, dokumentiert jeden Schritt in GitHub und liefert Pull Requests statt unsichtbarer Agentenausgaben.
+> Status: Release Candidate · Production-ready for test repos and explicitly approved low-risk repos.
 
-## Kernprinzipien
+Positron überwacht GitHub Issues, durchläuft eine 21-Phasen-Pipeline von Claim über Spec/Plan/Implement/Test bis zu Commit, Push, PR Creation und kontrolliertem Auto-Merge — mit 7 Sicherheitsgates, Kill-Switch und Dry-Run vor jedem Merge.
 
-1. **Kein Code ohne Spec.**
-2. **Kein Fortschritt ohne GitHub-Kommentare.**
-3. **Kein Erfolg ohne Testbeweis.**
-4. **Keine Vollautonomie außerhalb einer Sandbox.**
-5. **Kein neues Issue, bevor das aktuelle abgeschlossen oder blockiert ist.**
-
-## Architektur
+## Validierter Pfad
 
 ```
-Web UI (React/Vite/Tailwind)
-      ↕ WebSocket/SSE
-Positron Orchestrator (Node.js/Express/TS)
-  ├── GitHub API Adapter
-  ├── Spec Kit Adapter
-  ├── OpenCode Adapter
-  └── Sandbox (Git Worktrees)
-      ↕
-SQLite (Runs, Events, Artifacts, Metriken)
+Issue → CLAIMED → REPO_SYNC → SPECIFY → PLAN → TASKS
+→ IMPLEMENT → TEST → COMMIT → PUSH → PR_CREATE
+→ DRY-RUN (WOULD_MERGE) → MERGE → DONE
 ```
 
-## Schnellstart
+Erfolgreich validiert gegen `xxammaxx/positron-external-test`, PR #6, Merge Commit `67a6ab1f`.
+
+## Quickstart
 
 ```bash
 git clone https://github.com/xxammaxx/Positron.git
-cd positron
+cd Positron
 npm install
 npm run build
-npm start
+npm test                    # 395 tests
+
+# Configure (copy and edit)
+cp .env.example .env
+# Set: GITHUB_TOKEN, POSITRON_REPO_OWNER, POSITRON_REPO_NAME
+
+# Start server
+cd apps/server
+GITHUB_TOKEN=... npx tsx dogfood-runner.ts
+# Dashboard: http://localhost:3000
+```
+
+## Sicherheitsprofile (Default: Supervised)
+
+```bash
+# Safe defaults — alle mutierenden Aktionen deaktiviert
+POSITRON_MERGE_KILL_SWITCH=true  # All merges blocked
+POSITRON_ENABLE_MERGE=false      # Auto-merge disabled
+POSITRON_ENABLE_PUSH=false       # Push disabled
+POSITRON_ENABLE_FIX_LOOP=false   # Auto-retry disabled
 ```
 
 ## Dokumentation
 
-- [Blueprint-Analyse](docs/blueprint-analysis.md)
-- [Architektur](docs/architecture.md)
-- [Modul-Karte](docs/module-map.md)
-- [Abhängigkeitsgraph](docs/dependency-graph.md)
-- [Constitution](.specify/memory/constitution.md)
+| Bereich | Dokument |
+|---------|----------|
+| Release | [`v0.1.0-rc.1.md`](docs/release/v0.1.0-rc.1.md) |
+| Betrieb | [`production-runbook.md`](docs/operations/production-runbook.md) |
+| Sicherheit | [`threat-model.md`](docs/security/threat-model.md) — 10 Bedrohungen |
+| Auto-Merge | [`auto-merge-safety-runbook.md`](docs/operations/auto-merge-safety-runbook.md) — 7 Gates |
+| Isolation | [`agent-environment-isolation.md`](docs/security/agent-environment-isolation.md) |
+| Onboarding | [`repository-onboarding-policy.md`](docs/operations/repository-onboarding-policy.md) |
+| Env-Referenz | [`env-reference.md`](docs/configuration/env-reference.md) — 25+ Variablen |
+| Profile | [`repository-profiles.md`](docs/configuration/repository-profiles.md) — 4 Level |
+| Changelog | [`CHANGELOG.md`](CHANGELOG.md) — 48 Issues |
 
-## Autonomie-Level
+## Metriken (v0.1.0-rc.1)
 
-| Level | Name | Code | Tests | Push |
-|-------|------|------|-------|------|
-| 0 | Observer | ❌ | ❌ | ❌ |
-| 1 | Research & Spec | ❌ | ❌ | ❌ |
-| 2 | Supervised Build | ✅ (mit Gates) | ✅ | ✅ (mit Freigabe) |
-| 3 | Autonomous Sandbox | ✅ | ✅ | ✅ (isoliert) |
-| 4 | CI Auto-PR | ✅ | ✅ | ✅ |
+| Metrik | Wert |
+|--------|------|
+| Issues | 48 |
+| Tests | **395** (all passing) |
+| Playwright E2E | 23 tests |
+| Build | TypeScript strict, clean |
+| Web Bundle | 224 KB JS + 19 KB CSS |
+| Phasen | 21 (QUEUED → FAILED_UNSAFE) |
 
 ## Lizenz
 
