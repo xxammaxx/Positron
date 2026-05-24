@@ -20,12 +20,12 @@ describe('CommandRunner', () => {
     expect(result.stdout).toContain('main');
   });
 
-  test('verbotene Kommandos — push', async () => {
-    await expect(runCommand('git', ['push'], tmpDir)).rejects.toThrow(GitCommandPolicyError);
+  test('verbotene Kommandos — reset', async () => {
+    await expect(runCommand('git', ['reset'], tmpDir)).rejects.toThrow(GitCommandPolicyError);
   });
 
-  test('verbotene Kommandos — commit', async () => {
-    await expect(runCommand('git', ['commit'], tmpDir)).rejects.toThrow(GitCommandPolicyError);
+  test('verbotene Kommandos — clean', async () => {
+    await expect(runCommand('git', ['clean'], tmpDir)).rejects.toThrow(GitCommandPolicyError);
   });
 
   test('Shell-Metacharacter blockiert', async () => {

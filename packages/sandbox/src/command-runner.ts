@@ -32,11 +32,19 @@ const ALLOWED_SUBCOMMANDS = new Set([
   'clone', 'fetch', 'status', 'diff', 'branch', 'switch',
   'checkout', 'rev-parse', 'remote', 'worktree', 'log',
   'symbolic-ref', 'config', 'init', 'add', 'restore',
+  'commit', 'push',
 ]);
 
-/** Git-Subkommandos: verboten */
+/** Git-Subkommandos: verboten
+ *
+ * commit und push sind erlaubt, weil:
+ * - Der WorkspaceAdapter (RealGitWorkspaceAdapter) eigene Sicherheitsprüfungen
+ *   hat (BranchGuard, Force-Flag-Block, PushGate via POSITRON_ENABLE_PUSH)
+ * - Die Pipeline-Level-Gates (Issue #19, #21) schützen vor Fehlbedienung
+ * - runCommand wird nicht direkt von aussen aufgerufen
+ */
 const FORBIDDEN_SUBCOMMANDS = new Set([
-  'push', 'commit', 'reset', 'clean', 'merge', 'rebase',
+  'reset', 'clean', 'merge', 'rebase',
 ]);
 
 /** Validiert und führt ein Git-Kommando sicher aus. */
