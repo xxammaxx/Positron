@@ -121,10 +121,14 @@ export function useSSE(runId: string | null): UseSSEResult {
       const handleRunComplete = (e: MessageEvent) => {
         try {
           const data = JSON.parse(e.data) as { phase: string; status: string };
-          setState(prev => ({
-            ...prev,
-            run: prev.run ? { ...prev.run, ...data } : prev.run,
-          }));
+          setState(prev => {
+            if (!prev.run) return prev;
+            // Nur gültige Phase/Status-Werte übernehmen (SSE kann beliebige Strings liefern)
+            const updated: Record<string, unknown> = {};
+            if (typeof data.phase === 'string' && data.phase.length > 0) updated.phase = data.phase;
+            if (typeof data.status === 'string' && data.status.length > 0) updated.status = data.status;
+            return { ...prev, run: { ...prev.run, ...updated } as typeof prev.run };
+          });
         } catch {
           // ignore
         }

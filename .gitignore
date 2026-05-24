@@ -9,3 +9,5 @@ coverage/
 .DS_Store
 *.sqlite
 *.db
+test-results/
+playwright-report/

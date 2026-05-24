@@ -93,7 +93,7 @@ export class RealGitHubAdapter implements GitHubAdapter {
     try {
       const state = { since: options?.since };
       const issues = await pollIssues(this.octokit, owner, repo, state);
-      let result = issues.map(i => ({
+      let result = issues.map((i: { number: number; title: string; state: string; labels: string[]; url: string; updatedAt: string }) => ({
         id: i.number,
         number: i.number,
         title: i.title,
@@ -108,7 +108,7 @@ export class RealGitHubAdapter implements GitHubAdapter {
       }));
 
       if (options?.labels?.length) {
-        result = result.filter(i => options.labels!.some(l => i.labels.includes(l)));
+        result = result.filter((i: { labels: string[] }) => options.labels!.some(l => i.labels.includes(l)));
       }
 
       return options?.limit ? result.slice(0, options.limit) : result;
@@ -241,7 +241,7 @@ export class RealGitHubAdapter implements GitHubAdapter {
       });
 
       if (existing.data.length > 0) {
-        const pr = existing.data[0];
+        const pr = existing.data[0]!;
         return {
           id: pr.id, number: pr.number,
           title: pr.title, body: pr.body ?? null,
@@ -250,7 +250,7 @@ export class RealGitHubAdapter implements GitHubAdapter {
           base: { ref: pr.base.ref, sha: pr.base.sha },
           htmlUrl: pr.html_url, createdAt: pr.created_at,
           updatedAt: pr.updated_at, draft: pr.draft ?? false,
-        mergeable: null,
+          mergeable: null,
         };
       }
     } catch (err) {
@@ -264,7 +264,6 @@ export class RealGitHubAdapter implements GitHubAdapter {
         owner: options.owner, repo: options.repo,
         title: options.title, head: options.head, base: options.base,
         body: options.body, draft: options.draft,
-        mergeable: null,
       });
 
       return {
@@ -353,7 +352,7 @@ export class RealGitHubAdapter implements GitHubAdapter {
         commit_message: options.commitMessage,
       });
       return { merged: data.merged, sha: data.sha, message: data.message };
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (err instanceof RequestError) {
         // 405 = not mergeable (conflicts, checks not passed)
         if (err.status === 405) {
@@ -361,7 +360,7 @@ export class RealGitHubAdapter implements GitHubAdapter {
         }
         throw mapRequestError(err);
       }
-      return { merged: false, message: err?.message ?? String(err) };
+      return { merged: false, message: err instanceof Error ? err.message : String(err) };
     }
   }
 

@@ -120,13 +120,13 @@ export class FakeGitHubAdapter implements GitHubAdapter {
     const existing = (this.pullRequests.get(key) ?? [])
       .filter(pr => pr.head.ref === options.head && pr.state === 'open');
 
-    if (existing.length > 0) return existing[0];
+    if (existing.length > 0) return existing[0]!;
 
     const pr: GitHubPullRequest = {
       id: this.nextPRId, number: this.nextPRId,
       title: options.title, body: options.body ?? null,
       state: 'open', draft: options.draft ?? false,
-        mergeable: null,
+      mergeable: null,
       head: { ref: options.head, sha: 'fake-sha-head' },
       base: { ref: options.base, sha: 'fake-sha-base' },
       htmlUrl: `https://github.com/${options.owner}/${options.repo}/pull/${this.nextPRId}`,

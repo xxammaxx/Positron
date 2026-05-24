@@ -5,6 +5,9 @@
   "name": "@positron/server",
   "version": "0.1.0",
   "type": "module",
+  "bin": {
+    "positron": "./dist/cli.js"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -18,7 +21,8 @@
     "test": "vitest run",
     "typecheck": "tsc -b --pretty false",
     "start": "node dist/index.js",
-    "dev": "tsx watch src/index.ts"
+    "dev": "tsx watch src/index.ts",
+    "positron": "node dist/cli.js"
   },
   "dependencies": {
     "@positron/github-adapter": "^0.1.0",

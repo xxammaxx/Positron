@@ -22,7 +22,7 @@ import { fileURLToPath } from 'node:url';
         process.env[key] = value;
       }
     }
-    console.log(`[Positron] Loaded env from ${envPath}`);
+    console.log(`[Positron] Loaded env from ${envPath}`); // NOLINT: runs before logger init
   }
 })();
 
@@ -46,6 +46,10 @@ import { FakeGitWorkspaceAdapter, applyDogfoodFixtureChange } from '@positron/sa
 import type { GitWorkspaceAdapter } from '@positron/sandbox';
 import { TestCommandDetector, TestRunner } from '@positron/sandbox';
 import type { TestReport } from '@positron/sandbox';
+import { startWatcher } from './github-watcher.js';
+import { createLogger } from './logger.js';
+
+const log = createLogger('Server');
 
 /** GitHub Adapter Modus: "fake" (Standard/Test) oder "real" (mit GITHUB_TOKEN) */
 type GitHubMode = 'fake' | 'real';
@@ -65,7 +69,8 @@ function resolveAdapter(adapter?: GitHubAdapter): { adapter: GitHubAdapter; mode
     return { adapter, mode: adapter instanceof FakeGitHubAdapter ? 'fake' : 'real' };
   }
 
-  const mode = (process.env.GITHUB_MODE ?? 'fake') as GitHubMode;
+  // Priorisiere POSITRON_GITHUB_MODE, Fallback auf GITHUB_MODE (Legacy)
+  const mode = (process.env.POSITRON_GITHUB_MODE ?? process.env.GITHUB_MODE ?? 'fake') as GitHubMode;
   if (mode === 'real') {
     return { adapter: createRealGitHubAdapter(), mode: 'real' };
   }
@@ -91,6 +96,12 @@ let db: Database.Database | null = null;
 let workspaceAdapter: GitWorkspaceAdapter = new FakeGitWorkspaceAdapter();
 let speckitAdapter: SpecKitAdapter = new FakeSpecKitAdapter();
 let opencodeAdapter: OpenCodeAdapter = new FakeOpenCodeAdapter();
+
+// Watcher Stop-Funktion (wird von createApp gesetzt, von Shutdown verwendet)
+let stopWatcher: (() => void) | null = null;
+
+// Server-Startzeit für Uptime-Berechnung
+const serverStartTime = Date.now();
 
 // SSE Client Tracking (Issue #29)
 const sseClients = new Map<string, Set<express.Response>>();
@@ -237,7 +248,7 @@ function loadRunFromDb(runId: string): RunState | null {
       workspacePath: null,
     };
   } catch (err) {
-    console.error(`[DB] loadRunFromDb failed for ${runId}:`, err);
+    log.error(`loadRunFromDb failed for ${runId}`, err);
     return null;
   }
 }
@@ -267,7 +278,7 @@ function countRunsInDb(): number {
     const row = getDb().prepare('SELECT COUNT(*) as cnt FROM runs').get() as { cnt: number } | undefined;
     return row?.cnt ?? 0;
   } catch (err) {
-    console.error('[DB] countRunsInDb failed:', err);
+    log.error('countRunsInDb failed', err);
     return 0;
   }
 }
@@ -288,7 +299,7 @@ function storeEvent(event: RunEventData): void {
       event.createdAt,
     );
   } catch (err) {
-    console.error(`[DB] storeEvent failed for run ${event.runId}:`, err);
+    log.error(`storeEvent failed for run ${event.runId}`, err);
   }
   // Notify SSE clients about new event
   broadcastSSE(event.runId, 'run-event', event);
@@ -310,7 +321,7 @@ function getEvents(runId: string): RunEventData[] {
       createdAt: row.created_at as string,
     }));
   } catch (err) {
-    console.error(`[DB] getEvents failed for run ${runId}:`, err);
+    log.error(`getEvents failed for run ${runId}`, err);
     return [];
   }
 }
@@ -1166,7 +1177,7 @@ function saveArtifact(runId: string, kind: string, content: string | string[]): 
       new Date().toISOString(),
     );
   } catch (err) {
-    console.error(`[saveArtifact] Fehler beim Speichern von '${kind}' für Run ${runId}:`, err);
+    log.error(`saveArtifact failed for ${kind} / run ${runId}`, err);
   }
 }
 
@@ -1286,9 +1297,24 @@ export function createApp(options: ServerOptions = {}) {
   const app = express();
   app.use(express.json());
 
-  // CORS — allow frontend on any local port
+  // GitHub Watcher starten (nur wenn POSITRON_ENABLE_WATCHER=true)
+  stopWatcher = startWatcher({
+    github,
+    repository,
+    db: getDb(),
+    onRunCreated: (runId, issueNumber) => {
+      log.info(`Watcher created run ${runId} for issue #${issueNumber}`);
+    },
+  });
+
+  // CORS — production-sicher, dev-kompatibel
+  // In Fake-Mode: Allow-Origin: * (lokale Dev-Server)
+  // In Real-Mode: Allow-Origin aus POSITRON_CORS_ORIGIN (Default: http://localhost:5173)
+  const corsOrigin = github instanceof FakeGitHubAdapter
+    ? '*'
+    : (process.env['POSITRON_CORS_ORIGIN'] ?? 'http://localhost:5173');
   app.use((_req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Origin', corsOrigin);
     res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type');
     if (_req.method === 'OPTIONS') { res.sendStatus(204); return; }
@@ -1427,12 +1453,38 @@ export function createApp(options: ServerOptions = {}) {
     });
   });
 
-  // Health
-  app.get('/api/health', (_req, res) => {
-    res.json({ status: 'ok', runs: countRunsInDb() });
+  // Health (Issue #22 + HealthIndicator)
+  app.get('/api/health', async (_req, res) => {
+    try {
+      const speckitHealth = await activeSpecKitAdapter.healthCheck('/tmp');
+      const opencodeHealth = await activeOpenCodeAdapter.healthCheck('/tmp');
+      const isFakeMode = github instanceof FakeGitHubAdapter;
+      // In Fake-Mode gelten nicht-verfügbare Adapter nicht als "degraded"
+      const adapters = {
+        github: !isFakeMode,
+        specKit: speckitHealth.available,
+        openCode: opencodeHealth.available,
+      };
+      const allOk = isFakeMode || Object.values(adapters).every(Boolean);
+      res.json({
+        status: allOk ? 'ok' : 'degraded',
+        adapters,
+        uptime: Math.floor((Date.now() - serverStartTime) / 1000),
+        runs: countRunsInDb(),
+        mode: isFakeMode ? 'fake' : 'real',
+      });
+    } catch (err) {
+      res.json({
+        status: 'error',
+        adapters: { github: false, specKit: false, openCode: false },
+        uptime: Math.floor((Date.now() - serverStartTime) / 1000),
+        runs: countRunsInDb(),
+        error: String(err),
+      });
+    }
   });
 
-  // Adapter Health Status (Issue #22)
+  // Adapter Health Status (Issue #22) — separate legacy endpoint
   app.get('/api/adapters/health', async (_req, res) => {
     try {
       const speckitHealth = await activeSpecKitAdapter.healthCheck('/tmp');
@@ -1547,12 +1599,15 @@ export function createApp(options: ServerOptions = {}) {
   });
 
   // Gate-Entscheidung (approve / revise)
+  // Backward-kompatibel: akzeptiert sowohl `decision` als auch `action` als Feldname
   app.post('/api/runs/:id/gate', express.json(), async (req, res) => {
     const { id } = req.params;
-    const { decision, reason } = req.body as {
-      decision: 'approve' | 'revise';
+    // Unterstützt beide Namenskonventionen: decision (Backend) und action (Frontend)
+    const bodyDecision = req.body.decision ?? req.body.action;
+    const { reason } = req.body as {
       reason?: string;
     };
+    const decision: 'approve' | 'revise' = bodyDecision;
 
     if (!['approve', 'revise'].includes(decision)) {
       return res.status(400).json({ error: 'decision muss approve oder revise sein' });
@@ -1780,7 +1835,19 @@ export { runFullPipeline };
 
 export function createServer(options: ServerOptions = {}) {
   const app = createApp(options);
-  return http.createServer(app);
+  const server = http.createServer(app);
+
+  // Watcher beim Server-Close automatisch stoppen
+  const originalClose = server.close.bind(server);
+  server.close = (callback?: (err?: Error) => void) => {
+    if (stopWatcher) {
+      stopWatcher();
+      stopWatcher = null;
+    }
+    return originalClose(callback);
+  };
+
+  return server;
 }
 
 // Auto-start when run directly
@@ -1792,7 +1859,24 @@ if (isDirectRun) {
   const port = parseInt(process.env['PORT'] ?? '3000', 10);
   const server = createServer();
   server.listen(port, () => {
-    console.log(`⚡ Positron v3.0 — Server listening on http://localhost:${port}`);
-    console.log(`   GitHub Mode: ${process.env['GITHUB_MODE'] ?? 'fake'}`);
+    const ghMode = process.env['POSITRON_GITHUB_MODE'] ?? process.env['GITHUB_MODE'] ?? 'fake';
+    log.info(`Server listening on http://localhost:${port}, mode=${ghMode}`);
   });
+
+  // Graceful Shutdown
+  function shutdown(): void {
+    log.info('Shutting down...');
+    if (stopWatcher) {
+      stopWatcher();
+      stopWatcher = null;
+    }
+    server.close(() => {
+      log.info('Server stopped');
+      process.exit(0);
+    });
+    // Force exit after 5s
+    setTimeout(() => process.exit(1), 5000);
+  }
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
 }

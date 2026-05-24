@@ -10,6 +10,7 @@ import type {
   HealthStatus,
   ApiError,
 } from './types.js';
+import type { Phase, RunStatus } from './types.js';
 
 const BASE = '/api';
 
@@ -126,7 +127,46 @@ export const api = {
   },
 
   // Metrics
-  getMetrics(): Promise<Metrics> {
-    return request<Metrics>('/metrics');
+  async getMetrics(): Promise<Metrics> {
+    // The backend returns a nested structure: { metrics: { runs: { total, active, done, failed, blocked }, ... } }
+    // The frontend expects a flat structure: { totalRuns, runsByPhase, runsByStatus, avgDurationMs, successRate }
+    const data = await request<{
+      metrics: {
+        runs: { total: number; active: number; done: number; failed: number; blocked: number };
+        repositories: { total: number };
+        phaseDistribution: Array<{ phase: string; count: number }>;
+        avgRunDurationMs: number | null;
+        timestamp: string;
+      };
+    }>('/metrics');
+
+    const m = data.metrics;
+    const totalRuns = m.runs.total;
+    const doneRuns = m.runs.done;
+    const successRate = totalRuns > 0 ? Math.round((doneRuns / totalRuns) * 100) : 0;
+
+    // Build runsByPhase from phaseDistribution
+    const runsByPhase: Partial<Record<Phase, number>> = {};
+    if (Array.isArray(m.phaseDistribution)) {
+      for (const entry of m.phaseDistribution) {
+        runsByPhase[entry.phase as Phase] = entry.count;
+      }
+    }
+
+    // Build runsByStatus from runs breakdown
+    const runsByStatus: Partial<Record<RunStatus, number>> = {
+      active: m.runs.active,
+      done: m.runs.done,
+      failed: m.runs.failed,
+      blocked: m.runs.blocked,
+    };
+
+    return {
+      totalRuns,
+      runsByPhase,
+      runsByStatus,
+      avgDurationMs: m.avgRunDurationMs ?? 0,
+      successRate,
+    };
   },
 };
