@@ -598,14 +598,23 @@ async function executePhase(
 
       // --- Dry-Run: Evaluate all gates, never merge (Issue #41) ---
       if (mergeDryRun) {
-        // Fetch full PR details for mergeability check
-        let mergeableState = 'unknown';
-        try {
-          const prDetail = await github.getPullRequest(repository.owner, repository.repo, pr.number);
-          mergeableState = (prDetail as any)?.mergeable === true ? 'clean'
-            : (prDetail as any)?.mergeable === false ? 'conflict'
-            : 'checking';
-        } catch { /* PR details optional */ }
+        // Fetch PR details with polling for conclusive mergeability (Issue #42)
+        let mergeableState = 'checking';
+        const maxMergeableRetries = 3;
+        const mergeableRetryDelay = 5000; // 5s between polls
+
+        for (let retry = 0; retry <= maxMergeableRetries; retry++) {
+          try {
+            const prDetail = await github.getPullRequest(repository.owner, repository.repo, pr.number);
+            const raw = (prDetail as any)?.mergeable;
+            if (raw === true) { mergeableState = 'clean'; break; }
+            if (raw === false) { mergeableState = 'conflict'; break; }
+            // null/undefined: still computing — retry after delay
+            if (retry < maxMergeableRetries) {
+              await new Promise(r => setTimeout(r, mergeableRetryDelay));
+            }
+          } catch { /* PR details optional */ break; }
+        }
 
         const testEvent = getEvents(current.id).find(e => e.phase === 'TEST' && e.level === 'INFO');
 
