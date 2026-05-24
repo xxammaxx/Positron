@@ -66,7 +66,35 @@ Write-capable MCP tools require explicit task relevance and must be documented b
 
 Secrets must never be written into repository files, issue comments, logs, or generated documentation.
 
-## Researcher / Deep Research Guardrail
+## External Operator Guardrail
+
+Agents must not introduce or invoke external operator frameworks unless the current issue explicitly requires them.
+
+Forbidden by default:
+
+- OpenClaw
+- openclaw-local-operator
+- local-operator
+- desktop automation agents
+- browser/OS operator agents outside the existing Positron adapters
+- third-party skill/plugin marketplaces
+- new autonomous toolchains downloaded during a run
+
+Allowed automation surfaces are limited to the existing Positron adapters:
+
+- GitHubAdapter
+- GitWorkspaceAdapter
+- SpecKitAdapter
+- OpenCodeAdapter
+- TestRunner
+- GitHubStatusSyncService
+- Operator Dashboard / Run Control
+
+If an agent believes a new operator tool is required, it must stop and write:
+
+"External operator requested: <tool>. Reason: <specific blocker>. Awaiting human approval."
+
+Without explicit human approval, the agent must continue using the existing Positron pipeline.
 
 GPT Researcher, Deep Research, broad web research, and research-report generation are optional tools, not workflow owners.
 
