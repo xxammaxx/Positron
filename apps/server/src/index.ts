@@ -619,8 +619,13 @@ async function runFullPipeline(
   let current = run;
   const maxSteps = 20;
   let attempt = 0;
-  const maxAttempts = MAX_FIX_LOOPS;
+  // Configurable max retries: env var overrides constant (Issue #31)
+  const envMaxRetries = process.env.POSITRON_MAX_FIX_LOOPS
+    ? parseInt(process.env.POSITRON_MAX_FIX_LOOPS, 10)
+    : undefined;
+  const maxAttempts = envMaxRetries && !isNaN(envMaxRetries) ? envMaxRetries : MAX_FIX_LOOPS;
   const fixLoopEnabled = process.env.POSITRON_ENABLE_FIX_LOOP === 'true';
+  let lastRetryTime = 0;
 
   for (let i = 0; i < maxSteps; i++) {
     // Check control signals before each phase (Issue #30)
@@ -676,20 +681,42 @@ async function runFullPipeline(
 
     const next = await executePhase(current, repository, workspace, speckit, opencode, github, syncService);
     if (next.phase === current.phase || next.phase === 'DONE' || next.phase.startsWith('FAILED')) {
-      // --- Fix-Loop (Issue #26) ---
-      // Nur bei transienten Fehlern und wenn Fix-Loop enabled
+      // --- Fix-Loop (Issue #31 — enhanced) ---
       if (fixLoopEnabled && next.phase === 'FAILED_TRANSIENT' && attempt < maxAttempts) {
         attempt++;
+
+        // Find the original failed phase from event payload (stored by markFailed)
+        const allTransient = getEvents(next.id).filter((e: RunEventData) => e.phase === 'FAILED_TRANSIENT');
+        const transientEvent = allTransient[allTransient.length - 1];
+        const failedPhase = (transientEvent?.payload as Record<string, unknown> | null)?.failedPhase as string | undefined;
+        const retryFromPhase = failedPhase && failedPhase !== 'FAILED_TRANSIENT' ? failedPhase : 'TEST';
+
+        // Exponential backoff: 1s, 2s, 4s, 8s... max 30s
+        const backoffMs = Math.min(1000 * Math.pow(2, attempt - 1), 30000);
+        const now = Date.now();
+        const timeSinceLastRetry = now - lastRetryTime;
+        if (timeSinceLastRetry < backoffMs) {
+          await new Promise(r => setTimeout(r, backoffMs - timeSinceLastRetry));
+        }
+        lastRetryTime = Date.now();
+
         storeEvent({
-          id: createRunId(), runId: next.id, phase: 'TEST' as Phase,
+          id: createRunId(), runId: next.id, phase: retryFromPhase as Phase,
           level: 'WARN',
-          message: `Fix-Loop retry ${attempt}/${maxAttempts} after transient failure`,
-          payload: null, createdAt: new Date().toISOString(),
+          message: `Fix-Loop retry ${attempt}/${maxAttempts} — phase: ${retryFromPhase}, backoff: ${backoffMs}ms`,
+          payload: { attempt, maxAttempts, retryFromPhase, backoffMs },
+          createdAt: new Date().toISOString(),
         });
-        // Restart from TEST phase with incremented attempt
-        const retryTransition = transition(next, 'TEST', `Fix-Loop retry ${attempt}/${maxAttempts}`, 'WARN');
-        current = retryTransition.run;
-        current.attempt = attempt;
+
+        // Manually set run state (transition validation rejects FAILED_TRANSIENT → *)
+        current = {
+          ...next,
+          phase: retryFromPhase as Phase,
+          status: 'active',
+          attempt,
+          lastError: null,
+        };
+        broadcastSSE(current.id, 'run-update', { phase: current.phase, status: current.status, branch: current.branch });
         continue;
       }
 

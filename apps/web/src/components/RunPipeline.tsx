@@ -13,6 +13,9 @@ const FAILURE_PHASES = new Set(['FAILED_TRANSIENT', 'FAILED_BLOCKED', 'FAILED_UN
 export function RunPipeline({ events, currentPhase }: { events: RunEvent[]; currentPhase: string }) {
   const eventPhases = new Set(events.map(e => e.phase));
 
+  // Count retry events (FAILED_TRANSIENT entries that have a retry follow-up)
+  const transientCount = events.filter(e => e.phase === 'FAILED_TRANSIENT').length;
+
   return (
     <div className="flex flex-wrap gap-1 mt-2">
       {PHASE_ORDER.map(phase => {
@@ -28,13 +31,21 @@ export function RunPipeline({ events, currentPhase }: { events: RunEvent[]; curr
         else if (reached && isFailure) color = 'bg-red-950 text-red-300 border border-red-800';
         else if (reached) color = 'bg-emerald-900 text-emerald-200';
 
+        // Show retry badge on FAILED_TRANSIENT when there were retries
+        const retryCount = phase === 'FAILED_TRANSIENT' && transientCount > 0 ? transientCount : 0;
+
         return (
           <span
             key={phase}
-            className={`px-2 py-0.5 rounded text-xs font-mono ${color}`}
-            title={`${phase}${isFailure ? ' (failure state)' : ''}`}
+            className={`relative px-2 py-0.5 rounded text-xs font-mono ${color}`}
+            title={`${phase}${isFailure ? ' (failure state)' : ''}${retryCount ? ` — ${retryCount} retries` : ''}`}
           >
             {phase.replace(/_/g, ' ')}
+            {retryCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-amber-500 text-black text-[8px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">
+                {retryCount}
+              </span>
+            )}
           </span>
         );
       })}
