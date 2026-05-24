@@ -40,26 +40,22 @@ async function main(): Promise<void> {
   let specifyVersion = '';
   try {
     specifyVersion = execSync('specify --version 2>/dev/null', { encoding: 'utf-8', timeout: 5000 }).trim();
-  } catch {
-    try { specifyVersion = execSync('npx --yes specify --version 2>/dev/null', { encoding: 'utf-8', timeout: 10000 }).trim(); } catch { /* fail */ }
-  }
+  } catch { /* not found locally — keine npx-fallback (supply-chain safety) */ }
   results.push({
     name: 'SpecKit CLI (specify)',
     status: specifyVersion ? 'ok' : 'fail',
-    detail: specifyVersion ? `specify CLI gefunden: ${specifyVersion.slice(0, 100)}` : 'specify CLI nicht gefunden',
+    detail: specifyVersion ? `specify CLI gefunden: ${specifyVersion.slice(0, 100)}` : 'specify CLI nicht gefunden (lokal)',
   });
 
   // --- OpenCode ---
   let opencodeVersion = '';
   try {
     opencodeVersion = execSync('opencode --version 2>/dev/null', { encoding: 'utf-8', timeout: 5000 }).trim();
-  } catch {
-    try { opencodeVersion = execSync('npx --yes opencode --version 2>/dev/null', { encoding: 'utf-8', timeout: 10000 }).trim(); } catch { /* fail */ }
-  }
+  } catch { /* not found locally — keine npx-fallback (supply-chain safety) */ }
   results.push({
     name: 'OpenCode CLI',
     status: opencodeVersion ? 'ok' : 'fail',
-    detail: opencodeVersion ? `opencode CLI gefunden: ${opencodeVersion.slice(0, 100)}` : 'opencode CLI nicht gefunden',
+    detail: opencodeVersion ? `opencode CLI gefunden: ${opencodeVersion.slice(0, 100)}` : 'opencode CLI nicht gefunden (lokal)',
   });
 
   // --- Ausgabe ---

@@ -147,6 +147,15 @@ export async function runCommand(args: RunCommandArgs): Promise<void> {
       process.exit(1);
     }
 
+    // Prüfe Content-Type auf JSON — verhindert Crash bei non-JSON 2xx
+    const contentType = response.headers.get('content-type') ?? '';
+    if (!contentType.includes('json')) {
+      const body = await response.text().catch(() => '');
+      console.error(`❌ Server antwortete mit ${contentType} statt JSON`);
+      console.error(`   Body: ${body.slice(0, 500)}`);
+      process.exit(1);
+    }
+
     const data = await response.json() as {
       run: { id: string; phase: string; status: string };
       eventCount: number;

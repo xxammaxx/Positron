@@ -29,6 +29,7 @@ export interface WatcherOptions {
 interface WatcherState {
   intervalId: ReturnType<typeof setInterval> | null;
   enabled: boolean;
+  polling: boolean; // true während pollOnce läuft — verhindert Überlappung
 }
 
 /** Prüft, ob für eine Issue bereits ein Run existiert (Idempotenz). */
@@ -124,6 +125,7 @@ export function startWatcher(options: WatcherOptions): () => void {
   const state: WatcherState = {
     intervalId: null,
     enabled: true,
+    polling: false,
   };
 
   // Prüfen ob Watcher aktiviert ist
@@ -133,18 +135,34 @@ export function startWatcher(options: WatcherOptions): () => void {
     return () => { state.enabled = false; };
   }
 
-  const intervalMs = parseInt(process.env['POSITRON_WATCHER_INTERVAL_MS'] ?? '60000', 10);
+  // Intervall validieren
+  const rawInterval = process.env['POSITRON_WATCHER_INTERVAL_MS'] ?? '60000';
+  const intervalMs = parseInt(rawInterval, 10);
+  const safeInterval = (isNaN(intervalMs) || intervalMs < 1000) ? 60000 : intervalMs;
+  if (safeInterval !== intervalMs) {
+    log.warn(`Invalid POSITRON_WATCHER_INTERVAL_MS="${rawInterval}", using default 60000ms`);
+  }
 
-  log.info(`Started — interval=${intervalMs}ms, labels=${process.env['POSITRON_WATCHER_LABELS'] ?? '(all)'}`);
+  log.info(`Started — interval=${safeInterval}ms, labels=${process.env['POSITRON_WATCHER_LABELS'] ?? '(all)'}`);
+
+  /** Führt pollOnce aus, mit Überlappungsschutz */
+  async function safePoll(): Promise<void> {
+    if (!state.enabled || state.polling) return;
+    state.polling = true;
+    try {
+      await pollOnce(options);
+    } catch (err) {
+      log.error('Poll failed', err);
+    } finally {
+      state.polling = false;
+    }
+  }
 
   // Sofort einmal poll
-  pollOnce(options).catch(err => log.error('Initial poll failed', err));
+  safePoll();
 
   // Regelmäßiges Polling
-  state.intervalId = setInterval(() => {
-    if (!state.enabled) return;
-    pollOnce(options).catch(err => log.error('Poll failed', err));
-  }, intervalMs);
+  state.intervalId = setInterval(safePoll, safeInterval);
 
   // Stop-Funktion zurückgeben
   return () => {
