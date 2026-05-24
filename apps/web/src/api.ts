@@ -4,6 +4,7 @@ import type {
   Repository,
   Issue,
   Run,
+  RunEvent,
   Artifact,
   Metrics,
   HealthStatus,
@@ -70,16 +71,16 @@ export const api = {
     );
   },
 
-  getRunById(id: string): Promise<Run> {
-    return request<Run>(`/runs/${id}`);
+  getRunById(id: string): Promise<{ run: Run; events: RunEvent[] }> {
+    return request<{ run: Run; events: RunEvent[] }>(`/runs/${id}`);
   },
 
   startRun(
     repoId: string,
     issueNumber: number,
     autonomyLevel?: number,
-  ): Promise<Run> {
-    return request<Run>(`/repos/${repoId}/runs`, {
+  ): Promise<{ run: Run; events: RunEvent[]; eventCount: number }> {
+    return request<{ run: Run; events: RunEvent[]; eventCount: number }>(`/repos/${repoId}/runs`, {
       method: 'POST',
       body: JSON.stringify({ issueNumber, autonomyLevel }),
     });
@@ -87,7 +88,7 @@ export const api = {
 
   controlRun(
     runId: string,
-    action: 'pause' | 'resume' | 'abort',
+    action: 'pause' | 'resume' | 'abort' | 'retry',
   ): Promise<{ success: boolean }> {
     return request<{ success: boolean }>(`/runs/${runId}/control`, {
       method: 'POST',

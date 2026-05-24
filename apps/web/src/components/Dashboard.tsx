@@ -97,14 +97,14 @@ export default function Dashboard(): React.ReactElement {
     setStartingRun(true);
     setError(null);
     try {
-      const run = await api.startRun(
+      const { run: startedRun } = await api.startRun(
         selectedRepo,
         parseInt(issueNumber, 10),
         autonomyLevel,
       );
       setIsNewRunModalOpen(false);
       setIssueNumber('');
-      navigate(`/runs/${run.id}`);
+      navigate(`/runs/${startedRun.id}`);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Failed to start run',

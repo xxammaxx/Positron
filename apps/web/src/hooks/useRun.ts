@@ -20,12 +20,12 @@ export function useRun(runId: string): UseRunResult {
 
   const fetchRun = useCallback(async () => {
     try {
-      const data = await api.getRunById(runId);
-      setRun(data);
+      const { run: runData } = await api.getRunById(runId);
+      setRun(runData);
       setError(null);
 
       // Stop polling if terminal phase reached
-      if (data.status !== 'active' || TERMINAL_PHASES.has(data.phase)) {
+      if (runData.status !== 'active' || TERMINAL_PHASES.has(runData.phase)) {
         if (intervalRef.current) {
           clearInterval(intervalRef.current);
           intervalRef.current = null;
