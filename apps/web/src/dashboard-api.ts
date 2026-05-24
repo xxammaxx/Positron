@@ -2,7 +2,7 @@
 import type { RunRecord, RunDetail, RunDetailWithMeta, HealthStatus, SafetyState, EvidenceItem, PullRequestRef, TestSummary, RunEvent } from './types.js';
 import type { AdapterHealth, MergeGateStatus } from './dashboard-types.js';
 
-const BASE = '/api';
+const BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 async function fetchJSON<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, init);

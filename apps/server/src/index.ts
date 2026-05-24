@@ -928,6 +928,15 @@ export function createApp(options: ServerOptions = {}) {
   const app = express();
   app.use(express.json());
 
+  // CORS — allow frontend on any local port
+  app.use((_req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    if (_req.method === 'OPTIONS') { res.sendStatus(204); return; }
+    next();
+  });
+
   // Repository registrieren
   app.post('/api/repos', (_req, res) => {
     res.json({ id: 'repo-1', status: 'registered', mode: github instanceof FakeGitHubAdapter ? 'fake' : 'real' });
