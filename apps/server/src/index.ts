@@ -569,60 +569,101 @@ async function executePhase(
       break;
     }
     case 'MERGE': {
-      // --- Safety Gates (Issue #21) ---
+      // --- Safety Gates (Issue #21 + #41) ---
       const mergeAllowed = process.env.POSITRON_ENABLE_MERGE === 'true';
       const mergeDryRun = process.env.POSITRON_MERGE_DRY_RUN === 'true';
       const mergeKillSwitch = process.env.POSITRON_MERGE_KILL_SWITCH === 'true';
 
-      // Kill-Switch: sofortiger Abbruch aller Merges
-      if (mergeKillSwitch) {
-        result = transition(current, 'DONE', 'Merge BLOCKED: Kill-Switch aktiv (POSITRON_MERGE_KILL_SWITCH=true)', 'WARN');
-        break;
-      }
-
-      if (!mergeAllowed) {
-        result = transition(current, 'DONE', 'Merge skipped (POSITRON_ENABLE_MERGE not set)', 'INFO');
-        break;
-      }
-
-      // Run-Status-Gate: kein Merge bei blocked/failed
-      if (current.status === 'blocked' || current.status === 'failed') {
-        result = transition(current, 'DONE', `Merge blocked: Run status is ${current.status}`, 'WARN');
-        break;
-      }
-
-      // Test-Evidence-Gate: erfordert PASS im TEST-Event
-      const testEvent = getEvents(current.id).find(e => e.phase === 'TEST' && e.level === 'INFO');
-      if (!testEvent) {
-        result = transition(current, 'DONE', 'Merge blocked: No passing test evidence found', 'WARN');
-        break;
-      }
-
+      // Branch
       const branch = current.branch;
       if (!branch) {
         result = transition(current, 'DONE', 'Merge skipped (no branch)', 'INFO');
         break;
       }
 
+      // Fetch PR
+      let pr: Awaited<ReturnType<typeof github.listPullRequests>>[0] | null = null;
       try {
         const prs = await github.listPullRequests({
           owner: repository.owner, repo: repository.repo,
           head: `${repository.owner}:${branch}`, state: 'open',
         });
+        pr = prs[0] ?? null;
+      } catch { /* PR lookup optional */ }
 
-        if (prs.length === 0) {
-          result = transition(current, 'DONE', 'Merge skipped (no open PR found)', 'INFO');
-          break;
-        }
+      if (!pr) {
+        result = transition(current, 'DONE', 'Merge skipped (no open PR found)', 'INFO');
+        break;
+      }
 
-        const pr = prs[0];
+      // --- Dry-Run: Evaluate all gates, never merge (Issue #41) ---
+      if (mergeDryRun) {
+        // Fetch full PR details for mergeability check
+        let mergeableState = 'unknown';
+        try {
+          const prDetail = await github.getPullRequest(repository.owner, repository.repo, pr.number);
+          mergeableState = (prDetail as any)?.mergeable === true ? 'clean'
+            : (prDetail as any)?.mergeable === false ? 'conflict'
+            : 'checking';
+        } catch { /* PR details optional */ }
 
-        // Dry-Run: Merge simulieren ohne echten API-Call
-        if (mergeDryRun) {
-          result = transition(current, 'DONE', `[DRY-RUN] Would merge PR #${pr.number} (${pr.htmlUrl})`, 'INFO');
-          break;
-        }
+        const testEvent = getEvents(current.id).find(e => e.phase === 'TEST' && e.level === 'INFO');
 
+        // Evaluate ALL gates (no short-circuit in dry-run)
+        const allGates: Array<{ gate: string; passed: boolean; detail: string }> = [
+          { gate: 'Auto-Merge Enabled', passed: mergeAllowed, detail: mergeAllowed ? 'POSITRON_ENABLE_MERGE=true' : 'POSITRON_ENABLE_MERGE not set' },
+          { gate: 'Kill-Switch', passed: !mergeKillSwitch, detail: mergeKillSwitch ? 'POSITRON_MERGE_KILL_SWITCH=true — blocked' : 'Kill-Switch not active' },
+          { gate: 'Run Status Active', passed: current.status === 'active', detail: `Run status is "${current.status}"` },
+          { gate: 'Test Evidence', passed: !!testEvent, detail: testEvent ? 'Test phase completed with INFO' : 'No passing test evidence' },
+          { gate: 'Branch', passed: !!current.branch, detail: `Branch: ${current.branch}` },
+          { gate: 'PR Open', passed: pr.state === 'open', detail: `PR state: ${pr.state}` },
+          { gate: 'Mergeable', passed: mergeableState === 'clean', detail: `GitHub mergeable: ${mergeableState}` },
+        ];
+
+        const allPassed = allGates.every(g => g.passed);
+        const decision = allPassed ? 'WOULD_MERGE' : 'WOULD_BLOCK';
+        const blockedGates = allGates.filter(g => !g.passed);
+
+        // Structured event for Dashboard
+        storeEvent({
+          id: createRunId(), runId: current.id, phase: 'MERGE', level: 'GATE',
+          message: `[DRY-RUN] ${decision}: ${allGates.filter(g => g.passed).length}/${allGates.length} gates pass`,
+          payload: { decision, allPassed, mergeable: mergeableState, gates: allGates, prNumber: pr.number, prUrl: pr.htmlUrl },
+          createdAt: new Date().toISOString(),
+        });
+
+        // GitHub comment with gate-by-gate results
+        try {
+          const gateList = allGates.map(g => `- ${g.passed ? '✅' : '❌'} **${g.gate}:** ${g.detail}`).join('\n');
+          await github.createIssueComment(
+            { owner: repository.owner, repo: repository.repo, issueNumber: current.issueNumber },
+            `## 🔍 Auto-Merge Dry-Run Result\n\n**Decision:** ${decision}\n**PR:** #${pr.number}\n**Mergeable:** ${mergeableState}\n\n### Gates (${allGates.filter(g => g.passed).length}/${allGates.length})\n\n${gateList}\n\n> 🛡️ **No merge executed** — Dry-Run only.`,
+          );
+        } catch { /* comment is best-effort */ }
+
+        result = transition(current, 'DONE',
+          `[DRY-RUN] ${decision}: ${allPassed ? 'All gates pass' : `${blockedGates.length} gates fail — ${blockedGates.map(g => g.gate).join(', ')}`}`,
+          allPassed ? 'INFO' : 'WARN');
+        break;
+      }
+
+      // --- Real Merge (nicht Dry-Run) ---
+
+      // Kill-Switch
+      if (mergeKillSwitch) {
+        result = transition(current, 'DONE', 'Merge BLOCKED: Kill-Switch (POSITRON_MERGE_KILL_SWITCH=true)', 'WARN');
+        break;
+      }
+      if (!mergeAllowed) {
+        result = transition(current, 'DONE', 'Merge skipped (POSITRON_ENABLE_MERGE not set)', 'INFO');
+        break;
+      }
+      if (current.status !== 'active') {
+        result = transition(current, 'DONE', `Merge blocked: Run status is ${current.status}`, 'WARN');
+        break;
+      }
+
+      try {
         const mergeResult = await github.mergePullRequest({
           owner: repository.owner, repo: repository.repo,
           prNumber: pr.number, strategy: 'squash',
