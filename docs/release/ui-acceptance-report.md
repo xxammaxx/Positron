@@ -1,85 +1,72 @@
 # UI Acceptance Report — v0.1.0-rc.1
 
-> Stand: 2026-05-24 · Positron Issue #49
+> Stand: 2026-05-24 · Positron Issue #50
 
 ## Decision: User can open the UI — YES ✅
 
-Das Positron Operator Dashboard ist lokal erreichbar und visuell verifiziert.
+Das Positron Operator Dashboard ist lokal erreichbar, visuell geprüft, und alle 9 Screenshots sind mit eindeutigen Hashes dokumentiert.
 
-## How to Start
+## How to Start (Two Terminals)
 
 ```bash
-# Terminal 1 — Backend
+# Terminal 1 — Backend (http://localhost:3000)
 cd apps/server
-GITHUB_MODE=fake \
-POSITRON_REPO_OWNER=test POSITRON_REPO_NAME=test \
+GITHUB_TOKEN=<your-token> \
+POSITRON_REPO_OWNER=xxammaxx \
+POSITRON_REPO_NAME=positron-external-test \
+GITHUB_MODE=real \
 npx tsx dogfood-runner.ts
-# → http://localhost:3000
 
-# Terminal 2 — Frontend
+# Terminal 2 — Frontend (http://localhost:4173)
 cd apps/web
-npm run build && npx vite preview --port 4173
-# → http://localhost:4173
+npm run build
+npx vite preview --port 4173
 ```
 
-Browser öffnen: `http://localhost:4173`
+Browser öffnen: **http://localhost:4173**
 
-## Screenshots (9 captures)
+## Screenshot Artifacts (9 captures, all unique)
 
-Alle Screenshots liegen unter `docs/release/ui-acceptance/`.
+Siehe `docs/release/ui-acceptance/` und `manifest.json`.
 
-| # | Datei | Zeigt | Bytes |
-|---|-------|------|-------|
-| 01 | `01-dashboard.png` | Header "Positron Operator Cockpit", Issues + Run-Liste | 52 KB |
-| 02 | `02-issues.png` | Issues Section mit positron-Labeln | 52 KB |
-| 03 | `03-safety-controls.png` | Safety Controls: 5 Flags (Enable Merge, Kill Switch, etc.) | 52 KB |
-| 04 | `04-adapter-health.png` | Adapter Health Panel | 52 KB |
-| 05 | `05-run-detail.png` | Run-Detailseite mit Run-ID, Phase, Branch | 192 KB |
-| 06 | `06-pipeline.png` | 21-Phasen-Pipeline (QUEUED → FAILED_UNSAFE) | 192 KB |
-| 07 | `07-merge-gates.png` | Merge Gates mit Status + Blockierungsgrund | 192 KB |
-| 08 | `08-test-evidence-log.png` | Test Report + Evidence + Event Log | 192 KB |
-| 09 | `09-full-run-detail.png` | Komplette Run-Detailseite (Full Page) | 192 KB |
+| # | File | Hash (SHA256) | Size | Description |
+|---|------|---------------|------|-------------|
+| 01 | `01-dashboard.png` | `1e02aca3a11f8222` | 63 KB | Dashboard Overview — Header, Issues, Run List, Footer |
+| 02 | `02-issue-queue.png` | `b8b461798bae357c` | 4 KB | Issue Queue — Labels, positron:ready, Run-Button |
+| 03 | `03-safety-controls.png` | `546947a1efa2cc86` | 13 KB | Safety Controls — 5 flags: Merge, Dry-Run, Push, Kill-Switch, Fix-Loop |
+| 04 | `04-adapter-health.png` | `30db8b81bdff7238` | 2 KB | Adapter Health — GitHub, SpecKit, OpenCode availability |
+| 05 | `05-run-detail-pipeline.png` | `e802122e709cac67` | 192 KB | Full Run Detail — Run info header with 21-phase pipeline |
+| 06 | `06-merge-gates.png` | `f26cc8e2ab0c7498` | 114 KB | Merge Gates — Gate indicators with status and blocked reasons |
+| 07 | `07-test-report-evidence.png` | `e334c6aa137ccdca` | 2 KB | Test Report card with PASS/FAIL status and evidence items |
+| 08 | `08-event-log.png` | `afae87b28c86bb62` | 2 KB | Event Log — filter dropdowns by Level and Phase |
+| 09 | `09-pr-autonomy-controls.png` | `4fb9bb57397f0d84` | 137 KB | PR & Merge, Autonomy Mode, Run Controls (Pause/Abort/Resume/Retry) |
 
-## Visual Verification
-
-| UI-Element | Confirmed |
-|------------|-----------|
-| Positron Header + Status | ✅ |
-| Run List with Run IDs | ✅ |
-| 21-Phase Pipeline (QUEUED → FAILED_UNSAFE) | ✅ |
-| Merge Gates (6 gates with ✓/✗) | ✅ |
-| Safety Controls (5 flags with ON/OFF) | ✅ |
-| Adapter Health | ✅ |
-| Test Report | ✅ |
-| Evidence | ✅ |
-| Event Log | ✅ |
-| PR & Merge Block | ✅ |
-| Autonomy Mode | ✅ |
-| Run Controls (Pause/Abort/Resume/Retry) | ✅ |
-| No Secrets in UI | ✅ |
-
-## Leere Zustände
-
-Wenn keine Runs existieren, zeigt das Dashboard:
-- "Positron Operator Cockpit · 0 runs · ready" (Footer)
-- "Issues" Section mit "No repository configured" (wenn kein Repo)
-- Run-Liste leer mit "No runs yet"
-
-Die leeren Zustände sind verständlich und geben klare Hinweise.
-
-## Build
+## Reproducibility
 
 ```bash
-npm run build             # TypeScript strict, clean ✅
-npm run build --prefix apps/web  # 224KB JS + 19KB CSS ✅
-npm test                  # 395 passed ✅
+# Alle Screenshots regenerieren:
+cd apps/web
+npx playwright test --config=playwright.config.ts e2e/ui-acceptance.spec.ts
+# → 9 passing, 31s, outputs to docs/release/ui-acceptance/
 ```
+
+## Validation
+
+| Check | Result |
+|-------|--------|
+| Backend erreichbar | ✅ http://localhost:3000 |
+| Frontend erreichbar | ✅ http://localhost:4173 |
+| Screenshots existieren | ✅ 9 files in repo |
+| Alle unterschiedlich | ✅ 9/9 unique SHA256 hashes |
+| Manifest.json | ✅ 9 entries with file/route/timestamp/hash/description |
+| Playwright reproduzierbar | ✅ 9 passing, 31s |
+| Keine Secrets im UI | ✅ |
+| npm test | 395 passed ✅ |
+| npm run build | TypeScript strict ✅ |
+| Web preview | 224KB ✅ |
 
 ## Conclusion
 
 **User can open the UI: YES** ✅
-
-Das Operator Dashboard ist vollständig funktionsfähig, alle Komponenten sind
-visuell verifiziert, und die 9 Screenshots dokumentieren den Zustand.
 
 **Ready for v0.1.0-rc.1 tag after UI acceptance: YES** ✅

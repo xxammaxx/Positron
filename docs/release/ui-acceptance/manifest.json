@@ -1,0 +1,74 @@
+[
+  {
+    "file": "01-dashboard.png",
+    "route": "/",
+    "timestamp": "2026-05-24T08:22:47.483Z",
+    "hash": "1e02aca3a11f8222",
+    "viewport": "1280x720",
+    "description": "Dashboard Overview — Header, Issues, Run List, Footer"
+  },
+  {
+    "file": "02-issue-queue.png",
+    "route": "/",
+    "timestamp": "2026-05-24T08:22:50.519Z",
+    "hash": "b8b461798bae357c",
+    "viewport": "",
+    "description": "Issue Queue — Labels, positron:ready, Run-Button"
+  },
+  {
+    "file": "03-safety-controls.png",
+    "route": "/",
+    "timestamp": "2026-05-24T08:22:53.539Z",
+    "hash": "546947a1efa2cc86",
+    "viewport": "",
+    "description": "Safety Controls — 5 flags: Merge, Dry-Run, Push, Kill-Switch, Fix-Loop"
+  },
+  {
+    "file": "04-adapter-health.png",
+    "route": "/",
+    "timestamp": "2026-05-24T08:22:56.551Z",
+    "hash": "30db8b81bdff7238",
+    "viewport": "",
+    "description": "Adapter Health — GitHub, SpecKit, OpenCode availability"
+  },
+  {
+    "file": "05-run-detail-pipeline.png",
+    "route": "/run/:id",
+    "timestamp": "2026-05-24T08:23:00.241Z",
+    "hash": "e802122e709cac67",
+    "viewport": "",
+    "description": "Full Run Detail — Run info header with 21-phase pipeline badges"
+  },
+  {
+    "file": "06-merge-gates.png",
+    "route": "/run/:id",
+    "timestamp": "2026-05-24T08:23:04.011Z",
+    "hash": "f26cc8e2ab0c7498",
+    "viewport": "",
+    "description": "Merge Gates — Gate indicators with status and blocked reasons"
+  },
+  {
+    "file": "07-test-report-evidence.png",
+    "route": "/run/:id",
+    "timestamp": "2026-05-24T08:23:07.551Z",
+    "hash": "e334c6aa137ccdca",
+    "viewport": "",
+    "description": "Test Report card with PASS/FAIL status and evidence items"
+  },
+  {
+    "file": "08-event-log.png",
+    "route": "/run/:id",
+    "timestamp": "2026-05-24T08:23:11.084Z",
+    "hash": "afae87b28c86bb62",
+    "viewport": "",
+    "description": "Event Log — filter dropdowns by Level and Phase"
+  },
+  {
+    "file": "09-pr-autonomy-controls.png",
+    "route": "/run/:id",
+    "timestamp": "2026-05-24T08:23:14.874Z",
+    "hash": "4fb9bb57397f0d84",
+    "viewport": "",
+    "description": "PR & Merge block, Autonomy Mode, Run Controls (Pause/Abort/Resume/Retry)"
+  }
+]
