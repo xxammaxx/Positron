@@ -250,6 +250,7 @@ export class RealGitHubAdapter implements GitHubAdapter {
           base: { ref: pr.base.ref, sha: pr.base.sha },
           htmlUrl: pr.html_url, createdAt: pr.created_at,
           updatedAt: pr.updated_at, draft: pr.draft ?? false,
+        mergeable: null,
         };
       }
     } catch (err) {
@@ -263,6 +264,7 @@ export class RealGitHubAdapter implements GitHubAdapter {
         owner: options.owner, repo: options.repo,
         title: options.title, head: options.head, base: options.base,
         body: options.body, draft: options.draft,
+        mergeable: null,
       });
 
       return {
@@ -273,6 +275,7 @@ export class RealGitHubAdapter implements GitHubAdapter {
         base: { ref: created.data.base.ref, sha: created.data.base.sha },
         htmlUrl: created.data.html_url, createdAt: created.data.created_at,
         updatedAt: created.data.updated_at, draft: created.data.draft ?? false,
+        mergeable: null,
       };
     } catch (err) {
       if (err instanceof RequestError) throw mapRequestError(err);
@@ -295,6 +298,7 @@ export class RealGitHubAdapter implements GitHubAdapter {
         base: { ref: pr.base.ref, sha: pr.base.sha },
         htmlUrl: pr.html_url, createdAt: pr.created_at,
         updatedAt: pr.updated_at, draft: pr.draft ?? false,
+        mergeable: null,
       }));
     } catch (err) {
       if (err instanceof RequestError) throw mapRequestError(err);
@@ -331,6 +335,7 @@ export class RealGitHubAdapter implements GitHubAdapter {
         base: { ref: pr.base.ref, sha: pr.base.sha },
         htmlUrl: pr.html_url, createdAt: pr.created_at,
         updatedAt: pr.updated_at, draft: pr.draft ?? false,
+        mergeable: pr.mergeable ?? null,
       };
     } catch (err) {
       if (err instanceof RequestError) throw mapRequestError(err);

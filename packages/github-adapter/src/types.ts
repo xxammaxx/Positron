@@ -68,6 +68,8 @@ export interface GitHubPullRequest {
   createdAt: string;
   updatedAt: string;
   draft: boolean;
+  /** GitHub's mergeable flag: true (clean), false (conflict), null (computing) */
+  mergeable: boolean | null;
 }
 
 export interface GitHubPRFile {

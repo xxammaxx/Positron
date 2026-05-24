@@ -606,7 +606,7 @@ async function executePhase(
         for (let retry = 0; retry <= maxMergeableRetries; retry++) {
           try {
             const prDetail = await github.getPullRequest(repository.owner, repository.repo, pr.number);
-            const raw = (prDetail as any)?.mergeable;
+            const raw = prDetail.mergeable;
             if (raw === true) { mergeableState = 'clean'; break; }
             if (raw === false) { mergeableState = 'conflict'; break; }
             // null/undefined: still computing — retry after delay

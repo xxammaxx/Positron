@@ -126,6 +126,7 @@ export class FakeGitHubAdapter implements GitHubAdapter {
       id: this.nextPRId, number: this.nextPRId,
       title: options.title, body: options.body ?? null,
       state: 'open', draft: options.draft ?? false,
+        mergeable: null,
       head: { ref: options.head, sha: 'fake-sha-head' },
       base: { ref: options.base, sha: 'fake-sha-base' },
       htmlUrl: `https://github.com/${options.owner}/${options.repo}/pull/${this.nextPRId}`,
