@@ -21,7 +21,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "clean": "tsc -b --clean",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "start": "cd apps/server && npx tsx server.ts",
+    "dev": "cd apps/server && npx tsx server.ts"
   },
   "devDependencies": {
     "typescript": "^5.8.0",

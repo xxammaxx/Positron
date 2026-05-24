@@ -25,21 +25,54 @@ npm install
 npm run build
 npm test                    # 395 tests
 
-# Configure (copy and edit)
+# Quick demo (no GitHub token needed — fake mode):
+npm start
+# → Backend:  http://localhost:3000
+# → Health:   http://localhost:3000/api/health
+# → Frontend: cd apps/web && npm run build && npx vite preview --port 4173
+#             http://localhost:4173
+
+# Real mode (with GitHub token):
 cp .env.example .env
-# Set: GITHUB_TOKEN, POSITRON_REPO_OWNER, POSITRON_REPO_NAME
+# Edit .env: set GITHUB_TOKEN, POSITRON_REPO_OWNER, POSITRON_REPO_NAME
+POSITRON_REPO_OWNER=... POSITRON_REPO_NAME=... GITHUB_MODE=real npm start
+```
 
-# Start backend server
-cd apps/server
-GITHUB_TOKEN=... npx tsx dogfood-runner.ts
-# Backend: http://localhost:3000
+### Backend start (detail)
 
-# Start frontend (separate terminal)
+```bash
+# Demo (fake — needs nothing):
+cd apps/server && npx tsx server.ts
+
+# Real mode (needs GITHUB_TOKEN):
+GITHUB_TOKEN=ghp_... \
+POSITRON_REPO_OWNER=xxammaxx POSITRON_REPO_NAME=mytestrepo \
+GITHUB_MODE=real \
+npx tsx server.ts
+```
+
+### Frontend start (separate terminal)
+
+```bash
 cd apps/web
 npm run build
 npx vite preview --port 4173
-# Dashboard: http://localhost:4173
+# → http://localhost:4173
 ```
+
+### API Endpoints (localhost:3000)
+
+```
+GET  /api/health              → {"status":"ok","runs":<N>}
+GET  /api/runs                → Alle Runs
+GET  /api/runs/:id            → Run-Detail + Events
+POST /api/repos/repo-1/runs   → Run starten
+GET  /api/safety              → Safety-Gate-Status
+GET  /api/adapters/health     → Adapter-Status
+GET  /api/runs/:id/events/stream → SSE Live-Updates
+```
+
+**Hinweis zu Issues (0):** `GET /api/repos/:id/issues` liefert 0 Issues im Demo-Mode, weil kein reales GitHub-Repo konfiguriert ist. Mit `GITHUB_TOKEN` und `GITHUB_MODE=real` werden echte Issues abgerufen.
 
 ## Sicherheitsprofile (Default: Supervised)
 
