@@ -50,7 +50,7 @@ export function RunDetailPage({ runId, onBack }: { runId: string; onBack: () => 
   if (error) return <div className="text-red-400 p-6">{error}</div>;
   if (!detail) return <div className="text-slate-400 p-6">Run not found</div>;
 
-  const { run, events, pr, testReport, evidence, syncComments } = detail;
+  const { run, events, pr, testReport, evidence, syncComments, reviewers } = detail;
 
   /** Map run status to display */
   const terminalLabel = run.phase === 'DONE' ? 'Merged' :
@@ -130,6 +130,18 @@ export function RunDetailPage({ runId, onBack }: { runId: string; onBack: () => 
                 )}
                 {run.phase === 'DONE' && (
                   <div className="text-xs text-emerald-400">✅ Merged</div>
+                )}
+                {reviewers && reviewers.length > 0 && (
+                  <div className="mt-2 pt-2 border-t border-slate-800">
+                    <div className="text-[10px] text-slate-500 mb-1">Reviewers</div>
+                    <div className="flex flex-wrap gap-1">
+                      {reviewers.map(r => (
+                        <span key={r} className="px-1.5 py-0.5 bg-sky-950 text-sky-300 rounded text-[10px] font-mono">
+                          {r}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
             ) : (

@@ -497,6 +497,35 @@ async function executePhase(
           await safeSync(syncService, () => syncService.syncPrCreated(syncInput), current.id, 'PR_CREATE');
         }
 
+        // --- Reviewer-Automation (Issue #32) ---
+        const prReviewers = process.env.POSITRON_PR_REVIEWERS?.split(',').map(s => s.trim()).filter(Boolean);
+        const prTeamReviewers = process.env.POSITRON_PR_TEAM_REVIEWERS?.split(',').map(s => s.trim()).filter(Boolean);
+        if (prReviewers?.length || prTeamReviewers?.length) {
+          try {
+            const reviewResult = await github.requestReviewers({
+              owner: repository.owner, repo: repository.repo,
+              prNumber: pr.number,
+              reviewers: prReviewers,
+              teamReviewers: prTeamReviewers,
+            });
+            if (reviewResult.requested) {
+              const reviewerList = [...(reviewResult.reviewers ?? []), ...(reviewResult.teamReviewers ?? [])].join(', ');
+              storeEvent({
+                id: createRunId(), runId: current.id, phase: 'PR_CREATE',
+                level: 'INFO', message: `Review requested from: ${reviewerList}`,
+                payload: { reviewers: reviewResult.reviewers, teamReviewers: reviewResult.teamReviewers },
+                createdAt: new Date().toISOString(),
+              });
+            }
+          } catch {
+            storeEvent({
+              id: createRunId(), runId: current.id, phase: 'PR_CREATE',
+              level: 'WARN', message: 'Review request failed (non-blocking)',
+              payload: null, createdAt: new Date().toISOString(),
+            });
+          }
+        }
+
         result = transition(current, 'MERGE', `PR #${pr.number} created: ${pr.htmlUrl}`, 'INFO');
       } catch (err) {
         storeEvent({

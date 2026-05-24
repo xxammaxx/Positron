@@ -78,7 +78,10 @@ export function enrichDetail(detail: RunDetail): RunDetailWithMeta {
   // Build sync status from events that mention GitHub sync
   const syncComments = extractSyncStatus(events);
 
-  return { ...detail, pr, testReport, evidence, syncComments };
+  // Extract reviewers from review request events
+  const reviewers = extractReviewers(events);
+
+  return { ...detail, pr, testReport, evidence, syncComments, reviewers };
 }
 
 /** Extract PR number and URL from event messages like "PR #5 created: https://..." */
@@ -156,4 +159,21 @@ function extractSyncStatus(events: RunEvent[]): { phase: string; status: string;
       status: e.level === 'ERROR' ? 'failed' : e.level === 'WARN' ? 'warn' : 'ok',
       timestamp: e.createdAt,
     }));
+}
+
+/** Extract reviewer names from review request events */
+function extractReviewers(events: RunEvent[]): string[] {
+  const reviewEvents = events.filter(e =>
+    e.message.toLowerCase().includes('review requested') ||
+    e.message.toLowerCase().includes('reviewers'),
+  );
+  const reviewers = new Set<string>();
+  for (const ev of reviewEvents) {
+    // Parse "Review requested from: user1, user2"
+    const match = ev.message.match(/Review requested from:\s*(.+)/);
+    if (match) {
+      match[1].split(',').map(s => s.trim()).filter(Boolean).forEach(r => reviewers.add(r));
+    }
+  }
+  return Array.from(reviewers);
 }

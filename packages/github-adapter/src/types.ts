@@ -89,6 +89,24 @@ export interface CreatePROptions {
   base: string;
   body?: string;
   draft?: boolean;
+  /** GitHub usernames to request review from */
+  reviewers?: string[];
+  /** Team slugs (not full name) to request review from */
+  teamReviewers?: string[];
+}
+
+export interface RequestReviewersOptions {
+  owner: string;
+  repo: string;
+  prNumber: number;
+  reviewers?: string[];
+  teamReviewers?: string[];
+}
+
+export interface RequestReviewersResult {
+  requested: boolean;
+  reviewers?: string[];
+  teamReviewers?: string[];
 }
 
 export interface PRListOptions {

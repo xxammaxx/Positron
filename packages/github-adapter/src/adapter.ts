@@ -6,6 +6,7 @@ import type {
   GitHubIssueClaimResult, ClaimOptions,
   GitHubPullRequest, CreatePROptions, PRListOptions, GitHubPRFile,
   MergePROptions, MergePRResult,
+  RequestReviewersOptions, RequestReviewersResult,
 } from './types.js';
 
 export interface GitHubAdapter {
@@ -47,4 +48,9 @@ export interface GitHubAdapter {
 
   /** Merged einen Pull Request. Prüft mergeable state vorher. */
   mergePullRequest(options: MergePROptions): Promise<MergePRResult>;
+
+  // --- Reviewer Methods (Issue #32) ---
+
+  /** Fordert Review von Benutzern/Teams für einen PR an */
+  requestReviewers(options: RequestReviewersOptions): Promise<RequestReviewersResult>;
 }

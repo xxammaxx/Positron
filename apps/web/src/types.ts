@@ -52,6 +52,7 @@ export interface RunDetailWithMeta extends RunDetail {
   testReport?: TestSummary | null;
   evidence?: EvidenceItem[];
   syncComments?: SyncStatusItem[];
+  reviewers?: string[];
 }
 
 export interface SyncStatusItem {

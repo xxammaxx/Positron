@@ -12,6 +12,7 @@ import type {
   GitHubIssueClaimResult, ClaimOptions,
   GitHubPullRequest, CreatePROptions, PRListOptions, GitHubPRFile,
   MergePROptions, MergePRResult,
+  RequestReviewersOptions, RequestReviewersResult,
 } from './types.js';
 import { renderAccepted } from './templates.js';
 import {
@@ -356,6 +357,26 @@ export class RealGitHubAdapter implements GitHubAdapter {
         throw mapRequestError(err);
       }
       return { merged: false, message: err?.message ?? String(err) };
+    }
+  }
+
+  async requestReviewers(options: RequestReviewersOptions): Promise<RequestReviewersResult> {
+    const reviewers = options.reviewers?.length ? options.reviewers : undefined;
+    const teamReviewers = options.teamReviewers?.length ? options.teamReviewers : undefined;
+    if (!reviewers && !teamReviewers) {
+      return { requested: false };
+    }
+    try {
+      await this.octokit.rest.pulls.requestReviewers({
+        owner: options.owner, repo: options.repo,
+        pull_number: options.prNumber,
+        reviewers,
+        team_reviewers: teamReviewers,
+      });
+      return { requested: true, reviewers, teamReviewers };
+    } catch (err) {
+      if (err instanceof RequestError) throw mapRequestError(err);
+      throw err;
     }
   }
 }

@@ -6,6 +6,7 @@ import type {
   GitHubIssueClaimResult, ClaimOptions,
   GitHubPullRequest, CreatePROptions, PRListOptions, GitHubPRFile,
   MergePROptions, MergePRResult,
+  RequestReviewersOptions, RequestReviewersResult,
 } from './types.js';
 import type { GitHubAdapter } from './adapter.js';
 
@@ -177,5 +178,14 @@ export class FakeGitHubAdapter implements GitHubAdapter {
     if (pr.state !== 'open') return { merged: false, message: `PR is ${pr.state}` };
     pr.state = 'merged' as any;
     return { merged: true, sha: 'fake-merge-sha' };
+  }
+
+  async requestReviewers(options: RequestReviewersOptions): Promise<RequestReviewersResult> {
+    const reviewers = options.reviewers?.length ? options.reviewers : undefined;
+    const teamReviewers = options.teamReviewers?.length ? options.teamReviewers : undefined;
+    if (!reviewers && !teamReviewers) {
+      return { requested: false };
+    }
+    return { requested: true, reviewers, teamReviewers };
   }
 }
