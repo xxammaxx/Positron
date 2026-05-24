@@ -105,7 +105,7 @@ export function RunDetailPage({ runId, onBack }: { runId: string; onBack: () => 
 
           <EventLog events={events} />
 
-          <ControlButtons />
+          <ControlButtons run={run} />
         </div>
 
         {/* Right Column */}

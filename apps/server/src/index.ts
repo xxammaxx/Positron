@@ -2,13 +2,13 @@
 
 import express from 'express';
 import http from 'node:http';
-import { createRun, transition, markFailed, resumeFromEvents } from '@positron/run-state';
+import { createRun, transition, markFailed, retry, resumeFromEvents } from '@positron/run-state';
 import { runSpecify, runPlan, runTasks } from '@positron/speckit-adapter';
 import { RealSpecKitAdapter, FakeSpecKitAdapter } from '@positron/speckit-adapter';
 import { executeTasks } from '@positron/opencode-adapter';
 import { RealOpenCodeAdapter, FakeOpenCodeAdapter } from '@positron/opencode-adapter';
 import { generateBranchName, createRunId, loadRepositoryConfig, normalizeRepositoryConfig, buildRemoteUrl, MAX_FIX_LOOPS } from '@positron/shared';
-import type { Phase, RunStatus } from '@positron/shared';
+import type { Phase, RunStatus, EventLevel } from '@positron/shared';
 import type { RepositoryConfig, SpecKitAdapter, OpenCodeAdapter } from '@positron/shared';
 import type { RunState, RunEventData } from '@positron/run-state';
 import { FakeGitHubAdapter, createRealGitHubAdapter, GitHubStatusSyncService } from '@positron/github-adapter';
@@ -90,6 +90,38 @@ function removeSSEClient(runId: string, res: express.Response): void {
   if (clients) {
     clients.delete(res);
     if (clients.size === 0) sseClients.delete(runId);
+  }
+}
+
+// Run Control Signals (Issue #30)
+// Stored separately from run state to avoid database/schema changes
+const runSignals = new Map<string, 'PAUSE' | 'ABORT' | 'RESUME' | 'RETRY'>();
+
+export type RunControlAction = 'pause' | 'abort' | 'resume' | 'retry';
+
+function clearRunSignal(runId: string): void {
+  runSignals.delete(runId);
+}
+
+function checkRunSignal(runId: string, runPhase: Phase): 'proceed' | 'abort' | 'retry' | 'paused' {
+  const signal = runSignals.get(runId);
+  if (!signal) return 'proceed';
+
+  switch (signal) {
+    case 'ABORT':
+      clearRunSignal(runId);
+      return 'abort';
+    case 'PAUSE':
+      return 'paused';
+    case 'RESUME':
+      clearRunSignal(runId);
+      return 'proceed';
+    case 'RETRY':
+      if (runPhase !== 'FAILED_TRANSIENT') return 'proceed';
+      clearRunSignal(runId);
+      return 'retry';
+    default:
+      return 'proceed';
   }
 }
 
@@ -591,6 +623,57 @@ async function runFullPipeline(
   const fixLoopEnabled = process.env.POSITRON_ENABLE_FIX_LOOP === 'true';
 
   for (let i = 0; i < maxSteps; i++) {
+    // Check control signals before each phase (Issue #30)
+    const signalCheck = checkRunSignal(current.id, current.phase);
+    if (signalCheck === 'abort') {
+      const abortResult = markFailed(current, 'FAILED_BLOCKED', 'Run aborted by user');
+      storeEvent(abortResult.event);
+      runs.set(abortResult.run.id, abortResult.run);
+      broadcastSSE(abortResult.run.id, 'run-update', { phase: abortResult.run.phase, status: abortResult.run.status, branch: abortResult.run.branch });
+      return abortResult.run;
+    }
+    if (signalCheck === 'paused') {
+      // Wait for resume or abort
+      storeEvent({
+        id: createRunId(), runId: current.id, phase: current.phase, level: 'GATE' as EventLevel,
+        message: 'Run paused by user — waiting for resume or abort',
+        payload: null, createdAt: new Date().toISOString(),
+      });
+      broadcastSSE(current.id, 'run-control', { action: 'paused' });
+      while (true) {
+        await new Promise(r => setTimeout(r, 500));
+        const s = checkRunSignal(current.id, current.phase);
+        if (s === 'abort') {
+          const abortResult = markFailed(current, 'FAILED_BLOCKED', 'Run aborted while paused');
+          storeEvent(abortResult.event);
+          runs.set(abortResult.run.id, abortResult.run);
+          broadcastSSE(abortResult.run.id, 'run-update', { phase: abortResult.run.phase, status: abortResult.run.status, branch: abortResult.run.branch });
+          return abortResult.run;
+        }
+        if (s === 'proceed') {
+          storeEvent({
+            id: createRunId(), runId: current.id, phase: current.phase, level: 'GATE' as EventLevel,
+            message: 'Run resumed by user',
+            payload: null, createdAt: new Date().toISOString(),
+          });
+          broadcastSSE(current.id, 'run-control', { action: 'resumed' });
+          break;
+        }
+      }
+    }
+    if (signalCheck === 'retry') {
+      // Manual retry from FAILED_TRANSIENT
+      const retryResult = retry(current);
+      if (retryResult.ok) {
+        storeEvent(retryResult.event);
+        runs.set(retryResult.run.id, retryResult.run);
+        current = retryResult.run;
+        attempt = current.attempt;
+        broadcastSSE(current.id, 'run-update', { phase: current.phase, status: current.status, branch: current.branch });
+        continue;
+      }
+    }
+
     const next = await executePhase(current, repository, workspace, speckit, opencode, github, syncService);
     if (next.phase === current.phase || next.phase === 'DONE' || next.phase.startsWith('FAILED')) {
       // --- Fix-Loop (Issue #26) ---
@@ -833,6 +916,57 @@ export function createApp(options: ServerOptions = {}) {
         !run.branch && 'No branch',
       ].filter(Boolean),
     });
+  });
+
+  // Run Control (Issue #30)
+  app.post('/api/runs/:id/control', (req, res) => {
+    const runId = req.params.id;
+    const run = runs.get(runId);
+    if (!run) { res.status(404).json({ error: 'Run not found' }); return; }
+
+    const { action } = req.body as { action: string };
+    const validActions = ['pause', 'abort', 'resume', 'retry'];
+    if (!validActions.includes(action)) {
+      res.status(400).json({ error: `Invalid action. Must be one of: ${validActions.join(', ')}` });
+      return;
+    }
+
+    // Validate action based on run state
+    if (action === 'pause' && run.phase.startsWith('FAILED')) {
+      res.status(409).json({ error: 'Cannot pause a failed/completed run' });
+      return;
+    }
+    if (action === 'resume' && runSignals.get(runId) !== 'PAUSE') {
+      res.status(409).json({ error: 'Run is not paused' });
+      return;
+    }
+    if (action === 'retry' && run.phase !== 'FAILED_TRANSIENT') {
+      res.status(409).json({ error: 'Can only retry a FAILED_TRANSIENT run' });
+      return;
+    }
+    if (action === 'retry' && run.attempt >= MAX_FIX_LOOPS) {
+      res.status(409).json({ error: `Max retries (${MAX_FIX_LOOPS}) reached` });
+      return;
+    }
+
+    // Set signal
+    const signal = action.toUpperCase() as 'PAUSE' | 'ABORT' | 'RESUME' | 'RETRY';
+    runSignals.set(runId, signal);
+
+    // Log event
+    storeEvent({
+      id: createRunId(),
+      runId,
+      phase: run.phase,
+      level: 'HUMAN',
+      message: `Run control: ${action} requested by user`,
+      payload: { action },
+      createdAt: new Date().toISOString(),
+    });
+
+    broadcastSSE(runId, 'run-control', { action });
+
+    res.json({ ok: true, action, runId });
   });
 
   return app;

@@ -105,6 +105,12 @@ export function useRunSSE(runId: string | null) {
         }
       });
 
+      es.addEventListener('run-control', (_event: MessageEvent) => {
+        // Control actions (pause/abort/resume/retry) — just trigger re-evaluation
+        // The actual state change comes via run-update or run-event
+        if (!mounted) return;
+      });
+
       es.addEventListener('run-complete', (event: MessageEvent) => {
         if (!mounted) return;
         try {

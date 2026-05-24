@@ -52,6 +52,13 @@ export async function getSafetyState() {
   return fetchJSON<SafetyState>(`${BASE}/safety`);
 }
 
+export async function controlRun(runId: string, action: 'pause' | 'abort' | 'resume' | 'retry') {
+  return fetchJSON<{ ok: boolean; action: string; runId: string }>(`${BASE}/runs/${runId}/control`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action }),
+  });
+}
+
 /**
  * Enrich run detail with meta info extracted from events.
  * This avoids backend changes — we parse structured data from event messages.
