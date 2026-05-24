@@ -728,6 +728,17 @@ export function createApp(options: ServerOptions = {}) {
     }
   });
 
+  // Safety State (Issue #28)
+  app.get('/api/safety', (_req, res) => {
+    res.json({
+      enableMerge: process.env.POSITRON_ENABLE_MERGE === 'true',
+      mergeDryRun: process.env.POSITRON_MERGE_DRY_RUN === 'true',
+      enablePush: process.env.POSITRON_ENABLE_PUSH === 'true',
+      killSwitch: process.env.POSITRON_MERGE_KILL_SWITCH === 'true',
+      enableFixLoop: process.env.POSITRON_ENABLE_FIX_LOOP === 'true',
+    });
+  });
+
   // Merge Status (Issue #22)
   app.get('/api/runs/:id/merge-status', (_req, res) => {
     const run = runs.get(_req.params.id);

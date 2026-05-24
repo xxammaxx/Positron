@@ -3,10 +3,15 @@ import { getRunDetail } from '../dashboard-api.js';
 import { StatusBadge } from './StatusBadge.js';
 import { RunPipeline } from './RunPipeline.js';
 import { MergeGateStatus } from './MergeGateStatus.js';
-import type { RunDetail } from '../types.js';
+import { TestReport } from './TestReport.js';
+import { EvidenceList } from './EvidenceList.js';
+import { EventLog } from './EventLog.js';
+import { AutonomyDisplay } from './AutonomyDisplay.js';
+import { ControlButtons } from './ControlButtons.js';
+import type { RunDetailWithMeta } from '../types.js';
 
 export function RunDetailPage({ runId, onBack }: { runId: string; onBack: () => void }) {
-  const [detail, setDetail] = useState<RunDetail | null>(null);
+  const [detail, setDetail] = useState<RunDetailWithMeta | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,14 +26,32 @@ export function RunDetailPage({ runId, onBack }: { runId: string; onBack: () => 
   if (error) return <div className="text-red-400 p-6">{error}</div>;
   if (!detail) return <div className="text-slate-400 p-6">Run not found</div>;
 
-  const { run, events } = detail;
+  const { run, events, pr, testReport, evidence, syncComments } = detail;
+
+  /** Map run status to display */
+  const terminalLabel = run.phase === 'DONE' ? 'Merged' :
+    run.phase === 'FAILED_BLOCKED' ? 'Blocked' :
+    run.phase === 'FAILED_UNSAFE' ? 'Failed' :
+    run.phase === 'MERGE' ? 'Merging' : null;
 
   return (
     <div className="space-y-4 p-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <button onClick={onBack} className="text-sky-400 hover:text-sky-300 text-sm">← Dashboard</button>
-        <StatusBadge status={run.status} />
+        <div className="flex items-center gap-2">
+          {terminalLabel && (
+            <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+              run.phase === 'DONE' ? 'bg-emerald-900 text-emerald-300' :
+              run.phase === 'FAILED_BLOCKED' ? 'bg-amber-900 text-amber-300' :
+              run.phase === 'FAILED_UNSAFE' ? 'bg-red-900 text-red-300' :
+              'bg-slate-700 text-slate-300'
+            }`}>
+              {terminalLabel}
+            </span>
+          )}
+          <StatusBadge status={run.status} />
+        </div>
       </div>
 
       {/* Run Info */}
@@ -51,51 +74,74 @@ export function RunDetailPage({ runId, onBack }: { runId: string; onBack: () => 
 
       {/* Two-Column Detail */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Left: Merge Gates + Events */}
+        {/* Left Column */}
         <div className="space-y-4">
           <MergeGateStatus runId={run.id} />
 
-          <div className="bg-slate-900 rounded-lg border border-slate-800 p-3">
-            <h4 className="text-sm font-semibold text-slate-300 mb-2">Event Log</h4>
-            <div className="max-h-64 overflow-y-auto space-y-1">
-              {events.map(ev => (
-                <div key={ev.id} className={`text-xs font-mono py-1 border-b border-slate-800 ${
-                  ev.level === 'ERROR' ? 'text-red-400' :
-                  ev.level === 'WARN' ? 'text-amber-400' : 'text-slate-400'
-                }`}>
-                  <span className="text-slate-600">{ev.phase}</span>{' '}
-                  <span>{ev.message}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <EventLog events={events} />
+
+          <ControlButtons />
         </div>
 
-        {/* Right: PR + Test Report */}
+        {/* Right Column */}
         <div className="space-y-4">
-          {/* PR Status */}
+          {/* PR & Merge */}
           <div className="bg-slate-900 rounded-lg border border-slate-800 p-3">
             <h4 className="text-sm font-semibold text-slate-300 mb-2">PR & Merge</h4>
-            <div className="text-xs text-slate-400">
-              {run.phase === 'PR_CREATE' || run.phase === 'MERGE' || run.phase === 'DONE'
-                ? <span>PR created during run — check GitHub</span>
-                : <span>PR not yet created (current phase: {run.phase})</span>
-              }
-            </div>
+            {pr ? (
+              <div className="space-y-1">
+                <a
+                  href={pr.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sky-400 hover:text-sky-300 text-sm font-medium flex items-center gap-1"
+                >
+                  <span>🔗</span>
+                  <span>PR #{pr.number}</span>
+                  <span className="text-xs text-slate-500">↗</span>
+                </a>
+                {run.phase === 'MERGE' && (
+                  <div className="text-xs text-amber-400">⏳ Merge in progress...</div>
+                )}
+                {run.phase === 'DONE' && (
+                  <div className="text-xs text-emerald-400">✅ Merged</div>
+                )}
+              </div>
+            ) : (
+              <div className="text-xs text-slate-500">
+                {run.phase === 'PR_CREATE' || run.phase === 'MERGE' || run.phase === 'DONE'
+                  ? <span>PR created — URL not available in detail</span>
+                  : <span>PR not yet created (current phase: {run.phase})</span>
+                }
+              </div>
+            )}
           </div>
 
-          {/* Test Report */}
-          <div className="bg-slate-900 rounded-lg border border-slate-800 p-3">
-            <h4 className="text-sm font-semibold text-slate-300 mb-2">Test Report</h4>
-            {events.some(e => e.phase === 'TEST') ? (
-              <div className="text-xs text-emerald-400">✅ Test phase completed</div>
-            ) : (
-              <div className="text-xs text-slate-500">Test phase not yet reached</div>
-            )}
-            {events.filter(e => e.phase === 'TEST').map(e => (
-              <div key={e.id} className="text-xs text-slate-400 mt-1">{e.message}</div>
-            ))}
-          </div>
+          <TestReport report={testReport} events={events} />
+
+          <EvidenceList evidence={evidence} />
+
+          <AutonomyDisplay level={run.autonomyLevel} />
+
+          {/* GitHub Sync Status */}
+          {syncComments && syncComments.length > 0 && (
+            <div className="bg-slate-900 rounded-lg border border-slate-800 p-3">
+              <h4 className="text-sm font-semibold text-slate-300 mb-2">GitHub Sync Status</h4>
+              <div className="space-y-1 max-h-32 overflow-y-auto">
+                {syncComments.map((sc, i) => (
+                  <div key={i} className="flex items-center gap-1.5 text-xs py-0.5 border-b border-slate-800 last:border-0">
+                    <span>
+                      {sc.status === 'ok' ? '✅' : sc.status === 'warn' ? '⚠️' : '❌'}
+                    </span>
+                    <span className="font-mono text-[10px] text-slate-500">{sc.phase}</span>
+                    <span className="text-slate-400">
+                      {new Date(sc.timestamp).toLocaleTimeString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
