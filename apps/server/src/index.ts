@@ -459,19 +459,22 @@ async function executePhase(
       const commitWsPath = current.workspacePath ?? `/tmp/positron-ws-${current.id.slice(0, 8)}`;
 
       try {
-        // Diff vor Commit erfassen — nur committen wenn echte Änderung
-        let diffSummary = '';
-        let filesChanged = 0;
+        // Änderungen erfassen — nutzt git status (erkennt neue + geänderte Dateien)
+        let changeSummary = '';
+        let hasChanges = false;
         try {
-          const diff = await workspace.getDiff(commitWsPath);
-          filesChanged = diff.filesChanged;
-          diffSummary = `${filesChanged} files, +${diff.insertions ?? 0}/-${diff.deletions ?? 0}`;
-        } catch { /* diff optional */ }
+          const status = await workspace.getStatus(commitWsPath);
+          hasChanges = !status.isClean;
+          const staged = status.staged.length;
+          const unstaged = status.unstaged.length;
+          const untracked = status.untracked.length;
+          changeSummary = `${staged} staged, ${unstaged} unstaged, ${untracked} untracked`;
+        } catch { /* status optional */ }
 
-        if (filesChanged === 0) {
+        if (!hasChanges) {
           // Keine Änderungen — sauber blocken (Issue #38)
           result = markFailed(current, 'FAILED_BLOCKED',
-            `NO_CHANGES_TO_COMMIT: Branch ${branch} has no diff vs base`);
+            `NO_CHANGES_TO_COMMIT: Branch ${branch} has no changes (${changeSummary})`);
           break;
         }
 
@@ -487,7 +490,7 @@ async function executePhase(
           pushResult = ', push skipped (POSITRON_ENABLE_PUSH not set)';
         }
 
-        const summary = `Committed: ${commitResult.sha.slice(0, 7)}${pushResult} (${diffSummary})`;
+        const summary = `Committed: ${commitResult.sha.slice(0, 7)}${pushResult} (${changeSummary})`;
         result = transition(current, 'PR_CREATE', summary, 'INFO');
       } catch (err) {
         storeEvent({
