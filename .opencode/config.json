@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem",
+               "/home/xxammaxx/Schreibtisch/Positron"],
+      "description": "Dateizugriff auf den gesamten Projektordner"
+    },
+    "git": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-git", "--repository", "."],
+      "description": "Git-Operationen direkt"
+    }
+  }
+}

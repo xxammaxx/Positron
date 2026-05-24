@@ -1,0 +1,32 @@
+{
+  "name": "positron",
+  "version": "3.0.0",
+  "private": true,
+  "description": "Evidence-Gated GitHub Issue Execution System",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "tsc -b packages/shared packages/sandbox packages/github-adapter packages/run-state packages/speckit-adapter packages/opencode-adapter apps/server",
+    "build:watch": "tsc --build --watch",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:web\"",
+    "dev:server": "npm run build && node apps/server/dist/index.js",
+    "dev:web": "vite apps/web",
+    "test": "vitest run && cd apps/web && npx vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint . --ext .ts,.tsx",
+    "clean": "find . -name dist -not -path '*/node_modules/*' -exec rm -rf {} +",
+    "typecheck": "tsc --build --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0",
+    "@types/node": "^22.0.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "concurrently": "^8.2.0",
+    "eslint": "^8.56.0",
+    "typescript": "^5.4.0",
+    "vitest": "^4.0.0"
+  }
+}

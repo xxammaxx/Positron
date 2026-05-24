@@ -1,0 +1,44 @@
+{
+  "private": true,
+  "files": ["dist"],
+  "main": "./dist/index.js",
+  "name": "@positron/server",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "positron": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "test": "vitest run",
+    "typecheck": "tsc -b --pretty false",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "positron": "node dist/cli.js"
+  },
+  "dependencies": {
+    "@positron/github-adapter": "^0.1.0",
+    "@positron/opencode-adapter": "^0.1.0",
+    "@positron/run-state": "^0.1.0",
+    "@positron/sandbox": "^0.1.0",
+    "@positron/shared": "^0.1.0",
+    "@positron/speckit-adapter": "^0.1.0",
+    "better-sqlite3": "^11.0.0",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.0",
+    "@types/express": "^5.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.8.0",
+    "vitest": "^4.0.0"
+  }
+}
