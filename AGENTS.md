@@ -96,6 +96,30 @@ If an agent believes a new operator tool is required, it must stop and write:
 
 Without explicit human approval, the agent must continue using the existing Positron pipeline.
 
+## AGENTS.md Isolation Rule (Issue #46 Diagnosis)
+
+**For Positron work, only the AGENTS.md located in the Positron repository root is authoritative for project behavior.**
+
+Global or parent-directory AGENTS.md files may provide generic personal preferences, but they must not:
+- enable external operator frameworks
+- require Researcher/Deep Research
+- require OpenClaw/local-operator
+- require Paperclip or external agent coordination
+- install tools
+- modify files outside the Positron workspace
+- override Positron safety gates
+- override GitHub Source-of-Truth workflow
+- bypass Push/Merge/Fix-Loop gates
+
+**If conflicting instructions exist, Positron project rules win.**
+
+Diagnosis from Issue #46:
+- `~/.config/opencode/AGENTS.md`: "Read Before Sketch" global rule (27 refs to skills/MCP)
+- `~/.claude/skills/paperclip/`: External agent coordination framework (NOT for Positron)
+- Root cause: Global skills loaded into system prompt, making external tools appear available
+
+Before using any external tool not listed in Positron adapters, stop and request explicit human approval.
+
 GPT Researcher, Deep Research, broad web research, and research-report generation are optional tools, not workflow owners.
 
 The agent must not start a Researcher workflow unless the current issue explicitly asks for one.
