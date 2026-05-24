@@ -62,6 +62,37 @@ let workspaceAdapter: GitWorkspaceAdapter = new FakeGitWorkspaceAdapter();
 let speckitAdapter: SpecKitAdapter = new FakeSpecKitAdapter();
 let opencodeAdapter: OpenCodeAdapter = new FakeOpenCodeAdapter();
 
+// SSE Client Tracking (Issue #29)
+const sseClients = new Map<string, Set<express.Response>>();
+
+function broadcastSSE(runId: string, event: string, data: unknown): void {
+  const clients = sseClients.get(runId);
+  if (!clients) return;
+  const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+  for (const res of clients) {
+    try {
+      res.write(payload);
+    } catch {
+      clients.delete(res);
+    }
+  }
+}
+
+function addSSEClient(runId: string, res: express.Response): void {
+  if (!sseClients.has(runId)) {
+    sseClients.set(runId, new Set());
+  }
+  sseClients.get(runId)!.add(res);
+}
+
+function removeSSEClient(runId: string, res: express.Response): void {
+  const clients = sseClients.get(runId);
+  if (clients) {
+    clients.delete(res);
+    if (clients.size === 0) sseClients.delete(runId);
+  }
+}
+
 export function setWorkspaceAdapter(adapter: GitWorkspaceAdapter): void {
   workspaceAdapter = adapter;
 }
@@ -94,6 +125,8 @@ function storeEvent(event: RunEventData): void {
   const list = events.get(event.runId) ?? [];
   list.push(event);
   events.set(event.runId, list);
+  // Notify SSE clients about new event
+  broadcastSSE(event.runId, 'run-event', event);
 }
 
 function getEvents(runId: string): RunEventData[] {
@@ -598,6 +631,7 @@ async function runFullPipeline(
         }
       }
       runs.set(next.id, next);
+      broadcastSSE(next.id, 'run-update', { phase: next.phase, status: next.status, branch: next.branch });
       return next;
     }
     current = next;
@@ -616,6 +650,7 @@ async function runFullPipeline(
     await safeSync(syncService, () => syncService.syncBlocked(syncInput), result.run.id, 'FAILED_BLOCKED');
   }
   runs.set(result.run.id, result.run);
+  broadcastSSE(result.run.id, 'run-complete', { phase: result.run.phase, status: result.run.status });
   return result.run;
 }
 
@@ -706,6 +741,39 @@ export function createApp(options: ServerOptions = {}) {
     const run = runs.get(req.params.id);
     if (!run) { res.status(404).json({ error: 'Not found' }); return; }
     res.json({ run, events: getEvents(run.id) });
+  });
+
+  // SSE Event Stream (Issue #29)
+  app.get('/api/runs/:id/events/stream', (req, res) => {
+    const runId = req.params.id;
+    const run = runs.get(runId);
+    if (!run) { res.status(404).json({ error: 'Not found' }); return; }
+
+    // SSE headers
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no',
+    });
+
+    // Send initial state
+    const initialState = { run, events: getEvents(runId) };
+    res.write(`event: initial\ndata: ${JSON.stringify(initialState)}\n\n`);
+
+    // Register for live updates
+    addSSEClient(runId, res);
+
+    // Keep alive
+    const keepAlive = setInterval(() => {
+      try { res.write(':keepalive\n\n'); } catch { clearInterval(keepAlive); }
+    }, 15000);
+
+    // Cleanup on disconnect
+    req.on('close', () => {
+      clearInterval(keepAlive);
+      removeSSEClient(runId, res);
+    });
   });
 
   // Health

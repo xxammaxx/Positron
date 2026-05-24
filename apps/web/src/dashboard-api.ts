@@ -56,7 +56,7 @@ export async function getSafetyState() {
  * Enrich run detail with meta info extracted from events.
  * This avoids backend changes — we parse structured data from event messages.
  */
-function enrichDetail(detail: RunDetail): RunDetailWithMeta {
+export function enrichDetail(detail: RunDetail): RunDetailWithMeta {
   const { run, events } = detail;
 
   // Extract PR reference from events

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getRunDetail } from '../dashboard-api.js';
+import { useRunSSE } from '../useRunSSE.js';
 import { StatusBadge } from './StatusBadge.js';
 import { RunPipeline } from './RunPipeline.js';
 import { MergeGateStatus } from './MergeGateStatus.js';
@@ -8,21 +9,44 @@ import { EvidenceList } from './EvidenceList.js';
 import { EventLog } from './EventLog.js';
 import { AutonomyDisplay } from './AutonomyDisplay.js';
 import { ControlButtons } from './ControlButtons.js';
-import type { RunDetailWithMeta } from '../types.js';
+import { ConnectionStatus } from './ConnectionStatus.js';
 
 export function RunDetailPage({ runId, onBack }: { runId: string; onBack: () => void }) {
-  const [detail, setDetail] = useState<RunDetailWithMeta | null>(null);
+  // SSE-driven live updates
+  const { detail: sseDetail, status: sseStatus } = useRunSSE(runId);
+  const [fallbackDetail, setFallbackDetail] = useState<typeof sseDetail>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Fallback: if SSE doesn't connect within 3 seconds, use polling
   useEffect(() => {
-    setLoading(true);
-    getRunDetail(runId)
-      .then(d => { setDetail(d); setLoading(false); })
-      .catch(e => { setError(e.message); setLoading(false); });
-  }, [runId]);
+    if (sseDetail) return; // SSE already has data
+    const timer = setTimeout(async () => {
+      try {
+        const d = await getRunDetail(runId);
+        if (!sseDetail) {
+          setFallbackDetail(d);
+          setLoading(false);
+        }
+      } catch (e) {
+        setError(String(e));
+        setLoading(false);
+      }
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [runId, sseDetail]);
 
-  if (loading) return <div className="text-slate-400 p-6 text-center animate-pulse">Loading run {runId.slice(0, 8)}...</div>;
+  // When SSE data arrives, clear loading
+  useEffect(() => {
+    if (sseDetail) {
+      setLoading(false);
+      setError(null);
+    }
+  }, [sseDetail]);
+
+  const detail = sseDetail ?? fallbackDetail;
+
+  if (loading && !error) return <div className="text-slate-400 p-6 text-center animate-pulse">Connecting to run {runId.slice(0, 8)}...</div>;
   if (error) return <div className="text-red-400 p-6">{error}</div>;
   if (!detail) return <div className="text-slate-400 p-6">Run not found</div>;
 
@@ -50,6 +74,7 @@ export function RunDetailPage({ runId, onBack }: { runId: string; onBack: () => 
               {terminalLabel}
             </span>
           )}
+          <ConnectionStatus status={sseStatus} />
           <StatusBadge status={run.status} />
         </div>
       </div>
