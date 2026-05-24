@@ -30,27 +30,27 @@ async function get(path: string) {
 }
 
 describe('POST /api/repos/:repoId/runs', () => {
-  test('vollständiger Run durchläuft alle Phasen — blockiert bei NO_CHANGES_TO_COMMIT', async () => {
+  test('vollständiger Run durchläuft alle Phasen — erreicht DONE', async () => {
+    // Fake-Adapter simuliert jetzt Änderungen nach prepareWorkspace
+    // → Run erreicht COMMIT → PR_CREATE → MERGE (dry-run) → DONE
     const res = await post('/api/repos/repo-1/runs', { issueNumber: 42, autonomyLevel: 2 });
     expect(res.status).toBe(200);
     const body = await res.json() as { run: { phase: string; status: string; attempt: number; repoId: string; lastError: string | null }; events: Array<{ phase: string }>; eventCount: number };
-    // Fake-Adapter erzeugt keine Dateiänderungen → NO_CHANGES_TO_COMMIT (Issue #38)
-    expect(body.run.phase).toBe('FAILED_BLOCKED');
-    expect(body.run.status).toBe('blocked');
+    expect(body.run.phase).toBe('DONE');
+    expect(body.run.status).toBe('done');
     expect(body.run.repoId).toBe('test-repo');
-    expect(body.run.lastError).toContain('NO_CHANGES_TO_COMMIT');
-    expect(body.eventCount).toBeGreaterThanOrEqual(14);
+    // Sollte deutlich mehr Events haben als vorher (da der Run komplett durchläuft)
+    expect(body.eventCount).toBeGreaterThanOrEqual(18);
   });
 
-  test('zwei aufeinanderfolgende Runs — beide blockieren bei NO_CHANGES_TO_COMMIT', async () => {
+  test('zwei aufeinanderfolgende Runs — beide erreichen DONE', async () => {
     const r1 = await post('/api/repos/repo-1/runs', { issueNumber: 1 });
     const b1 = await r1.json() as { run: { id: string; phase: string; lastError: string | null } };
-    expect(b1.run.phase).toBe('FAILED_BLOCKED');
-    expect(b1.run.lastError).toContain('NO_CHANGES_TO_COMMIT');
+    expect(b1.run.phase).toBe('DONE');
 
     const r2 = await post('/api/repos/repo-2/runs', { issueNumber: 2 });
     const b2 = await r2.json() as { run: { id: string; phase: string } };
-    expect(b2.run.phase).toBe('FAILED_BLOCKED');
+    expect(b2.run.phase).toBe('DONE');
     expect(b2.run.id).not.toBe(b1.run.id);
   });
 });
@@ -78,7 +78,8 @@ describe('Run Resume', () => {
     const createBody = await create.json() as { run: { id: string } };
     const res = await get(`/api/runs/${createBody.run.id}`);
     const body = await res.json() as { run: { phase: string }; events: Array<unknown> };
-    expect(body.run.phase).toBe('FAILED_BLOCKED');
+    // Run sollte DONE sein, nicht FAILED_BLOCKED
+    expect(body.run.phase).toBe('DONE');
     expect(body.events.length).toBeGreaterThan(0);
   });
 });
