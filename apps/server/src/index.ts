@@ -2,6 +2,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 // Simple .env loader (no external dependency needed)
@@ -476,7 +477,8 @@ async function executePhase(
         result = transition(current, 'PLAN', sr.summary, sr.status === 'success' ? 'INFO' : 'WARN');
       } catch (err) {
         storeEvent({ id: createRunId(), runId: current.id, phase: 'SPECIFY', level: 'WARN', message: `Specify error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
-        runSpecify();
+        const specContent = await runSpecify(wsPath, `Issue #${current.issueNumber}`);
+        saveArtifact(current.id, 'spec', specContent);
         result = transition(current, 'PLAN', 'Spec generated (legacy stub fallback)', 'INFO');
       }
       break;
@@ -505,7 +507,8 @@ async function executePhase(
         result = transition(current, 'TASKS', pr.summary, pr.status === 'success' ? 'INFO' : 'WARN');
       } catch (err) {
         storeEvent({ id: createRunId(), runId: current.id, phase: 'PLAN', level: 'WARN', message: `Plan error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
-        runPlan();
+        const planContent = await runPlan(wsPath, `Spec for Issue #${current.issueNumber}`);
+        saveArtifact(current.id, 'plan', planContent);
         result = transition(current, 'TASKS', 'Plan generated (legacy stub fallback)', 'INFO');
       }
       break;
@@ -534,7 +537,8 @@ async function executePhase(
         result = transition(current, 'ANALYZE', tr.summary, tr.status === 'success' ? 'INFO' : 'WARN');
       } catch (err) {
         storeEvent({ id: createRunId(), runId: current.id, phase: 'TASKS', level: 'WARN', message: `Tasks error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
-        runTasks();
+        const tasksContent = await runTasks(wsPath, `Plan for Issue #${current.issueNumber}`);
+        saveArtifact(current.id, 'tasks', tasksContent);
         result = transition(current, 'ANALYZE', 'Tasks generated (legacy stub fallback)', 'INFO');
       }
       break;
@@ -579,7 +583,10 @@ async function executePhase(
         result = transition(current, 'TEST', ir.summary, ir.status === 'success' ? 'INFO' : 'WARN');
       } catch (err) {
         storeEvent({ id: createRunId(), runId: current.id, phase: 'IMPLEMENT', level: 'WARN', message: `Implement error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
-        executeTasks(); // legacy stub fallback
+        const execResult = await executeTasks(wsPath, [`Implement Issue #${current.issueNumber}`]);
+        if (execResult.success) {
+          saveArtifact(current.id, 'implementation', execResult.completedTasks);
+        }
         result = transition(current, 'TEST', 'Implementation done (legacy fallback)', 'INFO');
       }
       break;
@@ -1127,6 +1134,29 @@ function mapDbRows(rows: Array<Record<string, unknown>>): RunState[] {
     lastError: row.last_error as string | null,
     workspacePath: row.workspace_path as string | null,
   }));
+}
+
+/**
+ * Speichert ein Artefakt (Spec, Plan, Tasks, etc.) in der Datenbank.
+ */
+function saveArtifact(runId: string, kind: string, content: string | string[]): void {
+  try {
+    const contentStr = Array.isArray(content) ? content.join('\n') : content;
+    getDb().prepare(`
+      INSERT INTO artifacts (id, run_id, kind, content, created_at)
+      VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        content = excluded.content
+    `).run(
+      crypto.randomUUID(),
+      runId,
+      kind,
+      contentStr,
+      new Date().toISOString(),
+    );
+  } catch (err) {
+    console.error(`[saveArtifact] Fehler beim Speichern von '${kind}' für Run ${runId}:`, err);
+  }
 }
 
 /** Build evidence items from run state for sync comments */
