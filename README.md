@@ -29,10 +29,16 @@ npm test                    # 395 tests
 cp .env.example .env
 # Set: GITHUB_TOKEN, POSITRON_REPO_OWNER, POSITRON_REPO_NAME
 
-# Start server
+# Start backend server
 cd apps/server
 GITHUB_TOKEN=... npx tsx dogfood-runner.ts
-# Dashboard: http://localhost:3000
+# Backend: http://localhost:3000
+
+# Start frontend (separate terminal)
+cd apps/web
+npm run build
+npx vite preview --port 4173
+# Dashboard: http://localhost:4173
 ```
 
 ## Sicherheitsprofile (Default: Supervised)
