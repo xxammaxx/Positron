@@ -2,7 +2,8 @@
 // Hinweis: Jeder Type wird EXAKT EINMAL exportiert.
 // adapter-interfaces.ts enthält die Adapter-Interfaces (SpecKitAdapter, OpenCodeAdapter etc.)
 // speckit-types.ts und opencode-types.ts enthalten nur die Basis-Typdefinitionen.
-// interfaces.ts enthält DB-Modelle und GitHub-Typen.
+// interfaces.ts enthält DB-Modelle und GitHub-Datentypen.
+// (GitHubAdapter-Interface ist in @positron/github-adapter/src/adapter.ts)
 
 export * from './types.js';
 export * from './constants.js';
