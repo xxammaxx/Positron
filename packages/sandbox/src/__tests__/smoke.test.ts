@@ -1,5 +1,6 @@
 // Positron — Sandbox Package: Smoke-Tests
 
+import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { runCommand } from '../command-runner.js';
 import { FakeGitWorkspaceAdapter } from '../fake-adapter.js';
@@ -69,7 +70,7 @@ describe('paths', () => {
 
   test('createWorkspacePath erzeugt Pfad mit Run-ID', () => {
     const p = createWorkspacePath('abc12345-def', '/tmp/test');
-    expect(p).toContain('/tmp/test/abc12345');
+    expect(p).toContain(path.normalize('/tmp/test/abc12345'));
   });
 });
 

@@ -226,8 +226,7 @@ function saveRunToDb(run: RunState): void {
 
 /**
  * Lädt einen Run aus der Datenbank.
- * Anmerkung: lastError und workspacePath werden nicht in der DB persistiert
- * (Schema-Migration erforderlich für vollständige Persistenz).
+ * lastError und workspacePath werden aus den DB-Spalten last_error / workspace_path gelesen.
  */
 function loadRunFromDb(runId: string): RunState | null {
   try {
@@ -244,8 +243,8 @@ function loadRunFromDb(runId: string): RunState | null {
       attempt: row.attempt as number,
       startedAt: row.started_at as string,
       finishedAt: row.finished_at as string | null,
-      lastError: null,
-      workspacePath: null,
+      lastError: row.last_error as string | null,
+      workspacePath: row.workspace_path as string | null,
     };
   } catch (err) {
     log.error(`loadRunFromDb failed for ${runId}`, err);
@@ -485,6 +484,9 @@ async function executePhase(
       const input = { runId: current.id, workspacePath: wsPath, issueTitle: `Issue #${current.issueNumber}`, issueNumber: current.issueNumber, mode: 'artifact-only' as const };
       try {
         const sr = await speckit.runSpecify(input);
+        if (sr.status === 'success' || sr.status === 'skipped') {
+          saveArtifact(current.id, 'spec', sr.summary);
+        }
         result = transition(current, 'PLAN', sr.summary, sr.status === 'success' ? 'INFO' : 'WARN');
       } catch (err) {
         storeEvent({ id: createRunId(), runId: current.id, phase: 'SPECIFY', level: 'WARN', message: `Specify error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
@@ -515,7 +517,10 @@ async function executePhase(
       const input = { runId: current.id, workspacePath: wsPath, issueTitle: `Issue #${current.issueNumber}`, issueNumber: current.issueNumber, mode: 'artifact-only' as const };
       try {
         const pr = await speckit.runPlan(input);
-        result = transition(current, 'TASKS', pr.summary, pr.status === 'success' ? 'INFO' : 'WARN');
+        if (pr.status === 'success' || pr.status === 'skipped') {
+          saveArtifact(current.id, 'plan', pr.summary);
+        }
+        result = transition(current, 'TASKS', pr.summary, pr.status === 'success' || pr.status === 'skipped' ? 'INFO' : 'WARN');
       } catch (err) {
         storeEvent({ id: createRunId(), runId: current.id, phase: 'PLAN', level: 'WARN', message: `Plan error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
         const planContent = await runPlan(wsPath, `Spec for Issue #${current.issueNumber}`);
@@ -545,7 +550,10 @@ async function executePhase(
       const input = { runId: current.id, workspacePath: wsPath, issueTitle: `Issue #${current.issueNumber}`, issueNumber: current.issueNumber, mode: 'artifact-only' as const };
       try {
         const tr = await speckit.runTasks(input);
-        result = transition(current, 'ANALYZE', tr.summary, tr.status === 'success' ? 'INFO' : 'WARN');
+        if (tr.status === 'success' || tr.status === 'skipped') {
+          saveArtifact(current.id, 'tasks', tr.summary);
+        }
+        result = transition(current, 'ANALYZE', tr.summary, tr.status === 'success' || tr.status === 'skipped' ? 'INFO' : 'WARN');
       } catch (err) {
         storeEvent({ id: createRunId(), runId: current.id, phase: 'TASKS', level: 'WARN', message: `Tasks error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
         const tasksContent = await runTasks(wsPath, `Plan for Issue #${current.issueNumber}`);
@@ -566,9 +574,22 @@ async function executePhase(
       }
       break;
     }
-    case 'REVIEW':
-      result = transition(current, 'IMPLEMENT', 'Review passed');
+    case 'REVIEW': {
+      // Minimale Artefakt-Validierung: Prüfe ob spec, plan und tasks existieren
+      const requiredArtifacts = ['spec', 'plan', 'tasks'];
+      const existingKinds = new Set(
+        (getDb().prepare('SELECT DISTINCT kind FROM artifacts WHERE run_id = ?').all(current.id) as Array<{ kind: string }>)
+          .map(r => r.kind),
+      );
+      const missing = requiredArtifacts.filter(k => !existingKinds.has(k));
+      if (missing.length > 0) {
+        const msg = `Review failed: missing artifacts: ${missing.join(', ')}`;
+        result = markFailed(current, 'FAILED_BLOCKED', msg);
+      } else {
+        result = transition(current, 'IMPLEMENT', `Review passed: ${requiredArtifacts.length}/${requiredArtifacts.length} artifacts present`);
+      }
       break;
+    }
     case 'IMPLEMENT': {
       const wsPath = current.workspacePath ?? current.branch ?? '/tmp';
       const input = { runId: current.id, workspacePath: wsPath, issueTitle: `Issue #${current.issueNumber}`, issueNumber: current.issueNumber, mode: 'safe-cli' as const, autonomyLevel: current.autonomyLevel };
