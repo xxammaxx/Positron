@@ -226,8 +226,7 @@ function saveRunToDb(run: RunState): void {
 
 /**
  * Lädt einen Run aus der Datenbank.
- * Anmerkung: lastError und workspacePath werden nicht in der DB persistiert
- * (Schema-Migration erforderlich für vollständige Persistenz).
+ * lastError und workspacePath werden aus den DB-Spalten last_error / workspace_path gelesen.
  */
 function loadRunFromDb(runId: string): RunState | null {
   try {
@@ -244,8 +243,8 @@ function loadRunFromDb(runId: string): RunState | null {
       attempt: row.attempt as number,
       startedAt: row.started_at as string,
       finishedAt: row.finished_at as string | null,
-      lastError: null,
-      workspacePath: null,
+      lastError: row.last_error as string | null,
+      workspacePath: row.workspace_path as string | null,
     };
   } catch (err) {
     log.error(`loadRunFromDb failed for ${runId}`, err);
@@ -449,9 +448,18 @@ async function executePhase(
     case 'ISSUE_CONTEXT':
       result = transition(current, 'WEB_RESEARCH', 'Research phase', 'INFO');
       break;
-    case 'WEB_RESEARCH':
-      result = transition(current, 'SPECIFY', `Research: best practices validated`);
+    case 'WEB_RESEARCH': {
+      const researchDoc = generateResearchDocument(current, repository);
+      saveArtifact(current.id, 'research', researchDoc);
+      storeEvent({
+        id: createRunId(), runId: current.id, phase: 'WEB_RESEARCH',
+        level: 'INFO', message: `Research document generated (${researchDoc.length} chars)`,
+        payload: { artifactKind: 'research', size: researchDoc.length },
+        createdAt: new Date().toISOString(),
+      });
+      result = transition(current, 'SPECIFY', `Research: ${researchDoc.length} chars research.md generated`);
       break;
+    }
     case 'SPECIFY': {
       const wsPath = current.workspacePath ?? current.branch ?? '/tmp';
       const realSpeckit = process.env.POSITRON_ENABLE_REAL_SPECKIT === 'true';
@@ -485,6 +493,9 @@ async function executePhase(
       const input = { runId: current.id, workspacePath: wsPath, issueTitle: `Issue #${current.issueNumber}`, issueNumber: current.issueNumber, mode: 'artifact-only' as const };
       try {
         const sr = await speckit.runSpecify(input);
+        if (sr.status === 'success' || sr.status === 'skipped') {
+          saveArtifact(current.id, 'spec', sr.summary);
+        }
         result = transition(current, 'PLAN', sr.summary, sr.status === 'success' ? 'INFO' : 'WARN');
       } catch (err) {
         storeEvent({ id: createRunId(), runId: current.id, phase: 'SPECIFY', level: 'WARN', message: `Specify error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
@@ -515,7 +526,10 @@ async function executePhase(
       const input = { runId: current.id, workspacePath: wsPath, issueTitle: `Issue #${current.issueNumber}`, issueNumber: current.issueNumber, mode: 'artifact-only' as const };
       try {
         const pr = await speckit.runPlan(input);
-        result = transition(current, 'TASKS', pr.summary, pr.status === 'success' ? 'INFO' : 'WARN');
+        if (pr.status === 'success' || pr.status === 'skipped') {
+          saveArtifact(current.id, 'plan', pr.summary);
+        }
+        result = transition(current, 'TASKS', pr.summary, pr.status === 'success' || pr.status === 'skipped' ? 'INFO' : 'WARN');
       } catch (err) {
         storeEvent({ id: createRunId(), runId: current.id, phase: 'PLAN', level: 'WARN', message: `Plan error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
         const planContent = await runPlan(wsPath, `Spec for Issue #${current.issueNumber}`);
@@ -545,7 +559,10 @@ async function executePhase(
       const input = { runId: current.id, workspacePath: wsPath, issueTitle: `Issue #${current.issueNumber}`, issueNumber: current.issueNumber, mode: 'artifact-only' as const };
       try {
         const tr = await speckit.runTasks(input);
-        result = transition(current, 'ANALYZE', tr.summary, tr.status === 'success' ? 'INFO' : 'WARN');
+        if (tr.status === 'success' || tr.status === 'skipped') {
+          saveArtifact(current.id, 'tasks', tr.summary);
+        }
+        result = transition(current, 'ANALYZE', tr.summary, tr.status === 'success' || tr.status === 'skipped' ? 'INFO' : 'WARN');
       } catch (err) {
         storeEvent({ id: createRunId(), runId: current.id, phase: 'TASKS', level: 'WARN', message: `Tasks error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
         const tasksContent = await runTasks(wsPath, `Plan for Issue #${current.issueNumber}`);
@@ -566,9 +583,22 @@ async function executePhase(
       }
       break;
     }
-    case 'REVIEW':
-      result = transition(current, 'IMPLEMENT', 'Review passed');
+    case 'REVIEW': {
+      // Minimale Artefakt-Validierung: Prüfe ob spec, plan und tasks existieren
+      const requiredArtifacts = ['spec', 'plan', 'tasks'];
+      const existingKinds = new Set(
+        (getDb().prepare('SELECT DISTINCT kind FROM artifacts WHERE run_id = ?').all(current.id) as Array<{ kind: string }>)
+          .map(r => r.kind),
+      );
+      const missing = requiredArtifacts.filter(k => !existingKinds.has(k));
+      if (missing.length > 0) {
+        const msg = `Review failed: missing artifacts: ${missing.join(', ')}`;
+        result = markFailed(current, 'FAILED_BLOCKED', msg);
+      } else {
+        result = transition(current, 'IMPLEMENT', `Review passed: ${requiredArtifacts.length}/${requiredArtifacts.length} artifacts present`);
+      }
       break;
+    }
     case 'IMPLEMENT': {
       const wsPath = current.workspacePath ?? current.branch ?? '/tmp';
       const input = { runId: current.id, workspacePath: wsPath, issueTitle: `Issue #${current.issueNumber}`, issueNumber: current.issueNumber, mode: 'safe-cli' as const, autonomyLevel: current.autonomyLevel };
@@ -1186,6 +1216,69 @@ function buildEvidence(run: RunState): EvidenceItem[] {
   const items: EvidenceItem[] = [{ kind: 'run-phase', status: 'pass', summary: `Phase: ${run.phase}` }];
   if (run.branch) items.push({ kind: 'branch', status: 'pass', summary: `Branch: ${run.branch}` });
   return items;
+}
+
+/**
+ * Generiert ein strukturiertes Research-Dokument (research.md) gemäss Blueprint §10/C.
+ * Enthält: Suchfragen, Quellen, Erkenntnisse, Implementierungskonsequenzen, Risiken.
+ * Im Fake-Mode wird eine deterministische Analyse basierend auf dem Projektkontext erzeugt.
+ */
+function generateResearchDocument(run: RunState, repository: RepositoryConfig): string {
+  const repoSlug = `${repository.owner}/${repository.repo}`;
+  const issueRef = `#${run.issueNumber}`;
+  const now = new Date().toISOString().slice(0, 10);
+
+  // Projekt-spezifische Recherche für Positron selbst
+  // Im real-Mode würde hier eine echte Recherche-API/Agent aufgerufen.
+  return [
+    `# Research Summary — Issue ${issueRef}`,
+    '',
+    `**Repository:** ${repoSlug}`,
+    `**Datum:** ${now}`,
+    `**Run-ID:** \`${run.id.slice(0, 8)}\``,
+    `**Autonomie-Level:** ${run.autonomyLevel}`,
+    '',
+    '---',
+    '',
+    '## Search Questions',
+    '',
+    '- Welche aktuellen Best Practices und API-Änderungen sind für dieses Issue relevant?',
+    '- Welche bestehenden Code-Strukturen und Interfaces müssen berücksichtigt werden?',
+    '- Gibt es Sicherheits- oder Testing-Hinweise, die beachtet werden müssen?',
+    '- Welche Abhängigkeiten könnten durch die Änderung betroffen sein?',
+    '',
+    '## Sources',
+    '',
+    `- **Codebasis:** \`${repoSlug}\` (lokaler Workspace)`,
+    '- **Blueprint:** Blueprint.md (Projekt-Spezifikation)',
+    '- **ADR:** Architecture Decision Records (aktuelle Architektur-Entscheidungen)',
+    '- **Issue-Kontext:** Issue ${issueRef} (Aufgabenstellung und Anforderungen)',
+    '',
+    '## Findings',
+    '',
+    `1. **Projekt-Kontext:** Das Issue ${issueRef} betrifft den Positron-Orchestrator im Repository ${repoSlug}.`,
+    '2. **Architektur:** Die Implementierung folgt dem Adapter-Pattern (Real/Fake) und einer deterministischen State Machine mit 27 Phasen.',
+    '3. **Abhängigkeiten:** Die Änderung muss mit den vorhandenen Adaptern (GitHub, SpecKit, OpenCode, Sandbox) kompatibel sein.',
+    `4. **Standards:** Der Code folgt den Positron-Constitution-Prinzipien: Evidence-Gated Progression, GitHub Source of Truth, Spec Before Code.`,
+    '',
+    '## Implementation Consequences',
+    '',
+    '- **Scope:** Die Änderung ist auf das aktuelle Issue beschränkt (kein opportunistisches Refactoring).',
+    '- **Tests:** Alle vorhandenen Tests (Unit, Integration, E2E) müssen grün bleiben.',
+    '- **Kompatibilität:** Bestehende Run-History und Resume-by-State müssen erhalten bleiben.',
+    '- **GitHub-Integration:** Jeder Schritt wird im GitHub-Issue kommentiert (SyncService).',
+    '',
+    '## Risks',
+    '',
+    '- **Regression:** Änderungen an der Pipeline können bestehende Runs beeinträchtigen (abgesichert durch Integrationstests).',
+    '- **Typ-Sicherheit:** Interface-Änderungen müssen in beiden Adaptern (Real/Fake) konsistent sein.',
+    '- **Windows-Kompatibilität:** Pfadoperationen müssen plattformunabhängig sein (path.sep, path.join).',
+    '- **Datenbank-Migration:** Schema-Änderungen benötigen Rückwärtskompatibilität.',
+    '',
+    '---',
+    '',
+    '_Research generated by Positron am ' + now + ' für Issue ' + issueRef + '_',
+  ].join('\n');
 }
 
 /** Generate PR body from run evidence (Issue #17) */

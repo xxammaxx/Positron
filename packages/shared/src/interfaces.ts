@@ -212,27 +212,9 @@ export interface RequestReviewersResult {
   teamReviewers?: string[];
 }
 
-// GitHub Adapter Interface
-
-export interface GitHubAdapter {
-  getRepository(owner: string, repo: string): Promise<GitHubRepositorySummary>;
-  listOpenIssues(owner: string, repo: string, options?: { labels?: string[]; since?: string; limit?: number }): Promise<GitHubIssueSummary[]>;
-  getIssue(ref: GitHubIssueRef): Promise<GitHubIssueSummary>;
-  listIssueComments(ref: GitHubIssueRef): Promise<GitHubIssueComment[]>;
-  createIssueComment(ref: GitHubIssueRef, body: string): Promise<GitHubCommentResult>;
-  addIssueLabels(ref: GitHubIssueRef, labels: string[]): Promise<void>;
-  removeIssueLabel(ref: GitHubIssueRef, label: string): Promise<void>;
-  claimIssue(ref: GitHubIssueRef, options: ClaimOptions): Promise<GitHubIssueClaimResult>;
-  createPullRequest(options: CreatePROptions): Promise<GitHubPullRequest>;
-  listPullRequests(options: PRListOptions): Promise<GitHubPullRequest[]>;
-  listPullRequestFiles(owner: string, repo: string, prNumber: number): Promise<GitHubPRFile[]>;
-  getPullRequest(owner: string, repo: string, prNumber: number): Promise<GitHubPullRequest>;
-  mergePullRequest(options: MergePROptions): Promise<MergePRResult>;
-  requestReviewers(options: RequestReviewersOptions): Promise<RequestReviewersResult>;
-  closeIssue(owner: string, repo: string, issueNumber: number): Promise<void>;
-}
-
 // Git Workspace Adapter Interfaces
+// Hinweis: GitHubAdapter-Interface ist in @positron/github-adapter (src/adapter.ts) definiert
+// und wird von dort importiert. Diese Datei enthält nur die Daten-Typen (GitHubIssueRef etc.).
 
 export interface PrepareWorkspaceInput {
   repository: GitWorkspaceRef;

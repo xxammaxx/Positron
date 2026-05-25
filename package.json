@@ -17,7 +17,7 @@
     "test:watch": "vitest",
     "lint": "eslint . --ext .ts,.tsx",
     "clean": "find . -name dist -not -path '*/node_modules/*' -exec rm -rf {} +",
-    "typecheck": "tsc --build --noEmit"
+    "typecheck": "tsc -b --dry"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",

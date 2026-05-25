@@ -17,7 +17,6 @@ vi.mock('../api.js', () => ({
   api: {
     getHealth: vi.fn().mockResolvedValue({ status: 'ok', adapters: {}, uptime: 0 }),
     getRuns: vi.fn().mockResolvedValue({ runs: [], total: 0 }),
-    getMetrics: vi.fn().mockResolvedValue({ totalRuns: 0, runsByPhase: {}, runsByStatus: {}, avgDurationMs: 0, successRate: 0 }),
   },
 }));
 
