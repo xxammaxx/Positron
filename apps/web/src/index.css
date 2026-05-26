@@ -29,18 +29,18 @@
   }
 
   body {
-    @apply bg-slate-950 text-slate-100 antialiased;
+    @apply bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 antialiased;
     font-family: var(--font-sans);
   }
 
   /* Scrollbar — thin, slate-toned */
   ::-webkit-scrollbar { @apply w-1.5 h-1.5; }
   ::-webkit-scrollbar-track { @apply bg-transparent; }
-  ::-webkit-scrollbar-thumb { @apply bg-slate-700 rounded-full hover:bg-slate-600; }
+  ::-webkit-scrollbar-thumb { @apply bg-slate-400 dark:bg-slate-700 rounded-full hover:bg-slate-500 dark:hover:bg-slate-600; }
 
-  /* Global Focus — sky accent per spec */
+  /* Global Focus — sky accent */
   *:focus-visible {
-    @apply outline-none ring-2 ring-sky-400 ring-offset-2 ring-offset-slate-950;
+    @apply outline-none ring-2 ring-sky-400 ring-offset-2 ring-offset-white dark:ring-offset-slate-950;
   }
 
   /* Skip to content */
@@ -50,10 +50,10 @@
   }
 
   /* Typography scale — Issue #68 spec C2 */
-  h1 { @apply text-3xl font-bold text-slate-100 leading-tight; font-family: var(--font-heading); }
-  h2 { @apply text-xl font-semibold text-slate-100 leading-snug; font-family: var(--font-heading); }
-  h3 { @apply text-base font-medium text-slate-200 leading-snug; font-family: var(--font-heading); }
-  h4 { @apply text-sm font-medium text-slate-300 leading-normal; font-family: var(--font-heading); }
+  h1 { @apply text-3xl font-bold text-slate-800 dark:text-slate-100 leading-tight; font-family: var(--font-heading); }
+  h2 { @apply text-xl font-semibold text-slate-800 dark:text-slate-100 leading-snug; font-family: var(--font-heading); }
+  h3 { @apply text-base font-medium text-slate-600 dark:text-slate-200 leading-snug; font-family: var(--font-heading); }
+  h4 { @apply text-sm font-medium text-slate-500 dark:text-slate-300 leading-normal; font-family: var(--font-heading); }
 }
 
 /* ===== Component Classes (Brutalist Operator Terminal — Issue #68 spec) ===== */
@@ -92,10 +92,10 @@
 
   /* Cards — spec B2 */
   .card {
-    @apply bg-slate-900 rounded-xl border border-slate-700 p-6;
+    @apply bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-6;
   }
   .card-elevated {
-    @apply card shadow-lg shadow-black/20;
+    @apply card shadow-lg shadow-black/5 dark:shadow-black/20;
   }
 
   /* Badge */
@@ -106,15 +106,15 @@
 
   /* Input — spec C */
   .input {
-    @apply w-full px-3 py-2 bg-slate-800 border border-slate-700
-      rounded-lg text-slate-100 placeholder-slate-500 text-sm font-['IBM_Plex_Mono']
+    @apply w-full px-3 py-2 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700
+      rounded-lg text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-sm font-['IBM_Plex_Mono']
       focus:outline-none focus:ring-2 focus:ring-sky-400/50
       focus:border-sky-400 transition-colors duration-150;
   }
 
-  /* Semantic Status Cards — spec B1 status colors */
-  .status-pass {
-    @apply border-l-4 border-l-green-400 bg-green-500/5;
+  /* Skeleton loading */
+  .skeleton {
+    @apply animate-pulse bg-slate-200 dark:bg-slate-800 rounded;
   }
   .status-fail {
     @apply border-l-4 border-l-red-400 bg-red-500/5;
