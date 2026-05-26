@@ -81,9 +81,10 @@ export default function PhasePipeline({
   const isCurrentPhaseIndex = currentPhase ? ALL_PHASES.indexOf(currentPhase) : -1;
   const hasRunStarted = currentPhase !== undefined || completedPhases.length > 0;
 
-  // Zeige alle Phasen + Terminal-Phasen
-  const mainPhases = ALL_PHASES.slice(0, 18); // QUEUED → DONE
-  const errorPhases = ALL_PHASES.slice(18);   // FAILED → CLEANUP
+  // Zeige alle Phasen + Terminal-Phasen (semantisch, nicht hartcodiert)
+  const terminalMainIndex = ALL_PHASES.indexOf('DONE');
+  const mainPhases = terminalMainIndex >= 0 ? ALL_PHASES.slice(0, terminalMainIndex + 1) : ALL_PHASES;
+  const errorPhases = terminalMainIndex >= 0 ? ALL_PHASES.slice(terminalMainIndex + 1) : [];
   const hasErrorActivity = failedPhases.length > 0 || blockedPhases.length > 0 || humanPhases.length > 0;
 
   return (

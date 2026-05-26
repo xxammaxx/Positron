@@ -34,7 +34,7 @@ import { runSpecify, runPlan, runTasks } from '@positron/speckit-adapter';
 import { RealSpecKitAdapter, FakeSpecKitAdapter } from '@positron/speckit-adapter';
 import { executeTasks } from '@positron/opencode-adapter';
 import { RealOpenCodeAdapter, FakeOpenCodeAdapter } from '@positron/opencode-adapter';
-import { generateBranchName, createRunId, loadRepositoryConfig, normalizeRepositoryConfig, buildRemoteUrl, MAX_FIX_LOOPS } from '@positron/shared';
+import { generateBranchName, createRunId, loadRepositoryConfig, normalizeRepositoryConfig, buildRemoteUrl, MAX_FIX_LOOPS, parsePhase, parseRunStatus, safeJsonParse } from '@positron/shared';
 import type { Phase, RunStatus, EventLevel } from '@positron/shared';
 import type { RepositoryConfig, SpecKitAdapter, OpenCodeAdapter } from '@positron/shared';
 import type { RunState, RunEventData } from '@positron/run-state';
@@ -176,18 +176,18 @@ function loadRunFromDb(runId: string): RunState | null {
     const row = getDb().prepare('SELECT * FROM runs WHERE id = ?').get(runId) as Record<string, unknown> | undefined;
     if (!row) return null;
     return {
-      id: row.id as string,
-      repoId: row.repo_id as string,
-      issueNumber: row.issue_number as number,
-      branch: row.branch as string | null,
-      phase: row.phase as Phase,
-      status: row.status as RunStatus,
-      autonomyLevel: row.autonomy_level as number,
-      attempt: row.attempt as number,
-      startedAt: row.started_at as string,
-      finishedAt: row.finished_at as string | null,
-      lastError: row.last_error as string | null,
-      workspacePath: row.workspace_path as string | null,
+      id: String(row.id ?? ''),
+      repoId: String(row.repo_id ?? ''),
+      issueNumber: Number(row.issue_number ?? 0),
+      branch: row.branch ? String(row.branch) : null,
+      phase: parsePhase(String(row.phase ?? 'QUEUED')),
+      status: parseRunStatus(String(row.status ?? 'blocked')),
+      autonomyLevel: Number(row.autonomy_level ?? 1),
+      attempt: Number(row.attempt ?? 0),
+      startedAt: String(row.started_at ?? new Date().toISOString()),
+      finishedAt: row.finished_at ? String(row.finished_at) : null,
+      lastError: row.last_error ? String(row.last_error) : null,
+      workspacePath: row.workspace_path ? String(row.workspace_path) : null,
     };
   } catch (err) {
     log.error(`loadRunFromDb failed for ${runId}`, err);
@@ -198,17 +198,26 @@ function loadRunFromDb(runId: string): RunState | null {
 /** Listet alle Runs aus der Datenbank (neueste zuerst). */
 function listRunsFromDb(): RunState[] {
   const rows = getDb().prepare('SELECT * FROM runs ORDER BY started_at DESC').all() as Array<Record<string, unknown>>;
-  return rows.map(row => ({
-    id: row.id as string,
-    repoId: row.repo_id as string,
-    issueNumber: row.issue_number as number,
-    branch: row.branch as string | null,
-    phase: row.phase as Phase,
-    status: row.status as RunStatus,
-    autonomyLevel: row.autonomy_level as number,
-    attempt: row.attempt as number,
-    startedAt: row.started_at as string,
-    finishedAt: row.finished_at as string | null,
+  return rows.filter(row => {
+    // Filtere ungültige Einträge — logge Warnung statt Absturz
+    try {
+      parsePhase(String(row.phase ?? ''));
+      return true;
+    } catch {
+      log.warn(`listRunsFromDb: Ungültige Phase "${String(row.phase)}" für Run ${String(row.id)} — wird übersprungen`);
+      return false;
+    }
+  }).map(row => ({
+    id: String(row.id ?? ''),
+    repoId: String(row.repo_id ?? ''),
+    issueNumber: Number(row.issue_number ?? 0),
+    branch: row.branch ? String(row.branch) : null,
+    phase: parsePhase(String(row.phase ?? 'QUEUED')),
+    status: parseRunStatus(String(row.status ?? 'blocked')),
+    autonomyLevel: Number(row.autonomy_level ?? 1),
+    attempt: Number(row.attempt ?? 0),
+    startedAt: String(row.started_at ?? new Date().toISOString()),
+    finishedAt: row.finished_at ? String(row.finished_at) : null,
     lastError: null,
     workspacePath: null,
   }));
@@ -1521,7 +1530,7 @@ export function createApp(options: ServerOptions = {}) {
         runId: row.run_id,
         level: row.level as EventLevel,
         message: row.message,
-        payload: row.payload_json ? JSON.parse(row.payload_json) as Record<string, unknown> : null,
+        payload: safeJsonParse(row.payload_json),
         createdAt: row.created_at,
       }));
       const passed = testEvents.filter(e => e.level === 'INFO').length;

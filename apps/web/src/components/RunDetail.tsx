@@ -10,6 +10,7 @@ import GateControls from './GateControls.js';
 import ArtifactPanel from './ArtifactPanel.js';
 import PhaseBadge from './PhaseBadge.js';
 import type { Phase } from '../types.js';
+import { parsePhase } from '@positron/shared';
 
 function formatDuration(ms: number): string {
   if (ms < 1000) return `${ms}ms`;
@@ -264,8 +265,8 @@ export default function RunDetail(): React.ReactElement {
             currentPhase={run.phase}
             completedPhases={events
               .filter(e => e.level === 'INFO' && !['ERROR', 'WARN'].includes(e.level))
-              .map(e => e.phase as Phase)
-              .filter(Boolean)}
+              .map(e => { try { return parsePhase(e.phase); } catch { return null; } })
+              .filter((p): p is Phase => p !== null)}
             failedPhases={events.filter(e => e.level === 'ERROR').map(e => e.phase as Phase).filter(Boolean)}
             onPhaseClick={(phase) => {
               // Scroll event log to first matching phase
