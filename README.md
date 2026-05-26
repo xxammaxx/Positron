@@ -1,4 +1,8 @@
-# Positron v3.0 — Evidence-Gated GitHub Issue Execution
+# Positron — Evidence-Gated GitHub Issue Execution
+
+[![Version](https://img.shields.io/badge/release-v0.1.0--rc.1-blue)](https://github.com/xxammaxx/Positron/releases/tag/v0.1.0-rc.1)
+[![CI](https://github.com/xxammaxx/Positron/actions/workflows/verify-issues.yml/badge.svg)](https://github.com/xxammaxx/Positron/actions/workflows/verify-issues.yml)
+[![Tests](https://img.shields.io/badge/tests-79%20passed-brightgreen)]()
 
 Positron ist ein lokales GitHub-Issue-Ausführungssystem für agentische Softwareentwicklung.
 Es verwandelt GitHub-Issues in überprüfbare, dokumentierte, getestete Pull Requests.
