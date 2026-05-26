@@ -11,6 +11,7 @@ import type {
   ApiError,
 } from './types.js';
 import type { Phase, RunStatus, Run } from './types.js';
+import { parsePhase } from '@positron/shared';
 
 const BASE = '/api';
 
@@ -149,7 +150,7 @@ export const api = {
     const runsByPhase: Partial<Record<Phase, number>> = {};
     if (Array.isArray(m.phaseDistribution)) {
       for (const entry of m.phaseDistribution) {
-        runsByPhase[entry.phase as Phase] = entry.count;
+        try { runsByPhase[parsePhase(entry.phase)] = entry.count; } catch { /* ungültige Phase ignorieren */ }
       }
     }
 

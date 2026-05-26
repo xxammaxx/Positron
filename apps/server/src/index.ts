@@ -1153,20 +1153,27 @@ async function runFullPipeline(
  * Wandelt DB-Zeilen in RunState-Objekte um.
  */
 function mapDbRows(rows: Array<Record<string, unknown>>): RunState[] {
-  return rows.map(row => ({
-    id: row.id as string,
-    repoId: row.repo_id as string,
-    issueNumber: row.issue_number as number,
-    branch: row.branch as string | null,
-    phase: row.phase as Phase,
-    status: row.status as RunStatus,
-    autonomyLevel: row.autonomy_level as number,
-    attempt: row.attempt as number,
-    startedAt: row.started_at as string,
-    finishedAt: row.finished_at as string | null,
-    lastError: row.last_error as string | null,
-    workspacePath: row.workspace_path as string | null,
-  }));
+  return rows.flatMap(row => {
+    try {
+      return [{
+        id: String(row.id ?? ''),
+        repoId: String(row.repo_id ?? ''),
+        issueNumber: Number(row.issue_number ?? 0),
+        branch: row.branch ? String(row.branch) : null,
+        phase: parsePhase(String(row.phase ?? 'QUEUED')),
+        status: parseRunStatus(String(row.status ?? 'blocked')),
+        autonomyLevel: Number(row.autonomy_level ?? 1),
+        attempt: Number(row.attempt ?? 0),
+        startedAt: String(row.started_at ?? new Date().toISOString()),
+        finishedAt: row.finished_at ? String(row.finished_at) : null,
+        lastError: row.last_error ? String(row.last_error) : null,
+        workspacePath: row.workspace_path ? String(row.workspace_path) : null,
+      } satisfies RunState];
+    } catch (err) {
+      log.warn(`mapDbRows: Ungültiger DB-Eintrag übersprungen (ID: ${String(row.id ?? 'unknown')}): ${err instanceof Error ? err.message : String(err)}`);
+      return [];
+    }
+  });
 }
 
 /**

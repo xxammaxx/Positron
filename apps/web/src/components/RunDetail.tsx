@@ -267,7 +267,7 @@ export default function RunDetail(): React.ReactElement {
               .filter(e => e.level === 'INFO' && !['ERROR', 'WARN'].includes(e.level))
               .map(e => { try { return parsePhase(e.phase); } catch { return null; } })
               .filter((p): p is Phase => p !== null)}
-            failedPhases={events.filter(e => e.level === 'ERROR').map(e => e.phase as Phase).filter(Boolean)}
+            failedPhases={events.filter(e => e.level === 'ERROR').map(e => { try { return parsePhase(e.phase); } catch { return null; } }).filter((p): p is Phase => p !== null)}
             onPhaseClick={(phase) => {
               // Scroll event log to first matching phase
               const el = document.querySelector(`[data-phase="${phase}"]`);
