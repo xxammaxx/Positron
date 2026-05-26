@@ -120,6 +120,12 @@ Das React-Frontend bietet:
 - [Abhängigkeitsgraph](docs/dependency-graph.md)
 - [Constitution](.specify/memory/constitution.md)
 
+## Contributors
+
+Danke an alle, die zu Positron beigetragen haben!
+
+Siehe [Contributors](https://github.com/xxammaxx/Positron/graphs/contributors) für eine vollständige Liste.
+
 ## Lizenz
 
 [MIT](LICENSE)
