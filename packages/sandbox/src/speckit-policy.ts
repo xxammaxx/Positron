@@ -36,7 +36,10 @@ export function validateSpecKitCommand(command: string): void {
   const mode = process.env['POSITRON_SPECKIT_MODE'] ?? 'fake';
 
   if (mode === 'fake') {
-    throw new SpecKitCommandPolicyError('SpecKit is in fake mode — no real commands allowed');
+    throw new SpecKitCommandPolicyError(
+      'SpecKit is in fake mode — no real commands allowed. ' +
+      'Set POSITRON_SPECKIT_MODE=real to enable real SpecKit execution.',
+    );
   }
 
   if (isBlockedSpecKitCommand(command)) {

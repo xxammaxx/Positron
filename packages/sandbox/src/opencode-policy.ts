@@ -32,7 +32,10 @@ export function validateOpenCodeCommand(command: string): void {
   const mode = process.env['POSITRON_OPENCODE_MODE'] ?? 'fake';
 
   if (mode === 'fake') {
-    throw new OpenCodeCommandPolicyError('OpenCode is in fake mode — no real commands allowed');
+    throw new OpenCodeCommandPolicyError(
+      'OpenCode is in fake mode — no real commands allowed. ' +
+      'Set POSITRON_OPENCODE_MODE=real to enable real OpenCode execution.',
+    );
   }
 
   for (const blocked of BLOCKED_OPENCODE_COMMANDS) {
