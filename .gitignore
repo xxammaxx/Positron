@@ -11,3 +11,4 @@ coverage/
 *.db
 test-results/
 playwright-report/
+reports/

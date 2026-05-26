@@ -2,10 +2,13 @@
 
 /**
  * Legacy-Stub: runSpecify erzeugt eine Fake-Spezifikation.
- * Wird als Fallback aufgerufen wenn der Real/Fake-Adapter nicht genutzt wird.
+ *
+ * @deprecated Wird nur als Fallback genutzt wenn kein echter Adapter konfiguriert ist.
+ *             Setze POSITRON_SPECKIT_MODE=real und POSITRON_ENABLE_REAL_SPECKIT=true
+ *             für echte SpecKit-Generierung.
  */
 export async function runSpecify(workspacePath?: string, issueContext?: string): Promise<string> {
-  console.log('[speckit-stub] runSpecify aufgerufen');
+  console.warn('[speckit-stub] ⚠️ DEPRECATED: runSpecify Legacy-Stub aufgerufen — setze POSITRON_SPECKIT_MODE=real für echte SpecKit-Generierung');
   return [
     '# Specification (Stub)',
     `Generated at: ${new Date().toISOString()}`,
@@ -18,16 +21,19 @@ export async function runSpecify(workspacePath?: string, issueContext?: string):
     '- [ ] Dokumentation aktualisiert',
     '- [ ] PR erstellt',
     '## Technical Notes',
-    '- Diese Spezifikation wurde vom Legacy-Stub generiert',
-    '- Für volle Funktionalität den RealSpecKitAdapter verwenden',
+    '- ⚠️ Diese Spezifikation wurde vom Legacy-Stub generiert',
+    '- Für volle Funktionalität POSITRON_SPECKIT_MODE=real setzen',
   ].join('\n');
 }
 
 /**
  * Legacy-Stub: runPlan erzeugt einen Fake-Implementierungsplan.
+ *
+ * @deprecated Wird nur als Fallback genutzt wenn kein echter Adapter konfiguriert ist.
+ *             Setze POSITRON_SPECKIT_MODE=real und POSITRON_ENABLE_REAL_SPECKIT=true.
  */
 export async function runPlan(workspacePath?: string, spec?: string): Promise<string> {
-  console.log('[speckit-stub] runPlan aufgerufen');
+  console.warn('[speckit-stub] ⚠️ DEPRECATED: runPlan Legacy-Stub aufgerufen — setze POSITRON_SPECKIT_MODE=real für echte Plan-Generierung');
   return [
     '# Implementation Plan (Stub)',
     `Generated at: ${new Date().toISOString()}`,
@@ -47,9 +53,12 @@ export async function runPlan(workspacePath?: string, spec?: string): Promise<st
 
 /**
  * Legacy-Stub: runTasks erzeugt Fake-Tasks.
+ *
+ * @deprecated Wird nur als Fallback genutzt wenn kein echter Adapter konfiguriert ist.
+ *             Setze POSITRON_SPECKIT_MODE=real und POSITRON_ENABLE_REAL_SPECKIT=true.
  */
 export async function runTasks(workspacePath?: string, plan?: string): Promise<string[]> {
-  console.log('[speckit-stub] runTasks aufgerufen');
+  console.warn('[speckit-stub] ⚠️ DEPRECATED: runTasks Legacy-Stub aufgerufen — setze POSITRON_SPECKIT_MODE=real für echte Task-Generierung');
   return [
     `TASK-1: Codebase-Analyse für Issue #0`,
     `TASK-2: Feature-Implementierung (Hauptlogik)`,

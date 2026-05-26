@@ -48,7 +48,13 @@ import { TestCommandDetector, TestRunner } from '@positron/sandbox';
 import type { TestReport } from '@positron/sandbox';
 import { startWatcher } from './github-watcher.js';
 import { createLogger } from './logger.js';
+import { broadcastSSE, addSSEClient, removeSSEClient, resetEventSequence, primeEventSequence } from './sse/broadcaster.js';
+import { runSignals, resumePhaseTarget, checkRunSignal } from './signals.js';
+import type { RunControlAction } from './signals.js';
+import { createCancelHandler } from './handlers/cancel-run.js';
+import { createDemoLiveRunHandler } from './demo/live-run-handler.js';
 
+const __serverDirname = path.dirname(fileURLToPath(import.meta.url));
 const log = createLogger('Server');
 
 /** GitHub Adapter Modus: "fake" (Standard/Test) oder "real" (mit GITHUB_TOKEN) */
@@ -74,6 +80,10 @@ function resolveAdapter(adapter?: GitHubAdapter): { adapter: GitHubAdapter; mode
   if (mode === 'real') {
     return { adapter: createRealGitHubAdapter(), mode: 'real' };
   }
+  if (process.env.NODE_ENV === 'production') {
+    log.warn('PRODUCTION-MODE but POSITRON_GITHUB_MODE is not set to "real" — using fake adapter!');
+    log.warn('Set POSITRON_GITHUB_MODE=real and configure GITHUB_TOKEN for production use.');
+  }
   return { adapter: new FakeGitHubAdapter(), mode: 'fake' };
 }
 
@@ -92,7 +102,9 @@ function resolveRepositoryConfig(repository?: RepositoryConfig): RepositoryConfi
 // SQLite-Datenbankverbindung (initialisiert in createApp)
 let db: Database.Database | null = null;
 
-// In-Memory Adapter-Standards
+// In-Memory Adapter-Standards (werden in createApp überschrieben wenn env vars gesetzt)
+// NOTE: Sandbox hat noch keinen Real-Modus — env var existiert aber ist deaktiviert
+// TODO: RealGitWorkspaceAdapter implementieren wenn echter Git-Zugriff nötig
 let workspaceAdapter: GitWorkspaceAdapter = new FakeGitWorkspaceAdapter();
 let speckitAdapter: SpecKitAdapter = new FakeSpecKitAdapter();
 let opencodeAdapter: OpenCodeAdapter = new FakeOpenCodeAdapter();
@@ -102,75 +114,6 @@ let stopWatcher: (() => void) | null = null;
 
 // Server-Startzeit für Uptime-Berechnung
 const serverStartTime = Date.now();
-
-// SSE Client Tracking (Issue #29)
-const sseClients = new Map<string, Set<express.Response>>();
-
-function broadcastSSE(runId: string, event: string, data: unknown): void {
-  const clients = sseClients.get(runId);
-  if (!clients) return;
-  const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
-  for (const res of clients) {
-    try {
-      res.write(payload);
-    } catch {
-      clients.delete(res);
-    }
-  }
-}
-
-function addSSEClient(runId: string, res: express.Response): void {
-  if (!sseClients.has(runId)) {
-    sseClients.set(runId, new Set());
-  }
-  sseClients.get(runId)!.add(res);
-}
-
-function removeSSEClient(runId: string, res: express.Response): void {
-  const clients = sseClients.get(runId);
-  if (clients) {
-    clients.delete(res);
-    if (clients.size === 0) sseClients.delete(runId);
-  }
-}
-
-// Run Control Signals (Issue #30)
-// Stored separately from run state to avoid database/schema changes
-const runSignals = new Map<string, 'PAUSE' | 'ABORT' | 'RESUME' | 'RETRY'>();
-
-export type RunControlAction = 'pause' | 'abort' | 'resume' | 'retry';
-
-function clearRunSignal(runId: string): void {
-  runSignals.delete(runId);
-  resumePhaseTarget.delete(runId);
-}
-
-function checkRunSignal(runId: string, runPhase: Phase): 'proceed' | 'abort' | 'retry' | 'paused' | 'resume' {
-  const signal = runSignals.get(runId);
-  if (!signal) return 'proceed';
-
-  switch (signal) {
-    case 'ABORT':
-      clearRunSignal(runId);
-      return 'abort';
-    case 'PAUSE':
-      return 'paused';
-    case 'RESUME': {
-      clearRunSignal(runId);
-      // Prüfe ob eine Ziel-Phase gespeichert wurde (resumePhaseTarget bleibt erhalten)
-      if (resumePhaseTarget.has(runId)) {
-        return 'resume';
-      }
-      return 'proceed';
-    }
-    case 'RETRY':
-      if (runPhase !== 'FAILED_TRANSIENT') return 'proceed';
-      clearRunSignal(runId);
-      return 'retry';
-    default:
-      return 'proceed';
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Datenbank-Helper (Persistenz via better-sqlite3)
@@ -498,10 +441,13 @@ async function executePhase(
         }
         result = transition(current, 'PLAN', sr.summary, sr.status === 'success' ? 'INFO' : 'WARN');
       } catch (err) {
-        storeEvent({ id: createRunId(), runId: current.id, phase: 'SPECIFY', level: 'WARN', message: `Specify error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
+        const errMsg = `Specify error: ${String(err).slice(0, 200)}`;
+        storeEvent({ id: createRunId(), runId: current.id, phase: 'SPECIFY', level: 'WARN', message: errMsg, payload: null, createdAt: new Date().toISOString() });
+        log.warn(`[PIPELINE] ⚠️ LEGACY STUB FALLBACK in SPECIFY-Phase: ${errMsg}`);
+        log.warn('[PIPELINE] Setze POSITRON_SPECKIT_MODE=real und POSITRON_ENABLE_REAL_SPECKIT=true für echte SpecKit-Generierung');
         const specContent = await runSpecify(wsPath, `Issue #${current.issueNumber}`);
         saveArtifact(current.id, 'spec', specContent);
-        result = transition(current, 'PLAN', 'Spec generated (legacy stub fallback)', 'INFO');
+        result = transition(current, 'PLAN', 'Spec generated (legacy stub fallback)', 'WARN');
       }
       break;
     }
@@ -531,10 +477,12 @@ async function executePhase(
         }
         result = transition(current, 'TASKS', pr.summary, pr.status === 'success' || pr.status === 'skipped' ? 'INFO' : 'WARN');
       } catch (err) {
-        storeEvent({ id: createRunId(), runId: current.id, phase: 'PLAN', level: 'WARN', message: `Plan error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
+        const planErrMsg = `Plan error: ${String(err).slice(0, 200)}`;
+        storeEvent({ id: createRunId(), runId: current.id, phase: 'PLAN', level: 'WARN', message: planErrMsg, payload: null, createdAt: new Date().toISOString() });
+        log.warn(`[PIPELINE] ⚠️ LEGACY STUB FALLBACK in PLAN-Phase: ${planErrMsg}`);
         const planContent = await runPlan(wsPath, `Spec for Issue #${current.issueNumber}`);
         saveArtifact(current.id, 'plan', planContent);
-        result = transition(current, 'TASKS', 'Plan generated (legacy stub fallback)', 'INFO');
+        result = transition(current, 'TASKS', 'Plan generated (legacy stub fallback)', 'WARN');
       }
       break;
     }
@@ -564,10 +512,12 @@ async function executePhase(
         }
         result = transition(current, 'ANALYZE', tr.summary, tr.status === 'success' || tr.status === 'skipped' ? 'INFO' : 'WARN');
       } catch (err) {
-        storeEvent({ id: createRunId(), runId: current.id, phase: 'TASKS', level: 'WARN', message: `Tasks error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
+        const tasksErrMsg = `Tasks error: ${String(err).slice(0, 200)}`;
+        storeEvent({ id: createRunId(), runId: current.id, phase: 'TASKS', level: 'WARN', message: tasksErrMsg, payload: null, createdAt: new Date().toISOString() });
+        log.warn(`[PIPELINE] ⚠️ LEGACY STUB FALLBACK in TASKS-Phase: ${tasksErrMsg}`);
         const tasksContent = await runTasks(wsPath, `Plan for Issue #${current.issueNumber}`);
         saveArtifact(current.id, 'tasks', tasksContent);
-        result = transition(current, 'ANALYZE', 'Tasks generated (legacy stub fallback)', 'INFO');
+        result = transition(current, 'ANALYZE', 'Tasks generated (legacy stub fallback)', 'WARN');
       }
       break;
     }
@@ -623,12 +573,15 @@ async function executePhase(
         }
         result = transition(current, 'TEST', ir.summary, ir.status === 'success' ? 'INFO' : 'WARN');
       } catch (err) {
-        storeEvent({ id: createRunId(), runId: current.id, phase: 'IMPLEMENT', level: 'WARN', message: `Implement error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
+        const implErrMsg = `Implement error: ${String(err).slice(0, 200)}`;
+        storeEvent({ id: createRunId(), runId: current.id, phase: 'IMPLEMENT', level: 'WARN', message: implErrMsg, payload: null, createdAt: new Date().toISOString() });
+        log.warn(`[PIPELINE] ⚠️ LEGACY STUB FALLBACK in IMPLEMENT-Phase: ${implErrMsg}`);
+        log.warn('[PIPELINE] Setze POSITRON_OPENCODE_MODE=real für echte Implementierung');
         const execResult = await executeTasks(wsPath, [`Implement Issue #${current.issueNumber}`]);
         if (execResult.success) {
           saveArtifact(current.id, 'implementation', execResult.completedTasks);
         }
-        result = transition(current, 'TEST', 'Implementation done (legacy fallback)', 'INFO');
+        result = transition(current, 'TEST', 'Implementation done (legacy fallback)', 'WARN');
       }
       break;
     }
@@ -967,8 +920,8 @@ async function executePhase(
   }
 }
 
-/** Gespeicherte Ziel-Phase für Resume (Aufgabe 5) */
-const resumePhaseTarget = new Map<string, Phase>();
+/** Gespeicherte Ziel-Phase für Resume (imported from signals.ts) */
+// resumePhaseTarget is defined in ./signals.ts and imported above
 
 async function runFullPipeline(
   run: RunState,
@@ -1014,11 +967,21 @@ async function runFullPipeline(
     // Check control signals before each phase (Issue #30)
     const signalCheck = checkRunSignal(current.id, current.phase);
     if (signalCheck === 'abort') {
-      const abortResult = markFailed(current, 'FAILED_BLOCKED', 'Run aborted by user');
-      storeEvent(abortResult.event);
-      saveRunToDb(abortResult.run);
-      broadcastSSE(abortResult.run.id, 'run-update', { phase: abortResult.run.phase, status: abortResult.run.status, branch: abortResult.run.branch });
-      return abortResult.run;
+      // Unify abort → cancelled (Issue #66) — both cancel endpoint and control/abort now
+      // result in 'cancelled' status. Previously this was FAILED_BLOCKED.
+      const cancelledRun = { ...current, status: 'cancelled' as RunStatus, finishedAt: new Date().toISOString() };
+      storeEvent({
+        id: createRunId(), runId: current.id, phase: current.phase,
+        level: 'HUMAN' as EventLevel,
+        message: 'Run aborted by user',
+        payload: { action: 'abort', previousPhase: current.phase },
+        createdAt: new Date().toISOString(),
+      });
+      saveRunToDb(cancelledRun as RunState);
+      broadcastSSE(current.id, 'run-cancelled', {
+        runId: current.id, phase: current.phase, status: 'cancelled', message: 'Run aborted by user',
+      });
+      return cancelledRun as RunState;
     }
     if (signalCheck === 'paused') {
       // Wait for resume or abort
@@ -1032,11 +995,20 @@ async function runFullPipeline(
         await new Promise(r => setTimeout(r, 500));
         const s = checkRunSignal(current.id, current.phase);
         if (s === 'abort') {
-          const abortResult = markFailed(current, 'FAILED_BLOCKED', 'Run aborted while paused');
-          storeEvent(abortResult.event);
-          saveRunToDb(abortResult.run);
-          broadcastSSE(abortResult.run.id, 'run-update', { phase: abortResult.run.phase, status: abortResult.run.status, branch: abortResult.run.branch });
-          return abortResult.run;
+          // Unify abort → cancelled (Issue #66)
+          const cancelledRun = { ...current, status: 'cancelled' as RunStatus, finishedAt: new Date().toISOString() };
+          storeEvent({
+            id: createRunId(), runId: current.id, phase: current.phase,
+            level: 'HUMAN' as EventLevel,
+            message: 'Run aborted while paused',
+            payload: { action: 'abort', previousPhase: current.phase },
+            createdAt: new Date().toISOString(),
+          });
+          saveRunToDb(cancelledRun as RunState);
+          broadcastSSE(current.id, 'run-cancelled', {
+            runId: current.id, phase: current.phase, status: 'cancelled', message: 'Run aborted while paused',
+          });
+          return cancelledRun as RunState;
         }
         if (s === 'proceed') {
           storeEvent({
@@ -1194,18 +1166,27 @@ function mapDbRows(rows: Array<Record<string, unknown>>): RunState[] {
 function saveArtifact(runId: string, kind: string, content: string | string[]): void {
   try {
     const contentStr = Array.isArray(content) ? content.join('\n') : content;
+    const artifactId = crypto.randomUUID();
+    const createdAt = new Date().toISOString();
     getDb().prepare(`
       INSERT INTO artifacts (id, run_id, kind, content, created_at)
       VALUES (?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         content = excluded.content
     `).run(
-      crypto.randomUUID(),
+      artifactId,
       runId,
       kind,
       contentStr,
-      new Date().toISOString(),
+      createdAt,
     );
+    // Broadcast evidence creation to SSE clients (Issue #66)
+    broadcastSSE(runId, 'run-evidence-created', {
+      artifactId,
+      kind,
+      summary: `${kind} artifact created (${contentStr.length} chars)`,
+      createdAt,
+    });
   } catch (err) {
     log.error(`saveArtifact failed for ${kind} / run ${runId}`, err);
   }
@@ -1418,7 +1399,16 @@ export function createApp(options: ServerOptions = {}) {
   app.post('/api/repos', (req, res) => {
     try {
       validateRepoRegistration(req.body ?? {});
-      res.json({ id: 'repo-1', status: 'registered', mode: github instanceof FakeGitHubAdapter ? 'fake' : 'real' });
+      const repoId = `${repository.owner}/${repository.repo}`;
+      // In DB speichern falls noch nicht vorhanden
+      const existing = getDb().prepare('SELECT id FROM repositories WHERE id = ?').get(repoId) as { id: string } | undefined;
+      if (!existing) {
+        getDb().prepare(`
+          INSERT OR IGNORE INTO repositories (id, owner, name, url, default_branch, enabled)
+          VALUES (?, ?, ?, ?, ?, 1)
+        `).run(repoId, repository.owner, repository.repo, `https://github.com/${repository.owner}/${repository.repo}`, repository.defaultBranch);
+      }
+      res.json({ id: repoId, status: 'registered', mode: github instanceof FakeGitHubAdapter ? 'fake' : 'real' });
     } catch (err) {
       res.status(400).json({
         error: 'VALIDATION_ERROR',
@@ -1527,16 +1517,41 @@ export function createApp(options: ServerOptions = {}) {
       'X-Accel-Buffering': 'no',
     });
 
-    // Send initial state
-    const initialState = { run, events: getEvents(runId) };
-    res.write(`event: initial\ndata: ${JSON.stringify(initialState)}\n\n`);
+    // Check for W3C Last-Event-ID reconnection support (Issue #66)
+    const lastEventId = req.headers['last-event-id'];
+    const lastSeq = lastEventId ? parseInt(String(lastEventId), 10) : 0;
+
+    // Get all events and filter by Last-Event-ID if reconnecting
+    const allEvents = getEvents(runId);
+    const resendFromIdx = lastSeq > 0 ? allEvents.findIndex((_, i) => (i + 1) > lastSeq) : 0;
+    const resendEvents = resendFromIdx > 0 ? allEvents.slice(resendFromIdx) : allEvents;
+
+    // Send initial state with sequence numbers (Issue #66)
+    const eventsWithSequence = allEvents.map((e, idx) => ({
+      ...e,
+      _sequence: idx + 1,
+    }));
+    const initialState = {
+      run,
+      events: resendFromIdx > 0 ? eventsWithSequence.slice(resendFromIdx) : eventsWithSequence,
+      reconnected: lastSeq > 0,
+    };
+    res.write(`id: ${allEvents.length}\nevent: initial\ndata: ${JSON.stringify(initialState)}\n\n`);
+
+    // Prime sequence counter to continue from existing events
+    primeEventSequence(runId, allEvents.length);
 
     // Register for live updates
     addSSEClient(runId, res);
 
-    // Keep alive
+    // Keep alive — emit as comment for browsers that support it
     const keepAlive = setInterval(() => {
-      try { res.write(':keepalive\n\n'); } catch { clearInterval(keepAlive); }
+      try {
+        // Send heartbeat as an SSE event so it also gets header-based keepalive
+        broadcastSSE(runId, 'heartbeat', { timestamp: new Date().toISOString(), type: 'keepalive' });
+        // Also emit raw comment for compatibility
+        res.write(':keepalive\n\n');
+      } catch { clearInterval(keepAlive); }
     }, 15000);
 
     // Cleanup on disconnect
@@ -1549,8 +1564,9 @@ export function createApp(options: ServerOptions = {}) {
   // Health (Issue #22 + HealthIndicator)
   app.get('/api/health', async (_req, res) => {
     try {
-      const speckitHealth = await activeSpecKitAdapter.healthCheck('/tmp');
-      const opencodeHealth = await activeOpenCodeAdapter.healthCheck('/tmp');
+      const healthWsPath = process.env['POSITRON_WORKSPACE_ROOT'] ?? '/tmp';
+      const speckitHealth = await activeSpecKitAdapter.healthCheck(healthWsPath);
+      const opencodeHealth = await activeOpenCodeAdapter.healthCheck(healthWsPath);
       const isFakeMode = github instanceof FakeGitHubAdapter;
       // In Fake-Mode gelten nicht-verfügbare Adapter nicht als "degraded"
       const adapters = {
@@ -1580,8 +1596,9 @@ export function createApp(options: ServerOptions = {}) {
   // Adapter Health Status (Issue #22) — separate legacy endpoint
   app.get('/api/adapters/health', async (_req, res) => {
     try {
-      const speckitHealth = await activeSpecKitAdapter.healthCheck('/tmp');
-      const opencodeHealth = await activeOpenCodeAdapter.healthCheck('/tmp');
+      const healthWsPath = process.env['POSITRON_WORKSPACE_ROOT'] ?? '/tmp';
+      const speckitHealth = await activeSpecKitAdapter.healthCheck(healthWsPath);
+      const opencodeHealth = await activeOpenCodeAdapter.healthCheck(healthWsPath);
       res.json({
         github: { available: !(github instanceof FakeGitHubAdapter), mode: github instanceof FakeGitHubAdapter ? 'fake' : 'real' },
         specKit: speckitHealth,
@@ -1651,6 +1668,18 @@ export function createApp(options: ServerOptions = {}) {
     }
     res.json({ blueprint: (blueprintEvent.payload as Record<string, unknown>).blueprint, runId: req.params.runId });
   });
+
+  // Demo Live Run — Visual validation seed (Issue #66)
+  // Handler extracted to demo/live-run-handler.ts (Issue #66 architecture refactor)
+  app.post('/api/demo/live-run', createDemoLiveRunHandler({
+    createRun,
+    saveRunToDb,
+    storeEvent,
+    saveArtifact,
+    broadcastSSE,
+    createRunId,
+    repository,
+  }));
 
   // Safety State (Issue #28)
   app.get('/api/safety', (_req, res) => {
@@ -1825,6 +1854,221 @@ export function createApp(options: ServerOptions = {}) {
     }
   });
 
+  // -----------------------------------------------------------------------
+  // Evidence API — Aggregated evidence across runs (Issue #65)
+  // -----------------------------------------------------------------------
+  app.get('/api/evidence', (req, res) => {
+    try {
+      const database = getDb();
+      const runId = req.query.runId as string | undefined;
+
+      if (runId) {
+        // Evidence for a single run
+        const run = loadRunFromDb(runId);
+        if (!run) { res.status(404).json({ error: 'Run not found' }); return; }
+
+        const artifacts = database.prepare(
+          'SELECT kind, content, created_at as createdAt FROM artifacts WHERE run_id = ? ORDER BY created_at DESC',
+        ).all(runId) as Array<{ kind: string; content: string; createdAt: string }>;
+
+        const events = getEvents(runId).filter(e =>
+          e.level === 'ERROR' || e.level === 'WARN' || e.phase === 'TEST' || e.phase === 'MERGE',
+        );
+
+        const evidenceItems: Array<{
+          id: string; type: string; kind: string; source: string;
+          sourceId: string; status: string; summary: string;
+          timestamp: string; runPhase: string;
+        }> = artifacts.map(a => ({
+          id: `artifact-${a.kind}-${runId.slice(0, 8)}`,
+          type: 'artifact' as const,
+          kind: a.kind,
+          source: 'run',
+          sourceId: runId,
+          status: 'pass' as const,
+          summary: `${a.kind} (${a.content.length} chars)`,
+          timestamp: a.createdAt,
+          runPhase: run.phase,
+        }));
+
+        // Add test results as evidence
+        const testEvents = events.filter(e => e.phase === 'TEST');
+        for (const e of testEvents) {
+          evidenceItems.push({
+            id: `test-${e.id.slice(0, 8)}`,
+            type: 'test-result' as const,
+            kind: 'test',
+            source: 'test-run',
+            sourceId: runId,
+            status: e.level === 'INFO' ? 'pass' as const : 'fail' as const,
+            summary: e.message,
+            timestamp: e.createdAt,
+            runPhase: e.phase,
+          });
+        }
+
+        res.json({ evidence: evidenceItems, total: evidenceItems.length, runId });
+      } else {
+        // Aggregated evidence across all runs
+        const artifactCounts = database.prepare(`
+          SELECT kind, COUNT(*) as count FROM artifacts GROUP BY kind
+        `).all() as Array<{ kind: string; count: number }>;
+
+        const testEvents = database.prepare(`
+          SELECT COUNT(*) as testCount FROM run_events WHERE phase = 'TEST'
+        `).get() as { testCount: number };
+
+        const errorEvents = database.prepare(`
+          SELECT COUNT(*) as errorCount FROM run_events WHERE level = 'ERROR'
+        `).get() as { errorCount: number };
+
+        const warnEvents = database.prepare(`
+          SELECT COUNT(*) as warnCount FROM run_events WHERE level = 'WARN'
+        `).get() as { warnCount: number };
+
+        res.json({
+          summary: {
+            totalArtifacts: artifactCounts.reduce((sum, a) => sum + a.count, 0),
+            artifactBreakdown: Object.fromEntries(artifactCounts.map(a => [a.kind, a.count])),
+            testEvents: testEvents?.testCount ?? 0,
+            errorEvents: errorEvents?.errorCount ?? 0,
+            warningEvents: warnEvents?.warnCount ?? 0,
+          },
+        });
+      }
+    } catch (err) {
+      res.status(500).json({ error: 'Evidence konnte nicht geladen werden', details: String(err) });
+    }
+  });
+
+  // -----------------------------------------------------------------------
+  // Settings API — MCP Configuration + Test Modes (Issue #65)
+  // -----------------------------------------------------------------------
+
+  // MCP Configuration (masked — no secrets exposed)
+  app.get('/api/settings/mcp', (_req, res) => {
+    try {
+      const configPath = path.resolve('.opencode', 'config.json');
+      let mcpConfig = null;
+      let securityPolicy = null;
+      let artifactPolicy = null;
+
+      if (fs.existsSync(configPath)) {
+        const raw = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+        mcpConfig = raw.mcpServers ?? {};
+        securityPolicy = raw.mcpSecurityPolicy ?? {};
+        artifactPolicy = raw.mcpArtifactPolicy ?? {};
+      }
+
+      // Build masked MCP server list (no env vars, no tokens)
+      const servers = Object.entries(mcpConfig ?? {}).map(([name, cfg]: [string, unknown]) => {
+        const serverCfg = cfg as Record<string, unknown>;
+        return {
+          name,
+          command: serverCfg.command ?? 'unknown',
+          description: serverCfg.description ?? '',
+          disabled: serverCfg.disabled === true,
+          // NEVER expose env values — only show keys
+          envKeys: serverCfg.env ? Object.keys(serverCfg.env as Record<string, unknown>) : [],
+          hasToken: serverCfg.env ? Object.values(serverCfg.env as Record<string, unknown>).some(
+            (v: unknown) => typeof v === 'string' && (v as string).includes('${')
+          ) : false,
+        };
+      });
+
+      // Security policy (read-only display)
+      const policy = {
+        leastPrivilege: securityPolicy?.leastPrivilege ?? false,
+        readOnlyFirst: securityPolicy?.readOnlyFirst ?? false,
+        humanInTheLoop: securityPolicy?.humanInTheLoop ?? false,
+        secretProtection: securityPolicy?.secretProtection ?? false,
+        environmentSeparation: securityPolicy?.environmentSeparation ?? false,
+        allowedWriteActions: securityPolicy?.allowedWriteActions ?? [],
+        deniedActions: securityPolicy?.deniedActions ?? [],
+        pathRestrictions: securityPolicy?.pathRestrictions ?? {},
+      };
+
+      // Redaction patterns (never show raw patterns — just count)
+      const redactPatternCount = artifactPolicy?.redactPatterns?.length ?? 0;
+
+      res.json({
+        servers,
+        policy,
+        redactPatternCount,
+        configured: servers.filter(s => !s.disabled).length,
+        totalServers: servers.length,
+      });
+    } catch (err) {
+      res.status(500).json({ error: 'Settings could not be loaded', details: String(err) });
+    }
+  });
+
+  // Available Test Modes (Source of Truth: package.json scripts — live gelesen)
+  app.get('/api/settings/test-modes', (_req, res) => {
+    try {
+      // Beschreibungen für bekannte Test-Modi (wird mit package.json-Scripts gemerged)
+      const modeDescriptions: Record<string, { label: string; visible: boolean; description: string }> = {
+        test: { label: 'Unit Tests', visible: true, description: 'Vitest unit + integration tests' },
+        'test:e2e': { label: 'E2E (headless)', visible: false, description: 'Playwright E2E tests, headless' },
+        'test:e2e:headed': { label: 'E2E (headed)', visible: true, description: 'Playwright with visible browser' },
+        'test:e2e:slow': { label: 'E2E (slow)', visible: true, description: 'Headed + 1000ms slow motion' },
+        'test:e2e:observe': { label: 'E2E (observe)', visible: true, description: 'Browser stays open for human review' },
+        'test:e2e:ui': { label: 'Playwright UI Mode', visible: true, description: 'Interactive Playwright UI' },
+        'test:e2e:debug': { label: 'E2E (debug)', visible: true, description: 'Debug mode with PWDEBUG' },
+        'test:e2e:diag': { label: 'Diagnostic', visible: true, description: 'Visible diagnostic test' },
+        'test:orchestrator': { label: 'Orchestrator', visible: false, description: 'Full orchestrated test suite' },
+        'test:orchestrator:smoke': { label: 'Orchestrator (smoke)', visible: false, description: 'Orchestrated smoke tests' },
+        'test:orchestrator:headed': { label: 'Orchestrator (headed)', visible: true, description: 'Orchestrated headed tests' },
+        'test:orchestrator:slow': { label: 'Orchestrator (slow)', visible: true, description: 'Orchestrated slow tests' },
+        'test:orchestrator:contract': { label: 'Contract Tests', visible: true, description: 'API contract validation' },
+        'test:orchestrator:regression': { label: 'Regression', visible: true, description: 'Visual regression tests' },
+        'demo:live': { label: 'Live Demo', visible: true, description: 'Live demo with visible browser' },
+        'demo:open': { label: 'Open Demo', visible: true, description: 'Open demo in browser' },
+        'verify:issues': { label: 'Verify Issues', visible: false, description: 'Verify all GitHub issues against code' },
+      };
+
+      // Lese Scripts aus package.json als Source of Truth für commands
+      const pkgJsonPath = path.resolve(__serverDirname, '..', '..', '..', '..', 'package.json');
+      let scripts: Record<string, string> = {};
+      try {
+        scripts = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf-8')).scripts ?? {};
+      } catch {
+        log.warn('Konnte package.json nicht lesen — verwende Default-Scripts');
+      }
+
+      // Bekannte Test-Script-Präfixe
+      const testPrefixes = ['test:', 'demo:', 'verify:'];
+      const modes = Object.entries(modeDescriptions)
+        .filter(([id]) => testPrefixes.some(p => id.startsWith(p)))
+        .map(([id, desc]) => ({
+          id,
+          label: desc.label,
+          command: scripts[id] ? `npm run ${id}` : `npm run ${id}`,
+          visible: desc.visible,
+          description: desc.description,
+        }));
+
+      // Security status for each mode
+      const securityNotes = {
+        headed: 'Browser ist sichtbar — kein Produktionsmodus. Sicher für lokale Entwicklung.',
+        slow: 'Verlangsamte Ausführung für menschliche Beobachtung.',
+        observe: 'Browser bleibt nach Test offen. Nur lokal verwenden.',
+        debug: 'Debug-Modus mit PWDEBUG. Nur lokal verwenden.',
+        headless: 'Headless-Modus — geeignet für CI/CD.',
+      };
+
+      res.json({
+        modes,
+        securityNotes,
+        defaultMode: 'test:e2e',
+        observationMode: 'test:e2e:observe',
+        totalModes: modes.length,
+      });
+    } catch (err) {
+      res.status(500).json({ error: 'Test modes could not be loaded', details: String(err) });
+    }
+  });
+
   // Run Control (Issue #30)
   app.post('/api/runs/:id/control', (req, res) => {
     const runId = req.params.id;
@@ -1839,8 +2083,9 @@ export function createApp(options: ServerOptions = {}) {
     }
 
     // Validate action based on run state
-    if (action === 'pause' && run.phase.startsWith('FAILED')) {
-      res.status(409).json({ error: 'Cannot pause a failed/completed run' });
+    const isTerminalPhase = run.phase === 'DONE' || run.phase.startsWith('FAILED');
+    if (action === 'pause' && (isTerminalPhase || run.status === 'cancelled')) {
+      res.status(409).json({ error: 'Cannot pause a completed/failed/cancelled run' });
       return;
     }
     if (action === 'resume') {
@@ -1900,12 +2145,56 @@ export function createApp(options: ServerOptions = {}) {
         return;
       }
 
-      // Set signal
-      const signal = action.toUpperCase() as 'PAUSE' | 'ABORT' | 'RESUME' | 'RETRY';
+      // For abort: unify with cancel endpoint — update DB + store event + broadcast (Issue #66)
+      if (action === 'abort') {
+        if (run.status === 'cancelled') {
+          res.json({ ok: true, runId, message: 'Run already cancelled', status: 'cancelled' });
+          return;
+        }
+        if (run.status !== 'active' && run.status !== 'blocked') {
+          res.status(409).json({
+            error: `Cannot abort run with status "${run.status}". Only active or blocked runs can be aborted.`,
+          });
+          return;
+        }
+
+        // Atomic DB update
+        const database = getDb();
+        const updateResult = database.prepare(`
+          UPDATE runs SET status = 'cancelled', finished_at = datetime('now')
+          WHERE id = ? AND status IN ('active', 'blocked')
+        `).run(runId);
+
+        if (updateResult.changes === 0) {
+          res.status(409).json({ error: 'Run state changed before abort could complete', runId });
+          return;
+        }
+
+        // Set ABORT signal for pipeline loop
+        runSignals.set(runId, 'ABORT');
+
+        // Store cancel event
+        storeEvent({
+          id: createRunId(), runId, phase: run.phase, level: 'HUMAN',
+          message: `Run control: abort requested by user from phase: ${run.phase}`,
+          payload: { action, previousStatus: run.status },
+          createdAt: new Date().toISOString(),
+        });
+
+        broadcastSSE(runId, 'run-cancelled', {
+          runId, phase: run.phase, status: 'cancelled', message: 'Run aborted by user',
+        });
+
+        res.json({ ok: true, action, runId, status: 'cancelled' });
+        return;
+      }
+
+      // Set signal for non-abort actions
+      const signal = action.toUpperCase() as 'PAUSE' | 'RETRY';
       runSignals.set(runId, signal);
     }
 
-    // Log event
+    // Log event (abort already logged its own event above)
     storeEvent({
       id: createRunId(),
       runId,
@@ -1920,6 +2209,19 @@ export function createApp(options: ServerOptions = {}) {
 
     res.json({ ok: true, action, runId });
   });
+
+  // -----------------------------------------------------------------------
+  // Cancel Endpoint — Safe run cancellation (Issue #66)
+  // Handler extracted to handlers/cancel-run.ts (Issue #66 architecture refactor)
+  // -----------------------------------------------------------------------
+  app.post('/api/runs/:id/cancel', createCancelHandler({
+    loadRunFromDb,
+    getDb,
+    runSignals,
+    storeEvent,
+    broadcastSSE,
+    createRunId,
+  }));
 
   return app;
 }
@@ -1943,10 +2245,12 @@ export function createServer(options: ServerOptions = {}) {
   return server;
 }
 
-// Auto-start when run directly
+// Auto-start when run directly (platform-independent path check)
 const isDirectRun = process.argv[1] && (
-  process.argv[1].includes('/dist/index.js') ||
-  process.argv[1].includes('/src/index.ts')
+  process.argv[1].endsWith(`${path.sep}dist${path.sep}index.js`) ||
+  process.argv[1].includes(`${path.sep}dist${path.sep}index.js`) ||
+  process.argv[1].endsWith(`${path.sep}src${path.sep}index.ts`) ||
+  process.argv[1].includes(`${path.sep}src${path.sep}index.ts`)
 );
 if (isDirectRun) {
   const port = parseInt(process.env['PORT'] ?? '3000', 10);

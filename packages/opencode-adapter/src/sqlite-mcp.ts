@@ -61,14 +61,17 @@ export class SQLiteMCPReader {
    * Listet alle verfügbaren Sessions.
    */
   listSessions(): OpenCodeSession[] {
-    if (!this.db) return [];
+    if (!this.db) {
+      console.warn('[SQLiteMCPReader] Nicht verbunden — kann Sessions nicht abrufen');
+      return [];
+    }
     try {
       const stmt = this.db.prepare(
         'SELECT id, created_at as createdAt, updated_at as updatedAt FROM sessions ORDER BY created_at DESC LIMIT 100',
       );
       return stmt.all() as OpenCodeSession[];
-    } catch {
-      // Tabelle existiert möglicherweise nicht
+    } catch (err) {
+      console.warn(`[SQLiteMCPReader] listSessions fehlgeschlagen: ${err instanceof Error ? err.message : String(err)}`);
       return [];
     }
   }
@@ -77,13 +80,17 @@ export class SQLiteMCPReader {
    * Ruft alle Nachrichten einer Session ab.
    */
   getMessages(sessionId: string): OpenCodeMessage[] {
-    if (!this.db) return [];
+    if (!this.db) {
+      console.warn('[SQLiteMCPReader] Nicht verbunden — kann Nachrichten nicht abrufen');
+      return [];
+    }
     try {
       const stmt = this.db.prepare(
         'SELECT id, session_id as sessionId, role, content, created_at as createdAt FROM messages WHERE session_id = ? ORDER BY created_at ASC',
       );
       return stmt.all(sessionId) as OpenCodeMessage[];
-    } catch {
+    } catch (err) {
+      console.warn(`[SQLiteMCPReader] getMessages fehlgeschlagen: ${err instanceof Error ? err.message : String(err)}`);
       return [];
     }
   }
@@ -92,13 +99,17 @@ export class SQLiteMCPReader {
    * Sucht in Nachrichten-Inhalten.
    */
   searchMessages(query: string, limit = 20): OpenCodeMessage[] {
-    if (!this.db) return [];
+    if (!this.db) {
+      console.warn('[SQLiteMCPReader] Nicht verbunden — kann Suche nicht durchführen');
+      return [];
+    }
     try {
       const stmt = this.db.prepare(
         'SELECT id, session_id as sessionId, role, content, created_at as createdAt FROM messages WHERE content LIKE ? ORDER BY created_at DESC LIMIT ?',
       );
       return stmt.all(`%${query}%`, limit) as OpenCodeMessage[];
-    } catch {
+    } catch (err) {
+      console.warn(`[SQLiteMCPReader] searchMessages fehlgeschlagen: ${err instanceof Error ? err.message : String(err)}`);
       return [];
     }
   }

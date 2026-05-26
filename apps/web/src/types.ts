@@ -51,13 +51,14 @@ export const PHASE_LABELS: Record<Phase, string> = {
   CLEANUP: 'Bereinigung',
 };
 
-export type RunStatus = 'active' | 'blocked' | 'done' | 'failed';
+export type RunStatus = 'active' | 'blocked' | 'done' | 'failed' | 'cancelled';
 
 export const STATUS_LABEL: Record<RunStatus, string> = {
   active: 'Läuft',
   blocked: 'Blockiert',
   done: 'Abgeschlossen',
   failed: 'Fehlgeschlagen',
+  cancelled: 'Abgebrochen',
 };
 
 export type LogLevel = 'INFO' | 'WARN' | 'ERROR' | 'DEBUG';
@@ -105,6 +106,8 @@ export interface RunEvent {
   message: string;
   payload: Record<string, unknown>;
   createdAt: string;
+  /** Server-assigned sequence number for ordering/reconnection (Issue #66) */
+  _sequence?: number;
 }
 
 export interface Artifact {
@@ -125,6 +128,8 @@ export interface HealthStatus {
   status: 'ok' | 'degraded' | 'error';
   adapters: Record<string, boolean>;
   uptime: number;
+  mode?: 'fake' | 'real';
+  runs?: number;
 }
 
 export interface ApiError {

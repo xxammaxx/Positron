@@ -2,14 +2,15 @@
 
 /**
  * Legacy-Stub: executeTasks simuliert die Task-Ausführung.
- * Wird als Fallback aufgerufen wenn der Real/Fake-Adapter nicht genutzt wird.
+ *
+ * @deprecated Wird nur als Fallback genutzt wenn kein echter Adapter konfiguriert ist.
+ *             Setze POSITRON_OPENCODE_MODE=real für echte Task-Ausführung.
  */
 export async function executeTasks(
   workspacePath?: string,
   tasks?: string[],
 ): Promise<{ success: boolean; completedTasks: string[]; errors: string[] }> {
-  console.log('[opencode-stub] executeTasks aufgerufen');
-  console.log(`[opencode-stub] Tasks: ${tasks?.length ?? 0}`);
+  console.warn('[opencode-stub] ⚠️ DEPRECATED: executeTasks Legacy-Stub aufgerufen — setze POSITRON_OPENCODE_MODE=real für echte Ausführung');
   return {
     success: true,
     completedTasks: tasks ?? [],
