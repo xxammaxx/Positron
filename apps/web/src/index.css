@@ -2,50 +2,184 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===== Design Tokens (Brutalist Operator Terminal) ===== */
 @layer base {
+  :root {
+    /* Brutalist Color Palette — Issue #68 spec B1 */
+    --color-pass: #4ade80;
+    --color-pass-bg: rgba(74, 222, 128, 0.10);
+    --color-fail: #f87171;
+    --color-fail-bg: rgba(248, 113, 113, 0.10);
+    --color-warn: #fbbf24;
+    --color-warn-bg: rgba(251, 191, 36, 0.10);
+    --color-blocked: #fb923c;
+    --color-blocked-bg: rgba(251, 146, 60, 0.10);
+    --color-human: #c084fc;
+    --color-human-bg: rgba(192, 132, 252, 0.10);
+    --color-active: #38bdf8;
+    --color-active-bg: rgba(56, 189, 248, 0.10);
+    --color-pending: #475569;
+    --color-info: #38bdf8;
+    --color-info-bg: rgba(56, 189, 248, 0.10);
+
+    /* Typography — Issue #68 spec C1 */
+    --font-heading: 'Space Grotesk', system-ui, sans-serif;
+    --font-sans: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'Cascadia Code', 'Fira Code', monospace;
+  }
+
   body {
-    @apply bg-slate-900 text-slate-100 font-sans antialiased;
+    @apply bg-slate-950 text-slate-100 antialiased;
+    font-family: var(--font-sans);
   }
-  ::-webkit-scrollbar {
-    @apply w-2;
+
+  /* Scrollbar — thin, slate-toned */
+  ::-webkit-scrollbar { @apply w-1.5 h-1.5; }
+  ::-webkit-scrollbar-track { @apply bg-transparent; }
+  ::-webkit-scrollbar-thumb { @apply bg-slate-700 rounded-full hover:bg-slate-600; }
+
+  /* Global Focus — sky accent per spec */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-sky-400 ring-offset-2 ring-offset-slate-950;
   }
-  ::-webkit-scrollbar-track {
-    @apply bg-slate-800;
+
+  /* Skip to content */
+  .skip-to-content {
+    @apply absolute -top-10 left-4 z-50 px-4 py-2 bg-sky-600 text-white
+      rounded-b-lg text-sm transition-all focus:top-0;
   }
-  ::-webkit-scrollbar-thumb {
-    @apply bg-slate-600 rounded-full;
+
+  /* Typography scale — Issue #68 spec C2 */
+  h1 { @apply text-3xl font-bold text-slate-100 leading-tight; font-family: var(--font-heading); }
+  h2 { @apply text-xl font-semibold text-slate-100 leading-snug; font-family: var(--font-heading); }
+  h3 { @apply text-base font-medium text-slate-200 leading-snug; font-family: var(--font-heading); }
+  h4 { @apply text-sm font-medium text-slate-300 leading-normal; font-family: var(--font-heading); }
+}
+
+/* ===== Component Classes (Brutalist Operator Terminal — Issue #68 spec) ===== */
+@layer components {
+  /* Buttons — spec F10 */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2
+      bg-sky-500 hover:bg-sky-400 active:bg-sky-600
+      text-slate-900 rounded-lg font-semibold text-sm
+      transition-all duration-150 ease-out
+      disabled:opacity-50 disabled:cursor-not-allowed
+      focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2
+      bg-slate-800 hover:bg-slate-700 active:bg-slate-700
+      text-slate-200 rounded-lg font-medium text-sm
+      border border-slate-700 transition-colors duration-150;
+  }
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2
+      bg-red-500/10 hover:bg-red-500/20 active:bg-red-500/30
+      text-red-400 border border-red-800 rounded-lg font-medium text-sm
+      transition-colors duration-150;
+  }
+  .btn-success {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2
+      bg-green-500/10 hover:bg-green-500/20 text-green-400
+      border border-green-800 rounded-lg font-medium text-sm transition-colors duration-150;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-3 py-2
+      hover:bg-slate-800 text-slate-400 hover:text-slate-200
+      rounded-lg font-medium text-sm transition-colors duration-150;
+  }
+
+  /* Cards — spec B2 */
+  .card {
+    @apply bg-slate-900 rounded-xl border border-slate-700 p-6;
+  }
+  .card-elevated {
+    @apply card shadow-lg shadow-black/20;
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5
+      rounded-full text-xs font-medium;
+  }
+
+  /* Input — spec C */
+  .input {
+    @apply w-full px-3 py-2 bg-slate-800 border border-slate-700
+      rounded-lg text-slate-100 placeholder-slate-500 text-sm font-['IBM_Plex_Mono']
+      focus:outline-none focus:ring-2 focus:ring-sky-400/50
+      focus:border-sky-400 transition-colors duration-150;
+  }
+
+  /* Semantic Status Cards — spec B1 status colors */
+  .status-pass {
+    @apply border-l-4 border-l-green-400 bg-green-500/5;
+  }
+  .status-fail {
+    @apply border-l-4 border-l-red-400 bg-red-500/5;
+  }
+  .status-active {
+    @apply border-l-4 border-l-sky-400 bg-sky-500/5;
+  }
+  .status-blocked {
+    @apply border-l-4 border-l-orange-400 bg-orange-500/5;
+  }
+  .status-human {
+    @apply border-l-4 border-l-purple-400 bg-purple-500/5;
+  }
+
+  /* Skeleton loading */
+  .skeleton {
+    @apply animate-pulse bg-slate-800 rounded;
   }
 }
 
-@layer components {
-  .btn-primary {
-    @apply px-4 py-2 bg-blue-600 hover:bg-blue-700
-      text-white rounded-lg font-medium transition-colors
-      disabled:opacity-50 disabled:cursor-not-allowed;
+/* ===== Motion & Animation — Issue #68 spec D ===== */
+@layer utilities {
+  /* Panel Stagger — spec D1 */
+  @keyframes panel-enter {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
-  .btn-secondary {
-    @apply px-4 py-2 bg-slate-700 hover:bg-slate-600
-      text-slate-100 rounded-lg font-medium transition-colors;
+  .panel-stagger { animation: panel-enter 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .panel-stagger:nth-child(1) { animation-delay: 0.00s; }
+  .panel-stagger:nth-child(2) { animation-delay: 0.05s; }
+  .panel-stagger:nth-child(3) { animation-delay: 0.10s; }
+  .panel-stagger:nth-child(4) { animation-delay: 0.15s; }
+  .panel-stagger:nth-child(5) { animation-delay: 0.20s; }
+  .panel-stagger:nth-child(6) { animation-delay: 0.25s; }
+  .panel-stagger:nth-child(7) { animation-delay: 0.30s; }
+  .panel-stagger:nth-child(8) { animation-delay: 0.35s; }
+  .panel-stagger:nth-child(9) { animation-delay: 0.40s; }
+  .panel-stagger:nth-child(10) { animation-delay: 0.45s; }
+
+  /* SSE Event Enter — spec D3 */
+  @keyframes event-enter {
+    from { opacity: 0; transform: translateX(-16px); max-height: 0; }
+    to   { opacity: 1; transform: translateX(0); max-height: 100px; }
   }
-  .btn-danger {
-    @apply px-4 py-2 bg-red-600 hover:bg-red-700
-      text-white rounded-lg font-medium transition-colors;
+  .event-live {
+    animation: event-enter 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+    border-left: 3px solid #38bdf8;
   }
-  .btn-success {
-    @apply px-4 py-2 bg-green-600 hover:bg-green-700
-      text-white rounded-lg font-medium transition-colors;
+
+  /* Mode Badge REAL Pulse — spec D6 */
+  @keyframes mode-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.3); }
+    50%      { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0); }
   }
-  .card {
-    @apply bg-slate-800 rounded-xl border border-slate-700 p-6;
+  .mode-badge-real {
+    @apply bg-red-500/20 text-red-400 border border-red-800;
+    animation: mode-pulse 2s ease-in-out infinite;
   }
-  .badge {
-    @apply inline-flex items-center px-2.5 py-0.5
-      rounded-full text-xs font-medium;
-  }
-  .input {
-    @apply w-full px-3 py-2 bg-slate-700 border border-slate-600
-      rounded-lg text-slate-100 placeholder-slate-400
-      focus:outline-none focus:ring-2 focus:ring-blue-500
-      focus:border-transparent;
+
+  /* prefers-reduced-motion — spec E6 */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
