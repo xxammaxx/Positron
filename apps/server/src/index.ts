@@ -42,7 +42,7 @@ import { FakeGitHubAdapter, createRealGitHubAdapter, GitHubStatusSyncService } f
 import type { GitHubAdapter } from '@positron/github-adapter';
 import type { GitHubStatusSyncInput, GitHubStatusSyncResult, EvidenceItem } from '@positron/github-adapter';
 import { renderAccepted } from '@positron/github-adapter';
-import { FakeGitWorkspaceAdapter, applyDogfoodFixtureChange } from '@positron/sandbox';
+import { FakeGitWorkspaceAdapter, RealGitWorkspaceAdapter, applyDogfoodFixtureChange } from '@positron/sandbox';
 import type { GitWorkspaceAdapter } from '@positron/sandbox';
 import { TestCommandDetector, TestRunner } from '@positron/sandbox';
 import type { TestReport } from '@positron/sandbox';
@@ -103,9 +103,15 @@ function resolveRepositoryConfig(repository?: RepositoryConfig): RepositoryConfi
 let db: Database.Database | null = null;
 
 // In-Memory Adapter-Standards (werden in createApp überschrieben wenn env vars gesetzt)
-// NOTE: Sandbox hat noch keinen Real-Modus — env var existiert aber ist deaktiviert
-// TODO: RealGitWorkspaceAdapter implementieren wenn echter Git-Zugriff nötig
-let workspaceAdapter: GitWorkspaceAdapter = new FakeGitWorkspaceAdapter();
+// RealGitWorkspaceAdapter aktivieren: POSITRON_WORKSPACE_ROOT=/pfad/zum/workspace setzen
+// Für echten Git-Betrieb muss git im PATH und GITHUB_TOKEN gesetzt sein
+let workspaceAdapter: GitWorkspaceAdapter = (() => {
+  if (process.env['POSITRON_WORKSPACE_ROOT']) {
+    log.info('RealGitWorkspaceAdapter aktiviert (POSITRON_WORKSPACE_ROOT gesetzt)');
+    return new RealGitWorkspaceAdapter();
+  }
+  return new FakeGitWorkspaceAdapter();
+})();
 let speckitAdapter: SpecKitAdapter = new FakeSpecKitAdapter();
 let opencodeAdapter: OpenCodeAdapter = new FakeOpenCodeAdapter();
 
