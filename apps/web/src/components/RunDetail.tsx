@@ -5,6 +5,7 @@ import { useSSE } from '../hooks/useSSE.js';
 import { api } from '../api.js';
 import LogViewer from './LogViewer.js';
 import PhaseTimeline from './PhaseTimeline.js';
+import PhasePipeline from './PhasePipeline.js';
 import GateControls from './GateControls.js';
 import ArtifactPanel from './ArtifactPanel.js';
 import PhaseBadge from './PhaseBadge.js';
@@ -256,9 +257,22 @@ export default function RunDetail(): React.ReactElement {
           <LogViewer events={events} maxHeight="600px" />
         </div>
 
-        {/* Right: Phases + Controls + Evidence + Artifacts */}
+        {/* Right: Pipeline + Controls + Evidence + Artifacts */}
         <div className="space-y-4">
-          <PhaseTimeline currentPhase={run.phase} />
+          {/* 28-Phase Pipeline (Operator Cockpit — Issue #68) */}
+          <PhasePipeline
+            currentPhase={run.phase}
+            completedPhases={events
+              .filter(e => e.level === 'INFO' && !['ERROR', 'WARN'].includes(e.level))
+              .map(e => e.phase as Phase)
+              .filter(Boolean)}
+            failedPhases={events.filter(e => e.level === 'ERROR').map(e => e.phase as Phase).filter(Boolean)}
+            onPhaseClick={(phase) => {
+              // Scroll event log to first matching phase
+              const el = document.querySelector(`[data-phase="${phase}"]`);
+              el?.scrollIntoView({ behavior: 'smooth' });
+            }}
+          />
           <GateControls runId={run.id} currentPhase={run.phase} />
           <ArtifactPanel runId={run.id} />
 

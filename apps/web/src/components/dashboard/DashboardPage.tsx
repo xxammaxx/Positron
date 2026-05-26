@@ -9,6 +9,7 @@ import SystemHealth from './SystemHealth.js';
 import EmptyState from '../shared/EmptyState.js';
 import ErrorBanner from '../shared/ErrorBanner.js';
 import NewRunModal from './NewRunModal.js';
+import BlueprintPanel from './BlueprintPanel.js';
 import type { Run, Metrics } from '../../types.js';
 
 export default function DashboardPage(): React.ReactElement {
@@ -100,6 +101,9 @@ export default function DashboardPage(): React.ReactElement {
         <div className="space-y-5">
           {/* Status Cards */}
           <StatusSummary metrics={metrics} isLoading={loading} />
+
+          {/* Demo Blueprint Panel */}
+          <BlueprintPanel />
 
           {/* Evidence + Attention (side by side on larger screens) */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">

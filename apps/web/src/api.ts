@@ -169,4 +169,101 @@ export const api = {
       successRate,
     };
   },
+
+  // Evidence (aggregated)
+  getEvidence(runId?: string): Promise<{
+    evidence?: Array<{
+      id: string; type: string; kind: string; source: string;
+      sourceId: string; status: 'pass' | 'fail' | 'partial';
+      summary: string; timestamp: string; runPhase?: string;
+    }>;
+    total?: number;
+    summary?: {
+      totalArtifacts: number;
+      artifactBreakdown: Record<string, number>;
+      testEvents: number;
+      errorEvents: number;
+      warningEvents: number;
+    };
+    runId?: string;
+  }> {
+    const qs = runId ? `?runId=${encodeURIComponent(runId)}` : '';
+    return request(`/evidence${qs}`);
+  },
+
+  // Settings — MCP Configuration (masked)
+  getMcpSettings(): Promise<{
+    servers: Array<{
+      name: string; command: string; description: string;
+      disabled: boolean; envKeys: string[]; hasToken: boolean;
+    }>;
+    policy: Record<string, unknown>;
+    redactPatternCount: number;
+    configured: number;
+    totalServers: number;
+  }> {
+    return request('/settings/mcp');
+  },
+
+  // Settings — Test Modes
+  getTestModes(): Promise<{
+    modes: Array<{
+      id: string; label: string; command: string;
+      visible: boolean; description: string;
+    }>;
+    securityNotes: Record<string, string>;
+    defaultMode: string;
+    observationMode: string;
+    totalModes: number;
+  }> {
+    return request('/settings/test-modes');
+  },
+
+  // Safety state
+  getSafety(): Promise<{
+    enableMerge: boolean; mergeDryRun: boolean;
+    enablePush: boolean; killSwitch: boolean;
+    enableFixLoop: boolean;
+  }> {
+    return request('/safety');
+  },
+
+  // Cancel run (Issue #66)
+  cancelRun(runId: string): Promise<{
+    ok: boolean; runId: string; message: string;
+    previousStatus?: string; status: string;
+  }> {
+    return request(`/runs/${runId}/cancel`, { method: 'POST' });
+  },
+
+  // Run Control (Issue #29, #68)
+  controlRun(runId: string, action: string): Promise<{
+    success: boolean; runId: string; newStatus: string;
+    message: string;
+  }> {
+    return request(`/runs/${runId}/control`, {
+      method: 'POST', body: JSON.stringify({ action }),
+    });
+  },
+
+  // Test Report (Issue #68)
+  getTestReport(runId: string): Promise<{
+    runId: string;
+    summary: { total: number; passed: number; failed: number; errors: number; warnings: number };
+    testEvents: Array<{
+      id: string; runId: string; level: string;
+      message: string; payload: Record<string, unknown> | null; createdAt: string;
+    }>;
+  }> {
+    return request(`/runs/${runId}/test-report`);
+  },
+
+  // Demo Run (Issue #68)
+  startDemoRun(blueprint?: string, issueNumber?: number): Promise<{
+    run: import('./types.js').Run; message: string; blueprint: string;
+  }> {
+    return request('/demo-runs', {
+      method: 'POST', body: JSON.stringify({ blueprint, issueNumber }),
+    });
+  },
 };

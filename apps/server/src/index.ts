@@ -1503,6 +1503,40 @@ export function createApp(options: ServerOptions = {}) {
     res.json({ run, events: getEvents(run.id) });
   });
 
+  // Test Report — aggregated test data from run_events (phase='TEST')
+  // Required by Operator Cockpit (Issue #68)
+  app.get('/api/runs/:id/test-report', (req, res) => {
+    const run = loadRunFromDb(req.params.id);
+    if (!run) { res.status(404).json({ error: 'Not found' }); return; }
+    try {
+      const database = getDb();
+      const rows = database.prepare(
+        "SELECT id, run_id, phase, level, message, payload_json, created_at FROM run_events WHERE run_id = ? AND phase = 'TEST' ORDER BY created_at ASC",
+      ).all(req.params.id) as Array<{
+        id: string; run_id: string; phase: string; level: string;
+        message: string; payload_json: string; created_at: string;
+      }>;
+      const testEvents = rows.map(row => ({
+        id: row.id,
+        runId: row.run_id,
+        level: row.level as EventLevel,
+        message: row.message,
+        payload: row.payload_json ? JSON.parse(row.payload_json) as Record<string, unknown> : null,
+        createdAt: row.created_at,
+      }));
+      const passed = testEvents.filter(e => e.level === 'INFO').length;
+      const warnings = testEvents.filter(e => e.level === 'WARN').length;
+      const errors = testEvents.filter(e => e.level === 'ERROR').length;
+      res.json({
+        runId: req.params.id,
+        summary: { total: testEvents.length, passed, failed: errors, errors, warnings },
+        testEvents,
+      });
+    } catch (err) {
+      res.status(500).json({ error: 'Database error', details: String(err) });
+    }
+  });
+
   // SSE Event Stream (Issue #29)
   app.get('/api/runs/:id/events/stream', (req, res) => {
     const runId = req.params.id;
@@ -1653,6 +1687,54 @@ export function createApp(options: ServerOptions = {}) {
         storeEvent({
           id: createRunId(), runId: run.id, phase: 'FAILED_BLOCKED',
           level: 'ERROR', message: `Blueprint run failed: ${String(err).slice(0, 200)}`,
+          payload: null, createdAt: new Date().toISOString(),
+        });
+      });
+  });
+
+  // Demo Runs — create a demo run (Operator Cockpit, Issue #68)
+  app.post('/api/demo-runs', async (req, res) => {
+    const { blueprint, issueNumber } = (req.body as { blueprint?: string; issueNumber?: number }) ?? {};
+    let issueNum = parseInt(process.env.POSITRON_DEFAULT_ISSUE_NUMBER ?? '56', 10);
+    if (issueNumber !== undefined && issueNumber !== null) {
+      const parsed = Number(issueNumber);
+      if (!Number.isInteger(parsed) || parsed < 1 || parsed > 999999) {
+        res.status(400).json({ error: 'issueNumber must be a positive integer (1-999999)' });
+        return;
+      }
+      issueNum = parsed;
+    }
+    const run = createRun(repository.repo, issueNum, 2);
+    saveRunToDb(run);
+    const defaultBlueprint = [
+      '# Demo Run',
+      '',
+      `Automated demo pipeline for Issue #${issueNum}.`,
+      '## Scope',
+      '- Validate end-to-end pipeline execution',
+      '- Generate spec, plan, tasks artifacts',
+      '- Run tests and produce test report',
+    ].join('\n');
+    const usedBlueprint = typeof blueprint === 'string' ? blueprint : defaultBlueprint;
+    storeEvent({
+      id: createRunId(), runId: run.id, phase: 'QUEUED', level: 'HUMAN',
+      message: `Demo run created for Issue #${issueNum}`,
+      payload: { blueprint: usedBlueprint, issueNumber: issueNum, source: 'demo-runs' },
+      createdAt: new Date().toISOString(),
+    });
+    res.json({ run, message: 'Demo run started', blueprint: usedBlueprint });
+    // Pipeline asynchron — Response sofort gesendet
+    runFullPipeline(run, repository, activeWorkspaceAdapter, activeSpecKitAdapter, activeOpenCodeAdapter, github, syncService)
+      .then(finalRun => {
+        saveRunToDb(finalRun);
+        broadcastSSE(finalRun.id, 'run-update', {
+          phase: finalRun.phase, status: finalRun.status, branch: finalRun.branch,
+        });
+      })
+      .catch(err => {
+        storeEvent({
+          id: createRunId(), runId: run.id, phase: 'FAILED_BLOCKED', level: 'ERROR',
+          message: `Demo run failed: ${String(err).slice(0, 200)}`,
           payload: null, createdAt: new Date().toISOString(),
         });
       });
