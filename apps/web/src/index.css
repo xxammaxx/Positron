@@ -164,14 +164,10 @@
     border-left: 3px solid #38bdf8;
   }
 
-  /* Mode Badge REAL Pulse — spec D6 */
+  /* Mode Badge REAL Pulse (nicht verwendet — Demo-Badge in HealthIndicator) */
   @keyframes mode-pulse {
     0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.3); }
     50%      { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0); }
-  }
-  .mode-badge-real {
-    @apply bg-red-500/20 text-red-400 border border-red-800;
-    animation: mode-pulse 2s ease-in-out infinite;
   }
 
   /* prefers-reduced-motion — spec E6 */

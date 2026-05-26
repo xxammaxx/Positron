@@ -10,7 +10,7 @@ import type {
   HealthStatus,
   ApiError,
 } from './types.js';
-import type { Phase, RunStatus } from './types.js';
+import type { Phase, RunStatus, Run } from './types.js';
 
 const BASE = '/api';
 
@@ -236,16 +236,6 @@ export const api = {
     return request(`/runs/${runId}/cancel`, { method: 'POST' });
   },
 
-  // Run Control (Issue #29, #68)
-  controlRun(runId: string, action: string): Promise<{
-    success: boolean; runId: string; newStatus: string;
-    message: string;
-  }> {
-    return request(`/runs/${runId}/control`, {
-      method: 'POST', body: JSON.stringify({ action }),
-    });
-  },
-
   // Test Report (Issue #68)
   getTestReport(runId: string): Promise<{
     runId: string;
@@ -260,7 +250,7 @@ export const api = {
 
   // Demo Run (Issue #68)
   startDemoRun(blueprint?: string, issueNumber?: number): Promise<{
-    run: import('./types.js').Run; message: string; blueprint: string;
+    run: Run; message: string; blueprint: string;
   }> {
     return request('/demo-runs', {
       method: 'POST', body: JSON.stringify({ blueprint, issueNumber }),
