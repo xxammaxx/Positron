@@ -50,6 +50,39 @@ docs(issue-<n>): <Beschreibung>
 - `packages/sandbox/` — Git Worktrees
 - `packages/shared/` — Typen, Utilities
 
+## Agent Isolation
+
+### Trust-Tier-System
+
+| Tier | Zugriff | Beispiele |
+|------|---------|-----------|
+| **Tier 0 (Readonly)** | GitHub MCP (search/read), Brave Search, Context7 | Kein Schreibzugriff |
+| **Tier 1 (Sandboxed)** | Playwright, Docker, SQLite (project-local) | Isolierte Ausführung |
+| **Tier 2 (Human-Gate)** | FileSystem (external), PostgreSQL (readonly) | Nur mit Genehmigung |
+
+### Externe Skills
+
+- **🔴 Forbidden:** Paperclip (3), OpenClaw (3) — nicht installieren/nutzen
+- **🟡 Quarantined:** Researcher, Deep Research, PARA, MCP — deaktiviert bis manuelle Freigabe
+- **✅ Allowed:** 11 Positron-eigene Skills — vollständig geprüft
+
+### Isolations-Level
+
+| Level | Beschreibung | Gilt für |
+|-------|-------------|----------|
+| **L0 Unrestricted** | Keine Isolation | Kernsystem (Server, DB) |
+| **L1 Workspace** | Workspace-beschränkt | Positron-Subagenten |
+| **L2 Quarantined** | Sandbox + manuelles Gate | Externe Skills |
+| **L3 Forbidden** | Vollständig blockiert | Paperclip, OpenClaw |
+
+### Durchsetzung
+
+1. Policy Gates: `speckit-policy.ts`, `opencode-policy.ts` blockieren nicht erlaubte Kommandos
+2. Fake/Real Mode: Default `fake` — kein echter externer Zugriff ohne explizite Konfiguration
+3. Kill-Switches: Merge (`POSITRON_MERGE_KILL_SWITCH`), Push (`POSITRON_ENABLE_PUSH`)
+4. Evidence Gates: Keine Phase ohne prüfbare Artefakte
+5. Max Fix Loops: Automatischer Stopp nach 3 Fehlschlägen
+
 ## Tests
 
 - `npm test` in jedem Package
