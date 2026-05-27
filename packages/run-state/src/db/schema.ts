@@ -78,10 +78,13 @@ CREATE TABLE IF NOT EXISTS command_results (
 
 CREATE INDEX IF NOT EXISTS idx_runs_repo_id ON runs(repo_id);
 CREATE INDEX IF NOT EXISTS idx_runs_phase ON runs(phase);
+CREATE INDEX IF NOT EXISTS idx_runs_status ON runs(status);
+CREATE INDEX IF NOT EXISTS idx_runs_started_at ON runs(started_at);
 CREATE INDEX IF NOT EXISTS idx_run_events_run_id ON run_events(run_id);
 CREATE INDEX IF NOT EXISTS idx_run_events_created ON run_events(created_at);
 CREATE INDEX IF NOT EXISTS idx_artifacts_run_id ON artifacts(run_id);
 CREATE INDEX IF NOT EXISTS idx_issues_repo_id ON issues(repo_id);
+CREATE INDEX IF NOT EXISTS idx_repositories_owner_name ON repositories(owner, name);
 `;
 
 /**
