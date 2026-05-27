@@ -1,0 +1,49 @@
+services:
+  server:
+    build:
+      context: ..
+      dockerfile: apps/server/Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - positron-data:/app/.positron
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - DB_PATH=/app/.positron/runs/positron.db
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - GITHUB_MODE=${GITHUB_MODE:-fake}
+      - POSITRON_REPO_OWNER=${POSITRON_REPO_OWNER:-xxammaxx}
+      - POSITRON_REPO_NAME=${POSITRON_REPO_NAME:-Positron}
+      - POSITRON_REPO_DEFAULT_BRANCH=main
+      - POSITRON_ENABLE_PUSH=${POSITRON_ENABLE_PUSH:-false}
+      - POSITRON_ENABLE_MERGE=${POSITRON_ENABLE_MERGE:-false}
+      - POSITRON_ENABLE_FIX_LOOP=${POSITRON_ENABLE_FIX_LOOP:-false}
+      - POSITRON_MERGE_DRY_RUN=true
+      - POSITRON_MERGE_KILL_SWITCH=true
+      - POSITRON_WORKSPACE_ROOT=/app/workspace
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  web:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "5173:5173"
+    depends_on:
+      server:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:5173"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  positron-data:
