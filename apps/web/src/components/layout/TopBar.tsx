@@ -32,7 +32,7 @@ export default function TopBar({ onToggleSidebar }: TopBarProps): React.ReactEle
             Positron
           </span>
           <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-blue-600/30 text-blue-300 rounded-md border border-blue-700/30">
-            v3
+            v0.1
           </span>
         </NavLink>
       </div>

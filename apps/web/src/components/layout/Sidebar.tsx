@@ -2,7 +2,8 @@ import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 
 interface SidebarProps {
-  collapsed?: boolean;
+  open: boolean;
+  onClose: () => void;
 }
 
 interface NavItem {
@@ -69,7 +70,7 @@ const NAV_ITEMS: NavItem[] = [
   },
 ];
 
-export default function Sidebar({ collapsed: _collapsed }: SidebarProps): React.ReactElement {
+export default function Sidebar({ open, onClose }: SidebarProps): React.ReactElement {
   const location = useLocation();
 
   const linkClass = ({ isActive }: { isActive: boolean }): string =>
@@ -79,11 +80,28 @@ export default function Sidebar({ collapsed: _collapsed }: SidebarProps): React.
         : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/50 border-l-2 border-transparent ml-0 -ml-0.5'
     }`;
 
-  return (
+  const sidebarContent = (
     <nav
       aria-label="Main navigation"
       className="w-60 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 h-full"
     >
+      {/* Mobile close button */}
+      <div className="lg:hidden flex items-center justify-end px-3 pt-3 pb-1">
+        <button
+          onClick={onClose}
+          className="btn-ghost p-1 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+          aria-label="Close sidebar"
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+            <path
+              fillRule="evenodd"
+              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </button>
+      </div>
+
       {/* Nav Items */}
       <div className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
         {NAV_ITEMS.map(item => (
@@ -92,6 +110,7 @@ export default function Sidebar({ collapsed: _collapsed }: SidebarProps): React.
             to={item.to}
             end={item.end}
             className={linkClass}
+            onClick={onClose}
           >
             <span className="shrink-0 opacity-70">{item.icon}</span>
             <span>{item.label}</span>
@@ -107,5 +126,32 @@ export default function Sidebar({ collapsed: _collapsed }: SidebarProps): React.
         </div>
       </div>
     </nav>
+  );
+
+  return (
+    <>
+      {/* Mobile overlay + backdrop */}
+      {open && (
+        <div
+          className="fixed inset-0 z-40 lg:hidden"
+          onClick={onClose}
+        >
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/40" />
+          {/* Sidebar panel */}
+          <div
+            className="absolute left-0 top-0 bottom-0"
+            onClick={e => e.stopPropagation()}
+          >
+            {sidebarContent}
+          </div>
+        </div>
+      )}
+
+      {/* Desktop sidebar (always visible) */}
+      <div className="hidden lg:flex">
+        {sidebarContent}
+      </div>
+    </>
   );
 }

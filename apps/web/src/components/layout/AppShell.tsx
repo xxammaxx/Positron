@@ -4,10 +4,14 @@ import TopBar from './TopBar.js';
 import Sidebar from './Sidebar.js';
 
 export default function AppShell(): React.ReactElement {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const toggleSidebar = useCallback(() => {
     setSidebarOpen(prev => !prev);
+  }, []);
+
+  const closeSidebar = useCallback(() => {
+    setSidebarOpen(false);
   }, []);
 
   return (
@@ -22,15 +26,15 @@ export default function AppShell(): React.ReactElement {
 
       {/* Body: Sidebar + Main */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        {sidebarOpen && <Sidebar />}
+        {/* Sidebar — handles mobile overlay + desktop sidebar internally */}
+        <Sidebar open={sidebarOpen} onClose={closeSidebar} />
 
         {/* Main Content */}
         <main
           id="main-content"
-          className="flex-1 overflow-y-auto"
+          className="flex-1 overflow-y-auto min-w-0"
         >
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <Outlet />
           </div>
         </main>
