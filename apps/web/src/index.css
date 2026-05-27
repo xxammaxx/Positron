@@ -176,4 +176,12 @@
       transition-duration: 0.01ms !important;
     }
   }
+
+  /* Mobile <375px overrides (Issue #91) */
+  @media (max-width: 374px) {
+    .card { @apply p-3; }
+    h1 { @apply text-2xl; }
+    .btn-primary, .btn-secondary { @apply px-3 py-1.5 text-xs; }
+    .input { @apply px-2 py-1.5 text-xs; }
+  }
 }

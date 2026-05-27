@@ -1440,6 +1440,37 @@ export function createApp(options: ServerOptions = {}) {
     next();
   });
 
+  // Security headers (Issue #93) — nur in production
+  if (process.env.NODE_ENV !== 'development') {
+    app.use((_req, res, next) => {
+      res.header('X-Content-Type-Options', 'nosniff');
+      res.header('X-Frame-Options', 'DENY');
+      res.header('X-XSS-Protection', '1; mode=block');
+      res.header('Referrer-Policy', 'strict-origin-when-cross-origin');
+      res.header('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://api.github.com; img-src 'self' data:");
+      next();
+    });
+  }
+
+  // Rate limiting (Issue #93) — simple sliding window per IP
+  const rateLimitMap = new Map<string, number[]>();
+  const RATE_LIMIT_MAX = 100;
+  const RATE_LIMIT_WINDOW = 60_000;
+  app.use((req, res, next) => {
+    if (req.path === '/api/stream' || req.path === '/api/runs/' + req.params.id + '/events/stream') { next(); return; }
+    const ip = req.ip ?? 'unknown';
+    const now = Date.now();
+    const window = rateLimitMap.get(ip) ?? [];
+    while (window.length > 0 && window[0] < now - RATE_LIMIT_WINDOW) window.shift();
+    if (window.length >= RATE_LIMIT_MAX) {
+      res.status(429).json({ error: 'Too many requests', retryAfter: 60 });
+      return;
+    }
+    window.push(now);
+    rateLimitMap.set(ip, window);
+    next();
+  });
+
   // Repository registrieren
   app.post('/api/repos', (req, res) => {
     try {
@@ -2469,14 +2500,35 @@ export function createApp(options: ServerOptions = {}) {
   app.post('/api/admin/runs/cleanup', (_req, res) => {
     try {
       const db = getDb();
-      // Delete events older than 7 days
       db.prepare("DELETE FROM run_events WHERE created_at < datetime('now', '-7 days')").run();
       const eventsDeleted = (db.prepare('SELECT changes() as c').get() as { c: number }).c;
-      // Vacuum
       db.exec('VACUUM');
       const dbSizeBytes = fs.existsSync(options.dbPath ?? resolveDatabasePath())
         ? fs.statSync(options.dbPath ?? resolveDatabasePath()).size : 0;
       res.json({ eventsDeleted, dbSizeMb: Math.round(dbSizeBytes / 1024 / 1024 * 100) / 100 });
+    } catch (err) {
+      res.status(500).json({ error: String(err) });
+    }
+  });
+
+  // Webhook notifications (Issue #92)
+  app.post('/api/webhook/test', async (req, res) => {
+    const webhookUrl = process.env.POSITRON_WEBHOOK_URL;
+    if (!webhookUrl) {
+      res.status(400).json({ error: 'POSITRON_WEBHOOK_URL not configured' });
+      return;
+    }
+    try {
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: `Positron notification: ${req.body?.message ?? 'Test notification'}`,
+          timestamp: new Date().toISOString(),
+          runId: req.body?.runId ?? null,
+        }),
+      });
+      res.json({ sent: response.ok, status: response.status });
     } catch (err) {
       res.status(500).json({ error: String(err) });
     }
