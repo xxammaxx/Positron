@@ -2023,8 +2023,35 @@ export function createApp(options: ServerOptions = {}) {
   });
 
   // -----------------------------------------------------------------------
-  // Evidence API — Aggregated evidence across runs (Issue #65)
+  // Evidence API — Aggregated evidence across runs (Issue #65, #85)
   // -----------------------------------------------------------------------
+
+  // POST evidence — Agent schreibt Artefakte (Issue #85)
+  app.post('/api/evidence', (req, res) => {
+    try {
+      const { runId, kind, content } = req.body as { runId?: string; kind?: string; content?: string };
+      if (!runId || !kind || !content) {
+        res.status(400).json({ error: 'runId, kind, and content are required' });
+        return;
+      }
+      const run = loadRunFromDb(runId);
+      if (!run) { res.status(404).json({ error: 'Run not found' }); return; }
+
+      const db = getDb();
+      const createdAt = new Date().toISOString();
+      db.prepare('INSERT INTO artifacts (run_id, kind, content, created_at) VALUES (?, ?, ?, ?)').run(runId, kind, content, createdAt);
+
+      // Broadcast SSE to dashboard + per-run clients
+      broadcastSSE(runId, 'run-evidence-created', {
+        runId, kind, summary: `${kind} (${content.length} chars)`, createdAt,
+      });
+
+      res.status(201).json({ success: true, kind, createdAt });
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to save evidence', details: String(err) });
+    }
+  });
+
   app.get('/api/evidence', (req, res) => {
     try {
       const database = getDb();
