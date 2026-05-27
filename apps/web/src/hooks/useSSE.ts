@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import type { RunEvent, Run } from '../types.js';
+import type { RunEvent, Run, RunStatus } from '../types.js';
+
+interface EvidenceItem {
+  id: string;
+  kind: string;
+  summary: string;
+  createdAt: string;
+}
 
 const MAX_EVENTS = 500;
 const RECONNECT_BASE_MS = 500;
@@ -12,10 +19,13 @@ const RECONNECT_MAX_MS = 30000;
  * - run-update: Run-Phase/Status-Update
  * - run-control: Control-Aktion (pause/resume/abort)
  * - run-complete: Run abgeschlossen
+ * - run-evidence-created: Neues Evidence-Artefakt (Issue #66)
+ * - run-cancelled: Run abgebrochen (Issue #66)
  * - heartbeats als SSE-Kommentare (:keepalive)
  */
 const EVENT_TYPES = [
   'initial', 'run-event', 'run-update', 'run-control', 'run-complete',
+  'run-evidence-created', 'run-cancelled',
 ] as const;
 
 type SSEEventType = (typeof EVENT_TYPES)[number];
@@ -23,30 +33,36 @@ type SSEEventType = (typeof EVENT_TYPES)[number];
 interface SSEState {
   run: Run | null;
   events: RunEvent[];
+  evidence: EvidenceItem[];
+  runStatus: RunStatus | null;
 }
 
 interface UseSSEResult {
   events: RunEvent[];
+  evidence: EvidenceItem[];
   isConnected: boolean;
+  runStatus: RunStatus | null;
   error: string | null;
   clearEvents: () => void;
 }
 
 export function useSSE(runId: string | null): UseSSEResult {
-  const [state, setState] = useState<SSEState>({ run: null, events: [] });
+  const [state, setState] = useState<SSEState>({
+    run: null, events: [], evidence: [], runStatus: null,
+  });
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const retryCountRef = useRef(0);
 
   const clearEvents = useCallback(() => {
-    setState({ run: null, events: [] });
+    setState({ run: null, events: [], evidence: [], runStatus: null });
   }, []);
 
   useEffect(() => {
     if (!runId) {
       setIsConnected(false);
-      setState({ run: null, events: [] });
+      setState({ run: null, events: [], evidence: [], runStatus: null });
       setError(null);
       return;
     }
@@ -74,7 +90,12 @@ export function useSSE(runId: string | null): UseSSEResult {
       const handleInitial = (e: MessageEvent) => {
         try {
           const data = JSON.parse(e.data) as { run: Run; events: RunEvent[] };
-          setState({ run: data.run, events: data.events.slice(-MAX_EVENTS) });
+          setState(prev => ({
+            ...prev,
+            run: data.run,
+            events: data.events.slice(-MAX_EVENTS),
+            runStatus: data.run.status as RunStatus,
+          }));
         } catch (err) {
           console.warn('[SSE] Failed to parse initial event:', err);
         }
@@ -103,6 +124,8 @@ export function useSSE(runId: string | null): UseSSEResult {
           setState(prev => ({
             ...prev,
             run: prev.run ? { ...prev.run, ...data } : prev.run,
+            // Extract runStatus from run-update if status field present
+            runStatus: (data.status as RunStatus) ?? prev.runStatus,
           }));
         } catch {
           console.warn('[SSE] Failed to parse run-update data');
@@ -123,12 +146,52 @@ export function useSSE(runId: string | null): UseSSEResult {
           const data = JSON.parse(e.data) as { phase: string; status: string };
           setState(prev => {
             if (!prev.run) return prev;
-            // Nur gültige Phase/Status-Werte übernehmen (SSE kann beliebige Strings liefern)
             const updated: Record<string, unknown> = {};
             if (typeof data.phase === 'string' && data.phase.length > 0) updated.phase = data.phase;
-            if (typeof data.status === 'string' && data.status.length > 0) updated.status = data.status;
-            return { ...prev, run: { ...prev.run, ...updated } as typeof prev.run };
+            if (typeof data.status === 'string' && data.status.length > 0) {
+              updated.status = data.status;
+              (updated as { runStatus: RunStatus }).runStatus = data.status as RunStatus;
+            }
+            return {
+              ...prev,
+              run: { ...prev.run, ...updated } as Run,
+              runStatus: (data.status as RunStatus) ?? prev.runStatus,
+            };
           });
+        } catch {
+          // ignore
+        }
+      };
+
+      // Issue #66 — Live evidence updates
+      const handleEvidenceCreated = (e: MessageEvent) => {
+        try {
+          const data = JSON.parse(e.data) as { runId: string; kind: string; summary: string; createdAt: string };
+          const item: EvidenceItem = {
+            id: `${data.runId}-${data.kind}-${Date.now()}`,
+            kind: data.kind,
+            summary: data.summary,
+            createdAt: data.createdAt,
+          };
+          setState(prev => ({
+            ...prev,
+            evidence: [...prev.evidence, item],
+          }));
+        } catch {
+          console.warn('[SSE] Failed to parse evidence-created event');
+        }
+      };
+
+      // Issue #66 — Run cancelled
+      const handleRunCancelled = (e: MessageEvent) => {
+        try {
+          const data = JSON.parse(e.data) as { runId: string; status: string; message?: string };
+          setState(prev => ({
+            ...prev,
+            runStatus: 'cancelled' as RunStatus,
+            run: prev.run ? { ...prev.run, status: 'cancelled' as RunStatus } : prev.run,
+          }));
+          console.log('[SSE] Run cancelled:', data.message ?? 'No message');
         } catch {
           // ignore
         }
@@ -140,6 +203,8 @@ export function useSSE(runId: string | null): UseSSEResult {
       es.addEventListener('run-update', handleRunUpdate);
       es.addEventListener('run-control', handleRunControl);
       es.addEventListener('run-complete', handleRunComplete);
+      es.addEventListener('run-evidence-created', handleEvidenceCreated);
+      es.addEventListener('run-cancelled', handleRunCancelled);
 
       cleanupHandlers.push(
         () => es.removeEventListener('initial', handleInitial),
@@ -147,6 +212,8 @@ export function useSSE(runId: string | null): UseSSEResult {
         () => es.removeEventListener('run-update', handleRunUpdate),
         () => es.removeEventListener('run-control', handleRunControl),
         () => es.removeEventListener('run-complete', handleRunComplete),
+        () => es.removeEventListener('run-evidence-created', handleEvidenceCreated),
+        () => es.removeEventListener('run-cancelled', handleRunCancelled),
       );
 
       es.onerror = () => {
@@ -180,5 +247,12 @@ export function useSSE(runId: string | null): UseSSEResult {
     };
   }, [runId]);
 
-  return { events: state.events, isConnected, error, clearEvents };
+  return {
+    events: state.events,
+    evidence: state.evidence,
+    isConnected,
+    runStatus: state.runStatus,
+    error,
+    clearEvents,
+  };
 }

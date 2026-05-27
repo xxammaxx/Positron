@@ -290,7 +290,7 @@ export default function RunDetail(): React.ReactElement {
               </h3>
               <div className="space-y-1.5 max-h-[200px] overflow-y-auto">
                 {evidence.map((item, i) => (
-                  <div key={item.artifactId ?? i} className="flex items-center gap-2 py-1 px-2 rounded-md bg-slate-800/50 text-xs">
+                  <div key={item.id ?? i} className="flex items-center gap-2 py-1 px-2 rounded-md bg-slate-800/50 text-xs">
                     <span className="text-green-400">+</span>
                     <span className="text-slate-400 font-medium">{item.kind}</span>
                     <span className="text-slate-500 truncate flex-1">{item.summary}</span>
