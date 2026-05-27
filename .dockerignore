@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+.opencode
+.positron
+e2e
+docs/release
+*.log
+*.png
+.coverage
+test-results
+playwright-report
