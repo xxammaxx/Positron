@@ -59,9 +59,10 @@ function checkRateLimit(runId: string): boolean {
   if (!rateLimitBuckets.has(runId)) {
     rateLimitBuckets.set(runId, []);
   }
-  const bucket = rateLimitBuckets.get(runId)!;
+  const bucket = rateLimitBuckets.get(runId);
+  if (!bucket) return false;
   // Remove entries older than 1s
-  while (bucket.length > 0 && bucket[0] < now - window) {
+  while (bucket.length > 0 && (bucket[0] ?? 0) < now - window) {
     bucket.shift();
   }
   if (bucket.length >= MAX_EVENTS_PER_SEC) {
@@ -84,7 +85,7 @@ export function primeEventSequence(runId: string): void {
 export function broadcastSSE(
   runId: string,
   event: string,
-  data: Record<string, unknown>,
+  data: object,
 ): void {
   const runClients = clients.get(runId);
   if (!runClients || runClients.size === 0) return;

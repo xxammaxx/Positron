@@ -82,19 +82,25 @@ export default function DashboardPage(): React.ReactElement {
 
       {/* Completely Empty State */}
       {isCompletelyEmpty && (
-        <EmptyState
-          icon="🚀"
-          title="Welcome to Positron"
-          description="Positron is your evidence-gated agent execution platform. Start by creating your first run to see agent activity, test results, and evidence collection in action."
-          action={{
-            label: 'Create Your First Run',
-            onClick: () => setIsNewRunModalOpen(true),
-          }}
-          secondaryAction={{
-            label: 'Add Repository',
-            onClick: () => navigate('/repos'),
-          }}
-        />
+        <>
+          <EmptyState
+            icon="🚀"
+            title="Welcome to Positron"
+            description="Positron is your evidence-gated agent execution platform. Start by creating your first run to see agent activity, test results, and evidence collection in action."
+            action={{
+              label: 'Create Your First Run',
+              onClick: () => setIsNewRunModalOpen(true),
+            }}
+            secondaryAction={{
+              label: 'Add Repository',
+              onClick: () => navigate('/repos'),
+            }}
+          />
+          {/* Show Demo Blueprint even when empty — users need a way to test */}
+          <div className="mt-5">
+            <BlueprintPanel />
+          </div>
+        </>
       )}
 
       {!isCompletelyEmpty && (

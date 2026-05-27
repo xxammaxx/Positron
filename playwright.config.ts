@@ -16,15 +16,17 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: 'npm run dev:server',
+      command: 'npx tsx src/index.ts',
+      cwd: './apps/server',
       url: 'http://localhost:3000/api/health',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: true,
       timeout: 30000,
     },
     {
-      command: 'npm run dev:web',
+      command: 'npx vite --port 5173',
+      cwd: './apps/web',
       url: 'http://localhost:5173',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: true,
       timeout: 30000,
     }
   ],

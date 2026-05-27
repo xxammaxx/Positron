@@ -4,38 +4,9 @@
  */
 
 import type { Request, Response } from 'express';
-import type { RunState } from '@positron/shared';
 
-interface DemoDeps {
-  createRun: (repoId: string, issueNumber: number) => { runId: string };
-  saveRunToDb: (run: RunState) => void;
-  storeEvent: (runId: string, phase: string, level: string, message: string, payload?: Record<string, unknown>) => void;
-  saveArtifact: (runId: string, kind: string, content: string) => void;
-  broadcastSSE: (runId: string, event: string, data: Record<string, unknown>) => void;
-  createRunId: () => string;
-  repository: { id: string; owner: string; name: string };
-}
-
-const DEMO_EVENTS = [
-  { phase: 'SPECIFY', level: 'INFO', message: '📋 Loading specification...' },
-  { phase: 'SPECIFY', level: 'INFO', message: '📄 Specification generated (3 user stories)' },
-  { phase: 'PLAN', level: 'INFO', message: '🗂️ Creating implementation plan...' },
-  { phase: 'PLAN', level: 'INFO', message: '📋 Plan: 5 tasks identified' },
-  { phase: 'TASKS', level: 'INFO', message: '📝 Breaking down into atomic tasks...' },
-  { phase: 'TASKS', level: 'INFO', message: '✅ 5 tasks created' },
-  { phase: 'REVIEW', level: 'INFO', message: '🔍 Starting code review...' },
-  { phase: 'REVIEW', level: 'WARN', message: '⚠️ 2 minor style issues found (auto-fixable)' },
-  { phase: 'IMPLEMENT', level: 'INFO', message: '🛠️ Implementing feature...' },
-  { phase: 'TEST', level: 'INFO', message: '🧪 Running tests...' },
-  { phase: 'TEST', level: 'WARN', message: 'FAKE_API_TOKEN=sk-****-redacted (demo token, pre-redacted)' },
-];
-
-const DEMO_ARTIFACTS = [
-  { kind: 'spec', content: '# Demo Spec\n\n1. User can view runs\n2. User can cancel runs\n3. User can see evidence' },
-  { kind: 'test-results', content: 'Tests: 66/66 passed, 5 skipped' },
-];
-
-export function createDemoLiveRunHandler(deps: DemoDeps) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function createDemoLiveRunHandler(deps: Record<string, any>) {
   return async (_req: Request, res: Response): Promise<void> => {
     // Security gate
     if (process.env.NODE_ENV === 'production' && process.env.POSITRON_ENABLE_DEMO_LIVE !== '1') {
@@ -48,13 +19,13 @@ export function createDemoLiveRunHandler(deps: DemoDeps) {
 
       // Create and save the run
       const run = deps.createRun(deps.repository.id, 9999);
-      const runState: RunState = {
+      const runState = {
         ...run,
         id: runId,
         repoId: deps.repository.id,
         issueNumber: 9999,
-        status: 'active',
-        phase: 'SPECIFY',
+        status: 'active' as const,
+        phase: 'SPECIFY' as const,
         autonomyLevel: 2,
         attempt: 1,
         lastError: null,
@@ -64,7 +35,17 @@ export function createDemoLiveRunHandler(deps: DemoDeps) {
       };
       deps.saveRunToDb(runState);
 
-      // Seed demo events with delays via SSE broadcasts
+      const DEMO_EVENTS = [
+        { phase: 'SPECIFY', level: 'INFO', message: 'Demo: Loading specification...' },
+        { phase: 'SPECIFY', level: 'INFO', message: 'Demo: Specification generated (3 user stories)' },
+        { phase: 'PLAN', level: 'INFO', message: 'Demo: Creating implementation plan...' },
+        { phase: 'TASKS', level: 'INFO', message: 'Demo: Breaking into atomic tasks...' },
+        { phase: 'REVIEW', level: 'INFO', message: 'Demo: Starting code review...' },
+        { phase: 'IMPLEMENT', level: 'INFO', message: 'Demo: Implementing feature...' },
+        { phase: 'TEST', level: 'INFO', message: 'Demo: Running tests...' },
+        { phase: 'TEST', level: 'WARN', message: 'Demo: FAKE_API_TOKEN=***-redacted (demo token)' },
+      ];
+
       for (const evt of DEMO_EVENTS) {
         deps.storeEvent(runId, evt.phase, evt.level, evt.message);
         deps.broadcastSSE(runId, 'run-event', {
@@ -73,7 +54,11 @@ export function createDemoLiveRunHandler(deps: DemoDeps) {
         });
       }
 
-      // Seed demo artifacts
+      const DEMO_ARTIFACTS = [
+        { kind: 'spec', content: '# Demo Spec\n\n1. User can view runs\n2. User can cancel runs' },
+        { kind: 'test-results', content: 'Tests: 66/66 passed' },
+      ];
+
       for (const art of DEMO_ARTIFACTS) {
         deps.saveArtifact(runId, art.kind, art.content);
         deps.broadcastSSE(runId, 'run-evidence-created', {
@@ -82,7 +67,6 @@ export function createDemoLiveRunHandler(deps: DemoDeps) {
         });
       }
 
-      // Update to DONE
       deps.broadcastSSE(runId, 'run-update', { phase: 'DONE', status: 'done' });
 
       res.json({

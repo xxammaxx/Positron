@@ -7,6 +7,8 @@ import { fileURLToPath } from 'node:url';
 
 // Simple .env loader (no external dependency needed)
 (function loadEnv(): void {
+  // Skip .env loading during tests — vitest setup already configures env
+  if (process.env.VITEST === 'true' || process.env.TEST === 'true') return;
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const envPath = path.resolve(__dirname, '..', '.env');
   if (fs.existsSync(envPath)) {

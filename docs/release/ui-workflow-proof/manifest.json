@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-05-26T11:11:40.752Z",
+  "timestamp": "2026-05-27T18:12:04.995Z",
   "backendCommand": "npm start",
   "frontendCommand": "npm run build && npx vite preview --port 4173",
   "backendHealth": {

@@ -2,7 +2,7 @@
 
 ## Summary
 - **Status:** PASS
-- **Timestamp:** 2026-05-26T11:11:41.348Z
+- **Timestamp:** 2026-05-27T18:12:05.645Z
 
 ## Verification Results
 
@@ -15,30 +15,33 @@
 | Screenshots captured | ✅ 12 screenshots |
 
 ## Network Calls
-Total API calls captured: 21
+Total API calls captured: 24
 
 | Method | URL | Status |
 |--------|-----|--------|
-| GET | /health | 200 |
+| GET | /runs?limit=50 | 200 |
+| GET | /metrics | 200 |
+| GET | /evidence | 200 |
 | GET | /runs?limit=50 | 200 |
 | GET | /metrics | 200 |
 | GET | /evidence | 200 |
 | GET | /health | 200 |
-| GET | /metrics | 200 |
 | GET | /health | 200 |
-| GET | /evidence | 200 |
-| GET | /runs?limit=50 | 200 |
 | GET | /health | 200 |
-| GET | health | 200 |
-| GET | metrics | 200 |
+| GET | /health | 200 |
 | GET | runs?limit=50 | 200 |
+| GET | metrics | 200 |
 | GET | evidence | 200 |
-| GET | health | 200 |
-| GET | metrics | 200 |
 | GET | runs?limit=50 | 200 |
+| GET | metrics | 200 |
 | GET | evidence | 200 |
 | GET | health | 200 |
 | GET | health | 200 |
+| GET | health | 200 |
+| GET | health | 200 |
+| GET | runs?limit=50 | 200 |
+| GET | metrics | 200 |
+| GET | evidence | 200 |
 | GET | /api/health | 200 |
 
 ## Artifacts
