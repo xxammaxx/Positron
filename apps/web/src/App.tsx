@@ -7,6 +7,7 @@ import EvidencePage from './components/evidence/EvidencePage.js';
 import Repositories from './components/Repositories.js';
 import RunDetail from './components/RunDetail.js';
 import SettingsPage from './components/settings/SettingsPage.js';
+import AdminPage from './components/admin/AdminPage.js';
 import NotFound from './components/NotFound.js';
 
 export default function App(): React.ReactElement {
@@ -19,6 +20,7 @@ export default function App(): React.ReactElement {
         <Route path="/evidence" element={<EvidencePage />} />
         <Route path="/repos" element={<Repositories />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/admin" element={<AdminPage />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

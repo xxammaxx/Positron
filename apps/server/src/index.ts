@@ -2418,6 +2418,70 @@ export function createApp(options: ServerOptions = {}) {
     createRunId,
   }));
 
+  // -----------------------------------------------------------------------
+  // Admin API (Issue #87)
+  // -----------------------------------------------------------------------
+  app.get('/api/admin/stats', (_req, res) => {
+    try {
+      const db = getDb();
+      const totalRuns = (db.prepare('SELECT COUNT(*) as c FROM runs').get() as { c: number }).c;
+      const activeRuns = (db.prepare("SELECT COUNT(*) as c FROM runs WHERE status = 'active'").get() as { c: number }).c;
+      const failedRuns = (db.prepare("SELECT COUNT(*) as c FROM runs WHERE status = 'failed' OR status = 'blocked'").get() as { c: number }).c;
+      const doneRuns = (db.prepare("SELECT COUNT(*) as c FROM runs WHERE status = 'done'").get() as { c: number }).c;
+      const totalRepos = (db.prepare('SELECT COUNT(*) as c FROM repositories').get() as { c: number }).c;
+      const totalEvents = (db.prepare('SELECT COUNT(*) as c FROM run_events').get() as { c: number }).c;
+      const totalArtifacts = (db.prepare('SELECT COUNT(*) as c FROM artifacts').get() as { c: number }).c;
+      const dbSizeBytes = fs.existsSync(options.dbPath ?? resolveDatabasePath())
+        ? fs.statSync(options.dbPath ?? resolveDatabasePath()).size : 0;
+
+      res.json({
+        runs: { total: totalRuns, active: activeRuns, failed: failedRuns, done: doneRuns },
+        repositories: totalRepos,
+        events: totalEvents,
+        artifacts: totalArtifacts,
+        dbSizeMb: Math.round(dbSizeBytes / 1024 / 1024 * 100) / 100,
+      });
+    } catch (err) {
+      res.status(500).json({ error: String(err) });
+    }
+  });
+
+  app.post('/api/admin/runs/bulk-cancel', (_req, res) => {
+    try {
+      const db = getDb();
+      const result = db.prepare("UPDATE runs SET status = 'cancelled', finished_at = datetime('now') WHERE status IN ('active', 'blocked')").run();
+      res.json({ cancelled: (result as { changes: number }).changes });
+    } catch (err) {
+      res.status(500).json({ error: String(err) });
+    }
+  });
+
+  app.post('/api/admin/runs/bulk-retry', (_req, res) => {
+    try {
+      const db = getDb();
+      const result = db.prepare("UPDATE runs SET status = 'active', phase = 'QUEUED' WHERE status IN ('failed', 'blocked')").run();
+      res.json({ retried: (result as { changes: number }).changes });
+    } catch (err) {
+      res.status(500).json({ error: String(err) });
+    }
+  });
+
+  app.post('/api/admin/runs/cleanup', (_req, res) => {
+    try {
+      const db = getDb();
+      // Delete events older than 7 days
+      db.prepare("DELETE FROM run_events WHERE created_at < datetime('now', '-7 days')").run();
+      const eventsDeleted = (db.prepare('SELECT changes() as c').get() as { c: number }).c;
+      // Vacuum
+      db.exec('VACUUM');
+      const dbSizeBytes = fs.existsSync(options.dbPath ?? resolveDatabasePath())
+        ? fs.statSync(options.dbPath ?? resolveDatabasePath()).size : 0;
+      res.json({ eventsDeleted, dbSizeMb: Math.round(dbSizeBytes / 1024 / 1024 * 100) / 100 });
+    } catch (err) {
+      res.status(500).json({ error: String(err) });
+    }
+  });
+
   return app;
 }
 
