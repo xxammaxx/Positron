@@ -12,3 +12,11 @@ coverage/
 test-results/
 playwright-report/
 reports/
+
+# Playwright artifacts
+.playwright-mcp/
+visual-*.png
+dashboard-*.png
+console-*.txt
+network-*.txt
+dashboard-*.md

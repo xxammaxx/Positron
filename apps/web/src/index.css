@@ -116,6 +116,8 @@
   .skeleton {
     @apply animate-pulse bg-slate-200 dark:bg-slate-800 rounded;
   }
+
+  /* Status accents */
   .status-fail {
     @apply border-l-4 border-l-red-400 bg-red-500/5;
   }
@@ -125,13 +127,9 @@
   .status-blocked {
     @apply border-l-4 border-l-orange-400 bg-orange-500/5;
   }
+  /* Status accents */
   .status-human {
     @apply border-l-4 border-l-purple-400 bg-purple-500/5;
-  }
-
-  /* Skeleton loading */
-  .skeleton {
-    @apply animate-pulse bg-slate-800 rounded;
   }
 }
 
