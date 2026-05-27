@@ -242,6 +242,27 @@ function countRunsInDb(): number {
   }
 }
 
+/** Einfache Dashboard-Metriken (Issue #84) */
+function getDashboardMetrics() {
+  const db = getDb();
+  const total = (db.prepare('SELECT COUNT(*) as c FROM runs').get() as { c: number }).c;
+  const active = (db.prepare("SELECT COUNT(*) as c FROM runs WHERE status = 'active'").get() as { c: number }).c;
+  const done = (db.prepare("SELECT COUNT(*) as c FROM runs WHERE status = 'done'").get() as { c: number }).c;
+  const failed = (db.prepare("SELECT COUNT(*) as c FROM runs WHERE status = 'failed'").get() as { c: number }).c;
+  const blocked = (db.prepare("SELECT COUNT(*) as c FROM runs WHERE status = 'blocked'").get() as { c: number }).c;
+  return { totalRuns: total, runsByStatus: { active, done, failed, blocked }, runsByPhase: {} };
+}
+
+/** Einfache Evidence-Summary (Issue #84) */
+function getDashboardEvidence() {
+  const db = getDb();
+  const totalArtifacts = (db.prepare('SELECT COUNT(*) as c FROM artifacts').get() as { c: number }).c;
+  const testEvents = (db.prepare("SELECT COUNT(*) as c FROM events WHERE level = 'INFO' AND phase = 'TEST'").get() as { c: number }).c;
+  const errorEvents = (db.prepare("SELECT COUNT(*) as c FROM events WHERE level = 'ERROR'").get() as { c: number }).c;
+  const warningEvents = (db.prepare("SELECT COUNT(*) as c FROM events WHERE level = 'WARN'").get() as { c: number }).c;
+  return { totalArtifacts, testEvents, errorEvents, warningEvents };
+}
+
 /**
  * Speichert ein Run-Event in der Datenbank und benachrichtigt SSE-Clients.
  * better-sqlite3 ist synchron — kein async nötig.
@@ -1616,6 +1637,47 @@ export function createApp(options: ServerOptions = {}) {
     req.on('close', () => {
       clearInterval(keepAlive);
       removeSSEClient(runId, res);
+    });
+  });
+
+  // Dashboard SSE — global stream for dashboard real-time updates (Issue #84)
+  const dashboardClients = new Set<import('express').Response>();
+  app.get('/api/stream', (req, res) => {
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no',
+    });
+
+    dashboardClients.add(res);
+
+    // Send initial metrics
+    const initial = {
+      metrics: getDashboardMetrics(),
+      runs: listRunsFromDb().slice(0, 50),
+      evidence: getDashboardEvidence(),
+    };
+    res.write(`event: initial\ndata: ${JSON.stringify(initial)}\n\n`);
+
+    // Periodic metrics push (every 10s)
+    const pushInterval = setInterval(() => {
+      try {
+        const metrics = getDashboardMetrics();
+        const runs = listRunsFromDb().slice(0, 20);
+        res.write(`event: dashboard-update\ndata: ${JSON.stringify({ metrics, runs, evidence: getDashboardEvidence() })}\n\n`);
+      } catch { clearInterval(pushInterval); }
+    }, 10_000);
+
+    // Keep alive
+    const kaInterval = setInterval(() => {
+      try { res.write(':keepalive\n\n'); } catch { clearInterval(kaInterval); }
+    }, 15_000);
+
+    req.on('close', () => {
+      clearInterval(pushInterval);
+      clearInterval(kaInterval);
+      dashboardClients.delete(res);
     });
   });
 
