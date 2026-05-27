@@ -1,131 +1,87 @@
-# Positron — Evidence-Gated GitHub Issue Execution
+# Positron — Evidence-Gated Agent Execution
 
-[![Version](https://img.shields.io/badge/release-v0.1.0--rc.1-blue)](https://github.com/xxammaxx/Positron/releases/tag/v0.1.0-rc.1)
-[![CI](https://github.com/xxammaxx/Positron/actions/workflows/verify-issues.yml/badge.svg)](https://github.com/xxammaxx/Positron/actions/workflows/verify-issues.yml)
-[![Tests](https://img.shields.io/badge/tests-79%20passed-brightgreen)]()
+**Positron** ist ein agentisches Ausführungssystem für GitHub Issues. Es durchläuft einen 27-Phasen-Pipeline-Workflow (Spec → Plan → Tasks → Implement → Review → Merge) und produziert für jeden Schritt prüfbare Artefakte.
 
-Positron ist ein lokales GitHub-Issue-Ausführungssystem für agentische Softwareentwicklung.
-Es verwandelt GitHub-Issues in überprüfbare, dokumentierte, getestete Pull Requests.
+## Quickstart
 
-## Quick Start
-
+### Docker (empfohlen)
 ```bash
-# 1. Dependencies installieren
-npm install
-
-# 2. Umgebung konfigurieren
-cp .env.example apps/server/.env
-# Editiere apps/server/.env und setze POSITRON_REPO_OWNER und POSITRON_REPO_NAME
-
-# 3. Bauen
-npm run build
-
-# 4. Server starten (Fake-Mode — kein GitHub Token nötig)
-node apps/server/dist/index.js
-
-# 5. Frontend-Dev-Server starten (neues Terminal)
-cd apps/web && npm run dev
-
-# 6. Browser öffnen
-open http://localhost:5173
+git clone https://github.com/xxammaxx/Positron.git
+cd Positron
+docker compose up -d
+# Server: http://localhost:3000
+# Web UI: http://localhost:5173
 ```
 
-## Zusätzliche Einstiegspunkte
+### Manueller Start
+```bash
+git clone https://github.com/xxammaxx/Positron.git
+cd Positron
+./start.sh
+# Server: http://localhost:3000
+# Web UI: http://localhost:5173
+```
 
 ### CLI
+```bash
+./positron health           # System-Check
+./positron runs             # Letzte 20 Runs
+./positron stats            # Admin-Statistiken
+./positron cancel <run-id>  # Run abbrechen
+```
 
-Der Server exportiert einen `positron`-Binärbefehl (`apps/server/package.json`).
-Das CLI spricht die REST-API des laufenden Servers an.
+## Konfiguration
+
+Alle Einstellungen via Umgebungsvariablen oder `apps/server/.env`:
+
+| Variable | Default | Beschreibung |
+|:---------|:--------|:-------------|
+| `GITHUB_MODE` | `fake` | `real` für echten GitHub-Zugriff |
+| `GITHUB_TOKEN` | — | GitHub Personal Access Token |
+| `POSITRON_ENABLE_PUSH` | `false` | Git-Push erlauben |
+| `POSITRON_ENABLE_MERGE` | `false` | Auto-Merge erlauben |
+| `POSITRON_MERGE_KILL_SWITCH` | `true` | Not-Aus |
+| `POSITRON_WORKSPACE_ROOT` | — | Pfad für echten Workspace |
+| `POSITRON_WEBHOOK_URL` | — | Slack/Discord Webhook |
+
+## Features
+
+- 🚀 27-Phasen-Pipeline: QUEUED → DONE inkl. Spec/Plan/Tasks/Review/Merge
+- 📊 Dashboard: Echtzeit-SSE-Updates, Metriken, Attention-Queue
+- 🔍 Evidence-Explorer: Artefakte, Testergebnisse, Screenshots
+- ⚙️ Admin-Panel: Bulk-Cancel, Bulk-Retry, Cleanup, DB-Stats
+- 🎨 Brutalist-Design: Dark/Light-Theme, Mobile-Responsive
+- 🔒 Sicherheit: CSP, Rate-Limiting, Secret-Redaction, Kill-Switch
+- 🐳 Docker: docker compose up in 2 Minuten
+- 📝 CLI: positron health, runs, status, cancel, stats
+- 🔔 Notifications: Slack/Discord-Webhooks
+
+## Tests
 
 ```bash
-positron run --issueNumber 42 --autonomyLevel 2
+npx vitest run         # 69 Tests
+cd apps/web && npx vitest run  # 58 Tests  
+npx playwright test    # 17 E2E-Tests
+./scripts/dogfood-test.sh  # Dogfood-Test
 ```
 
-- `--serverUrl` default: `http://localhost:3000`
-- `--repoId` default: `repo-1`
-- Server muss laufen, sonst schlägt der Aufruf fehl
-
-Mehr dazu: `docs/workflows/cli.md`
-
-### GitHub Watcher
-
-Der Server enthält einen polling-basierten GitHub-Watcher unter
-`apps/server/src/github-watcher.ts`.
-
-- `POSITRON_ENABLE_WATCHER=true` aktiviert den Poller
-- `POSITRON_WATCHER_INTERVAL_MS` setzt das Intervall in Millisekunden
-- `POSITRON_WATCHER_LABELS=bug,feature` filtert nach Labels (kommagetrennt)
-- Neue Open Issues werden mit `GitHubAdapter.listOpenIssues()` geprüft
-- Bereits vorhandene Runs werden nicht dupliziert (idempotent)
-
-## Architektur (kurz)
-
-- **8 TypeScript Packages** im Monorepo
-- **State Machine** mit 18 Phasen (QUEUED → DONE)
-- **Adapter Pattern** für GitHub, SpecKit, OpenCode
-- **SQLite** für Persistenz (via better-sqlite3)
-- **React + Tailwind** Frontend (Vite)
-- **Server-Sent Events** für Live-Updates
+## Architektur
 
 ```
-Web UI (React/Vite/Tailwind)
-      ↕ SSE + REST API
-Positron Orchestrator (Node.js/Express/TS)
-  ├── GitHub API Adapter
-  ├── Spec Kit Adapter
-  ├── OpenCode Adapter
-  └── Sandbox (Git Worktrees)
-      ↕
-SQLite (Runs, Events, Artifacts)
+Positron/
+├── apps/
+│   ├── server/   # Express/TypeScript Backend (Port 3000)
+│   └── web/      # React/Vite/Tailwind Frontend (Port 5173)
+├── packages/
+│   ├── github-adapter/    # GitHub API (Fake/Real)
+│   ├── speckit-adapter/   # Spec-Kit CLI
+│   ├── opencode-adapter/  # OpenCode CLI
+│   ├── run-state/         # State Machine + DB
+│   ├── sandbox/           # Git Workspace (Fake/Real)
+│   └── shared/            # Typen, Utilities
+└── docker-compose.yml
 ```
-
-## Kernprinzipien
-
-1. **Kein Code ohne Spec.**
-2. **Kein Fortschritt ohne GitHub-Kommentare.**
-3. **Kein Erfolg ohne Testbeweis.**
-4. **Keine Vollautonomie außerhalb einer Sandbox.**
-
-## Testing
-
-```bash
-npm test              # alle Tests (53 Backend + 30 Frontend)
-npm run typecheck     # TypeScript Check
-cd apps/web && npm run dev  # Frontend-Dev-Server
-```
-
-## Environment
-
-Alle Variablen mit Beschreibung: `.env.example`
-
-Wichtige Runtime-Variablen:
-
-- `POSITRON_GITHUB_MODE` hat Vorrang vor dem Legacy-Fallback `GITHUB_MODE`
-- `POSITRON_ENABLE_WATCHER`, `POSITRON_WATCHER_INTERVAL_MS`, `POSITRON_WATCHER_LABELS`
-- `POSITRON_REPO_OWNER`, `POSITRON_REPO_NAME`
-
-## Frontend
-
-Das React-Frontend bietet:
-- **Dashboard** mit Live-Übersicht aller Runs, Metriken und Filter
-- **Run-Detail** mit Live-Log-Stream (SSE), Phasen-Timeline und Gate-Steuerung
-- **Repositories** für Verwaltung von GitHub-Repos und Issue-Übersicht
-- **Gate-Controls** für manuelle Genehmigung/Überarbeitung
-
-## Dokumentation
-
-- [Blueprint-Analyse](docs/blueprint-analysis.md)
-- [Architektur](docs/architecture.md)
-- [Modul-Karte](docs/module-map.md)
-- [Abhängigkeitsgraph](docs/dependency-graph.md)
-- [Constitution](.specify/memory/constitution.md)
-
-## Contributors
-
-Danke an alle, die zu Positron beigetragen haben!
-
-Siehe [Contributors](https://github.com/xxammaxx/Positron/graphs/contributors) für eine vollständige Liste.
 
 ## Lizenz
 
-[MIT](LICENSE)
+MIT
