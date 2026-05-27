@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# Positron CLI v0.1.0
+set -e
+BASE="${POSITRON_URL:-http://localhost:3000}"
+
+cmd="${1:-help}"
+shift 2>/dev/null || true
+
+case "$cmd" in
+  health)
+    curl -s "$BASE/api/health" | python3 -m json.tool 2>/dev/null || curl -s "$BASE/api/health"
+    ;;
+  runs)
+    limit="${1:-20}"
+    curl -s "$BASE/api/runs?limit=$limit" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+for r in d.get('runs',[]):
+    print(f\"  {r['id'][:12]}  {r.get('phase','?'):12s}  {r.get('status','?'):10s}  #{r.get('issueNumber','?')}\")
+print(f\"\\n{d.get('total',0)} runs total\")
+" 2>/dev/null || curl -s "$BASE/api/runs?limit=$limit"
+    ;;
+  status)
+    rid="${1:-}"
+    [ -z "$rid" ] && { echo "Usage: positron status <run-id>"; exit 1; }
+    curl -s "$BASE/api/runs/$rid" | python3 -m json.tool 2>/dev/null
+    ;;
+  cancel)
+    rid="${1:-}"
+    [ -z "$rid" ] && { echo "Usage: positron cancel <run-id>"; exit 1; }
+    curl -s -X POST "$BASE/api/runs/$rid/cancel" | python3 -m json.tool 2>/dev/null
+    ;;
+  stats)
+    curl -s "$BASE/api/admin/stats" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+r=d['runs']
+print(f'Runs: {r[\"total\"]} total  |  {r[\"active\"]} active  |  {r[\"done\"]} done  |  {r[\"failed\"]} failed')
+print(f'Repos: {d[\"repositories\"]}  |  Events: {d[\"events\"]}  |  Artifacts: {d[\"artifacts\"]}  |  DB: {d[\"dbSizeMb\"]} MB')
+" 2>/dev/null
+    ;;
+  *)
+    echo "Positron CLI v0.1.0"
+    echo ""
+    echo "Usage: positron <command> [args]"
+    echo ""
+    echo "Commands:"
+    echo "  health              — System health check"
+    echo "  runs [limit]        — Recent runs (default: 20)"
+    echo "  status <run-id>     — Run detail"
+    echo "  cancel <run-id>     — Cancel run"
+    echo "  stats               — Admin statistics"
+    echo ""
+    echo "Env: POSITRON_URL  — Server URL (default: http://localhost:3000)"
+    ;;
+esac
