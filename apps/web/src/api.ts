@@ -192,6 +192,14 @@ export const api = {
     return request(`/evidence${qs}`);
   },
 
+  // Evidence Write-Back (Issue #85)
+  saveEvidence(runId: string, kind: string, content: string): Promise<{ success: boolean; kind: string; createdAt: string }> {
+    return request('/evidence', {
+      method: 'POST',
+      body: JSON.stringify({ runId, kind, content }),
+    });
+  },
+
   // Settings — MCP Configuration (masked)
   getMcpSettings(): Promise<{
     servers: Array<{
