@@ -257,9 +257,9 @@ function getDashboardMetrics() {
 function getDashboardEvidence() {
   const db = getDb();
   const totalArtifacts = (db.prepare('SELECT COUNT(*) as c FROM artifacts').get() as { c: number }).c;
-  const testEvents = (db.prepare("SELECT COUNT(*) as c FROM events WHERE level = 'INFO' AND phase = 'TEST'").get() as { c: number }).c;
-  const errorEvents = (db.prepare("SELECT COUNT(*) as c FROM events WHERE level = 'ERROR'").get() as { c: number }).c;
-  const warningEvents = (db.prepare("SELECT COUNT(*) as c FROM events WHERE level = 'WARN'").get() as { c: number }).c;
+  const testEvents = (db.prepare("SELECT COUNT(*) as c FROM run_events WHERE level = 'INFO' AND phase = 'TEST'").get() as { c: number }).c;
+  const errorEvents = (db.prepare("SELECT COUNT(*) as c FROM run_events WHERE level = 'ERROR'").get() as { c: number }).c;
+  const warningEvents = (db.prepare("SELECT COUNT(*) as c FROM run_events WHERE level = 'WARN'").get() as { c: number }).c;
   return { totalArtifacts, testEvents, errorEvents, warningEvents };
 }
 
