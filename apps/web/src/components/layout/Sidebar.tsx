@@ -59,7 +59,6 @@ const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
-  {
     to: '/settings',
     label: 'Settings',
     icon: (
