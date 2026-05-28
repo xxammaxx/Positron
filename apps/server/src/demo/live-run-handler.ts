@@ -47,7 +47,7 @@ export function createDemoLiveRunHandler(deps: Record<string, any>) {
       ];
 
       for (const evt of DEMO_EVENTS) {
-        deps.storeEvent(runId, evt.phase, evt.level, evt.message);
+        deps.storeEvent(runId, evt.phase, evt.level, evt.message, {});
         deps.broadcastSSE(runId, 'run-event', {
           runId, phase: evt.phase, level: evt.level, message: evt.message,
           createdAt: new Date().toISOString(),

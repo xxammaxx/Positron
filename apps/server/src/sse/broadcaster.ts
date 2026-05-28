@@ -76,9 +76,9 @@ export function resetEventSequence(runId: string): void {
   eventSequences.set(runId, 0);
 }
 
-export function primeEventSequence(runId: string): void {
+export function primeEventSequence(runId: string, initialSeq?: number): void {
   if (!eventSequences.has(runId)) {
-    eventSequences.set(runId, 0);
+    eventSequences.set(runId, initialSeq ?? 0);
   }
 }
 

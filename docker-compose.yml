@@ -9,7 +9,7 @@ services:
       - positron-data:/app/.positron
     environment:
       - PORT=3000
-      - NODE_ENV=development
+      - NODE_ENV=production
       - DB_PATH=/app/.positron/runs/positron.db
       - GITHUB_TOKEN=${GITHUB_TOKEN:-ghp_fake}
       - GITHUB_MODE=${GITHUB_MODE:-fake}

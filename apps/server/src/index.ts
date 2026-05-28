@@ -31,7 +31,7 @@ import { fileURLToPath } from 'node:url';
 import express from 'express';
 import http from 'node:http';
 import Database from 'better-sqlite3';
-import { openDatabase, createRun, transition, markFailed, retry, resumeFromEvents } from '@positron/run-state';
+import { openDatabase, createRun, transition, markFailed, retry, resumeFromEvents, resolveDatabasePath } from '@positron/run-state';
 import { runSpecify, runPlan, runTasks } from '@positron/speckit-adapter';
 import { RealSpecKitAdapter, FakeSpecKitAdapter } from '@positron/speckit-adapter';
 import { executeTasks } from '@positron/opencode-adapter';
@@ -1456,8 +1456,18 @@ export function createApp(options: ServerOptions = {}) {
   const rateLimitMap = new Map<string, number[]>();
   const RATE_LIMIT_MAX = 100;
   const RATE_LIMIT_WINDOW = 60_000;
+  // Periodic cleanup of stale IP entries every 5 minutes
+  setInterval(() => {
+    const cutoff = Date.now() - RATE_LIMIT_WINDOW;
+    for (const [ip, timestamps] of rateLimitMap) {
+      const filtered = timestamps.filter(t => t > cutoff);
+      if (filtered.length === 0) rateLimitMap.delete(ip);
+      else rateLimitMap.set(ip, filtered);
+    }
+  }, 300_000);
   app.use((req, res, next) => {
-    if (req.path === '/api/stream' || req.path === '/api/runs/' + req.params.id + '/events/stream') { next(); return; }
+    // Exempt SSE streams (per-run and dashboard) from rate limiting
+    if (req.path === '/api/stream' || req.path.endsWith('/events/stream')) { next(); return; }
     const ip = req.ip ?? 'unknown';
     const now = Date.now();
     const window = rateLimitMap.get(ip) ?? [];
@@ -2452,6 +2462,18 @@ export function createApp(options: ServerOptions = {}) {
   // -----------------------------------------------------------------------
   // Admin API (Issue #87)
   // -----------------------------------------------------------------------
+  const ADMIN_TOKEN = process.env.POSITRON_ADMIN_TOKEN ?? 'positron-admin-dev';
+  const requireAdmin = (req: import('express').Request, res: import('express').Response, next: import('express').NextFunction) => {
+    const token = req.headers['x-admin-token'] as string ?? req.query.token as string;
+    if (token !== ADMIN_TOKEN) {
+      res.status(401).json({ error: 'Admin token required. Set X-Admin-Token header or ?token= query param.' });
+      return;
+    }
+    next();
+  };
+
+  app.use('/api/admin', requireAdmin);
+
   app.get('/api/admin/stats', (_req, res) => {
     try {
       const db = getDb();

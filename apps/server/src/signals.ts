@@ -10,6 +10,6 @@ export const runSignals = new Map<string, string>();
 /** Resume target phase for interrupted runs */
 export const resumePhaseTarget = new Map<string, string>();
 
-export function checkRunSignal(runId: string): string | null {
+export function checkRunSignal(runId: string, _phase?: string): string | null {
   return runSignals.get(runId) ?? null;
 }

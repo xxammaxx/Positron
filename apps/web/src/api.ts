@@ -10,7 +10,7 @@ import type {
   HealthStatus,
   ApiError,
 } from './types.js';
-import type { Phase, RunStatus, Run } from './types.js';
+import type { Phase, RunStatus } from './types.js';
 import { parsePhase } from '@positron/shared';
 
 const BASE = '/api';

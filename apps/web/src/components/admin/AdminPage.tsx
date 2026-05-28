@@ -16,6 +16,7 @@ export default function AdminPage(): React.ReactElement {
   const fetchStats = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/stats');
+      if (!res.ok) { setLoading(false); return; }
       setStats(await res.json());
     } catch { /* ignore */ }
     setLoading(false);

@@ -37,7 +37,7 @@ export function createCancelHandler(deps: Record<string, any>) {
       return;
     }
 
-    deps.storeEvent(id, current.phase, 'HUMAN', 'Run cancelled by operator');
+    deps.storeEvent(id, current.phase, 'HUMAN', 'Run cancelled by operator', {});
     deps.broadcastSSE(id, 'run-cancelled', {
       runId: id, phase: current.phase, status: 'cancelled', message: 'Run cancelled by operator',
     });
