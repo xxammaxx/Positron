@@ -19,6 +19,7 @@ services:
       - POSITRON_ENABLE_MERGE=${POSITRON_ENABLE_MERGE:-false}
       - POSITRON_MERGE_KILL_SWITCH=true
       - POSITRON_WORKSPACE_ROOT=/app/workspace
+      - POSITRON_ADMIN_TOKEN=${POSITRON_ADMIN_TOKEN:-positron-admin-prod}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]

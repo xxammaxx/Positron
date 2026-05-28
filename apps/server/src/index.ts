@@ -1066,7 +1066,7 @@ async function runFullPipeline(
         resumePhaseTarget.delete(current.id);
         current = {
           ...current,
-          phase: targetPhase,
+          phase: targetPhase as import('@positron/shared').Phase,
           status: 'active',
           lastError: null,
         };
@@ -1457,7 +1457,7 @@ export function createApp(options: ServerOptions = {}) {
   const RATE_LIMIT_MAX = 100;
   const RATE_LIMIT_WINDOW = 60_000;
   // Periodic cleanup of stale IP entries every 5 minutes
-  setInterval(() => {
+  const rateLimitCleanup = setInterval(() => {
     const cutoff = Date.now() - RATE_LIMIT_WINDOW;
     for (const [ip, timestamps] of rateLimitMap) {
       const filtered = timestamps.filter(t => t > cutoff);
@@ -1465,13 +1465,14 @@ export function createApp(options: ServerOptions = {}) {
       else rateLimitMap.set(ip, filtered);
     }
   }, 300_000);
+  rateLimitCleanup.unref();
   app.use((req, res, next) => {
     // Exempt SSE streams (per-run and dashboard) from rate limiting
     if (req.path === '/api/stream' || req.path.endsWith('/events/stream')) { next(); return; }
     const ip = req.ip ?? 'unknown';
     const now = Date.now();
     const window = rateLimitMap.get(ip) ?? [];
-    while (window.length > 0 && window[0] < now - RATE_LIMIT_WINDOW) window.shift();
+    while (window.length > 0 && (window[0] ?? 0) < now - RATE_LIMIT_WINDOW) window.shift();
     if (window.length >= RATE_LIMIT_MAX) {
       res.status(429).json({ error: 'Too many requests', retryAfter: 60 });
       return;
@@ -2462,11 +2463,16 @@ export function createApp(options: ServerOptions = {}) {
   // -----------------------------------------------------------------------
   // Admin API (Issue #87)
   // -----------------------------------------------------------------------
-  const ADMIN_TOKEN = process.env.POSITRON_ADMIN_TOKEN ?? 'positron-admin-dev';
+  const ADMIN_TOKEN = process.env.POSITRON_ADMIN_TOKEN
+    ?? (process.env.NODE_ENV === 'production' ? undefined : 'positron-admin-dev');
   const requireAdmin = (req: import('express').Request, res: import('express').Response, next: import('express').NextFunction) => {
-    const token = req.headers['x-admin-token'] as string ?? req.query.token as string;
+    const token = req.headers['x-admin-token'] as string | undefined;
+    if (!ADMIN_TOKEN) {
+      res.status(503).json({ error: 'Admin API disabled: set POSITRON_ADMIN_TOKEN in production' });
+      return;
+    }
     if (token !== ADMIN_TOKEN) {
-      res.status(401).json({ error: 'Admin token required. Set X-Admin-Token header or ?token= query param.' });
+      res.status(401).json({ error: 'Invalid admin token. Set X-Admin-Token header.' });
       return;
     }
     next();
