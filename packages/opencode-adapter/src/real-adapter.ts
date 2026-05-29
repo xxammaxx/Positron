@@ -1,17 +1,26 @@
 // Positron — Real OpenCode Adapter
 
+import fs from 'node:fs';
+import path from 'node:path';
 import { runCommand } from '@positron/sandbox';
 import type { OpenCodeAdapter, OpenCodeHealth, OpenCodeCommandResult, OpenCodeRunInput } from '@positron/shared';
-import { OpenCodeNotInstalledError, OpenCodeTimeoutError } from '@positron/shared';
 
 /**
  * RealOpenCodeAdapter — führt echte OpenCode CLI-Kommandos aus.
  *
- * Modi:
- * - detect-only: nur CLI-Erkennung, keine Kommandos
- * - safe-cli: erlaubte Kommandos (opencode run --command speckit.*)
+ * Quality-of-Life-Features:
+ * - Speichert CLI-Output als Evidence-Dateien (stdout/stderr)
+ * - Grapfulcher Fallback wenn CLI nicht installiert
+ * - Timeout-Handling via runCommand
  */
 export class RealOpenCodeAdapter implements OpenCodeAdapter {
+  private evidenceDir: string;
+
+  constructor(evidenceDir?: string) {
+    // Default-Evidence-Pfad unter .positron/
+    this.evidenceDir = evidenceDir ?? '.positron/evidence/opencode';
+  }
+
   /**
    * Prüft ob die OpenCode CLI verfügbar ist.
    */
@@ -46,6 +55,22 @@ export class RealOpenCodeAdapter implements OpenCodeAdapter {
   async runSlashCommand(slashCommand: string, input: OpenCodeRunInput): Promise<OpenCodeCommandResult> {
     const startTime = Date.now();
 
+    // Graceful fallback: CLI-Check vorab
+    const health = await this.healthCheck(input.workspacePath);
+    if (!health.available) {
+      return {
+        phase: this.mapPhase(slashCommand),
+        status: 'blocked',
+        command: `opencode run --command ${slashCommand}`,
+        args: [],
+        cwd: input.workspacePath,
+        exitCode: null,
+        durationMs: 0,
+        summary: `OpenCode CLI not available: ${health.reason ?? 'unknown'}`,
+        blockedReason: health.reason,
+      };
+    }
+
     const args = [
       'run',
       '--command', slashCommand,
@@ -65,6 +90,9 @@ export class RealOpenCodeAdapter implements OpenCodeAdapter {
         timeout: 300_000, // 5 Minuten für Agent-Kommandos
       });
 
+      // CLI-Output als Evidence-Dateien speichern
+      const evidencePaths = this.saveEvidence(slashCommand, result.stdout, result.stderr);
+
       return {
         phase: this.mapPhase(slashCommand),
         status: result.exitCode === 0 ? 'success' : 'failed',
@@ -76,11 +104,12 @@ export class RealOpenCodeAdapter implements OpenCodeAdapter {
         summary: result.exitCode === 0
           ? `Slash command "${slashCommand}" completed`
           : `Slash command "${slashCommand}" failed: ${result.stderr.slice(0, 200)}`,
-        stdoutPath: undefined,
-        stderrPath: undefined,
+        stdoutPath: evidencePaths.stdoutPath,
+        stderrPath: evidencePaths.stderrPath,
         blockedReason: result.exitCode !== 0 ? result.stderr.slice(0, 200) : undefined,
       };
     } catch (err) {
+      const errMsg = String(err);
       return {
         phase: this.mapPhase(slashCommand),
         status: 'failed',
@@ -89,8 +118,8 @@ export class RealOpenCodeAdapter implements OpenCodeAdapter {
         cwd: input.workspacePath,
         exitCode: null,
         durationMs: Date.now() - startTime,
-        summary: `Slash command "${slashCommand}" failed: ${String(err).slice(0, 200)}`,
-        blockedReason: String(err),
+        summary: `Slash command "${slashCommand}" failed: ${errMsg.slice(0, 200)}`,
+        blockedReason: errMsg,
       };
     }
   }
@@ -100,6 +129,22 @@ export class RealOpenCodeAdapter implements OpenCodeAdapter {
    */
   async runImplement(input: OpenCodeRunInput): Promise<OpenCodeCommandResult> {
     const startTime = Date.now();
+
+    // Graceful fallback: CLI-Check vorab
+    const health = await this.healthCheck(input.workspacePath);
+    if (!health.available) {
+      return {
+        phase: 'implement',
+        status: 'blocked',
+        command: 'opencode run --prompt "... (implementation)"',
+        args: [],
+        cwd: input.workspacePath,
+        exitCode: null,
+        durationMs: 0,
+        summary: `OpenCode CLI not available: ${health.reason ?? 'unknown'}`,
+        blockedReason: health.reason,
+      };
+    }
 
     const args = [
       'run',
@@ -117,6 +162,9 @@ export class RealOpenCodeAdapter implements OpenCodeAdapter {
         timeout: 600_000, // 10 Minuten für Implementation
       });
 
+      // CLI-Output als Evidence-Dateien speichern
+      const evidencePaths = this.saveEvidence('implement', result.stdout, result.stderr);
+
       return {
         phase: 'implement',
         status: result.exitCode === 0 ? 'success' : 'failed',
@@ -128,9 +176,12 @@ export class RealOpenCodeAdapter implements OpenCodeAdapter {
         summary: result.exitCode === 0
           ? 'Implementation completed successfully'
           : `Implementation failed: ${result.stderr.slice(0, 200)}`,
+        stdoutPath: evidencePaths.stdoutPath,
+        stderrPath: evidencePaths.stderrPath,
         blockedReason: result.exitCode !== 0 ? result.stderr.slice(0, 200) : undefined,
       };
     } catch (err) {
+      const errMsg = String(err);
       return {
         phase: 'implement',
         status: 'failed',
@@ -139,9 +190,32 @@ export class RealOpenCodeAdapter implements OpenCodeAdapter {
         cwd: input.workspacePath,
         exitCode: null,
         durationMs: Date.now() - startTime,
-        summary: `Implementation failed: ${String(err).slice(0, 200)}`,
-        blockedReason: String(err),
+        summary: `Implementation failed: ${errMsg.slice(0, 200)}`,
+        blockedReason: errMsg,
       };
+    }
+  }
+
+  /**
+   * Speichert CLI-Output als Evidence-Dateien.
+   * Erzeugt .positron/evidence/opencode/<command>-stdout.txt und ...-stderr.txt
+   */
+  private saveEvidence(command: string, stdout: string, stderr: string): { stdoutPath?: string; stderrPath?: string } {
+    try {
+      const dir = path.join(this.evidenceDir, command.replace(/[^a-z0-9.-]/gi, '_'));
+      fs.mkdirSync(dir, { recursive: true });
+      const timestamp = Date.now();
+      const stdoutPath = path.join(dir, `stdout-${timestamp}.txt`);
+      const stderrPath = path.join(dir, `stderr-${timestamp}.txt`);
+      if (stdout) fs.writeFileSync(stdoutPath, stdout, 'utf-8');
+      if (stderr) fs.writeFileSync(stderrPath, stderr, 'utf-8');
+      return {
+        stdoutPath: stdout ? stdoutPath : undefined,
+        stderrPath: stderr ? stderrPath : undefined,
+      };
+    } catch {
+      // Evidence-Speicherung ist nicht kritisch — bei Fehler einfach überspringen
+      return {};
     }
   }
 
