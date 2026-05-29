@@ -9,6 +9,8 @@ const repository = { owner: 'test-owner', repo: 'test-repo' };
 const DEV_ADMIN_TOKEN = 'positron-admin-dev';
 
 beforeAll(async () => {
+  // Set the admin token via env so SecretManager picks it up (env provider first)
+  process.env['POSITRON_ADMIN_TOKEN'] = DEV_ADMIN_TOKEN;
   server = createServer({ repository, dbPath: ':memory:' });
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', () => resolve()));
   const addr = server.address() as { port: number };
@@ -16,6 +18,7 @@ beforeAll(async () => {
 });
 
 afterAll(() => {
+  delete process.env['POSITRON_ADMIN_TOKEN'];
   server.close();
 });
 

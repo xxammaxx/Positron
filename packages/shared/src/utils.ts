@@ -15,6 +15,8 @@ export type IdGenerator = () => string;
 /** Standard-Regeln für Secret-Redaction */
 export const DEFAULT_REDACTION_RULES: readonly RedactionRule[] = [
   { name: 'github-token', pattern: /ghp_[a-zA-Z0-9]{36}/g, replacement: 'ghp_***REDACTED***' },
+  { name: 'github-oauth-token', pattern: /gho_[a-zA-Z0-9_]{36}/g, replacement: 'gho_***REDACTED***' },
+  { name: 'github-app-token', pattern: /ghb_[a-zA-Z0-9_]{36}/g, replacement: 'ghb_***REDACTED***' },
   { name: 'github-token-v2', pattern: /github_pat_[a-zA-Z0-9_]{82}/g, replacement: 'github_pat_***REDACTED***' },
   { name: 'openai-key', pattern: /sk-[a-zA-Z0-9]{48,}/g, replacement: 'sk-***REDACTED***' },
   { name: 'anthropic-key', pattern: /anthropic_[a-zA-Z0-9]{40,}/g, replacement: 'anthropic_***REDACTED***' },
