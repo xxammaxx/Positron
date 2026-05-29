@@ -15,4 +15,6 @@ export * from './speckit-errors.js';
 export * from './opencode-types.js';
 export * from './opencode-errors.js';
 export * from './live-e2e.js';
-export * from './secret-manager.js';
+// SecretManager is intentionally NOT exported from the barrel —
+// it imports Node.js modules (fs, path) and is server-only.
+// Import directly: import { SecretManager } from '@positron/shared/src/secret-manager.js';
