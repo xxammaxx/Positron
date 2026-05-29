@@ -85,7 +85,7 @@ Positron implements **evidence-gated progression** — no phase completes withou
 | **Push Gate** | `POSITRON_ENABLE_PUSH=false` blocks git pushes | Server-side config |
 | **Evidence Gate** | Each pipeline phase requires passing tests + captured artifacts | Pipeline engine |
 | **Audit Trail** | Every agent decision logged with timestamps + evidence hashes | Audit enforcer |
-| **Rate Limiting** | Maximum 20 requests/minute per IP | Express middleware |
+| **Rate Limiting** | Maximum 100 requests/minute per IP | Express middleware |
 | **Secret Redaction** | `GITHUB_TOKEN`, API keys masked in logs | Log sanitizer |
 | **Max Fix Loops** | Automatic stop after 3 failed attempts | State machine |
 
@@ -158,8 +158,8 @@ Positron/
 | **Frontend** | React 18, Vite 6, Tailwind CSS 3 |
 | **Backend** | Express 4, SQLite (better-sqlite3) |
 | **State Machine** | Custom pipeline engine (28 phases) |
-| **E2E Testing** | Playwright 1.52 |
-| **Unit Testing** | Vitest 3 |
+| **E2E Testing** | Playwright 1.60 |
+| **Unit Testing** | Vitest 4 |
 | **Container** | Docker + docker-compose |
 
 ---

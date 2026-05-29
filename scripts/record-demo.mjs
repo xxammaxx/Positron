@@ -1,7 +1,10 @@
 /**
  * Record a Positron demo video walking through key features.
- * Usage: node scripts/record-demo.mjs
- * Output: docs/release/video-demo/demo-recording.webm
+ * Usage:
+ *   node scripts/record-demo.mjs              # headless (CI/release)
+ *   HEADED=1 node scripts/record-demo.mjs     # headed (interactive demo)
+ *   PW_SLOWMO=500 HEADED=1 node scripts/record-demo.mjs  # slow motion
+ * Output: docs/release/video-demo/positron-demo-recording.webm
  */
 import { chromium } from '@playwright/test';
 import fs from 'fs';
@@ -9,7 +12,8 @@ import path from 'path';
 
 const OUT_DIR = 'docs/release/video-demo';
 const BASE_URL = 'http://localhost:5173';
-const VIDEO_PATH = path.join(OUT_DIR, 'demo-recording.webm');
+const HEADED = process.env.HEADED === '1';
+const SLOWMO = parseInt(process.env.PW_SLOWMO ?? '0', 10);
 
 let scenesFailed = 0;
 const MAX_SCENE_FAILURES = 3;
@@ -37,7 +41,8 @@ async function main() {
   fs.mkdirSync(OUT_DIR, { recursive: true });
 
   const browser = await chromium.launch({
-    headless: false,
+    headless: !HEADED,
+    slowMo: SLOWMO,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
 

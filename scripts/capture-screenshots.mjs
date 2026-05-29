@@ -39,41 +39,45 @@ async function capturePage(page, name, url, waitMs = 3000) {
 async function main() {
   fs.mkdirSync(OUT_DIR, { recursive: true });
 
-  const browser = await chromium.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
-  });
-
-  const context = await browser.newContext({
-    viewport: { width: 1440, height: 900 },
-  });
-
-  const page = await context.newPage();
-
-  // Capture all main pages
-  for (const { path: route, name } of PAGES) {
-    await capturePage(page, name, `${BASE_URL}${route}`);
-  }
-
-  // Capture run detail page
+  let browser;
   try {
-    console.log(`📸 Fetching latest run...`);
-    const resp = await page.request.get('http://localhost:3000/api/runs');
-    const data = await resp.json();
-    if (data.runs && data.runs.length > 0) {
-      const runId = data.runs[0].id;
-      await capturePage(page, 'run-detail', `${BASE_URL}/runs/${runId}`);
-    } else {
-      console.log('  ⚠️ No runs found, skipping run-detail');
-    }
-  } catch (err) {
-    failures++;
-    console.error(`  ❌ run-detail failed: ${err.message}`);
-  }
+    browser = await chromium.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
 
-  await page.close();
-  await context.close();
-  await browser.close();
+    const context = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+    });
+
+    const page = await context.newPage();
+
+    // Capture all main pages
+    for (const { path: route, name } of PAGES) {
+      await capturePage(page, name, `${BASE_URL}${route}`);
+    }
+
+    // Capture run detail page
+    try {
+      console.log(`📸 Fetching latest run...`);
+      const resp = await page.request.get('http://localhost:3000/api/runs');
+      const data = await resp.json();
+      if (data.runs && data.runs.length > 0) {
+        const runId = data.runs[0].id;
+        await capturePage(page, 'run-detail', `${BASE_URL}/runs/${runId}`);
+      } else {
+        console.log('  ⚠️ No runs found, skipping run-detail');
+      }
+    } catch (err) {
+      failures++;
+      console.error(`  ❌ run-detail failed: ${err.message}`);
+    }
+
+    await page.close();
+    await context.close();
+  } finally {
+    if (browser) await browser.close();
+  }
 
   // Report
   console.log('\n📁 Screenshots in', OUT_DIR);

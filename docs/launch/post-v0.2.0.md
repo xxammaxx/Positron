@@ -8,21 +8,21 @@
 
 ## Tagline
 
-17-phase pipeline: SPECIFY → PLAN → TASKS → IMPLEMENT → DONE. Every step auditable, every phase gated by verifiable evidence.
+28-phase pipeline: QUEUED → CLAIMED → SPECIFY → PLAN → TASKS → IMPLEMENT → REVIEW → MERGE → DONE → CLEANUP. Every step auditable, every phase gated by verifiable evidence.
 
 ---
 
 ## Key Features
 
-### 1. 🚀 17-Phase Autonomous Pipeline
-Positron runs a complete software development workflow: from issue CLAIMED → SPECIFY → PLAN → TASKS → IMPLEMENT → REVIEW → MERGE → DONE. No manual handoffs required. The full pipeline completes in ~14 seconds on its own repository.
+### 1. 🚀 28-Phase Autonomous Pipeline
+Positron runs a complete software development workflow: from issue QUEUED → CLAIMED → SPECIFY → PLAN → TASKS → IMPLEMENT → REVIEW → MERGE → DONE → CLEANUP. A happy-path run progresses through ~17 execution phases in about 14 seconds on its own repository.
 
 ### 2. 🛡️ Safety-First Architecture
 Every safety layer is built-in, not bolted on:
 - **Kill-Switch** (`POSITRON_MERGE_KILL_SWITCH=true`) — blocks all merges by default
 - **Evidence Gates** — no phase completes without passing tests + captured artifacts
 - **Secret Redaction** — tokens and API keys are masked in all logs
-- **Rate Limiting** — 20 req/min per IP
+- **Rate Limiting** — 100 req/min per IP
 - **Audit Trail** — every agent decision logged with timestamps and evidence hashes
 
 ### 3. 🔍 Evidence-Gated Progression
@@ -65,10 +65,10 @@ Screenshots:
 | **Runtime** | Node.js 22 + TypeScript 5.7 |
 | **Frontend** | React 18, Vite 6, Tailwind CSS 3 |
 | **Backend** | Express 4, SQLite (better-sqlite3) |
-| **State Machine** | Custom 17-phase pipeline engine |
+| **State Machine** | Custom 28-phase pipeline engine |
 | **Container** | Docker + docker-compose |
-| **E2E Tests** | Playwright 1.52 |
-| **Unit Tests** | Vitest 3 |
+| **E2E Tests** | Playwright 1.60 |
+| **Unit Tests** | Vitest 4 |
 
 ---
 
@@ -108,5 +108,5 @@ Screenshots:
 
 - Post title: "Show HN: Positron – Evidence-gated AI agent that resolves GitHub issues autonomously"
 - Focus on the safety architecture — HN users care about agent safety
-- Mention the 17-phase pipeline and the dogfood results (13.7s end-to-end)
+- Mention the 28-phase pipeline and the dogfood results (13.7s end-to-end happy path)
 - Link to the workflow proof report for credibility
