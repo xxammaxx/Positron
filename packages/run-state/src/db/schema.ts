@@ -84,6 +84,21 @@ CREATE INDEX IF NOT EXISTS idx_run_events_run_id ON run_events(run_id);
 CREATE INDEX IF NOT EXISTS idx_run_events_created ON run_events(created_at);
 CREATE INDEX IF NOT EXISTS idx_artifacts_run_id ON artifacts(run_id);
 CREATE INDEX IF NOT EXISTS idx_issues_repo_id ON issues(repo_id);
+CREATE TABLE IF NOT EXISTS run_signals (
+  run_id TEXT NOT NULL,
+  signal TEXT NOT NULL,
+  target_phase TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (run_id, signal)
+);
+
+CREATE TABLE IF NOT EXISTS settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_run_signals_run_id ON run_signals(run_id);
 CREATE INDEX IF NOT EXISTS idx_repositories_owner_name ON repositories(owner, name);
 `;
 

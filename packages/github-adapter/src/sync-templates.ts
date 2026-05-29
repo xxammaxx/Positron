@@ -1,6 +1,6 @@
 // Positron — GitHub Sync Kommentar-Templates
 
-import type { TestReport } from '@positron/sandbox';
+import type { TestReport } from '@positron/shared';
 import type { EvidenceItem, SafeLlmRunMetadata } from './sync-types.js';
 
 /**

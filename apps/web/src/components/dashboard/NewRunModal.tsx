@@ -24,16 +24,7 @@ export default function NewRunModal({
     setError(null);
 
     try {
-      const result = await fetch('/api/runs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ issueUrl: issueUrl.trim() }),
-      });
-      if (!result.ok) {
-        const errData = await result.json().catch(() => ({}));
-        throw new Error(errData.error ?? `HTTP ${result.status}`);
-      }
-      const data = await result.json();
+      const data = await api.createRun(issueUrl.trim());
       onClose();
       navigate(`/runs/${data.runId}`);
     } catch (err) {

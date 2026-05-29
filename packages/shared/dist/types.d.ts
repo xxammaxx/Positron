@@ -1,4 +1,4 @@
-/** Phasen der Positron-Run-State-Machine (kanonische 27 Werte) */
+/** Phasen der Positron-Run-State-Machine (kanonische 28 Werte) */
 export type Phase = 'QUEUED' | 'CLAIMED' | 'REPO_SYNC' | 'ISSUE_CONTEXT' | 'WEB_RESEARCH' | 'SPECIFY' | 'CLARIFY_OPTIONAL' | 'PLAN' | 'TASKS' | 'ANALYZE' | 'REVIEW' | 'IMPLEMENT' | 'TEST' | 'VERIFY' | 'COMMIT' | 'PR_CREATE' | 'MERGE' | 'DONE' | 'FAILED' | 'FAILED_TRANSIENT' | 'FAILED_BLOCKED' | 'FAILED_UNSAFE' | 'BLOCKED_PUSH' | 'BLOCKED_MERGE' | 'GATE_APPROVE' | 'GATE_REVISE' | 'RESUME_PENDING' | 'CLEANUP';
 /** Terminale Phasen (keine weiteren Übergänge) */
 export type TerminalPhase = 'DONE' | 'FAILED' | 'FAILED_BLOCKED' | 'FAILED_UNSAFE' | 'CLEANUP';
@@ -27,6 +27,8 @@ export declare function isFailurePhase(phase: Phase): phase is FailurePhase;
  */
 export declare function parsePhase(value: string): Phase;
 export declare function parseRunStatus(value: string): RunStatus;
+/** Deutsche Label für jede Phase (Issue #24) */
+export declare const PHASE_LABELS: Record<Phase, string>;
 /** Safe JSON.parse — gibt null statt Fehler bei ungültigem JSON */
 export declare function safeJsonParse(s: string | null): Record<string, unknown> | null;
 //# sourceMappingURL=types.d.ts.map

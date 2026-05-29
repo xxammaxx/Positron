@@ -1,16 +1,22 @@
 // Positron — OpenCode Adapter Package: Zentrale Exporte
 
+function isTestEnv(): boolean {
+  return process.env.NODE_ENV === 'test' || process.env.VITEST === 'true';
+}
+
 /**
  * Legacy-Stub: executeTasks simuliert die Task-Ausführung.
  *
- * @deprecated Wird nur als Fallback genutzt wenn kein echter Adapter konfiguriert ist.
- *             Setze POSITRON_OPENCODE_MODE=real für echte Task-Ausführung.
+ * @deprecated Use OpenCodeAdapter (Real/Fake) instead.
+ *             This function only works in test mode. In production, it throws.
  */
 export async function executeTasks(
   workspacePath?: string,
   tasks?: string[],
 ): Promise<{ success: boolean; completedTasks: string[]; errors: string[] }> {
-  console.warn('[opencode-stub] ⚠️ DEPRECATED: executeTasks Legacy-Stub aufgerufen — setze POSITRON_OPENCODE_MODE=real für echte Ausführung');
+  if (!isTestEnv()) {
+    throw new Error('DEPRECATED: executeTasks is deprecated. Use OpenCodeAdapter instead.');
+  }
   return {
     success: true,
     completedTasks: tasks ?? [],

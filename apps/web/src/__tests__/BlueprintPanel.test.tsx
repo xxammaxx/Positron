@@ -12,6 +12,12 @@ vi.mock('../api.js', () => ({
       message: 'Demo run started',
       blueprint: '# Test Blueprint',
     }),
+    getBlueprint: vi.fn().mockResolvedValue({
+      blueprint: '# Fetched Blueprint\n\nFrom real issue.',
+      repoId: 'owner/repo',
+      issueNumber: 123,
+      generatedAt: '2025-01-01T00:00:00.000Z',
+    }),
   },
 }));
 
@@ -73,13 +79,13 @@ describe('BlueprintPanel', () => {
     expect(screen.getByText(/Demo runs do not push/i)).toBeDefined();
   });
 
-  test('has Load Mini Blueprint button', () => {
+  test('has Generate Blueprint button', () => {
     render(
       <MemoryRouter>
         <BlueprintPanel />
       </MemoryRouter>
     );
-    expect(screen.getByRole('button', { name: /Load Mini Blueprint/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /Generate Blueprint/i })).toBeDefined();
   });
 
   test('has Start Demo Run button', () => {
@@ -89,5 +95,24 @@ describe('BlueprintPanel', () => {
       </MemoryRouter>
     );
     expect(screen.getByRole('button', { name: /Start Demo Run/i })).toBeDefined();
+  });
+
+  test('shows helpful message when no issue is selected', () => {
+    render(
+      <MemoryRouter>
+        <BlueprintPanel />
+      </MemoryRouter>
+    );
+    expect(screen.getByText(/Select a run or enter/)).toBeDefined();
+  });
+
+  test('has repository and issue number inputs', () => {
+    render(
+      <MemoryRouter>
+        <BlueprintPanel />
+      </MemoryRouter>
+    );
+    expect(screen.getByPlaceholderText('owner/repo')).toBeDefined();
+    expect(screen.getByPlaceholderText('Issue #')).toBeDefined();
   });
 });

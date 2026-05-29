@@ -69,6 +69,7 @@ export default function SettingsPage(): React.ReactElement {
   const [safety, setSafety] = useState<Record<string, boolean> | null>(null);
   const [safetyLoading, setSafetyLoading] = useState(true);
   const [savingSafety, setSavingSafety] = useState<string | null>(null);
+  const [safetyError, setSafetyError] = useState<string | null>(null);
 
   const fetchMcp = useCallback(async () => {
     try {
@@ -108,18 +109,22 @@ export default function SettingsPage(): React.ReactElement {
   const toggleSafety = useCallback(async (key: string) => {
     if (!safety) return;
     setSavingSafety(key);
+    setSafetyError(null);
     const newValue = !safety[key];
     // Optimistic update
     setSafety(prev => prev ? { ...prev, [key]: newValue } : prev);
     try {
-      // POST to /api/safety — falls nicht existent, simuliert
-      await fetch('/api/safety', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ [key]: newValue }),
-      });
-    } catch { /* revert on failure */
+      const result = await api.updateSafety(key, newValue);
+      // Sync all flags from server response (Issue #25)
+      if (result.all) {
+        setSafety(result.all);
+      }
+    } catch (err) {
+      // Revert on failure and show error
       setSafety(prev => prev ? { ...prev, [key]: !newValue } : prev);
+      setSafetyError(err instanceof Error ? err.message : 'Failed to update safety setting');
+      // Clear error after 5s
+      setTimeout(() => setSafetyError(null), 5000);
     } finally { setSavingSafety(null); }
   }, [safety]);
 
@@ -149,6 +154,11 @@ export default function SettingsPage(): React.ReactElement {
             <p className="text-xs text-slate-500 dark:text-slate-500 mb-4">
               Toggle safety mechanisms. Changes take effect immediately.
             </p>
+            {safetyError && (
+              <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                <p className="text-xs text-red-700 dark:text-red-400">{safetyError}</p>
+              </div>
+            )}
             <div className="space-y-2">
               {Object.entries(safety).map(([key, value]) => (
                 <div key={key} className="flex items-center justify-between py-2.5 px-4 rounded-lg bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-800">

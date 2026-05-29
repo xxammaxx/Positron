@@ -1,4 +1,17 @@
 services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
   server:
     build:
       context: .
@@ -10,22 +23,61 @@ services:
     environment:
       - PORT=3000
       - NODE_ENV=production
-      - DB_PATH=/app/.positron/runs/positron.db
+      - POSITRON_DB_PATH=/app/.positron/runs/positron.db
+      - POSITRON_REDIS_URL=redis://redis:6379
       - GITHUB_TOKEN=${GITHUB_TOKEN:-ghp_fake}
-      - GITHUB_MODE=${GITHUB_MODE:-fake}
+      - POSITRON_GITHUB_MODE=${POSITRON_GITHUB_MODE:-fake}
+      - POSITRON_SPECKIT_MODE=${POSITRON_SPECKIT_MODE:-fake}
+      - POSITRON_OPENCODE_MODE=${POSITRON_OPENCODE_MODE:-fake}
       - POSITRON_REPO_OWNER=${POSITRON_REPO_OWNER:-xxammaxx}
       - POSITRON_REPO_NAME=${POSITRON_REPO_NAME:-Positron}
+      - POSITRON_REPO_DEFAULT_BRANCH=${POSITRON_REPO_DEFAULT_BRANCH:-main}
       - POSITRON_ENABLE_PUSH=${POSITRON_ENABLE_PUSH:-false}
       - POSITRON_ENABLE_MERGE=${POSITRON_ENABLE_MERGE:-false}
+      - POSITRON_MERGE_DRY_RUN=${POSITRON_MERGE_DRY_RUN:-true}
       - POSITRON_MERGE_KILL_SWITCH=true
+      - POSITRON_ENABLE_FIX_LOOP=${POSITRON_ENABLE_FIX_LOOP:-false}
       - POSITRON_WORKSPACE_ROOT=/app/workspace
       - POSITRON_ADMIN_TOKEN=${POSITRON_ADMIN_TOKEN:-positron-admin-prod}
+      - POSITRON_CORS_ORIGIN=${POSITRON_CORS_ORIGIN:-http://localhost:5173}
+    depends_on:
+      redis:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
       interval: 30s
       timeout: 5s
       retries: 3
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    volumes:
+      - positron-data:/app/.positron
+    environment:
+      - NODE_ENV=production
+      - POSITRON_DB_PATH=/app/.positron/runs/positron.db
+      - POSITRON_REDIS_URL=redis://redis:6379
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-ghp_fake}
+      - POSITRON_GITHUB_MODE=${POSITRON_GITHUB_MODE:-fake}
+      - POSITRON_SPECKIT_MODE=${POSITRON_SPECKIT_MODE:-fake}
+      - POSITRON_OPENCODE_MODE=${POSITRON_OPENCODE_MODE:-fake}
+      - POSITRON_REPO_OWNER=${POSITRON_REPO_OWNER:-xxammaxx}
+      - POSITRON_REPO_NAME=${POSITRON_REPO_NAME:-Positron}
+      - POSITRON_REPO_DEFAULT_BRANCH=${POSITRON_REPO_DEFAULT_BRANCH:-main}
+      - POSITRON_ENABLE_PUSH=${POSITRON_ENABLE_PUSH:-false}
+      - POSITRON_ENABLE_MERGE=${POSITRON_ENABLE_MERGE:-false}
+      - POSITRON_MERGE_DRY_RUN=${POSITRON_MERGE_DRY_RUN:-true}
+      - POSITRON_MERGE_KILL_SWITCH=true
+      - POSITRON_ENABLE_FIX_LOOP=${POSITRON_ENABLE_FIX_LOOP:-false}
+      - POSITRON_WORKSPACE_ROOT=/app/workspace
+      - POSITRON_ADMIN_TOKEN=${POSITRON_ADMIN_TOKEN:-positron-admin-prod}
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
 
   web:
     build:
@@ -45,3 +97,4 @@ services:
 
 volumes:
   positron-data:
+  redis-data:

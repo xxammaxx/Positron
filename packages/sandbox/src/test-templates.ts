@@ -1,6 +1,6 @@
 // Positron — Test-Templates für verschiedene Frameworks
 
-import type { TestReport } from './test-runner.js';
+import type { TestReport } from '@positron/shared';
 
 /**
  * Gibt ein Template für einen bestimmten Test-Framework zurück.

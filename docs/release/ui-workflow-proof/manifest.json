@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-05-27T18:12:04.995Z",
+  "timestamp": "2026-05-29T07:43:12.517Z",
   "backendCommand": "npm start",
   "frontendCommand": "npm run build && npx vite preview --port 4173",
   "backendHealth": {
@@ -9,7 +9,7 @@
   "frontendUrl": "http://localhost:5173",
   "apiBaseUrl": "http://localhost:3000",
   "mode": "demo",
-  "runId": "not captured",
+  "runId": "d593db3f-7f58-4399-9ccd-f14b997167a0",
   "finalStatus": "DONE",
   "artifacts": {
     "screenshots": [
@@ -65,12 +65,13 @@
     "networkLog": "network-log.json"
   },
   "network": {
+    "totalCalls": 5,
     "requiredCalls": [
       "GET /api/health",
-      "GET /api/runs",
-      "POST /api/demo-runs",
-      "GET /api/runs/:id"
+      "GET /api/runs"
     ],
-    "allPassed": true
+    "allRequiredPresent": true,
+    "clientErrors": 0,
+    "serverErrors": 0
   }
 }
