@@ -1662,6 +1662,13 @@ export function createApp(options: ServerOptions = {}) {
           connection: { url: redisUrl, connectTimeout: 500, retryStrategy: () => null },
         });
 
+        // Check if at least one worker is listening before enqueuing.
+        // If no workers are available, the run would never execute — fall back to inline.
+        const workers = await pipelineQueue.getWorkers();
+        if (workers.length === 0) {
+          throw new Error('NO_WORKERS');
+        }
+
         // Use run.id as deterministic jobId to prevent double-execution on retry
         const job = await pipelineQueue.add('pipeline', {
           runId: run.id,
@@ -1717,6 +1724,13 @@ export function createApp(options: ServerOptions = {}) {
         pipelineQueue = new Queue(PIPELINE_QUEUE, {
           connection: { url: redisUrl, connectTimeout: 500, retryStrategy: () => null },
         });
+
+        // Check if at least one worker is listening before enqueuing.
+        // If no workers are available, the run would never execute — fall back to inline.
+        const workers = await pipelineQueue.getWorkers();
+        if (workers.length === 0) {
+          throw new Error('NO_WORKERS');
+        }
 
         // Use run.id as deterministic jobId to prevent double-execution on retry
         const job = await pipelineQueue.add('pipeline', {

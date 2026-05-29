@@ -23,6 +23,5 @@ COPY --from=builder /app/packages/sandbox/dist ./packages/sandbox/dist
 COPY --from=builder /app/packages/speckit-adapter/dist ./packages/speckit-adapter/dist
 COPY --from=builder /app/packages/opencode-adapter/dist ./packages/opencode-adapter/dist
 COPY --from=builder /app/apps/worker/dist ./apps/worker/dist
-COPY --from=builder /app/apps/worker/node_modules ./apps/worker/node_modules
 COPY --from=builder /app/package.json ./package.json
 CMD ["node", "apps/worker/dist/index.js"]
