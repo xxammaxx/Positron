@@ -1,7 +1,14 @@
 #!/usr/bin/env bash
-# Positron CLI v0.1.0
+# Positron CLI v0.2.0
 set -e
 BASE="${POSITRON_URL:-http://localhost:3000}"
+TOKEN="${POSITRON_ADMIN_TOKEN:-}"
+
+# Build curl auth args when token is set
+AUTH_ARGS=()
+if [ -n "$TOKEN" ]; then
+  AUTH_ARGS=(-H "X-Admin-Token: $TOKEN")
+fi
 
 cmd="${1:-help}"
 shift 2>/dev/null || true
@@ -24,14 +31,18 @@ case "$cmd" in
   cancel)
     rid="${1:-}"
     [ -z "$rid" ] && { echo "Usage: positron cancel <run-id>"; exit 1; }
-    curl -s -X POST "$BASE/api/runs/$rid/cancel" | python3 -m json.tool 2>/dev/null
+    curl -s -X POST "${AUTH_ARGS[@]}" "$BASE/api/runs/$rid/cancel" | python3 -m json.tool 2>/dev/null
     ;;
   stats)
-    curl -s "$BASE/api/admin/stats" | python3 -m json.tool 2>/dev/null || curl -s "$BASE/api/admin/stats"
+    if [ -z "$TOKEN" ]; then
+      echo "Warning: POSITRON_ADMIN_TOKEN not set. Set it in apps/server/.env or export it."
+      echo ""
+    fi
+    curl -s "${AUTH_ARGS[@]}" "$BASE/api/admin/stats" | python3 -m json.tool 2>/dev/null || curl -s "${AUTH_ARGS[@]}" "$BASE/api/admin/stats"
     echo ""
     ;;
   *)
-    echo "Positron CLI v0.1.0"
+    echo "Positron CLI v0.2.0"
     echo ""
     echo "Usage: positron <command> [args]"
     echo ""
@@ -42,6 +53,8 @@ case "$cmd" in
     echo "  cancel <run-id>     — Cancel run"
     echo "  stats               — Admin statistics"
     echo ""
-    echo "Env: POSITRON_URL  — Server URL (default: http://localhost:3000)"
+    echo "Environment:"
+    echo "  POSITRON_URL           — Server URL (default: http://localhost:3000)"
+    echo "  POSITRON_ADMIN_TOKEN   — Admin token for stats/cancel"
     ;;
 esac

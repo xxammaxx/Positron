@@ -5,6 +5,8 @@ import type http from 'node:http';
 let server: http.Server;
 let baseUrl: string;
 const repository = { owner: 'test-owner', repo: 'test-repo' };
+// Dev default token, same as in index.ts
+const DEV_ADMIN_TOKEN = 'positron-admin-dev';
 
 beforeAll(async () => {
   server = createServer({ repository, dbPath: ':memory:' });
@@ -27,6 +29,12 @@ async function post(path: string, body: unknown) {
 
 async function get(path: string) {
   return fetch(`${baseUrl}${path}`);
+}
+
+async function getWithToken(path: string, token: string) {
+  return fetch(`${baseUrl}${path}`, {
+    headers: { 'X-Admin-Token': token },
+  });
 }
 
 describe('POST /api/repos/:repoId/runs', () => {
@@ -85,5 +93,32 @@ describe('Run Resume', () => {
     // Run sollte DONE sein, nicht FAILED_BLOCKED
     expect(body.run.phase).toBe('DONE');
     expect(body.events.length).toBeGreaterThan(0);
+  });
+});
+
+describe('Admin Auth Middleware', () => {
+  test('GET /api/admin/stats ohne Token → 401', async () => {
+    const res = await get('/api/admin/stats');
+    expect(res.status).toBe(401);
+    const body = await res.json() as { error: string };
+    expect(body.error).toContain('admin token');
+  });
+
+  test('GET /api/admin/stats mit falschem Token → 401', async () => {
+    const res = await getWithToken('/api/admin/stats', 'wrong-token');
+    expect(res.status).toBe(401);
+    const body = await res.json() as { error: string };
+    expect(body.error).toContain('admin token');
+  });
+
+  test('GET /api/admin/stats mit gültigem Token → 200', async () => {
+    const res = await getWithToken('/api/admin/stats', DEV_ADMIN_TOKEN);
+    expect(res.status).toBe(200);
+    const body = await res.json() as { runs: { total: number }; repositories: number };
+    expect(body).toHaveProperty('runs');
+    expect(body.runs).toHaveProperty('total');
+    expect(body).toHaveProperty('repositories');
+    expect(body).toHaveProperty('events');
+    expect(body).toHaveProperty('artifacts');
   });
 });
