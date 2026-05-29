@@ -1,6 +1,6 @@
 // Positron — Zentrale Typdefinitionen
 
-/** Phasen der Positron-Run-State-Machine (kanonische 27 Werte) */
+/** Phasen der Positron-Run-State-Machine (kanonische 28 Werte) */
 export type Phase =
   | 'QUEUED'
   | 'CLAIMED'
