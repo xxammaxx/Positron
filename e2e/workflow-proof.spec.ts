@@ -56,7 +56,7 @@ test.describe.serial('UI Workflow Proof — 16 Steps', () => {
       }
     });
 
-    await page.goto(FRONTEND_URL, { waitUntil: 'networkidle', timeout: 30_000 });
+    await page.goto(FRONTEND_URL, { waitUntil: 'domcontentloaded', timeout: 30_000 });
 
     // Verify main content renders (don't fail on benign console errors)
     await expect(page.getByRole('main')).toBeVisible({ timeout: 10_000 });
@@ -67,7 +67,7 @@ test.describe.serial('UI Workflow Proof — 16 Steps', () => {
   });
 
   test('S02: Backend health verified in UI', async ({ page }) => {
-    await page.goto(FRONTEND_URL, { waitUntil: 'networkidle', timeout: 30_000 });
+    await page.goto(FRONTEND_URL, { waitUntil: 'domcontentloaded', timeout: 30_000 });
 
     // Take screenshot first — capture whatever state we're in
     await page.screenshot({ path: `${ARTIFACT_DIR}/02-health-verified.png`, fullPage: true });
@@ -86,7 +86,7 @@ test.describe.serial('UI Workflow Proof — 16 Steps', () => {
   });
 
   test('S04: Dashboard renders completely', async ({ page }) => {
-    await page.goto(FRONTEND_URL, { waitUntil: 'networkidle', timeout: 30_000 });
+    await page.goto(FRONTEND_URL, { waitUntil: 'domcontentloaded', timeout: 30_000 });
 
     // Take screenshot first
     await page.screenshot({ path: `${ARTIFACT_DIR}/04-dashboard-complete.png`, fullPage: true });
@@ -99,7 +99,7 @@ test.describe.serial('UI Workflow Proof — 16 Steps', () => {
   });
 
   test('S05: Demo Blueprint can be loaded', async ({ page }) => {
-    await page.goto(FRONTEND_URL, { waitUntil: 'networkidle', timeout: 30_000 });
+    await page.goto(FRONTEND_URL, { waitUntil: 'domcontentloaded', timeout: 30_000 });
 
     // Take initial screenshot
     await page.screenshot({ path: `${ARTIFACT_DIR}/05-blueprint-before.png`, fullPage: true });
@@ -119,7 +119,7 @@ test.describe.serial('UI Workflow Proof — 16 Steps', () => {
   });
 
   test('S06: Start Demo Run creates a run', async ({ page }) => {
-    await page.goto(FRONTEND_URL, { waitUntil: 'networkidle', timeout: 30_000 });
+    await page.goto(FRONTEND_URL, { waitUntil: 'domcontentloaded', timeout: 30_000 });
 
     // Take screenshot of initial state
     await page.screenshot({ path: `${ARTIFACT_DIR}/06-demo-run-before.png`, fullPage: true });
@@ -140,7 +140,7 @@ test.describe.serial('UI Workflow Proof — 16 Steps', () => {
   });
 
   test('S07: Run appears in recent activity or run list', async ({ page }) => {
-    await page.goto(FRONTEND_URL, { waitUntil: 'networkidle', timeout: 30_000 });
+    await page.goto(FRONTEND_URL, { waitUntil: 'domcontentloaded', timeout: 30_000 });
 
     // Wait for run list to populate
     await page.waitForTimeout(3000);
@@ -154,7 +154,7 @@ test.describe.serial('UI Workflow Proof — 16 Steps', () => {
 
   test('S08: Run detail and pipeline', async ({ page }) => {
     // Navigate directly to runs page
-    await page.goto(`${FRONTEND_URL}/runs`, { waitUntil: 'networkidle', timeout: 15_000 });
+    await page.goto(`${FRONTEND_URL}/runs`, { waitUntil: 'domcontentloaded', timeout: 15_000 });
     await page.waitForTimeout(2000);
     await page.screenshot({ path: `${ARTIFACT_DIR}/08-runs-page.png`, fullPage: true });
 
@@ -169,19 +169,19 @@ test.describe.serial('UI Workflow Proof — 16 Steps', () => {
   });
 
   test('S09: Evidence page', async ({ page }) => {
-    await page.goto(`${FRONTEND_URL}/evidence`, { waitUntil: 'networkidle', timeout: 15_000 });
+    await page.goto(`${FRONTEND_URL}/evidence`, { waitUntil: 'domcontentloaded', timeout: 15_000 });
     await page.waitForTimeout(1000);
     await page.screenshot({ path: `${ARTIFACT_DIR}/09-evidence-page.png`, fullPage: true });
   });
 
   test('S10: Settings page', async ({ page }) => {
-    await page.goto(`${FRONTEND_URL}/settings`, { waitUntil: 'networkidle', timeout: 15_000 });
+    await page.goto(`${FRONTEND_URL}/settings`, { waitUntil: 'domcontentloaded', timeout: 15_000 });
     await page.waitForTimeout(1000);
     await page.screenshot({ path: `${ARTIFACT_DIR}/10-settings-page.png`, fullPage: true });
   });
 
   test('S11: System Health and safety', async ({ page }) => {
-    await page.goto(FRONTEND_URL, { waitUntil: 'networkidle', timeout: 15_000 });
+    await page.goto(FRONTEND_URL, { waitUntil: 'domcontentloaded', timeout: 15_000 });
     await page.waitForTimeout(1000);
     await page.screenshot({ path: `${ARTIFACT_DIR}/11-system-health.png`, fullPage: true });
   });
@@ -204,7 +204,7 @@ test.describe.serial('UI Workflow Proof — 16 Steps', () => {
     });
 
     // Trigger a fresh API call by navigating to dashboard
-    await page.goto(FRONTEND_URL, { waitUntil: 'networkidle', timeout: 15_000 });
+    await page.goto(FRONTEND_URL, { waitUntil: 'domcontentloaded', timeout: 15_000 });
     await page.waitForTimeout(2000);
 
     // Also verify backend health directly

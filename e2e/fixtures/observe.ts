@@ -24,7 +24,8 @@ async function observe(page: Page): Promise<void> {
 export const test = base.extend({
   page: async ({ page }, use) => {
     // Navigate to app base URL
-    await page.goto('/', { waitUntil: 'networkidle' });
+    // Use 'load' instead of 'networkidle' because SSE streams keep connections open
+    await page.goto('/', { waitUntil: 'load' });
     await use(page);
   },
 });
