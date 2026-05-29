@@ -1571,7 +1571,7 @@ export function createApp(options: ServerOptions = {}) {
           VALUES (?, ?, ?, ?, ?, 1)
         `).run(repoId, repository.owner, repository.repo, `https://github.com/${repository.owner}/${repository.repo}`, repository.defaultBranch);
       }
-      res.json({ id: repoId, status: 'registered', mode: github instanceof FakeGitHubAdapter ? 'fake' : 'real' });
+      res.json({ id: repoId, status: 'registered', mode: githubMode });
     } catch (err) {
       res.status(400).json({
         error: 'VALIDATION_ERROR',
@@ -1947,7 +1947,7 @@ export function createApp(options: ServerOptions = {}) {
       const healthWsPath = process.env['POSITRON_WORKSPACE_ROOT'] ?? '/tmp';
       const speckitHealth = await activeSpecKitAdapter.healthCheck(healthWsPath);
       const opencodeHealth = await activeOpenCodeAdapter.healthCheck(healthWsPath);
-      const isFakeMode = github instanceof FakeGitHubAdapter;
+      const isFakeMode = githubMode === 'fake';
       // In Fake-Mode gelten nicht-verfügbare Adapter nicht als "degraded"
       const adapters = {
         github: !isFakeMode,
@@ -1980,7 +1980,7 @@ export function createApp(options: ServerOptions = {}) {
       const speckitHealth = await activeSpecKitAdapter.healthCheck(healthWsPath);
       const opencodeHealth = await activeOpenCodeAdapter.healthCheck(healthWsPath);
       res.json({
-        github: { available: !(github instanceof FakeGitHubAdapter), mode: github instanceof FakeGitHubAdapter ? 'fake' : 'real' },
+        github: { available: githubMode !== 'fake', mode: githubMode },
         specKit: speckitHealth,
         openCode: opencodeHealth,
       });
