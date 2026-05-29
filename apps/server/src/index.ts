@@ -36,7 +36,7 @@ import { runSpecify, runPlan, runTasks } from '@positron/speckit-adapter';
 import { RealSpecKitAdapter, FakeSpecKitAdapter } from '@positron/speckit-adapter';
 import { executeTasks } from '@positron/opencode-adapter';
 import { RealOpenCodeAdapter, FakeOpenCodeAdapter } from '@positron/opencode-adapter';
-import { generateBranchName, createRunId, loadRepositoryConfig, normalizeRepositoryConfig, buildRemoteUrl, MAX_FIX_LOOPS, parsePhase, parseRunStatus, safeJsonParse } from '@positron/shared';
+import { generateBranchName, createRunId, loadRepositoryConfig, normalizeRepositoryConfig, buildRemoteUrl, MAX_FIX_LOOPS, parsePhase, parseRunStatus, safeJsonParse, SecretManager } from '@positron/shared';
 import type { Phase, RunStatus, EventLevel } from '@positron/shared';
 import type { RepositoryConfig, SpecKitAdapter, OpenCodeAdapter } from '@positron/shared';
 import type { RunState, RunEventData } from '@positron/run-state';
@@ -1401,6 +1401,15 @@ function validateRepoRegistration(body: unknown): { owner: string; name: string 
 }
 
 // ---------------------------------------------------------------------------
+// Secret Manager (centralized secret resolution)
+// ---------------------------------------------------------------------------
+
+/** Globaler SecretManager: env → docker secrets → .env file */
+const secretManager = new SecretManager({
+  envFilePath: path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.env'),
+});
+
+// ---------------------------------------------------------------------------
 // REST API
 // ---------------------------------------------------------------------------
 
@@ -2463,7 +2472,7 @@ export function createApp(options: ServerOptions = {}) {
   // -----------------------------------------------------------------------
   // Admin API (Issue #87)
   // -----------------------------------------------------------------------
-  const ADMIN_TOKEN = process.env.POSITRON_ADMIN_TOKEN
+  const ADMIN_TOKEN = secretManager.getSecret('POSITRON_ADMIN_TOKEN')
     ?? (process.env.NODE_ENV === 'production' ? undefined : 'positron-admin-dev');
   const requireAdmin = (req: import('express').Request, res: import('express').Response, next: import('express').NextFunction) => {
     const token = req.headers['x-admin-token'] as string | undefined;
