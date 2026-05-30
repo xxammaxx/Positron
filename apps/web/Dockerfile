@@ -1,28 +1,37 @@
 # Positron Web UI — Vite/React
-FROM node:22-alpine AS base
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 ENV NODE_ENV=production
 
-# Install dependencies
-COPY apps/web/package*.json ./
-RUN npm install --omit=dev
+# Root workspace config (npm needs this for workspace resolution)
+COPY package.json ./
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/shared/dist ./packages/shared/dist
 
-# Copy source
-COPY apps/web/index.html ./
-COPY apps/web/src ./src
-COPY apps/web/vite.config.ts ./
-COPY apps/web/tailwind.config.js ./
-COPY apps/web/postcss.config.js ./
-COPY apps/web/tsconfig.json ./
+# Web package dependencies
+COPY apps/web/package.json ./apps/web/
+
+# Install dependencies including dev (needed for vite build)
+RUN npm install --include=dev
+
+# Copy web source
+COPY apps/web/index.html ./apps/web/
+COPY apps/web/src ./apps/web/src
+COPY apps/web/vite.config.ts ./apps/web/
+COPY apps/web/tailwind.config.js ./apps/web/
+COPY apps/web/postcss.config.js ./apps/web/
+COPY apps/web/tsconfig.json ./apps/web/
+COPY tsconfig.json ./tsconfig.json
 
 # Build
-RUN npm install && npx vite build
+WORKDIR /app/apps/web
+RUN npx vite build
 
 # Serve via lightweight HTTP server
 FROM node:22-alpine
 WORKDIR /app
-COPY --from=base /app/dist ./dist
+COPY --from=builder /app/apps/web/dist ./dist
 RUN npm install -g serve
 EXPOSE 5173
 
