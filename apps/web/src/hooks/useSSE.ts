@@ -97,7 +97,7 @@ export function useSSE(runId: string | null): UseSSEResult {
             runStatus: data.run.status as RunStatus,
           }));
         } catch (err) {
-          console.warn('[SSE] Failed to parse initial event:', err);
+          if (process.env.NODE_ENV !== 'production') console.warn('[SSE] Failed to parse initial event:', err);
         }
       };
 
@@ -114,7 +114,7 @@ export function useSSE(runId: string | null): UseSSEResult {
             };
           });
         } catch {
-          console.warn('[SSE] Failed to parse run-event data');
+          if (process.env.NODE_ENV !== 'production') console.warn('[SSE] Failed to parse run-event data');
         }
       };
 
@@ -128,14 +128,14 @@ export function useSSE(runId: string | null): UseSSEResult {
             runStatus: (data.status as RunStatus) ?? prev.runStatus,
           }));
         } catch {
-          console.warn('[SSE] Failed to parse run-update data');
+          if (process.env.NODE_ENV !== 'production') console.warn('[SSE] Failed to parse run-update data');
         }
       };
 
       const handleRunControl = (e: MessageEvent) => {
         try {
           const data = JSON.parse(e.data) as { action: string };
-          console.log('[SSE] Run control:', data.action);
+          if (process.env.NODE_ENV !== 'production') console.log('[SSE] Run control:', data.action);
         } catch {
           // ignore
         }
@@ -178,7 +178,7 @@ export function useSSE(runId: string | null): UseSSEResult {
             evidence: [...prev.evidence, item],
           }));
         } catch {
-          console.warn('[SSE] Failed to parse evidence-created event');
+          if (process.env.NODE_ENV !== 'production') console.warn('[SSE] Failed to parse evidence-created event');
         }
       };
 
@@ -191,7 +191,7 @@ export function useSSE(runId: string | null): UseSSEResult {
             runStatus: 'cancelled' as RunStatus,
             run: prev.run ? { ...prev.run, status: 'cancelled' as RunStatus } : prev.run,
           }));
-          console.log('[SSE] Run cancelled:', data.message ?? 'No message');
+          if (process.env.NODE_ENV !== 'production') console.log('[SSE] Run cancelled:', data.message ?? 'No message');
         } catch {
           // ignore
         }

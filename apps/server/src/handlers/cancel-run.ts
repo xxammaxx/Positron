@@ -4,6 +4,7 @@
  */
 
 import type { Request, Response } from 'express';
+import crypto from 'node:crypto';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createCancelHandler(deps: Record<string, any>) {
@@ -26,7 +27,7 @@ export function createCancelHandler(deps: Record<string, any>) {
       return;
     }
 
-    deps.runSignals.set(id, 'ABORT');
+    deps.setRunSignal(id, 'ABORT');
 
     const db = deps.getDb();
     const now = new Date().toISOString();
@@ -37,7 +38,15 @@ export function createCancelHandler(deps: Record<string, any>) {
       return;
     }
 
-    deps.storeEvent(id, current.phase, 'HUMAN', 'Run cancelled by operator', {});
+    deps.storeEvent({
+      id: crypto.randomUUID(),
+      runId: id,
+      phase: current.phase,
+      level: 'HUMAN',
+      message: 'Run cancelled by operator',
+      payload: null,
+      createdAt: now,
+    });
     deps.broadcastSSE(id, 'run-cancelled', {
       runId: id, phase: current.phase, status: 'cancelled', message: 'Run cancelled by operator',
     });

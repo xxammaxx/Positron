@@ -8,5 +8,5 @@ export * from './speckit-errors.js';
 export * from './opencode-types.js';
 export * from './opencode-errors.js';
 export * from './live-e2e.js';
-export * from './sse-events.js';
+export * from './queue/types.js';
 //# sourceMappingURL=index.d.ts.map

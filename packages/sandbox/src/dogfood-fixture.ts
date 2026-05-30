@@ -1,4 +1,17 @@
 // Positron — Dogfood Fixture Change Provider
+//
+// **DEVELOPMENT-ONLY TOOL**: This module exists exclusively for testing Positron
+// against itself ("dogfooding"). It creates artificial, deterministic file changes
+// so the pipeline can validate commit/PR creation without requiring real code changes.
+//
+// **DO NOT USE IN PRODUCTION.** It creates `.positron-fixture-*.md` files that
+// pollute the workspace and produce meaningless commits.
+//
+// Guards:
+//   1. POSITRON_ENABLE_DOGFOOD_FIXTURE_CHANGE=true must be explicitly set
+//   2. A `.positron-dogfood` marker file must exist in the workspace root
+//
+// Without both conditions, the function returns `applied: false` immediately.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -16,16 +29,29 @@ export interface FixtureChangeResult {
 }
 
 /**
- * Wendet eine vordefinierte Änderung für Selbst-Tests an.
- * Erstellt eine Datei .positron-fixture-<issueNumber>.md mit Metadaten.
- * Nur aktiv wenn POSITRON_ENABLE_DOGFOOD_FIXTURE_CHANGE=true.
+ * Applies a predefined change for self-testing (dogfooding).
+ *
+ * Creates a file `.positron-fixture-<issueNumber>.md` with metadata.
+ * Only active when BOTH conditions are met:
+ *   1. POSITRON_ENABLE_DOGFOOD_FIXTURE_CHANGE=true
+ *   2. A `.positron-dogfood` marker file exists in the workspace root
+ *
+ * This is a development-only tool for testing Positron itself.
+ * Never use in production pipelines.
  */
 export function applyDogfoodFixtureChange(input: FixtureChangeInput): FixtureChangeResult {
   if (process.env['POSITRON_ENABLE_DOGFOOD_FIXTURE_CHANGE'] !== 'true') {
-    return { applied: false, summary: 'Dogfood fixture change disabled' };
+    return { applied: false, summary: 'Dogfood fixture change disabled (env var not set)' };
   }
 
   const { workspacePath, runId, issueNumber } = input;
+
+  // Guard: workspace must contain a .positron-dogfood marker file
+  const markerPath = path.join(workspacePath, '.positron-dogfood');
+  if (!fs.existsSync(markerPath)) {
+    return { applied: false, summary: 'Dogfood fixture change disabled (no .positron-dogfood marker in workspace)' };
+  }
+
   const fileName = `.positron-fixture-${issueNumber}.md`;
   const filePath = path.join(workspacePath, fileName);
 

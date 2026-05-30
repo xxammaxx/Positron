@@ -1,151 +1,34 @@
 {
-  "timestamp": "2026-05-27T18:12:04.982Z",
-  "totalCalls": 24,
+  "timestamp": "2026-05-29T07:43:10.525Z",
+  "totalCalls": 3,
+  "uniqueEndpoints": [
+    "GET /api/stream",
+    "GET /api/health",
+    "GET /api/runs"
+  ],
   "calls": [
     {
       "method": "GET",
-      "url": "/runs?limit=50",
+      "url": "/api/stream",
       "status": 200,
-      "timestamp": "2026-05-27T18:10:45.145Z"
-    },
-    {
-      "method": "GET",
-      "url": "/metrics",
-      "status": 200,
-      "timestamp": "2026-05-27T18:10:45.146Z"
-    },
-    {
-      "method": "GET",
-      "url": "/evidence",
-      "status": 200,
-      "timestamp": "2026-05-27T18:10:45.146Z"
-    },
-    {
-      "method": "GET",
-      "url": "/health",
-      "status": 200,
-      "timestamp": "2026-05-27T18:10:47.519Z"
-    },
-    {
-      "method": "GET",
-      "url": "runs?limit=50",
-      "status": 200,
-      "timestamp": "2026-05-27T18:12:04.471Z"
-    },
-    {
-      "method": "GET",
-      "url": "metrics",
-      "status": 200,
-      "timestamp": "2026-05-27T18:12:04.471Z"
-    },
-    {
-      "method": "GET",
-      "url": "evidence",
-      "status": 200,
-      "timestamp": "2026-05-27T18:12:04.472Z"
-    },
-    {
-      "method": "GET",
-      "url": "health",
-      "status": 200,
-      "timestamp": "2026-05-27T18:12:01.863Z"
+      "timestamp": "2026-05-29T07:42:47.005Z"
     },
     {
       "method": "GET",
       "url": "/api/health",
       "status": 200,
-      "timestamp": "2026-05-27T18:12:04.982Z"
+      "timestamp": "2026-05-29T07:43:08.374Z"
+    },
+    {
+      "method": "GET",
+      "url": "/api/runs",
+      "status": 200,
+      "timestamp": "2026-05-29T07:43:08.374Z"
     }
   ],
   "summary": {
-    "health": [
-      {
-        "method": "GET",
-        "url": "/health",
-        "status": 200,
-        "timestamp": "2026-05-27T18:10:45.761Z"
-      },
-      {
-        "method": "GET",
-        "url": "/health",
-        "status": 200,
-        "timestamp": "2026-05-27T18:10:46.355Z"
-      },
-      {
-        "method": "GET",
-        "url": "/health",
-        "status": 200,
-        "timestamp": "2026-05-27T18:10:46.931Z"
-      },
-      {
-        "method": "GET",
-        "url": "/health",
-        "status": 200,
-        "timestamp": "2026-05-27T18:10:47.519Z"
-      },
-      {
-        "method": "GET",
-        "url": "health",
-        "status": 200,
-        "timestamp": "2026-05-27T18:12:00.077Z"
-      },
-      {
-        "method": "GET",
-        "url": "health",
-        "status": 200,
-        "timestamp": "2026-05-27T18:12:00.677Z"
-      },
-      {
-        "method": "GET",
-        "url": "health",
-        "status": 200,
-        "timestamp": "2026-05-27T18:12:01.287Z"
-      },
-      {
-        "method": "GET",
-        "url": "health",
-        "status": 200,
-        "timestamp": "2026-05-27T18:12:01.863Z"
-      },
-      {
-        "method": "GET",
-        "url": "/api/health",
-        "status": 200,
-        "timestamp": "2026-05-27T18:12:04.982Z"
-      }
-    ],
-    "runs": [
-      {
-        "method": "GET",
-        "url": "/runs?limit=50",
-        "status": 200,
-        "timestamp": "2026-05-27T18:10:45.137Z"
-      },
-      {
-        "method": "GET",
-        "url": "/runs?limit=50",
-        "status": 200,
-        "timestamp": "2026-05-27T18:10:45.145Z"
-      },
-      {
-        "method": "GET",
-        "url": "runs?limit=50",
-        "status": 200,
-        "timestamp": "2026-05-27T18:11:59.473Z"
-      },
-      {
-        "method": "GET",
-        "url": "runs?limit=50",
-        "status": 200,
-        "timestamp": "2026-05-27T18:11:59.478Z"
-      },
-      {
-        "method": "GET",
-        "url": "runs?limit=50",
-        "status": 200,
-        "timestamp": "2026-05-27T18:12:04.471Z"
-      }
-    ],
+    "health": 200,
+    "runs": 200,
     "errors": []
   }
 }

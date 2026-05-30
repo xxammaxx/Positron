@@ -4,18 +4,25 @@
 
 import type { Phase, RunStatus, AutonomyLevel, EventLevel } from './types.js';
 
-/**
- * Minimales TestReport Interface für Sync-Zwecke.
- * Vollständige Definition in @positron/sandbox.
- */
+/** Ergebnis eines einzelnen Test-Kommandos */
+export interface TestCommandExecutionResult {
+  command: string;
+  exitCode: number | null;
+  stdout: string;
+  stderr: string;
+  durationMs: number;
+}
+
+/** Kanonischer Test-Report (Issue #31 — konsolidiert aus @positron/sandbox) */
 export interface TestReport {
-  status: string;
+  status: 'passed' | 'failed' | 'blocked' | 'skipped';
   summary: string;
   passed: number;
   failed: number;
   total: number;
   durationMs: number;
   artifactPath?: string;
+  details?: TestCommandExecutionResult[];
 }
 
 export interface Repository {

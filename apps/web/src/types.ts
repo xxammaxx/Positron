@@ -10,46 +10,9 @@ export type Phase =
   | 'BLOCKED_PUSH' | 'BLOCKED_MERGE' | 'GATE_APPROVE'
   | 'GATE_REVISE' | 'RESUME_PENDING' | 'CLEANUP';
 
-export const ALL_PHASES: readonly Phase[] = [
-  'QUEUED', 'CLAIMED', 'REPO_SYNC', 'ISSUE_CONTEXT',
-  'WEB_RESEARCH', 'SPECIFY', 'CLARIFY_OPTIONAL', 'PLAN', 'TASKS',
-  'ANALYZE', 'REVIEW', 'IMPLEMENT', 'TEST', 'VERIFY',
-  'COMMIT', 'PR_CREATE', 'MERGE', 'DONE', 'FAILED',
-  'FAILED_TRANSIENT', 'FAILED_BLOCKED', 'FAILED_UNSAFE',
-  'BLOCKED_PUSH', 'BLOCKED_MERGE', 'GATE_APPROVE',
-  'GATE_REVISE', 'RESUME_PENDING', 'CLEANUP',
-] as const;
-
-export const PHASE_LABELS: Record<Phase, string> = {
-  QUEUED: 'Warteschlange',
-  CLAIMED: 'Übernommen',
-  REPO_SYNC: 'Repository-Sync',
-  ISSUE_CONTEXT: 'Issue-Kontext',
-  WEB_RESEARCH: 'Web-Recherche',
-  SPECIFY: 'Anforderungsanalyse',
-  CLARIFY_OPTIONAL: 'Klarstellung',
-  PLAN: 'Planung',
-  TASKS: 'Aufgaben',
-  ANALYZE: 'Analyse',
-  REVIEW: 'Code-Review',
-  IMPLEMENT: 'Implementierung',
-  TEST: 'Tests',
-  VERIFY: 'Verifikation',
-  COMMIT: 'Committen',
-  PR_CREATE: 'Pull Request',
-  MERGE: 'Zusammenführen',
-  DONE: 'Abgeschlossen',
-  FAILED: 'Fehlgeschlagen',
-  FAILED_TRANSIENT: 'Fehler (wiederholbar)',
-  FAILED_BLOCKED: 'Fehler (blockiert)',
-  FAILED_UNSAFE: 'Fehler (unsicher)',
-  BLOCKED_PUSH: 'Push blockiert',
-  BLOCKED_MERGE: 'Merge blockiert',
-  GATE_APPROVE: 'Genehmigung erforderlich',
-  GATE_REVISE: 'Überarbeitung erforderlich',
-  RESUME_PENDING: 'Wiederaufnahme ausstehend',
-  CLEANUP: 'Bereinigung',
-};
+// Issue #23: Kanonische ALL_PHASES und PHASE_LABELS sind in @positron/shared.
+// Re-export für Abwärtskompatibilität der Importe aus '../types.js'.
+export { ALL_PHASES, PHASE_LABELS } from '@positron/shared';
 
 export type RunStatus = 'active' | 'blocked' | 'done' | 'failed' | 'cancelled';
 

@@ -32,9 +32,7 @@ import express from 'express';
 import http from 'node:http';
 import Database from 'better-sqlite3';
 import { openDatabase, createRun, transition, markFailed, retry, resumeFromEvents, resolveDatabasePath } from '@positron/run-state';
-import { runSpecify, runPlan, runTasks } from '@positron/speckit-adapter';
 import { RealSpecKitAdapter, FakeSpecKitAdapter } from '@positron/speckit-adapter';
-import { executeTasks } from '@positron/opencode-adapter';
 import { RealOpenCodeAdapter, FakeOpenCodeAdapter } from '@positron/opencode-adapter';
 import { generateBranchName, createRunId, loadRepositoryConfig, normalizeRepositoryConfig, buildRemoteUrl, MAX_FIX_LOOPS, parsePhase, parseRunStatus, safeJsonParse } from '@positron/shared';
 import { SecretManager } from '../../../packages/shared/src/secret-manager.js';
@@ -45,15 +43,14 @@ import { FakeGitHubAdapter, createRealGitHubAdapter, GitHubStatusSyncService } f
 import type { GitHubAdapter } from '@positron/github-adapter';
 import type { GitHubStatusSyncInput, GitHubStatusSyncResult, EvidenceItem } from '@positron/github-adapter';
 import { renderAccepted } from '@positron/github-adapter';
-import { FakeGitWorkspaceAdapter, RealGitWorkspaceAdapter, applyDogfoodFixtureChange } from '@positron/sandbox';
+import { FakeGitWorkspaceAdapter, RealGitWorkspaceAdapter } from '@positron/sandbox';
 import type { GitWorkspaceAdapter } from '@positron/sandbox';
 import { TestCommandDetector, TestRunner } from '@positron/sandbox';
 import type { TestReport } from '@positron/sandbox';
 import { startWatcher } from './github-watcher.js';
 import { createLogger } from './logger.js';
 import { broadcastSSE, addSSEClient, removeSSEClient, resetEventSequence, primeEventSequence } from './sse/broadcaster.js';
-import { runSignals, resumePhaseTarget, checkRunSignal } from './signals.js';
-import type { RunControlAction } from './signals.js';
+import { initSignalsDb, setRunSignal, clearRunSignal, checkRunSignal, getResumePhaseTarget } from './signals.js';
 import { createCancelHandler } from './handlers/cancel-run.js';
 import { createDemoLiveRunHandler } from './demo/live-run-handler.js';
 
@@ -105,18 +102,47 @@ function resolveRepositoryConfig(repository?: RepositoryConfig): RepositoryConfi
 // SQLite-Datenbankverbindung (initialisiert in createApp)
 let db: Database.Database | null = null;
 
-// In-Memory Adapter-Standards (werden in createApp überschrieben wenn env vars gesetzt)
-// RealGitWorkspaceAdapter aktivieren: POSITRON_WORKSPACE_ROOT=/pfad/zum/workspace setzen
-// Für echten Git-Betrieb muss git im PATH und GITHUB_TOKEN gesetzt sein
-let workspaceAdapter: GitWorkspaceAdapter = (() => {
+// Adapter-Standards (werden in createApp basierend auf Env-Vars konfiguriert)
+// Env-Vars: POSITRON_WORKSPACE_ROOT, POSITRON_SPECKIT_MODE, POSITRON_OPENCODE_MODE
+// Default: Fake-Adapter für Development, Real-Adapter für Production mit Warnung
+function resolveWorkspaceAdapter(): GitWorkspaceAdapter {
   if (process.env['POSITRON_WORKSPACE_ROOT']) {
     log.info('RealGitWorkspaceAdapter aktiviert (POSITRON_WORKSPACE_ROOT gesetzt)');
     return new RealGitWorkspaceAdapter();
   }
+  if (process.env.NODE_ENV === 'production') {
+    log.warn('PRODUCTION: POSITRON_WORKSPACE_ROOT nicht gesetzt — FakeGitWorkspaceAdapter verwendet!');
+  }
   return new FakeGitWorkspaceAdapter();
-})();
-let speckitAdapter: SpecKitAdapter = new FakeSpecKitAdapter();
-let opencodeAdapter: OpenCodeAdapter = new FakeOpenCodeAdapter();
+}
+
+function resolveSpeckitAdapter(): SpecKitAdapter {
+  const mode = process.env['POSITRON_SPECKIT_MODE'] ?? 'fake';
+  if (mode === 'real') {
+    log.info('RealSpecKitAdapter aktiviert');
+    return new RealSpecKitAdapter();
+  }
+  if (process.env.NODE_ENV === 'production') {
+    log.warn('PRODUCTION: POSITRON_SPECKIT_MODE nicht auf "real" gesetzt — FakeSpecKitAdapter verwendet!');
+  }
+  return new FakeSpecKitAdapter();
+}
+
+function resolveOpencodeAdapter(): OpenCodeAdapter {
+  const mode = process.env['POSITRON_OPENCODE_MODE'] ?? 'fake';
+  if (mode === 'real') {
+    log.info('RealOpenCodeAdapter aktiviert');
+    return new RealOpenCodeAdapter();
+  }
+  if (process.env.NODE_ENV === 'production') {
+    log.warn('PRODUCTION: POSITRON_OPENCODE_MODE nicht auf "real" gesetzt — FakeOpenCodeAdapter verwendet!');
+  }
+  return new FakeOpenCodeAdapter();
+}
+
+let workspaceAdapter: GitWorkspaceAdapter = resolveWorkspaceAdapter();
+let speckitAdapter: SpecKitAdapter = resolveSpeckitAdapter();
+let opencodeAdapter: OpenCodeAdapter = resolveOpencodeAdapter();
 
 // Watcher Stop-Funktion (wird von createApp gesetzt, von Shutdown verwendet)
 let stopWatcher: (() => void) | null = null;
@@ -431,7 +457,7 @@ async function executePhase(
       result = transition(current, 'WEB_RESEARCH', 'Research phase', 'INFO');
       break;
     case 'WEB_RESEARCH': {
-      const researchDoc = generateResearchDocument(current, repository);
+      const researchDoc = await generateResearchDocument(github, repository, current.issueNumber);
       saveArtifact(current.id, 'research', researchDoc);
       storeEvent({
         id: createRunId(), runId: current.id, phase: 'WEB_RESEARCH',
@@ -481,12 +507,7 @@ async function executePhase(
         result = transition(current, 'PLAN', sr.summary, sr.status === 'success' ? 'INFO' : 'WARN');
       } catch (err) {
         const errMsg = `Specify error: ${String(err).slice(0, 200)}`;
-        storeEvent({ id: createRunId(), runId: current.id, phase: 'SPECIFY', level: 'WARN', message: errMsg, payload: null, createdAt: new Date().toISOString() });
-        log.warn(`[PIPELINE] ⚠️ LEGACY STUB FALLBACK in SPECIFY-Phase: ${errMsg}`);
-        log.warn('[PIPELINE] Setze POSITRON_SPECKIT_MODE=real und POSITRON_ENABLE_REAL_SPECKIT=true für echte SpecKit-Generierung');
-        const specContent = await runSpecify(wsPath, `Issue #${current.issueNumber}`);
-        saveArtifact(current.id, 'spec', specContent);
-        result = transition(current, 'PLAN', 'Spec generated (legacy stub fallback)', 'WARN');
+        result = markFailed(current, 'FAILED_TRANSIENT', errMsg);
       }
       break;
     }
@@ -517,11 +538,7 @@ async function executePhase(
         result = transition(current, 'TASKS', pr.summary, pr.status === 'success' || pr.status === 'skipped' ? 'INFO' : 'WARN');
       } catch (err) {
         const planErrMsg = `Plan error: ${String(err).slice(0, 200)}`;
-        storeEvent({ id: createRunId(), runId: current.id, phase: 'PLAN', level: 'WARN', message: planErrMsg, payload: null, createdAt: new Date().toISOString() });
-        log.warn(`[PIPELINE] ⚠️ LEGACY STUB FALLBACK in PLAN-Phase: ${planErrMsg}`);
-        const planContent = await runPlan(wsPath, `Spec for Issue #${current.issueNumber}`);
-        saveArtifact(current.id, 'plan', planContent);
-        result = transition(current, 'TASKS', 'Plan generated (legacy stub fallback)', 'WARN');
+        result = markFailed(current, 'FAILED_TRANSIENT', planErrMsg);
       }
       break;
     }
@@ -552,11 +569,7 @@ async function executePhase(
         result = transition(current, 'ANALYZE', tr.summary, tr.status === 'success' || tr.status === 'skipped' ? 'INFO' : 'WARN');
       } catch (err) {
         const tasksErrMsg = `Tasks error: ${String(err).slice(0, 200)}`;
-        storeEvent({ id: createRunId(), runId: current.id, phase: 'TASKS', level: 'WARN', message: tasksErrMsg, payload: null, createdAt: new Date().toISOString() });
-        log.warn(`[PIPELINE] ⚠️ LEGACY STUB FALLBACK in TASKS-Phase: ${tasksErrMsg}`);
-        const tasksContent = await runTasks(wsPath, `Plan for Issue #${current.issueNumber}`);
-        saveArtifact(current.id, 'tasks', tasksContent);
-        result = transition(current, 'ANALYZE', 'Tasks generated (legacy stub fallback)', 'WARN');
+        result = markFailed(current, 'FAILED_TRANSIENT', tasksErrMsg);
       }
       break;
     }
@@ -592,19 +605,6 @@ async function executePhase(
       const wsPath = current.workspacePath ?? current.branch ?? '/tmp';
       const input = { runId: current.id, workspacePath: wsPath, issueTitle: `Issue #${current.issueNumber}`, issueNumber: current.issueNumber, mode: 'safe-cli' as const, autonomyLevel: current.autonomyLevel };
 
-      // Dogfood Fixture Change Provider (Issue #38)
-      // Nur aktiv mit POSITRON_ENABLE_DOGFOOD_FIXTURE_CHANGE=true
-      // Erzeugt eine deterministische Dateiänderung für PR-Validierung
-      const fixtureResult = applyDogfoodFixtureChange({ workspacePath: wsPath, runId: current.id, issueNumber: current.issueNumber });
-      if (fixtureResult.applied) {
-        storeEvent({
-          id: createRunId(), runId: current.id, phase: 'IMPLEMENT',
-          level: 'INFO', message: fixtureResult.summary,
-          payload: { fixtureFile: fixtureResult.filePath },
-          createdAt: new Date().toISOString(),
-        });
-      }
-
       try {
         const ir = await opencode.runImplement(input);
         if (ir.status === 'blocked') {
@@ -613,14 +613,7 @@ async function executePhase(
         result = transition(current, 'TEST', ir.summary, ir.status === 'success' ? 'INFO' : 'WARN');
       } catch (err) {
         const implErrMsg = `Implement error: ${String(err).slice(0, 200)}`;
-        storeEvent({ id: createRunId(), runId: current.id, phase: 'IMPLEMENT', level: 'WARN', message: implErrMsg, payload: null, createdAt: new Date().toISOString() });
-        log.warn(`[PIPELINE] ⚠️ LEGACY STUB FALLBACK in IMPLEMENT-Phase: ${implErrMsg}`);
-        log.warn('[PIPELINE] Setze POSITRON_OPENCODE_MODE=real für echte Implementierung');
-        const execResult = await executeTasks(wsPath, [`Implement Issue #${current.issueNumber}`]);
-        if (execResult.success) {
-          saveArtifact(current.id, 'implementation', execResult.completedTasks);
-        }
-        result = transition(current, 'TEST', 'Implementation done (legacy fallback)', 'WARN');
+        result = markFailed(current, 'FAILED_TRANSIENT', implErrMsg);
       }
       break;
     }
@@ -630,8 +623,12 @@ async function executePhase(
         const detector = new TestCommandDetector();
         const detection = await detector.detect(wsPath);
         if (detection.commands.length === 0) {
-          // Keine Commands erkannt — trotzdem als INFO durch (MVP-Stub)
-          result = transition(current, 'VERIFY', 'Keine Test-Kommandos erkannt (MVP)', 'INFO');
+          const strictMode = process.env.POSITRON_STRICT_TEST_MODE === 'true';
+          if (strictMode) {
+            result = markFailed(current, 'FAILED_BLOCKED', 'No test commands configured. Set up tests or disable strict mode.');
+          } else {
+            result = transition(current, 'VERIFY', 'No test commands configured — tests skipped', 'WARN');
+          }
         } else {
           const runner = new TestRunner();
           const report = await runner.runDetectedCommands({
@@ -691,7 +688,7 @@ async function executePhase(
         if (!hasChanges) {
           // Keine Änderungen — sauber blocken (Issue #38)
           result = markFailed(current, 'FAILED_BLOCKED',
-            `NO_CHANGES_TO_COMMIT: Branch ${branch} has no changes (${changeSummary})`);
+            `No changes were made during implementation — no files changed in workspace ${commitWsPath} (${changeSummary})`);
           break;
         }
 
@@ -1005,7 +1002,7 @@ async function runFullPipeline(
   for (let i = 0; i < maxSteps; i++) {
     // Check control signals before each phase (Issue #30)
     const signalCheck = checkRunSignal(current.id, current.phase);
-    if (signalCheck === 'abort') {
+    if (signalCheck?.toLowerCase() === 'abort') {
       // Unify abort → cancelled (Issue #66) — both cancel endpoint and control/abort now
       // result in 'cancelled' status. Previously this was FAILED_BLOCKED.
       const cancelledRun = { ...current, status: 'cancelled' as RunStatus, finishedAt: new Date().toISOString() };
@@ -1022,7 +1019,7 @@ async function runFullPipeline(
       });
       return cancelledRun as RunState;
     }
-    if (signalCheck === 'paused') {
+    if (signalCheck?.toLowerCase() === 'paused') {
       // Wait for resume or abort
       storeEvent({
         id: createRunId(), runId: current.id, phase: current.phase, level: 'GATE' as EventLevel,
@@ -1033,7 +1030,7 @@ async function runFullPipeline(
       while (true) {
         await new Promise(r => setTimeout(r, 500));
         const s = checkRunSignal(current.id, current.phase);
-        if (s === 'abort') {
+        if (s?.toLowerCase() === 'abort') {
           // Unify abort → cancelled (Issue #66)
           const cancelledRun = { ...current, status: 'cancelled' as RunStatus, finishedAt: new Date().toISOString() };
           storeEvent({
@@ -1049,7 +1046,7 @@ async function runFullPipeline(
           });
           return cancelledRun as RunState;
         }
-        if (s === 'proceed') {
+        if (s?.toLowerCase() === 'proceed') {
           storeEvent({
             id: createRunId(), runId: current.id, phase: current.phase, level: 'GATE' as EventLevel,
             message: 'Run resumed by user',
@@ -1060,11 +1057,11 @@ async function runFullPipeline(
         }
       }
     }
-    if (signalCheck === 'resume') {
+    if (signalCheck?.toLowerCase() === 'resume') {
       // Resume-by-State (Aufgabe 5): Phase überspringen zur Ziel-Phase
-      const targetPhase = resumePhaseTarget.get(current.id);
+      const targetPhase = getResumePhaseTarget(current.id);
       if (targetPhase) {
-        resumePhaseTarget.delete(current.id);
+        clearRunSignal(current.id, 'RESUME');
         current = {
           ...current,
           phase: targetPhase as import('@positron/shared').Phase,
@@ -1081,7 +1078,7 @@ async function runFullPipeline(
         continue;
       }
     }
-    if (signalCheck === 'retry') {
+    if (signalCheck?.toLowerCase() === 'retry') {
       // Manual retry from FAILED_TRANSIENT
       const retryResult = retry(current);
       if (retryResult.ok) {
@@ -1247,65 +1244,89 @@ function buildEvidence(run: RunState): EvidenceItem[] {
 
 /**
  * Generiert ein strukturiertes Research-Dokument (research.md) gemäss Blueprint §10/C.
- * Enthält: Suchfragen, Quellen, Erkenntnisse, Implementierungskonsequenzen, Risiken.
- * Im Fake-Mode wird eine deterministische Analyse basierend auf dem Projektkontext erzeugt.
+ *
+ * Im Fake-Mode: Fetcht das tatsächliche GitHub Issue und liest README.md + docs.
+ * Im Real-Mode (POSITRON_RESEARCH_API_KEY gesetzt): Zusätzlich Brave Search API.
+ * Fabriziert niemals Funde — alle Inhalte stammen aus echten Quellen.
  */
-function generateResearchDocument(run: RunState, repository: RepositoryConfig): string {
+async function generateResearchDocument(github: GitHubAdapter, repository: RepositoryConfig, issueNumber: number): Promise<string> {
   const repoSlug = `${repository.owner}/${repository.repo}`;
-  const issueRef = `#${run.issueNumber}`;
+  const issueRef = `#${issueNumber}`;
   const now = new Date().toISOString().slice(0, 10);
 
-  // Projekt-spezifische Recherche für Positron selbst
-  // Im real-Mode würde hier eine echte Recherche-API/Agent aufgerufen.
-  return [
-    `# Research Summary — Issue ${issueRef}`,
+  // 1. GitHub Issue abrufen
+  let issueBody = '';
+  let issueTitle = '';
+  try {
+    const issue = await github.getIssue({ owner: repository.owner, repo: repository.repo, issueNumber });
+    issueTitle = issue.title ?? '';
+    issueBody = issue.body ?? '';
+  } catch (err) {
+    log.warn(`generateResearchDocument: Failed to fetch issue #${issueNumber}: ${String(err).slice(0, 200)}`);
+  }
+
+  // 2. README.md und lokale docs lesen
+  let readmeContent = '';
+  try {
+    const readmePath = path.resolve(__serverDirname, '..', '..', '..', '..', 'README.md');
+    if (fs.existsSync(readmePath)) {
+      readmeContent = fs.readFileSync(readmePath, 'utf-8').slice(0, 5000);
+    }
+  } catch { /* optional */ }
+
+  // 3. Brave Search API (nur wenn API-Key gesetzt)
+  let searchResults = '';
+  const researchApiKey = process.env['POSITRON_RESEARCH_API_KEY'];
+  if (researchApiKey) {
+    try {
+      const query = encodeURIComponent(`site:github.com/${repoSlug} issue #${issueNumber}`);
+      const response = await fetch(`https://api.search.brave.com/res/v1/web/search?q=${query}&count=5`, {
+        headers: {
+          'Accept': 'application/json',
+          'Accept-Encoding': 'gzip',
+          'X-Subscription-Token': researchApiKey,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json() as Record<string, unknown>;
+        const results = (data as { web?: { results?: Array<{ title: string; url: string; description: string }> } }).web?.results?.slice(0, 5) ?? [];
+        searchResults = results.map(r => `- [${r.title}](${r.url}): ${r.description}`).join('\n');
+      }
+    } catch (err) {
+      log.warn(`generateResearchDocument: Brave Search failed: ${String(err).slice(0, 200)}`);
+    }
+  }
+
+  // 4. Dokument zusammensetzen — nur echte Daten, keine Fabrikation
+  const lines = [
+    `# Research Summary — Issue ${issueRef}${issueTitle ? ': ' + issueTitle : ''}`,
     '',
     `**Repository:** ${repoSlug}`,
     `**Datum:** ${now}`,
-    `**Run-ID:** \`${run.id.slice(0, 8)}\``,
-    `**Autonomie-Level:** ${run.autonomyLevel}`,
     '',
     '---',
     '',
-    '## Search Questions',
+    '## GitHub Issue',
     '',
-    '- Welche aktuellen Best Practices und API-Änderungen sind für dieses Issue relevant?',
-    '- Welche bestehenden Code-Strukturen und Interfaces müssen berücksichtigt werden?',
-    '- Gibt es Sicherheits- oder Testing-Hinweise, die beachtet werden müssen?',
-    '- Welche Abhängigkeiten könnten durch die Änderung betroffen sein?',
+    issueBody ? issueBody.slice(0, 3000) : '_Issue body could not be fetched._',
     '',
-    '## Sources',
+    '## Local Context',
     '',
-    `- **Codebasis:** \`${repoSlug}\` (lokaler Workspace)`,
-    '- **Blueprint:** Blueprint.md (Projekt-Spezifikation)',
-    '- **ADR:** Architecture Decision Records (aktuelle Architektur-Entscheidungen)',
-    '- **Issue-Kontext:** Issue ${issueRef} (Aufgabenstellung und Anforderungen)',
+    readmeContent ? `### README.md (excerpt)\n\n\`\`\`\n${readmeContent.slice(0, 2000)}\n\`\`\`` : '_README.md not available._',
     '',
-    '## Findings',
-    '',
-    `1. **Projekt-Kontext:** Das Issue ${issueRef} betrifft den Positron-Orchestrator im Repository ${repoSlug}.`,
-    '2. **Architektur:** Die Implementierung folgt dem Adapter-Pattern (Real/Fake) und einer deterministischen State Machine mit 27 Phasen.',
-    '3. **Abhängigkeiten:** Die Änderung muss mit den vorhandenen Adaptern (GitHub, SpecKit, OpenCode, Sandbox) kompatibel sein.',
-    `4. **Standards:** Der Code folgt den Positron-Constitution-Prinzipien: Evidence-Gated Progression, GitHub Source of Truth, Spec Before Code.`,
-    '',
-    '## Implementation Consequences',
-    '',
-    '- **Scope:** Die Änderung ist auf das aktuelle Issue beschränkt (kein opportunistisches Refactoring).',
-    '- **Tests:** Alle vorhandenen Tests (Unit, Integration, E2E) müssen grün bleiben.',
-    '- **Kompatibilität:** Bestehende Run-History und Resume-by-State müssen erhalten bleiben.',
-    '- **GitHub-Integration:** Jeder Schritt wird im GitHub-Issue kommentiert (SyncService).',
-    '',
-    '## Risks',
-    '',
-    '- **Regression:** Änderungen an der Pipeline können bestehende Runs beeinträchtigen (abgesichert durch Integrationstests).',
-    '- **Typ-Sicherheit:** Interface-Änderungen müssen in beiden Adaptern (Real/Fake) konsistent sein.',
-    '- **Windows-Kompatibilität:** Pfadoperationen müssen plattformunabhängig sein (path.sep, path.join).',
-    '- **Datenbank-Migration:** Schema-Änderungen benötigen Rückwärtskompatibilität.',
-    '',
-    '---',
-    '',
-    '_Research generated by Positron am ' + now + ' für Issue ' + issueRef + '_',
-  ].join('\n');
+  ];
+
+  if (searchResults) {
+    lines.push('## Web Search Results (Brave)', '', searchResults, '');
+  }
+
+  if (!issueBody && !readmeContent && !searchResults) {
+    lines.push('## Note', '', '_No external data could be fetched. Research is limited to the local workspace._', '');
+  }
+
+  lines.push('---', '', '_Research generated by Positron am ' + now + ' für Issue ' + issueRef + '_');
+
+  return lines.join('\n');
 }
 
 /** Generate PR body from run evidence (Issue #17) */
@@ -1340,6 +1361,51 @@ function renderPRBody(run: RunState, repo: RepositoryConfig, evidence: EvidenceI
   lines.push('_Generated by [Positron](https://github.com/xxammaxx/Positron)_');
 
   return lines.join('\n');
+}
+
+/**
+ * Generates a dynamic blueprint from a GitHub issue.
+ * Fetches the issue body via the GitHub adapter and wraps it in
+ * a structured blueprint document never fabricating content.
+ */
+async function generateBlueprintFromIssue(
+  github: GitHubAdapter,
+  repository: RepositoryConfig,
+  issueNumber: number,
+): Promise<string> {
+  let issueBody = '';
+  let issueTitle = '';
+  try {
+    const issue = await github.getIssue({ owner: repository.owner, repo: repository.repo, issueNumber });
+    issueTitle = issue.title ?? `Issue #${issueNumber}`;
+    issueBody = (issue.body ?? '').slice(0, 10000);
+  } catch (err) {
+    log.warn(`generateBlueprintFromIssue: Failed to fetch issue #${issueNumber}: ${String(err).slice(0, 200)}`);
+  }
+
+  return [
+    `# Blueprint: ${issueTitle}`,
+    '',
+    `**Repository:** ${repository.owner}/${repository.repo}`,
+    `**Issue:** #${issueNumber}`,
+    `**Generated:** ${new Date().toISOString().slice(0, 10)}`,
+    '',
+    '---',
+    '',
+    '## Issue Description',
+    '',
+    issueBody || '_Issue body could not be fetched. Using default blueprint._',
+    '',
+    '---',
+    '',
+    '## Scope',
+    '',
+    '- Validate end-to-end pipeline execution',
+    '- Generate spec, plan, tasks artifacts',
+    '- Run tests and produce test report',
+    '',
+    '_Generated by Positron — all content from GitHub Issue #' + issueNumber + '_',
+  ].join('\n');
 }
 
 // ---------------------------------------------------------------------------
@@ -1417,8 +1483,9 @@ const secretManager = new SecretManager({
 export function createApp(options: ServerOptions = {}) {
   // SQLite-Datenbank initialisieren
   db = openDatabase(options.dbPath);
+  initSignalsDb(getDb());
   const repository = resolveRepositoryConfig(options.repository);
-  const github = resolveAdapter(options.adapter).adapter;
+  const { adapter: github, mode: githubMode } = resolveAdapter(options.adapter);
   const activeWorkspaceAdapter = options.workspaceAdapter ?? workspaceAdapter;
   const activeSpecKitAdapter = resolveSpecKitAdapter(options.speckitAdapter);
   const activeOpenCodeAdapter = resolveOpenCodeAdapter(options.opencodeAdapter);
@@ -1439,9 +1506,8 @@ export function createApp(options: ServerOptions = {}) {
   // CORS — production-sicher, dev-kompatibel
   // In Fake-Mode: Allow-Origin: * (lokale Dev-Server)
   // In Real-Mode: Allow-Origin aus POSITRON_CORS_ORIGIN (Default: http://localhost:5173)
-  const corsOrigin = github instanceof FakeGitHubAdapter
-    ? '*'
-    : (process.env['POSITRON_CORS_ORIGIN'] ?? 'http://localhost:5173');
+  const corsOrigin = process.env['POSITRON_CORS_ORIGIN']
+    ?? (githubMode === 'fake' ? '*' : 'http://localhost:5173');
   app.use((_req, res, next) => {
     res.header('Access-Control-Allow-Origin', corsOrigin);
     res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
@@ -1505,7 +1571,7 @@ export function createApp(options: ServerOptions = {}) {
           VALUES (?, ?, ?, ?, ?, 1)
         `).run(repoId, repository.owner, repository.repo, `https://github.com/${repository.owner}/${repository.repo}`, repository.defaultBranch);
       }
-      res.json({ id: repoId, status: 'registered', mode: github instanceof FakeGitHubAdapter ? 'fake' : 'real' });
+      res.json({ id: repoId, status: 'registered', mode: githubMode });
     } catch (err) {
       res.status(400).json({
         error: 'VALIDATION_ERROR',
@@ -1536,15 +1602,157 @@ export function createApp(options: ServerOptions = {}) {
     } catch (err) { next(err); }
   });
 
+  // GET /api/repos/:owner/:repo/issues/:issueNumber/blueprint — Dynamic Blueprint
+  app.get('/api/repos/:owner/:repo/issues/:issueNumber/blueprint', async (req, res) => {
+    try {
+      const issueNumber = parseInt(req.params.issueNumber, 10);
+      if (isNaN(issueNumber) || issueNumber < 1) {
+        res.status(400).json({ error: 'issueNumber must be a positive integer' });
+        return;
+      }
+      const repo = { owner: req.params.owner, repo: req.params.repo, defaultBranch: 'main' };
+      const blueprint = await generateBlueprintFromIssue(github, repo, issueNumber);
+      res.json({ blueprint, issueNumber, repo: `${repo.owner}/${repo.repo}` });
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to generate blueprint', details: String(err) });
+    }
+  });
+
+  // POST /api/runs — Start a run from a GitHub issue URL
+  app.post('/api/runs', async (req, res) => {
+    try {
+      const { issueUrl } = (req.body as { issueUrl?: string }) ?? {};
+      if (!issueUrl || typeof issueUrl !== 'string') {
+        res.status(400).json({ error: 'issueUrl (string) is required' });
+        return;
+      }
+
+      // Parse GitHub URL: https://github.com/owner/repo/issues/123
+      const match = issueUrl.match(/github\.com\/([^/]+)\/([^/]+)\/issues\/(\d+)/);
+      if (!match) {
+        res.status(400).json({ error: 'Invalid GitHub issue URL. Expected format: https://github.com/owner/repo/issues/123' });
+        return;
+      }
+      const [, owner, repo, issueNumberStr] = match;
+      const issueNumber = parseInt(issueNumberStr!, 10);
+
+      // Find or create repository
+      const repoId = `${owner}/${repo}`;
+      const existing = getDb().prepare('SELECT id FROM repositories WHERE id = ?').get(repoId) as { id: string } | undefined;
+      if (!existing) {
+        getDb().prepare(`
+          INSERT OR IGNORE INTO repositories (id, owner, name, url, default_branch, enabled)
+          VALUES (?, ?, ?, ?, ?, 1)
+        `).run(repoId, owner, repo, `https://github.com/${owner}/${repo}`, 'main');
+      }
+
+      // Create run and attempt to enqueue to BullMQ (inline fallback if Redis unavailable)
+      const { autonomyLevel } = req.body as { autonomyLevel?: number };
+      const run = createRun(repo!, issueNumber, autonomyLevel ?? 2);
+      saveRunToDb(run);
+
+      let queued = false;
+      let pipelineQueue: import('bullmq').Queue | null = null;
+      try {
+        const { Queue } = await import('bullmq');
+        const { PIPELINE_QUEUE, resolveRedisUrl } = await import('@positron/shared');
+
+        const redisUrl = resolveRedisUrl();
+        pipelineQueue = new Queue(PIPELINE_QUEUE, {
+          connection: { url: redisUrl, connectTimeout: 500, retryStrategy: () => null },
+        });
+
+        // Check if at least one worker is listening before enqueuing.
+        // If no workers are available, the run would never execute — fall back to inline.
+        const workers = await pipelineQueue.getWorkers();
+        if (workers.length === 0) {
+          throw new Error('NO_WORKERS');
+        }
+
+        // Use run.id as deterministic jobId to prevent double-execution on retry
+        const job = await pipelineQueue.add('pipeline', {
+          runId: run.id,
+          repoId: repository.repo,
+          issueNumber: issueNumber ?? run.issueNumber,
+          autonomyLevel: autonomyLevel ?? run.autonomyLevel ?? 2,
+        }, { jobId: run.id });
+        queued = true;
+
+        res.json({ run, runId: run.id, jobId: job.id, message: 'Run queued' });
+      } catch (_queueErr: unknown) {
+        if (!queued) {
+          // Queue completely unavailable — fall back to inline execution
+          res.json({ run, runId: run.id, message: 'Run started (inline)', repoId });
+          runFullPipeline(run, repository, activeWorkspaceAdapter, activeSpecKitAdapter, activeOpenCodeAdapter, github, syncService)
+            .then(finalRun => {
+              saveRunToDb(finalRun);
+              broadcastSSE(finalRun.id, 'run-update', { phase: finalRun.phase, status: finalRun.status, branch: finalRun.branch });
+            })
+            .catch(err => {
+              storeEvent({
+                id: createRunId(), runId: run.id, phase: 'FAILED_BLOCKED', level: 'ERROR',
+                message: `Run failed: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString(),
+              });
+            });
+        }
+        // If close() threw but job was queued, the job is still in Redis — no fallback needed
+      } finally {
+        await pipelineQueue?.close().catch(() => {});
+      }
+    } catch (err) {
+      res.status(400).json({
+        error: 'VALIDATION_ERROR',
+        message: err instanceof Error ? err.message : 'Invalid request',
+      });
+    }
+  });
+
   // Run starten
   app.post('/api/repos/:repoId/runs', async (req, res) => {
     try {
       const { issueNumber, autonomyLevel } = validateRunRequest(req.body);
       const run = createRun(repository.repo, issueNumber, autonomyLevel ?? 2);
       saveRunToDb(run); // Sofort persistieren — sichtbar noch während Pipeline läuft
-      const completed = await runFullPipeline(run, repository, activeWorkspaceAdapter, activeSpecKitAdapter, activeOpenCodeAdapter, github, syncService);
-      const evts = getEvents(completed.id);
-      res.json({ run: completed, events: evts, eventCount: evts.length });
+
+      let queued = false;
+      let pipelineQueue: import('bullmq').Queue | null = null;
+      try {
+        const { Queue } = await import('bullmq');
+        const { PIPELINE_QUEUE, resolveRedisUrl } = await import('@positron/shared');
+
+        const redisUrl = resolveRedisUrl();
+        pipelineQueue = new Queue(PIPELINE_QUEUE, {
+          connection: { url: redisUrl, connectTimeout: 500, retryStrategy: () => null },
+        });
+
+        // Check if at least one worker is listening before enqueuing.
+        // If no workers are available, the run would never execute — fall back to inline.
+        const workers = await pipelineQueue.getWorkers();
+        if (workers.length === 0) {
+          throw new Error('NO_WORKERS');
+        }
+
+        // Use run.id as deterministic jobId to prevent double-execution on retry
+        const job = await pipelineQueue.add('pipeline', {
+          runId: run.id,
+          repoId: repository.repo,
+          issueNumber,
+          autonomyLevel: autonomyLevel ?? 2,
+        }, { jobId: run.id });
+        queued = true;
+
+        res.json({ run, runId: run.id, jobId: job.id, message: 'Run queued' });
+      } catch (_queueErr: unknown) {
+        if (!queued) {
+          // Queue completely unavailable — fall back to inline execution
+          const completed = await runFullPipeline(run, repository, activeWorkspaceAdapter, activeSpecKitAdapter, activeOpenCodeAdapter, github, syncService);
+          const evts = getEvents(completed.id);
+          res.json({ run: completed, runId: completed.id, events: evts, eventCount: evts.length });
+        }
+        // If close() threw but job was queued, the job is still in Redis — no fallback needed
+      } finally {
+        await pipelineQueue?.close().catch(() => {});
+      }
     } catch (err) {
       res.status(400).json({
         error: 'VALIDATION_ERROR',
@@ -1739,7 +1947,7 @@ export function createApp(options: ServerOptions = {}) {
       const healthWsPath = process.env['POSITRON_WORKSPACE_ROOT'] ?? '/tmp';
       const speckitHealth = await activeSpecKitAdapter.healthCheck(healthWsPath);
       const opencodeHealth = await activeOpenCodeAdapter.healthCheck(healthWsPath);
-      const isFakeMode = github instanceof FakeGitHubAdapter;
+      const isFakeMode = githubMode === 'fake';
       // In Fake-Mode gelten nicht-verfügbare Adapter nicht als "degraded"
       const adapters = {
         github: !isFakeMode,
@@ -1772,7 +1980,7 @@ export function createApp(options: ServerOptions = {}) {
       const speckitHealth = await activeSpecKitAdapter.healthCheck(healthWsPath);
       const opencodeHealth = await activeOpenCodeAdapter.healthCheck(healthWsPath);
       res.json({
-        github: { available: !(github instanceof FakeGitHubAdapter), mode: github instanceof FakeGitHubAdapter ? 'fake' : 'real' },
+        github: { available: githubMode !== 'fake', mode: githubMode },
         specKit: speckitHealth,
         openCode: opencodeHealth,
       });
@@ -1844,16 +2052,7 @@ export function createApp(options: ServerOptions = {}) {
     }
     const run = createRun(repository.repo, issueNum, 2);
     saveRunToDb(run);
-    const defaultBlueprint = [
-      '# Demo Run',
-      '',
-      `Automated demo pipeline for Issue #${issueNum}.`,
-      '## Scope',
-      '- Validate end-to-end pipeline execution',
-      '- Generate spec, plan, tasks artifacts',
-      '- Run tests and produce test report',
-    ].join('\n');
-    const usedBlueprint = typeof blueprint === 'string' ? blueprint : defaultBlueprint;
+    const usedBlueprint = typeof blueprint === 'string' ? blueprint : await generateBlueprintFromIssue(github, repository, issueNum);
     storeEvent({
       id: createRunId(), runId: run.id, phase: 'QUEUED', level: 'HUMAN',
       message: `Demo run created for Issue #${issueNum}`,
@@ -1898,18 +2097,87 @@ export function createApp(options: ServerOptions = {}) {
     saveArtifact,
     broadcastSSE,
     createRunId,
-    repository,
+    repository: { ...repository, id: `${repository.owner}/${repository.repo}` },
+    runPipeline: (run: RunState) => runFullPipeline(run, repository, activeWorkspaceAdapter, activeSpecKitAdapter, activeOpenCodeAdapter, github, syncService),
+    addSSEClient,
+    removeSSEClient,
+    getEvents,
   }));
 
   // Safety State (Issue #28)
-  app.get('/api/safety', (_req, res) => {
-    res.json({
+  // Whitelist of allowed safety keys
+  const SAFETY_KEYS = ['enableMerge', 'mergeDryRun', 'enablePush', 'killSwitch', 'enableFixLoop'] as const;
+  const ENV_KEY_MAP: Record<string, string> = {
+    enableMerge: 'POSITRON_ENABLE_MERGE',
+    mergeDryRun: 'POSITRON_MERGE_DRY_RUN',
+    enablePush: 'POSITRON_ENABLE_PUSH',
+    killSwitch: 'POSITRON_MERGE_KILL_SWITCH',
+    enableFixLoop: 'POSITRON_ENABLE_FIX_LOOP',
+  };
+
+  function getSafetyState(): Record<string, boolean> {
+    const result: Record<string, boolean> = {
       enableMerge: process.env.POSITRON_ENABLE_MERGE === 'true',
       mergeDryRun: process.env.POSITRON_MERGE_DRY_RUN === 'true',
       enablePush: process.env.POSITRON_ENABLE_PUSH === 'true',
       killSwitch: process.env.POSITRON_MERGE_KILL_SWITCH !== 'false',
       enableFixLoop: process.env.POSITRON_ENABLE_FIX_LOOP === 'true',
-    });
+    };
+    // Merge DB overrides
+    try {
+      const rows = getDb().prepare('SELECT key, value FROM settings WHERE key LIKE ?').all('safety.%') as Array<{ key: string; value: string }>;
+      for (const row of rows) {
+        const safetyKey = row.key.replace('safety.', '');
+        if (safetyKey in result) {
+          (result as Record<string, unknown>)[safetyKey] = row.value === 'true';
+        }
+      }
+    } catch { /* table may not exist yet */ }
+    return result;
+  }
+
+  app.get('/api/safety', (_req, res) => {
+    res.json(getSafetyState());
+  });
+
+  app.post('/api/safety', (req, res) => {
+    try {
+      // Require admin token for write access to safety gates
+      const token = req.headers['x-admin-token'] as string | undefined;
+      if (!ADMIN_TOKEN) {
+        res.status(503).json({ error: 'Admin API disabled: set POSITRON_ADMIN_TOKEN' });
+        return;
+      }
+      if (token !== ADMIN_TOKEN) {
+        res.status(401).json({ error: 'Invalid admin token. Set X-Admin-Token header.' });
+        return;
+      }
+
+      const { key, value } = (req.body as { key?: string; value?: boolean }) ?? {};
+      if (!key || typeof key !== 'string') {
+        res.status(400).json({ error: 'key (string) is required' });
+        return;
+      }
+      if (typeof value !== 'boolean') {
+        res.status(400).json({ error: 'value (boolean) is required' });
+        return;
+      }
+      if (!(SAFETY_KEYS as readonly string[]).includes(key)) {
+        res.status(400).json({ error: `Invalid key. Allowed: ${SAFETY_KEYS.join(', ')}` });
+        return;
+      }
+
+      // Store in settings table
+      const dbKey = `safety.${key}`;
+      getDb().prepare(`
+        INSERT OR REPLACE INTO settings (key, value, updated_at)
+        VALUES (?, ?, datetime('now'))
+      `).run(dbKey, String(value));
+
+      res.json({ ok: true, key, value, all: getSafetyState() });
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to update safety setting', details: String(err) });
+    }
   });
 
   // Merge Status (Issue #22)
@@ -1974,14 +2242,13 @@ export function createApp(options: ServerOptions = {}) {
         const targetPhase: Phase = run.phase === 'GATE_APPROVE' ? 'COMMIT' : 'MERGE';
         const updatedRun = { ...run, phase: targetPhase, status: 'active' as RunStatus, lastError: null };
         saveRunToDb(updatedRun);
-        runSignals.set(id, 'RESUME');
-        resumePhaseTarget.set(id, targetPhase);
+        setRunSignal(id, 'RESUME', targetPhase);
       } else {
         // Zurück zur vorherigen Phase (revise)
         const targetPhase: Phase = 'REVIEW';
         const updatedRun = { ...run, phase: targetPhase, status: 'active' as RunStatus, lastError: null };
         saveRunToDb(updatedRun);
-        runSignals.set(id, 'RETRY');
+        setRunSignal(id, 'RETRY');
       }
 
       res.json({ ok: true, action });
@@ -1994,7 +2261,7 @@ export function createApp(options: ServerOptions = {}) {
   app.get('/api/runs/:id/artifacts/:kind', (req, res) => {
     const { id, kind } = req.params;
 
-    const VALID_KINDS = ['spec', 'plan', 'tasks', 'review', 'test-results', 'diff'];
+    const VALID_KINDS = ['spec', 'plan', 'tasks', 'review', 'test-results', 'diff', 'implementation'];
     if (!VALID_KINDS.includes(kind)) {
       return res.status(400).json({
         error: `Ungültiger Artefakt-Typ. Erlaubt: ${VALID_KINDS.join(', ')}`,
@@ -2337,7 +2604,7 @@ export function createApp(options: ServerOptions = {}) {
     }
     if (action === 'resume') {
       // Resume-by-State (Aufgabe 5): Von der letzten abgeschlossenen Phase fortsetzen
-      const isPaused = runSignals.get(runId) === 'PAUSE';
+      const isPaused = checkRunSignal(runId) === 'PAUSE';
       const isFailed = run.phase === 'FAILED_BLOCKED' || run.phase === 'FAILED_TRANSIENT';
 
       if (!isPaused && !isFailed) {
@@ -2365,8 +2632,7 @@ export function createApp(options: ServerOptions = {}) {
         : 'TEST';
 
       // Ziel-Phase speichern und Signal setzen
-      resumePhaseTarget.set(runId, nextPhase);
-      runSignals.set(runId, 'RESUME');
+      setRunSignal(runId, 'RESUME', nextPhase);
 
       storeEvent({
         id: createRunId(),
@@ -2418,7 +2684,7 @@ export function createApp(options: ServerOptions = {}) {
         }
 
         // Set ABORT signal for pipeline loop
-        runSignals.set(runId, 'ABORT');
+        setRunSignal(runId, 'ABORT');
 
         // Store cancel event
         storeEvent({
@@ -2438,7 +2704,7 @@ export function createApp(options: ServerOptions = {}) {
 
       // Set signal for non-abort actions
       const signal = action.toUpperCase() as 'PAUSE' | 'RETRY';
-      runSignals.set(runId, signal);
+      setRunSignal(runId, signal);
     }
 
     // Log event (abort already logged its own event above)
@@ -2464,7 +2730,7 @@ export function createApp(options: ServerOptions = {}) {
   app.post('/api/runs/:id/cancel', createCancelHandler({
     loadRunFromDb,
     getDb,
-    runSignals,
+    setRunSignal,
     storeEvent,
     broadcastSSE,
     createRunId,
@@ -2590,6 +2856,21 @@ export function createServer(options: ServerOptions = {}) {
     }
     return originalClose(callback);
   };
+
+  // Graceful shutdown on SIGTERM
+  const gracefulShutdown = () => {
+    log.info('SIGTERM received, shutting down...');
+    server.close(() => {
+      log.info('HTTP server closed');
+      process.exit(0);
+    });
+    // Force exit after 10s
+    setTimeout(() => {
+      log.error('Forced shutdown after timeout');
+      process.exit(1);
+    }, 10000);
+  };
+  process.on('SIGTERM', gracefulShutdown);
 
   return server;
 }

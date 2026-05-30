@@ -9,7 +9,10 @@ export { FakeGitWorkspaceAdapter } from './fake-adapter.js';
 export { TestCommandDetector } from './detector.js';
 export type { TestCommandKind, TestCommandStatus, DetectedTestCommand, TestCommandDetectionResult } from './detector.js';
 export { TestRunner, runSingleCommand } from './test-runner.js';
-export type { TestCommandExecutionResult, TestReport, RunOptions } from './test-runner.js';
+export type { RunOptions } from './test-runner.js';
+// TestReport und TestCommandExecutionResult wurden nach @positron/shared konsolidiert (Issue #31)
+// Re-export für Abwärtskompatibilität
+export type { TestReport, TestCommandExecutionResult } from '@positron/shared';
 export { renderTestReportMarkdown, renderTestReportComment } from './test-templates.js';
 export { ALLOWED_SPECKIT_COMMANDS, BLOCKED_SPECKIT_COMMANDS, isAllowedSpecKitCommand, isBlockedSpecKitCommand, validateSpecKitCommand, SpecKitCommandPolicyError } from './speckit-policy.js';
 export { ALLOWED_OPENCODE_COMMANDS, BLOCKED_OPENCODE_COMMANDS, ALLOWED_SLASH_COMMANDS, validateOpenCodeCommand, OpenCodeCommandPolicyError } from './opencode-policy.js';

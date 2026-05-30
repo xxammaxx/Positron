@@ -21,6 +21,7 @@
     { "path": "./packages/sandbox" },
     { "path": "./packages/speckit-adapter" },
     { "path": "./packages/opencode-adapter" },
-    { "path": "./apps/server" }
+    { "path": "./apps/server" },
+    { "path": "./apps/worker" }
   ]
 }

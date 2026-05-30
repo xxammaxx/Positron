@@ -1,13 +1,46 @@
 /**
- * Demo Live Run Handler — Creates demo run with seeded events and evidence (Issue #66).
+ * Demo Live Run Handler — Creates a real run and executes the full pipeline, streaming events via SSE (Issue #66, #3).
+ * No synthetic events. All events come from actual pipeline execution through the configured adapters.
  * Security-gated: only available in dev mode or with POSITRON_ENABLE_DEMO_LIVE=1.
  */
 
 import type { Request, Response } from 'express';
+import type { Phase, EventLevel } from '@positron/shared';
+import type { RunState, RunEventData } from '@positron/run-state';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function createDemoLiveRunHandler(deps: Record<string, any>) {
-  return async (_req: Request, res: Response): Promise<void> => {
+/** Dependencies interface — strongly typed to prevent silent mismatches like the old Record<string,any>. */
+export interface DemoLiveRunDeps {
+  /** Creates a fresh RunState object (not persisted yet). */
+  createRun: (repoId: string, issueNumber: number, autonomyLevel: number) => RunState;
+  /** Persists a run to the DB (INSERT/UPDATE). */
+  saveRunToDb: (run: RunState) => void;
+  /** Persists a run event and broadcasts it via SSE. Takes a single RunEventData object. */
+  storeEvent: (event: RunEventData) => void;
+  /** Saves an artifact (spec, plan, tasks, etc.) and broadcasts evidence-created via SSE. */
+  saveArtifact: (runId: string, kind: string, content: string | string[]) => void;
+  /** Writes SSE event data to all registered clients for a run. */
+  broadcastSSE: (runId: string, event: string, data: Record<string, unknown>) => void;
+  /** Generates a unique ID (crypto.randomUUID). */
+  createRunId: () => string;
+  /** Repository config (owner, repo, defaultBranch, etc.). */
+  repository: { id: string; owner: string; repo: string; defaultBranch?: string; remoteUrl?: string };
+
+  // --- Pipeline execution & SSE streaming ---
+
+  /** Executes the full Positron pipeline for the given run, returning the final state.
+   *  This executes ALL phases using the configured adapters (fake or real).
+   *  Each phase transition calls storeEvent() which automatically broadcasts SSE. */
+  runPipeline: (run: RunState) => Promise<RunState>;
+  /** Registers the response as an SSE client for a run — pipeline events will stream to this client. */
+  addSSEClient: (runId: string, res: Response) => void;
+  /** Removes a previously registered SSE client. */
+  removeSSEClient: (runId: string, res: Response) => void;
+  /** Loads all events for a run from the DB (chronological). */
+  getEvents: (runId: string) => RunEventData[];
+}
+
+export function createDemoLiveRunHandler(deps: DemoLiveRunDeps) {
+  return async (req: Request, res: Response): Promise<void> => {
     // Security gate
     if (process.env.NODE_ENV === 'production' && process.env.POSITRON_ENABLE_DEMO_LIVE !== '1') {
       res.status(403).json({ error: 'Demo live run is disabled in production' });
@@ -15,73 +48,85 @@ export function createDemoLiveRunHandler(deps: Record<string, any>) {
     }
 
     try {
-      const runId = `demo-live-${deps.createRunId().slice(0, 8)}`;
-
-      // Create and save the run
-      const run = deps.createRun(deps.repository.id, 9999);
-      const runState = {
-        ...run,
-        id: runId,
-        repoId: deps.repository.id,
-        issueNumber: 9999,
-        status: 'active' as const,
-        phase: 'SPECIFY' as const,
-        autonomyLevel: 2,
-        attempt: 1,
-        lastError: null,
-        workspacePath: null,
-        startedAt: new Date().toISOString(),
-        finishedAt: null,
-      };
-      deps.saveRunToDb(runState);
-
-      const DEMO_EVENTS = [
-        { phase: 'SPECIFY', level: 'INFO', message: 'Demo: Loading specification...' },
-        { phase: 'SPECIFY', level: 'INFO', message: 'Demo: Specification generated (3 user stories)' },
-        { phase: 'PLAN', level: 'INFO', message: 'Demo: Creating implementation plan...' },
-        { phase: 'TASKS', level: 'INFO', message: 'Demo: Breaking into atomic tasks...' },
-        { phase: 'REVIEW', level: 'INFO', message: 'Demo: Starting code review...' },
-        { phase: 'IMPLEMENT', level: 'INFO', message: 'Demo: Implementing feature...' },
-        { phase: 'TEST', level: 'INFO', message: 'Demo: Running tests...' },
-        { phase: 'TEST', level: 'WARN', message: 'Demo: FAKE_API_TOKEN=***-redacted (demo token)' },
-      ];
-
-      for (const evt of DEMO_EVENTS) {
-        deps.storeEvent(runId, evt.phase, evt.level, evt.message, {});
-        deps.broadcastSSE(runId, 'run-event', {
-          runId, phase: evt.phase, level: evt.level, message: evt.message,
-          createdAt: new Date().toISOString(),
-        });
+      const { blueprint, issueNumber } = (req.body as { blueprint?: string; issueNumber?: number }) ?? {};
+      let issueNum = parseInt(process.env.POSITRON_DEFAULT_ISSUE_NUMBER ?? '56', 10);
+      if (issueNumber !== undefined && issueNumber !== null) {
+        const parsed = Number(issueNumber);
+        if (Number.isInteger(parsed) && parsed >= 1 && parsed <= 999999) {
+          issueNum = parsed;
+        }
       }
 
-      const DEMO_ARTIFACTS = [
-        { kind: 'spec', content: '# Demo Spec\n\n1. User can view runs\n2. User can cancel runs' },
-        { kind: 'test-results', content: 'Tests: 66/66 passed' },
-      ];
+      // ── 1. Create a real run in the database (persisted) ──────────────────
+      const repoId = deps.repository.id ?? `${deps.repository.owner}/${deps.repository.repo}`;
+      const run = deps.createRun(repoId, issueNum, 2);
+      deps.saveRunToDb(run);
 
-      for (const art of DEMO_ARTIFACTS) {
-        deps.saveArtifact(runId, art.kind, art.content);
-        deps.broadcastSSE(runId, 'run-evidence-created', {
-          runId, kind: art.kind, summary: `Demo ${art.kind} artifact`,
-          createdAt: new Date().toISOString(),
-        });
-      }
+      // ── 2. Store an initial event (visible in SSE stream + DB) ───────────
+      deps.storeEvent({
+        id: deps.createRunId(),
+        runId: run.id,
+        phase: 'QUEUED' as Phase,
+        level: 'HUMAN' as EventLevel,
+        message: `Demo live run created for Issue #${issueNum}`,
+        payload: {
+          blueprint: blueprint ?? null,
+          issueNumber: issueNum,
+          source: 'demo-live-run',
+        },
+        createdAt: new Date().toISOString(),
+      });
 
-      deps.broadcastSSE(runId, 'run-update', { phase: 'DONE', status: 'done' });
+      // ── 3. Set up SSE streaming ──────────────────────────────────────────
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no',
+      });
 
-      res.json({
-        success: true,
-        runId,
-        status: 'done',
+      // Send initial state (run metadata + all events so far) to the client
+      const initialEvents = deps.getEvents(run.id);
+      const initialState = {
+        run,
+        events: initialEvents,
+        message: 'Demo live run started — streaming real pipeline events via SSE',
         demo: true,
-        message: 'Demo live run created and populated with events and evidence',
-        events: DEMO_EVENTS.length,
-        artifacts: DEMO_ARTIFACTS.length,
-      });
+      };
+      res.write(`event: initial\ndata: ${JSON.stringify(initialState)}\n\n`);
+
+      // Register as SSE client so storeEvent() -> broadcastSSE() writes to this response
+      deps.addSSEClient(run.id, res);
+
+      // ── 4. Execute the REAL pipeline — all events come from actual execution ──
+      //    Each phase transition calls deps.storeEvent() internally (via the orchestrator),
+      //    which in turn calls broadcastSSE() -> this client receives each event live.
+      const finalRun = await deps.runPipeline(run);
+
+      // ── 5. Send completion event ─────────────────────────────────────────
+      res.write(`event: done\ndata: ${JSON.stringify({
+        runId: finalRun.id,
+        status: finalRun.status,
+        phase: finalRun.phase,
+        demo: true,
+        message: 'Pipeline complete — all events streamed from real adapter execution',
+      })}\n\n`);
+
+      // ── 6. Cleanup ───────────────────────────────────────────────────────
+      deps.removeSSEClient(run.id, res);
+      res.end();
     } catch (err) {
-      res.status(500).json({
-        error: err instanceof Error ? err.message : 'Failed to create demo run',
-      });
+      // If the pipeline or setup fails, send an error event via SSE
+      // (headers may or may not be sent — try SSE, fallback to JSON)
+      try {
+        res.write(`event: error\ndata: ${JSON.stringify({
+          error: err instanceof Error ? err.message : 'Failed to create demo live run',
+          demo: true,
+        })}\n\n`);
+        res.end();
+      } catch {
+        // Headers already sent or connection closed — nothing to do
+      }
     }
   };
 }

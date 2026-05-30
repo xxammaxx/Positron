@@ -2,27 +2,7 @@
 
 import { runCommand } from './command-runner.js';
 import type { DetectedTestCommand, TestCommandDetectionResult } from './detector.js';
-
-/** Ergebnis eines einzelnen Test-Kommandos */
-export interface TestCommandExecutionResult {
-  command: string;
-  exitCode: number | null;
-  stdout: string;
-  stderr: string;
-  durationMs: number;
-}
-
-/** Vollständiger Test-Report */
-export interface TestReport {
-  status: 'passed' | 'failed' | 'blocked' | 'skipped';
-  summary: string;
-  passed: number;
-  failed: number;
-  total: number;
-  durationMs: number;
-  artifactPath?: string;
-  details?: TestCommandExecutionResult[];
-}
+import type { TestReport, TestCommandExecutionResult } from '@positron/shared';
 
 /** Optionen für den Test-Runner */
 export interface RunOptions {

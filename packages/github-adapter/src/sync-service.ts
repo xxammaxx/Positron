@@ -2,7 +2,7 @@
 
 import type { GitHubAdapter } from './adapter.js';
 import type { GitHubIssueRef, GitHubIssueComment } from './types.js';
-import type { TestReport } from '@positron/sandbox';
+import type { TestReport } from '@positron/shared';
 import type { EvidenceItem, SafeLlmRunMetadata } from './sync-types.js';
 import { redactSecrets } from '@positron/shared';
 import {

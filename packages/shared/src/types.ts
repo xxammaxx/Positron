@@ -125,6 +125,38 @@ export function parseRunStatus(value: string): RunStatus {
   throw new Error(`Invalid run status: "${value}". Must be one of: ${ALL_RUN_STATUSES.join(', ')}`);
 }
 
+/** Deutsche Label für jede Phase (Issue #24) */
+export const PHASE_LABELS: Record<Phase, string> = {
+  QUEUED: 'Warteschlange',
+  CLAIMED: 'Übernommen',
+  REPO_SYNC: 'Repository-Sync',
+  ISSUE_CONTEXT: 'Issue-Kontext',
+  WEB_RESEARCH: 'Web-Recherche',
+  SPECIFY: 'Anforderungsanalyse',
+  CLARIFY_OPTIONAL: 'Klarstellung',
+  PLAN: 'Planung',
+  TASKS: 'Aufgaben',
+  ANALYZE: 'Analyse',
+  REVIEW: 'Code-Review',
+  IMPLEMENT: 'Implementierung',
+  TEST: 'Tests',
+  VERIFY: 'Verifikation',
+  COMMIT: 'Committen',
+  PR_CREATE: 'Pull Request',
+  MERGE: 'Zusammenführen',
+  DONE: 'Abgeschlossen',
+  FAILED: 'Fehlgeschlagen',
+  FAILED_TRANSIENT: 'Fehler (wiederholbar)',
+  FAILED_BLOCKED: 'Fehler (blockiert)',
+  FAILED_UNSAFE: 'Fehler (unsicher)',
+  BLOCKED_PUSH: 'Push blockiert',
+  BLOCKED_MERGE: 'Merge blockiert',
+  GATE_APPROVE: 'Genehmigung erforderlich',
+  GATE_REVISE: 'Überarbeitung erforderlich',
+  RESUME_PENDING: 'Wiederaufnahme ausstehend',
+  CLEANUP: 'Bereinigung',
+};
+
 /** Safe JSON.parse — gibt null statt Fehler bei ungültigem JSON */
 export function safeJsonParse(s: string | null): Record<string, unknown> | null {
   if (!s) return null;

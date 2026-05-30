@@ -25,37 +25,80 @@ describe('FakeGitWorkspaceAdapter', () => {
     expect(result.workspacePath).toContain('positron-fake-');
   });
 
-  test('getStatus: anfangs clean, nach prepareWorkspace dirty', async () => {
+  test('getStatus: nach prepareWorkspace dirty (simuliert Änderungen), nach commit clean', async () => {
     const adapter = new FakeGitWorkspaceAdapter();
-    // Vor prepareWorkspace: clean
-    const statusBefore = await adapter.getStatus('/fake/path');
-    expect(statusBefore.isClean).toBe(true);
-
-    // Nach prepareWorkspace: dirty (simuliert Änderungen)
-    await adapter.prepareWorkspace({
+    const result = await adapter.prepareWorkspace({
       repository: { owner: 'test', repo: 'test', remoteUrl: 'https://github.com/test/test.git' },
       issueNumber: 42, issueTitle: 'Test',
       runId: 'test-run-status', baseBranch: 'main',
     });
-    const statusAfter = await adapter.getStatus('/fake/path');
-    expect(statusAfter.isClean).toBe(false);
-    expect(statusAfter.branch).toBeDefined();
+    const wsPath = result.workspacePath;
+
+    // Nach prepareWorkspace ist der Workspace dirty (simuliert Änderungen für Pipeline)
+    const statusBefore = await adapter.getStatus(wsPath);
+    expect(statusBefore.isClean).toBe(false);
+    expect(statusBefore.branch).toBeDefined();
+
+    // Nach commit ist der Workspace clean
+    await adapter.commit(wsPath, 'test');
+    const statusAfter = await adapter.getStatus(wsPath);
+    expect(statusAfter.isClean).toBe(true);
   });
 
-  test('commit: nach prepareWorkspace erfolgreich, danach NO_CHANGES', async () => {
+  test('commit: nach prepareWorkspace dirty → commit erfolgreich, danach clean', async () => {
     const adapter = new FakeGitWorkspaceAdapter();
-    await adapter.prepareWorkspace({
+    const result = await adapter.prepareWorkspace({
       repository: { owner: 'test', repo: 'test', remoteUrl: 'https://github.com/test/test.git' },
       issueNumber: 42, issueTitle: 'Test',
       runId: 'test-run-commit', baseBranch: 'main',
     });
-    // Erster Commit: erfolgreich (weil _hasChanges=true)
-    const result = await adapter.commit('/fake/path', 'test commit');
-    expect(result.sha).toContain('fake-commit-sha-');
-    // Zweiter Commit: schlägt fehl (weil _hasChanges=false)
+    const wsPath = result.workspacePath;
+
+    // Nach prepareWorkspace: dirty → commit erfolgreich
+    const commitResult = await adapter.commit(wsPath, 'test commit');
+    expect(commitResult.sha).toContain('fake-commit-sha-');
+
+    // Zweiter Commit: schlägt fehl (weil dirty nach erstem Commit zurückgesetzt wurde)
     await expect(
-      adapter.commit('/fake/path', 'second commit')
+      adapter.commit(wsPath, 'second commit')
     ).rejects.toThrow('NO_CHANGES_TO_COMMIT');
+
+    // simulateChange → wieder dirty → commit erfolgreich
+    adapter.simulateChange(wsPath);
+    const thirdCommit = await adapter.commit(wsPath, 'third commit');
+    expect(thirdCommit.sha).toContain('fake-commit-sha-');
+  });
+
+  test('simulateFileChange setzt dirty-Flag und fileStates — getStatus spiegelt die Dateien', async () => {
+    const adapter = new FakeGitWorkspaceAdapter();
+    const result = await adapter.prepareWorkspace({
+      repository: { owner: 'test', repo: 'test', remoteUrl: 'https://github.com/test/test.git' },
+      issueNumber: 42, issueTitle: 'File Change Test',
+      runId: 'test-run-file', baseBranch: 'main',
+    });
+    const wsPath = result.workspacePath;
+
+    // Nach prepareWorkspace: dirty mit Fallback-Dateien (keine simulierten Files)
+    const statusDefault = await adapter.getStatus(wsPath);
+    expect(statusDefault.isClean).toBe(false);
+    expect(statusDefault.staged).toEqual(['README.md', 'src/index.ts']);
+
+    // simulateFileChange → die simulierten Dateien erscheinen in staged
+    adapter.simulateFileChange(wsPath, 'src/foo.ts');
+    adapter.simulateFileChange(wsPath, 'config.json');
+    const status = await adapter.getStatus(wsPath);
+    expect(status.isClean).toBe(false);
+    expect(status.staged).toEqual(expect.arrayContaining(['src/foo.ts', 'config.json']));
+    expect(status.staged.length).toBe(2);
+
+    // commit soll funktionieren
+    const commitResult = await adapter.commit(wsPath, 'add foo.ts + config.json');
+    expect(commitResult.sha).toContain('fake-commit-sha-');
+
+    // Nach Commit: clean, keine staged files
+    const statusAfter = await adapter.getStatus(wsPath);
+    expect(statusAfter.isClean).toBe(true);
+    expect(statusAfter.staged).toEqual([]);
   });
 });
 

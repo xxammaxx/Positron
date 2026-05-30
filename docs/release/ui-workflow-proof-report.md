@@ -2,47 +2,30 @@
 
 ## Summary
 - **Status:** PASS
-- **Timestamp:** 2026-05-27T18:12:05.645Z
+- **Timestamp:** 2026-05-29T07:43:13.293Z
 
 ## Verification Results
 
 | Check | Result |
 |-------|--------|
-| Backend verified | ✅ true |
-| UI renders | ✅ true |
-| Backend API used by UI | ✅ true |
-| Network log exists | ✅ true |
-| Screenshots captured | ✅ 12 screenshots |
+| Backend health | ✅ true |
+| Runs endpoint | ✅ true |
+| UI screenshots captured | ✅ true |
+| Network log file exists | ✅ true |
+| Captured API calls | ✅ 5 calls logged |
+| No server errors (5xx) | ✅ true |
+| Screenshots count | ✅ 12 screenshots |
 
 ## Network Calls
-Total API calls captured: 24
+Total API calls captured: 5
 
 | Method | URL | Status |
 |--------|-----|--------|
-| GET | /runs?limit=50 | 200 |
-| GET | /metrics | 200 |
-| GET | /evidence | 200 |
-| GET | /runs?limit=50 | 200 |
-| GET | /metrics | 200 |
-| GET | /evidence | 200 |
-| GET | /health | 200 |
-| GET | /health | 200 |
-| GET | /health | 200 |
-| GET | /health | 200 |
-| GET | runs?limit=50 | 200 |
-| GET | metrics | 200 |
-| GET | evidence | 200 |
-| GET | runs?limit=50 | 200 |
-| GET | metrics | 200 |
-| GET | evidence | 200 |
-| GET | health | 200 |
-| GET | health | 200 |
-| GET | health | 200 |
-| GET | health | 200 |
-| GET | runs?limit=50 | 200 |
-| GET | metrics | 200 |
-| GET | evidence | 200 |
+| GET | /api/stream | 200 |
 | GET | /api/health | 200 |
+| GET | /api/runs | 200 |
+| GET | /api/health | 200 |
+| GET | /api/runs | 200 |
 
 ## Artifacts
 - docs/release/ui-workflow-proof/01-ui-opened.png

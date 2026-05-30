@@ -12,14 +12,17 @@ import type {
 /**
  * Fake-Git-Workspace-Adapter für Tests.
  * Simuliert alle Git-Operationen ohne echte Git-Calls.
- * 
- * Wichtig: _hasChanges wird nach prepareWorkspace() auf true gesetzt,
- * damit die Pipeline nicht bei NO_CHANGES_TO_COMMIT blockiert.
+ *
+ * Dirty-State wird pro Workspace über eine Map<string, boolean> getrackt.
+ * Standardmäßig ist der Workspace nach prepareWorkspace() dirty (simuliert Änderungen),
+ * damit die Pipeline vollständig durchlaufen kann. Tests können simulateChange()
+ * oder simulateFileChange() für granulare Kontrolle nutzen.
  */
 export class FakeGitWorkspaceAdapter implements GitWorkspaceAdapter {
   private workspaces = new Map<string, PreparedWorkspace>();
   private fileStates = new Map<string, Map<string, string>>();
-  private _hasChanges = false;
+  private workspaceDirty = new Map<string, boolean>();
+  private workspaceToRunId = new Map<string, string>();
 
   async prepareWorkspace(input: PrepareWorkspaceInput): Promise<PreparedWorkspace> {
     const { repository, issueNumber, issueTitle, runId, baseBranch } = input;
@@ -46,19 +49,57 @@ export class FakeGitWorkspaceAdapter implements GitWorkspaceAdapter {
 
     this.workspaces.set(runId, workspace);
     this.fileStates.set(runId, new Map());
-    // Simuliere dass OpenCode Änderungen gemacht hat
-    this._hasChanges = true;
+    this.workspaceToRunId.set(workspacePath, runId);
+    // Starte mit simulierten Änderungen — ermöglicht vollständige Pipeline-Durchläufe
+    this.workspaceDirty.set(workspacePath, true);
 
     return workspace;
   }
 
+  /**
+   * Markiert einen Workspace als dirty (simuliert uncommittete Änderungen).
+   * Muss nach prepareWorkspace() aufgerufen werden, bevor commit() erfolgreich ist.
+   */
+  simulateChange(workspacePath: string): void {
+    this.workspaceDirty.set(workspacePath, true);
+  }
+
+  /**
+   * Simuliert eine Dateiänderung in einem Workspace.
+   * Setzt dirty-flag und trägt die Datei in fileStates ein.
+   */
+  simulateFileChange(workspacePath: string, filename: string): void {
+    this.workspaceDirty.set(workspacePath, true);
+    const runId = this.workspaceToRunId.get(workspacePath);
+    if (runId) {
+      const files = this.fileStates.get(runId);
+      if (files) {
+        files.set(filename, 'modified');
+      }
+    }
+  }
+
   async getStatus(workspacePath: string): Promise<GitStatusSummary> {
+    const isDirty = this.workspaceDirty.get(workspacePath) ?? false;
+
+    // Lies die tatsächlich simulierten Dateien, falls vorhanden
+    const runId = this.workspaceToRunId.get(workspacePath);
+    const simulatedFiles: string[] = [];
+    if (runId) {
+      const files = this.fileStates.get(runId);
+      if (files && files.size > 0) {
+        simulatedFiles.push(...files.keys());
+      }
+    }
+
     return {
       branch: this._currentBranch ?? 'positron/issue-42-fake',
-      isClean: !this._hasChanges,
-      ahead: this._hasChanges ? 1 : 0,
+      isClean: !isDirty,
+      ahead: isDirty ? 1 : 0,
       behind: 0,
-      staged: this._hasChanges ? ['README.md', 'src/index.ts'] : [],
+      staged: isDirty
+        ? (simulatedFiles.length > 0 ? simulatedFiles : ['README.md', 'src/index.ts'])
+        : [],
       unstaged: [],
       untracked: [],
       conflicted: [],
@@ -91,11 +132,13 @@ export class FakeGitWorkspaceAdapter implements GitWorkspaceAdapter {
     // Im Fake-Modus immer valide
   }
 
-  async commit(_workspacePath: string, _message: string): Promise<{ sha: string }> {
-    if (!this._hasChanges) {
+  async commit(workspacePath: string, _message: string): Promise<{ sha: string }> {
+    const isDirty = this.workspaceDirty.get(workspacePath) ?? false;
+    if (!isDirty) {
       throw new Error('NO_CHANGES_TO_COMMIT');
     }
-    this._hasChanges = false;
+    // Dirty-Flag nach erfolgreichem Commit zurücksetzen
+    this.workspaceDirty.set(workspacePath, false);
     return { sha: `fake-commit-sha-${Date.now()}` };
   }
 

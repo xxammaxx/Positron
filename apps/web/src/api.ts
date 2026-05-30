@@ -15,6 +15,55 @@ import { parsePhase } from '@positron/shared';
 
 const BASE = '/api';
 
+// ── Admin API Types & Token Management (Issue #11) ────────────
+
+export interface AdminStats {
+  runs: { total: number; active: number; failed: number; done: number };
+  repositories: number;
+  events: number;
+  artifacts: number;
+  dbSizeMb: number;
+}
+
+/** Read the stored admin token from localStorage */
+export function getAdminToken(): string {
+  try {
+    return localStorage.getItem('positron_admin_token') ?? '';
+  } catch {
+    return '';
+  }
+}
+
+/** Persist the admin token to localStorage */
+export function setAdminToken(token: string): void {
+  try {
+    localStorage.setItem('positron_admin_token', token);
+  } catch { /* ignore */ }
+}
+
+async function adminRequest<T>(path: string, options?: RequestInit): Promise<T> {
+  const token = getAdminToken();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'X-Admin-Token': token,
+    ...(options?.headers as Record<string, string> | undefined ?? {}),
+  };
+  const res = await fetch(`${BASE}${path}`, {
+    ...options,
+    headers,
+  });
+  if (!res.ok) {
+    const err = (await res.json().catch(() => ({
+      error: res.statusText,
+    }))) as ApiError;
+    // Include HTTP status code in the error for client-side handling
+    throw Object.assign(new Error(err.error ?? res.statusText), {
+      status: res.status,
+    });
+  }
+  return res.json() as Promise<T>;
+}
+
 async function request<T>(
   path: string,
   options?: RequestInit,
@@ -75,6 +124,15 @@ export const api = {
 
   getRunById(id: string): Promise<{ run: Run; events: RunEvent[] }> {
     return request<{ run: Run; events: RunEvent[] }>(`/runs/${id}`);
+  },
+
+  createRun(
+    issueUrl: string,
+  ): Promise<{ run: Run; runId: string }> {
+    return request<{ run: Run; runId: string }>('/runs', {
+      method: 'POST',
+      body: JSON.stringify({ issueUrl }),
+    });
   },
 
   startRun(
@@ -237,6 +295,17 @@ export const api = {
     return request('/safety');
   },
 
+  // Update a single safety flag (Issue #25)
+  updateSafety(key: string, value: boolean): Promise<{
+    ok: boolean; key: string; value: boolean;
+    all: Record<string, boolean>;
+  }> {
+    return request('/safety', {
+      method: 'POST',
+      body: JSON.stringify({ key, value }),
+    });
+  },
+
   // Cancel run (Issue #66)
   cancelRun(runId: string): Promise<{
     ok: boolean; runId: string; message: string;
@@ -264,5 +333,34 @@ export const api = {
     return request('/demo-runs', {
       method: 'POST', body: JSON.stringify({ blueprint, issueNumber }),
     });
+  },
+
+  // Blueprint from GitHub issue (Issue #14 + #15)
+  getBlueprint(owner: string, repo: string, issueNumber: number): Promise<{
+    blueprint: string; repoId: string; issueNumber: number; generatedAt: string;
+  }> {
+    return request(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${issueNumber}/blueprint`);
+  },
+
+  // ── Admin API (Issue #11) ──────────────────────────────────────
+
+  /** Admin dashboard statistics */
+  getAdminStats(): Promise<AdminStats> {
+    return adminRequest<AdminStats>('/admin/stats');
+  },
+
+  /** Bulk-cancel all active/blocked runs */
+  bulkCancelRuns(): Promise<{ cancelled: number }> {
+    return adminRequest<{ cancelled: number }>('/admin/runs/bulk-cancel', { method: 'POST' });
+  },
+
+  /** Bulk-retry all failed/blocked runs */
+  bulkRetryRuns(): Promise<{ retried: number }> {
+    return adminRequest<{ retried: number }>('/admin/runs/bulk-retry', { method: 'POST' });
+  },
+
+  /** Cleanup old events (7d) and VACUUM database */
+  cleanupRuns(): Promise<{ eventsDeleted: number; dbSizeMb: number }> {
+    return adminRequest<{ eventsDeleted: number; dbSizeMb: number }>('/admin/runs/cleanup', { method: 'POST' });
   },
 };
