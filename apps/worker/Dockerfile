@@ -2,6 +2,8 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 COPY . .
 RUN npm ci --ignore-scripts
+# Rebuild native modules (better-sqlite3) — skipped by --ignore-scripts above
+RUN npm rebuild better-sqlite3
 RUN npm run build
 
 FROM node:22-alpine
