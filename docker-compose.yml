@@ -37,13 +37,13 @@ services:
     volumes:
       - positron-data:/app/.positron
       - ${HOME}/.opencode/bin/opencode:/usr/local/bin/opencode:ro
-      - ${HOME}/.local/share/uv/tools/specify-cli:/opt/specify-cli:ro
+      - ${HOME}/.local/share/uv/tools/specify-cli:${HOME}/.local/share/uv/tools/specify-cli:ro
       - ${HOME}/.config/opencode:/root/.config/opencode:ro
       - ${HOME}/.opencode:/root/.opencode
     environment:
       - PORT=3000
       - NODE_ENV=production
-      - PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/specify-cli/bin
+      - PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${HOME}/.local/share/uv/tools/specify-cli/bin:${HOME}/.local/share/uv/tools/specify-cli/bin
       - POSITRON_DB_PATH=/app/.positron/runs/positron.db
       - POSITRON_REDIS_URL=redis://redis:6379
       - GITHUB_TOKEN=${GITHUB_TOKEN:-ghp_fake}
@@ -78,14 +78,14 @@ services:
     volumes:
       - positron-data:/app/.positron
       - ${HOME}/.opencode/bin/opencode:/usr/local/bin/opencode:ro
-      - ${HOME}/.local/share/uv/tools/specify-cli:/opt/specify-cli:ro
+      - ${HOME}/.local/share/uv/tools/specify-cli:${HOME}/.local/share/uv/tools/specify-cli:ro
       - ${HOME}/.config/opencode:/root/.config/opencode:ro
       - ${HOME}/.opencode:/root/.opencode
     environment:
       - NODE_ENV=production
       - POSITRON_DB_PATH=/app/.positron/runs/positron.db
       - POSITRON_REDIS_URL=redis://redis:6379
-      - PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/specify-cli/bin
+      - PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${HOME}/.local/share/uv/tools/specify-cli/bin
       - GITHUB_TOKEN=${GITHUB_TOKEN:-ghp_fake}
       - POSITRON_GITHUB_MODE=${POSITRON_GITHUB_MODE:-fake}
       - POSITRON_SPECKIT_MODE=${POSITRON_SPECKIT_MODE:-fake}
