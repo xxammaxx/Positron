@@ -27,4 +27,5 @@ COPY --from=builder /app/packages/speckit-adapter/dist ./packages/speckit-adapte
 COPY --from=builder /app/packages/opencode-adapter/dist ./packages/opencode-adapter/dist
 COPY --from=builder /app/apps/worker/dist ./apps/worker/dist
 COPY --from=builder /app/package.json ./package.json
+RUN mkdir -p /app/workspace
 CMD ["node", "apps/worker/dist/index.js"]

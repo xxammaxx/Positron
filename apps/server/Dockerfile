@@ -29,6 +29,7 @@ COPY packages/sandbox/dist ./packages/sandbox/dist
 COPY apps/server/src ./apps/server/src
 
 WORKDIR /app/apps/server
+RUN mkdir -p /app/workspace
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
