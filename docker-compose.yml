@@ -36,6 +36,10 @@ services:
       - "3000:3000"
     volumes:
       - positron-data:/app/.positron
+      - ${HOME}/.opencode/bin/opencode:/usr/local/bin/opencode:ro
+      - ${HOME}/.local/bin/specify:/usr/local/bin/specify:ro
+      - ${HOME}/.config/opencode:/root/.config/opencode:ro
+      - ${HOME}/.opencode:/root/.opencode:ro
     environment:
       - PORT=3000
       - NODE_ENV=production
@@ -72,6 +76,10 @@ services:
       dockerfile: apps/worker/Dockerfile
     volumes:
       - positron-data:/app/.positron
+      - ${HOME}/.opencode/bin/opencode:/usr/local/bin/opencode:ro
+      - ${HOME}/.local/bin/specify:/usr/local/bin/specify:ro
+      - ${HOME}/.config/opencode:/root/.config/opencode:ro
+      - ${HOME}/.opencode:/root/.opencode:ro
     environment:
       - NODE_ENV=production
       - POSITRON_DB_PATH=/app/.positron/runs/positron.db
