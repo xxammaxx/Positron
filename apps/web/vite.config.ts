@@ -26,10 +26,14 @@ export default defineConfig({
   esbuild: {
     jsx: 'automatic',
     jsxImportSource: 'react',
+    loader: {
+      '.js': 'jsx',
+    },
   },
   optimizeDeps: {
     esbuildOptions: {
       loader: {
+        '.js': 'jsx',
         '.tsx': 'tsx',
       },
     },
