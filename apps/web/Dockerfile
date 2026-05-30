@@ -11,7 +11,6 @@ RUN npm install --omit=dev
 # Copy source
 COPY apps/web/index.html ./
 COPY apps/web/src ./src
-COPY apps/web/public ./public 2>/dev/null || true
 COPY apps/web/vite.config.ts ./
 COPY apps/web/tailwind.config.js ./
 COPY apps/web/postcss.config.js ./
