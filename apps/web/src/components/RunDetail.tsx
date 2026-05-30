@@ -3,12 +3,12 @@ import { useParams, Link } from 'react-router-dom';
 import { useRun } from '../hooks/useRun.js';
 import { useSSE } from '../hooks/useSSE.js';
 import { api } from '../api.js';
-import LogViewer from './LogViewer.js';
-import PhaseTimeline from './PhaseTimeline.js';
-import PhasePipeline from './PhasePipeline.js';
-import GateControls from './GateControls.js';
-import ArtifactPanel from './ArtifactPanel.js';
-import PhaseBadge from './PhaseBadge.js';
+import LogViewer from './LogViewer.jsx';
+import PhaseTimeline from './PhaseTimeline.jsx';
+import PhasePipeline from './PhasePipeline.jsx';
+import GateControls from './GateControls.jsx';
+import ArtifactPanel from './ArtifactPanel.jsx';
+import PhaseBadge from './PhaseBadge.jsx';
 import type { Phase } from '../types.js';
 import { parsePhase } from '@positron/shared';
 

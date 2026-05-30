@@ -1,14 +1,14 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import AppShell from './components/layout/AppShell.js';
-import DashboardPage from './components/dashboard/DashboardPage.js';
-import RunsPage from './components/runs/RunsPage.js';
-import EvidencePage from './components/evidence/EvidencePage.js';
-import Repositories from './components/Repositories.js';
-import RunDetail from './components/RunDetail.js';
-import SettingsPage from './components/settings/SettingsPage.js';
-import AdminPage from './components/admin/AdminPage.js';
-import NotFound from './components/NotFound.js';
+import AppShell from './components/layout/AppShell.jsx';
+import DashboardPage from './components/dashboard/DashboardPage.jsx';
+import RunsPage from './components/runs/RunsPage.jsx';
+import EvidencePage from './components/evidence/EvidencePage.jsx';
+import Repositories from './components/Repositories.jsx';
+import RunDetail from './components/RunDetail.jsx';
+import SettingsPage from './components/settings/SettingsPage.jsx';
+import AdminPage from './components/admin/AdminPage.jsx';
+import NotFound from './components/NotFound.jsx';
 
 export default function App(): React.ReactElement {
   return (

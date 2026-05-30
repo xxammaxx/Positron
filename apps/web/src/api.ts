@@ -9,8 +9,8 @@ import type {
   Metrics,
   HealthStatus,
   ApiError,
-} from './types.js';
-import type { Phase, RunStatus } from './types.js';
+} from './types.jsx';
+import type { Phase, RunStatus } from './types.jsx';
 import { parsePhase } from '@positron/shared';
 
 const BASE = '/api';

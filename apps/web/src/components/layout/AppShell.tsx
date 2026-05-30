@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Outlet } from 'react-router-dom';
-import TopBar from './TopBar.js';
-import Sidebar from './Sidebar.js';
+import TopBar from './TopBar.jsx';
+import Sidebar from './Sidebar.jsx';
 
 export default function AppShell(): React.ReactElement {
   const [sidebarOpen, setSidebarOpen] = useState(false);

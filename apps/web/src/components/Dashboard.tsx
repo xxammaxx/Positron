@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
-import PhaseBadge from './PhaseBadge.js';
+import PhaseBadge from './PhaseBadge.jsx';
 import type { Run, Phase } from '../types.js';
 import { ALL_PHASES } from '../types.js';
 
