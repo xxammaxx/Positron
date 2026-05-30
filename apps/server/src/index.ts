@@ -35,7 +35,7 @@ import { openDatabase, createRun, transition, markFailed, retry, resumeFromEvent
 import { RealSpecKitAdapter, FakeSpecKitAdapter } from '@positron/speckit-adapter';
 import { RealOpenCodeAdapter, FakeOpenCodeAdapter } from '@positron/opencode-adapter';
 import { generateBranchName, createRunId, loadRepositoryConfig, normalizeRepositoryConfig, buildRemoteUrl, MAX_FIX_LOOPS, parsePhase, parseRunStatus, safeJsonParse } from '@positron/shared';
-import { SecretManager } from '../../../packages/shared/src/secret-manager.js';
+import { SecretManager } from '@positron/shared';
 import type { Phase, RunStatus, EventLevel } from '@positron/shared';
 import type { RepositoryConfig, SpecKitAdapter, OpenCodeAdapter } from '@positron/shared';
 import type { RunState, RunEventData } from '@positron/run-state';

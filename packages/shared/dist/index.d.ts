@@ -9,4 +9,5 @@ export * from './opencode-types.js';
 export * from './opencode-errors.js';
 export * from './live-e2e.js';
 export * from './queue/types.js';
+export * from './secret-manager.js';
 //# sourceMappingURL=index.d.ts.map
