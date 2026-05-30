@@ -28,5 +28,9 @@ COPY --from=builder /app/packages/opencode-adapter/dist ./packages/opencode-adap
 COPY --from=builder /app/apps/worker/dist ./apps/worker/dist
 COPY --from=builder /app/package.json ./package.json
 RUN mkdir -p /app/workspace
-RUN printf '#!/bin/sh\nexec python3 /home/xxammaxx/.local/share/uv/tools/specify-cli/bin/specify "\$@"\n' > /usr/local/bin/specify && chmod +x /usr/local/bin/specify
+RUN printf '#!/bin/sh\n\
+for d in /home/xxammaxx/.local/share/uv/tools/specify-cli/lib/python3.*/site-packages; do\n\
+  if [ -d "\$d" ]; then export PYTHONPATH="\$d"; break; fi\n\
+done\n\
+exec python3 /home/xxammaxx/.local/share/uv/tools/specify-cli/bin/specify "\$@"\n' > /usr/local/bin/specify && chmod +x /usr/local/bin/specify
 CMD ["node", "apps/worker/dist/index.js"]
