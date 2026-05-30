@@ -30,6 +30,10 @@ COPY apps/server/src ./apps/server/src
 
 WORKDIR /app/apps/server
 RUN mkdir -p /app/workspace
+
+# Wrapper: use system python3 for specify (mounted binary needs host libs)
+RUN printf '#!/bin/sh\nexec python3 /home/xxammaxx/.local/share/uv/tools/specify-cli/bin/specify "\$@"\n' > /usr/local/bin/specify && chmod +x /usr/local/bin/specify
+
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \

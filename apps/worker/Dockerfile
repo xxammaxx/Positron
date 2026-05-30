@@ -9,7 +9,7 @@ RUN npm run build
 
 FROM node:22-slim
 WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends git wget && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends git wget python3 && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /app/node_modules ./node_modules
 # Workspace package manifests (npm needs these for resolution)
 COPY --from=builder /app/packages/shared/package.json ./packages/shared/package.json
@@ -28,4 +28,5 @@ COPY --from=builder /app/packages/opencode-adapter/dist ./packages/opencode-adap
 COPY --from=builder /app/apps/worker/dist ./apps/worker/dist
 COPY --from=builder /app/package.json ./package.json
 RUN mkdir -p /app/workspace
+RUN printf '#!/bin/sh\nexec python3 /home/xxammaxx/.local/share/uv/tools/specify-cli/bin/specify "\$@"\n' > /usr/local/bin/specify && chmod +x /usr/local/bin/specify
 CMD ["node", "apps/worker/dist/index.js"]
