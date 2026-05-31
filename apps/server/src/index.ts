@@ -483,17 +483,17 @@ async function executePhase(
           if (initResult.status === 'success') {
             storeEvent({ id: createRunId(), runId: current.id, phase: 'SPECIFY', level: 'INFO', message: `Spec Kit initialized: ${initResult.summary}`, payload: null, createdAt: new Date().toISOString() });
 
-            // Step 2: opencode run --command speckit.specify
-            const specResult = await opencode.runSlashCommand('speckit.specify', {
+            // Step 2: opencode run --command spec-driven-development "specify"
+            const specResult = await opencode.runSlashCommand('spec-driven-development', {
               runId: current.id, workspacePath: wsPath,
               issueTitle: `Issue #${current.issueNumber}`, issueNumber: current.issueNumber,
-              mode: 'safe-cli',
+              phaseName: 'specify',
             });
-            result = transition(current, 'PLAN', `Real Spec Kit: ${specResult.summary}`, specResult.status === 'success' ? 'INFO' : 'WARN');
+            result = transition(current, 'PLAN', `OpenCode: ${specResult.summary}`, specResult.status === 'success' ? 'INFO' : 'WARN');
             break;
           }
         } catch (err) {
-          storeEvent({ id: createRunId(), runId: current.id, phase: 'SPECIFY', level: 'WARN', message: `Real Spec Kit error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
+          storeEvent({ id: createRunId(), runId: current.id, phase: 'SPECIFY', level: 'WARN', message: `OpenCode error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
         }
       }
 
@@ -517,15 +517,15 @@ async function executePhase(
 
       if (realSpeckit) {
         try {
-          const planResult = await opencode.runSlashCommand('speckit.plan', {
+          const planResult = await opencode.runSlashCommand('spec-driven-development', {
             runId: current.id, workspacePath: wsPath,
             issueTitle: `Issue #${current.issueNumber}`, issueNumber: current.issueNumber,
-            mode: 'safe-cli',
+            phaseName: 'plan',
           });
-          result = transition(current, 'TASKS', `Real Spec Kit: ${planResult.summary}`, planResult.status === 'success' ? 'INFO' : 'WARN');
+          result = transition(current, 'TASKS', `OpenCode: ${planResult.summary}`, planResult.status === 'success' ? 'INFO' : 'WARN');
           break;
         } catch (err) {
-          storeEvent({ id: createRunId(), runId: current.id, phase: 'PLAN', level: 'WARN', message: `Real Spec Kit error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
+          storeEvent({ id: createRunId(), runId: current.id, phase: 'PLAN', level: 'WARN', message: `OpenCode error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
         }
       }
 
@@ -548,15 +548,15 @@ async function executePhase(
 
       if (realSpeckit) {
         try {
-          const tasksResult = await opencode.runSlashCommand('speckit.tasks', {
+          const tasksResult = await opencode.runSlashCommand('spec-driven-development', {
             runId: current.id, workspacePath: wsPath,
             issueTitle: `Issue #${current.issueNumber}`, issueNumber: current.issueNumber,
-            mode: 'safe-cli',
+            phaseName: 'tasks',
           });
-          result = transition(current, 'ANALYZE', `Real Spec Kit: ${tasksResult.summary}`, tasksResult.status === 'success' ? 'INFO' : 'WARN');
+          result = transition(current, 'ANALYZE', `OpenCode: ${tasksResult.summary}`, tasksResult.status === 'success' ? 'INFO' : 'WARN');
           break;
         } catch (err) {
-          storeEvent({ id: createRunId(), runId: current.id, phase: 'TASKS', level: 'WARN', message: `Real Spec Kit error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
+          storeEvent({ id: createRunId(), runId: current.id, phase: 'TASKS', level: 'WARN', message: `OpenCode error: ${String(err).slice(0, 200)}`, payload: null, createdAt: new Date().toISOString() });
         }
       }
 
