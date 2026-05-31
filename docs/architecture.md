@@ -37,6 +37,45 @@
 └─────────────────────────────────────────────┘
 ```
 
+### v0.2.0 Produktionspfad: Worker/Queue-Layer
+
+Seit v0.2.0 ergänzt Positron die ursprüngliche Server/Web-Architektur um eine produktionsfähige, entkoppelte Ausführungsschicht auf Basis von BullMQ und Redis 7. Der HTTP-Server bleibt API- und Enqueue-Komponente; lang laufende Pipeline-Ausführung wird bevorzugt vom Worker-Prozess übernommen.
+
+```
+Browser
+  │
+  │ POST /api/runs oder /api/repos/:repoId/runs
+  ▼
+Nginx :5173
+  ├─ /api/* ─────────────► Server :3000
+  │                         │
+  │                         │ Queue.add('pipeline', ..., jobId = run.id)
+  │                         ▼
+  │                       Redis 7 / BullMQ
+  │                         │
+  │                         ▼
+  │                       Worker
+  │                         │
+  │                         ▼
+  │                       SQLite DB auf shared positron-data volume
+  │
+  └─ /* ─────────────────► Web :5173
+
+Fallback ohne Redis/Worker:
+Browser → Nginx → Server → runFullPipeline(...) → SQLite DB
+```
+
+Wichtige Eigenschaften:
+
+- **Queueing:** BullMQ nutzt Redis 7 (`redis:7-alpine`) als Broker. Der Queue-Name ist `positron-pipeline` (`PIPELINE_QUEUE`).
+- **Deterministische Jobs:** Der Server verwendet `run.id` als BullMQ `jobId`, um doppelte Ausführung bei Retries oder erneuten Enqueue-Versuchen zu vermeiden.
+- **Worker-Verfügbarkeit:** Vor dem Enqueue ruft der Server `queue.getWorkers()` auf. Ist kein Worker registriert oder Redis nicht erreichbar, wird nicht blind queued.
+- **Inline-Fallback:** Wenn Queue oder Worker fehlen, führt der Server die Pipeline direkt via `runFullPipeline(...)` aus. Dadurch bleiben lokale Entwicklung und degradierter Betrieb funktionsfähig.
+- **SSE vs. Polling:** Inline-Runs senden Live-Updates über SSE. Worker-Runs persistieren nach Phasenübergängen in SQLite; UI und API lesen diese Läufe über Polling (`GET /api/runs/:id`) statt über worker-seitige SSE-Broadcasts.
+- **Gemeinsame Persistenz:** Server und Worker mounten das Docker-Volume `positron-data` nach `/app/.positron` und verwenden denselben DB-Pfad (`/app/.positron/runs/positron.db`). Dadurch sieht der Server Worker-Fortschritt und Run-Control-Signale.
+- **Image split:** `apps/server/Dockerfile` und `apps/worker/Dockerfile` basieren auf `node:22-slim`/Debian-slim, damit native Module und CLI-Tools mit glibc kompatibel sind. `apps/web/Dockerfile` nutzt `node:22-alpine`, weil die Vite/React-Web-App keine nativen Abhängigkeiten benötigt.
+- **Graceful Shutdown:** Server und Worker reagieren auf `SIGTERM`; der Server schließt den HTTP-Server und stoppt den Watcher, der Worker schließt den BullMQ-Worker vor Prozessende.
+
 ---
 
 ## Architekturprinzipien
@@ -56,14 +95,15 @@
 positron/
 ├── apps/
 │   ├── web/                  # React/Vite/Tailwind Frontend
-│   └── server/               # Node.js/Express/TypeScript Backend
+│   ├── server/               # Node.js/Express/TypeScript Backend / Queue Producer
+│   └── worker/               # BullMQ Worker / Pipeline Consumer
 ├── packages/
 │   ├── github-adapter/       # GitHub API Wrapper
 │   ├── speckit-adapter/      # Spec Kit CLI Adapter
 │   ├── opencode-adapter/     # OpenCode CLI Adapter
 │   ├── run-state/            # State Machine & Run-Management
 │   ├── sandbox/              # Git Worktree / Docker-Isolation
-│   └── shared/               # Gemeinsame Typen, Utilities
+│   └── shared/               # Gemeinsame Typen, Utilities, Queue-Typen
 ├── docs/
 │   ├── architecture/         # Architektur-Dokumentation
 │   ├── security/             # Sicherheitskonzepte
@@ -73,6 +113,8 @@ positron/
 ├── .specify/
 │   └── memory/
 │       └── constitution.md   # Positron-Constitution
+├── nginx.conf                # Reverse Proxy für API und Frontend
+├── docker-compose.yml        # Services: nginx, redis, server, worker, web
 ├── AGENTS.md                 # Agenten-Regelwerk
 └── README.md
 ```
@@ -86,6 +128,9 @@ positron/
 |---------|-------------|------------|
 | Frontend | React / Vite / Tailwind | Schnelle Entwicklung, Tailwind für UI-Konsistenz |
 | Backend | Node.js / Express / TypeScript | TypeScript-Ökosystem, einfache CLI-Integration |
+| Worker | Node.js / TypeScript / BullMQ | Entkoppelte Ausführung lang laufender Pipelines |
+| Queue | Redis 7 + BullMQ | Robustes Job-Queueing mit Worker-Erkennung und deterministischen Job-IDs |
+| Reverse Proxy | Nginx Alpine | Einheitlicher Einstiegspunkt: API nach Server, UI nach Web |
 | Datenbank | SQLite (better-sqlite3) | Kein Server-Setup, dateibasiert, ausreichend für MVP |
 | Tests | Vitest + Playwright | Schnell (Vitest), visuelles Testing (Playwright) |
 | Sandbox | Git Worktrees (MVP), Docker (später) | Isolierung ohne Docker-Daemon-Abhängigkeit |
@@ -101,6 +146,8 @@ FastAPI (Python) bleibt eine spätere Option, ist aber für den vorhandenen Type
 ```
 Web UI ────► Orchestrator (WebSocket/SSE)
                  │
+                 ├──────────► BullMQ / Redis ─────► Worker
+                 │                                  │
      ┌───────────┼───────────┐
      ▼           ▼           ▼
 GitHub      Spec Kit    OpenCode
@@ -108,18 +155,51 @@ Adapter     Adapter     Adapter
      │           │           │
      └───────────┼───────────┘
                  ▼
-           Sandbox
+            Sandbox
                  │
                  ▼
-           Persistenz (SQLite)
+            Persistenz (SQLite)
 ```
 
 ### Abhängigkeitsregeln
 - `shared/` hat keine internen Abhängigkeiten (nur externe: TypeScript)
 - Adapter (`github-adapter`, `speckit-adapter`, `opencode-adapter`) hängen nur von `shared/` ab
 - `run-state/` hängt von `shared/` ab — NICHT von Adaptern (Dependency Inversion)
-- `server/` orchestriert Adapter über `run-state/`
+- `server/` orchestriert Adapter über `run-state/` und ist BullMQ-Producer für Produktionsläufe
+- `worker/` ist BullMQ-Consumer und führt die Pipeline mit denselben Adapter-Abstraktionen aus
 - `web/` hängt nur vom Server via WebSocket/SSE ab
+- `nginx` routet `/api/*` zum Server und alle übrigen Pfade zum Web-Frontend
+
+### Queue- und Fallback-Regeln
+
+1. Der Server persistiert den Run zuerst in SQLite.
+2. Danach versucht er, eine BullMQ-Queue-Verbindung über `POSITRON_REDIS_URL` aufzubauen.
+3. Vor dem Enqueue wird per `queue.getWorkers()` geprüft, ob mindestens ein Worker verfügbar ist.
+4. Ist ein Worker verfügbar, wird ein `pipeline`-Job mit `jobId = run.id` erzeugt.
+5. Ist Redis nicht erreichbar oder kein Worker registriert, verarbeitet der Server den Run inline.
+
+Diese Regeln reduzieren Kopplung zwischen HTTP-Lebenszyklus und Pipeline-Ausführung, vermeiden aber zugleich verlorene Runs bei fehlendem Worker.
+
+### Docker- und Routing-Topologie
+
+- `nginx` veröffentlicht Port `5173` und hängt vom gesunden `server` ab.
+- `server` veröffentlicht intern/extern Port `3000`, spricht Redis über `redis://redis:6379` an und mountet `positron-data:/app/.positron`.
+- `worker` hat keinen HTTP-Port, verbindet sich mit derselben Redis-Instanz und mountet ebenfalls `positron-data:/app/.positron`.
+- `web` bedient die Frontend-Auslieferung hinter Nginx.
+- `redis` nutzt `redis-data` für Redis-Persistenz.
+
+Nginx-Routing:
+
+| Pfad | Ziel | Hinweise |
+|------|------|----------|
+| `/api/*` | `http://server:3000` | Proxy-Buffering deaktiviert, lange Read-Timeouts für SSE |
+| `/*` | `http://web:5173` | Frontend / statische UI |
+
+### Graceful Shutdown
+
+- **Server:** `SIGTERM` schließt den HTTP-Server; beim Server-Close wird der GitHub-Watcher gestoppt. Der direkte Prozesspfad behandelt zusätzlich `SIGINT` und erzwingt nach Timeout einen Exit.
+- **Worker:** `SIGTERM` und `SIGINT` rufen `worker.close()` auf, damit BullMQ keine neuen Jobs annimmt und sauber beendet wird.
+- **Queue-Producer:** Kurzlebige Queue-Verbindungen im Server werden nach Enqueue-Versuch mit `queue.close()` geschlossen.
 
 ---
 

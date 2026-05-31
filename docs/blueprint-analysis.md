@@ -10,6 +10,8 @@
 
 Positron ist ein **lokaler GitHub-Issue-Orchestrator** für agentische Softwareentwicklung. Es verwandelt GitHub-Issues in überprüfbare, dokumentierte, getestete Pull Requests — mit Spec Kit als Planungsschicht, OpenCode als Ausführungsschicht und GitHub als Source of Truth.
 
+Seit v0.2.0 besitzt die Produktionsarchitektur zusätzlich einen Worker/Queue-Layer: Der Browser startet Runs über den Server, der Server queued Pipeline-Jobs via BullMQ in Redis 7, ein separater Worker verarbeitet die Pipeline und persistiert Fortschritt in derselben SQLite-Datenbank. Wenn Redis oder ein Worker nicht verfügbar sind, fällt der Server kontrolliert auf Inline-Ausführung zurück.
+
 ### Kernprinzipien
 
 | Prinzip | Bedeutung |
@@ -39,6 +41,16 @@ Positron ist ein **lokaler GitHub-Issue-Orchestrator** für agentische Softwaree
 - Deterministische State Machine mit 17+ Phasen
 - Hauptpfad: QUEUED → CLAIMED → REPO_SYNC → ISSUE_CONTEXT → WEB_RESEARCH → SPECIFY → CLARIFY_OPTIONAL → PLAN → TASKS → ANALYZE → REVIEW → IMPLEMENT → TEST → VERIFY → PR_CREATE → DONE
 - Fehlerzustände: FAILED_TRANSIENT (Retry), FAILED_BLOCKED (GitHub-Kommentar + Stop), FAILED_UNSAFE (Sofortiger Stop)
+- v0.2.0: Der HTTP-Orchestrator ist im Produktionspfad primär Queue-Producer; die eigentliche Pipeline-Ausführung läuft bevorzugt im Worker.
+
+### 2.2a Worker/Queue Layer (v0.2.0)
+- **Producer:** `apps/server/src/index.ts` erzeugt Runs, persistiert sie und versucht, BullMQ-Jobs zu enqueuen.
+- **Broker:** Redis 7 hält die BullMQ-Queue `positron-pipeline`.
+- **Consumer:** `apps/worker/src/index.ts` verarbeitet `pipeline`-Jobs mit einer BullMQ-Worker-Instanz.
+- **Pipeline:** `apps/worker/src/pipeline-runner.ts` enthält eine worker-seitige Pipeline-Ausführung mit denselben Adapter-Abstraktionen wie der Server.
+- **Queue-Typen:** `packages/shared/src/queue/types.ts` definiert `PipelineJobData`, `PipelineJobResult`, `PIPELINE_QUEUE` und `POSITRON_REDIS_URL`-Auflösung.
+- **Fallback:** Vor dem Enqueue prüft der Server `queue.getWorkers()`. Ohne Redis oder ohne registrierten Worker wird inline über `runFullPipeline(...)` verarbeitet.
+- **Job-Idempotenz:** BullMQ-Jobs verwenden `run.id` als deterministische `jobId`.
 
 ### 2.3 Artifact Manager (§5.3)
 - Pro Run eigener Artefaktordner unter `.positron/runs/issue-<id>/`
@@ -78,8 +90,12 @@ Positron ist ein **lokaler GitHub-Issue-Orchestrator** für agentische Softwaree
 
 ### Intern
 - **Web UI ↔ Orchestrator**: WebSocket / SSE
+- **Web UI ↔ Server bei Worker-Runs**: Polling über `GET /api/runs/:id`, da Worker keine SSE-Clients im Serverprozess besitzt
 - **Orchestrator ↔ Adapter**: Prozessaufrufe mit kontrollierten Configs
 - **Orchestrator ↔ Persistenz**: SQLite (MVP)
+- **Server ↔ Redis ↔ Worker**: BullMQ-Queueing für Produktionsläufe
+- **Server/Worker ↔ Persistenz**: gemeinsame SQLite-Datei auf `positron-data` Docker-Volume
+- **Nginx ↔ Server/Web**: `/api/*` wird an den Server geleitet, alle übrigen Pfade an das Web-Frontend
 
 ### MCP-Design (§6)
 - Positron MCP Server mit Tool-Gruppen: `positron.github`, `positron.repo`, `positron.run`, `positron.qa`
@@ -92,6 +108,9 @@ Positron ist ein **lokaler GitHub-Issue-Orchestrator** für agentische Softwaree
 ### Technologie-Stack
 - **Frontend**: React / Vite / Tailwind
 - **Backend**: Node.js / Express / TypeScript
+- **Worker**: Node.js / TypeScript / BullMQ
+- **Queue/Broker**: Redis 7 (`redis:7-alpine`) + BullMQ
+- **Reverse Proxy**: Nginx Alpine
 - **Datenbank**: SQLite (MVP) → PostgreSQL (optional)
 - **Tests**: Vitest + Playwright
 - **Sandbox**: Git Worktrees (zuerst), Docker (später)
@@ -101,6 +120,14 @@ Positron ist ein **lokaler GitHub-Issue-Orchestrator** für agentische Softwaree
 - Spec Kit CLI (installiert im System)
 - OpenCode CLI (installiert im System)
 - NPM/npx für TypeScript-Projekt
+- Redis 7 für produktionsfähiges Queueing; ohne Redis greift Inline-Fallback
+
+### Deployment-Erweiterung v0.2.0
+- Docker Compose definiert `nginx`, `redis`, `server`, `worker` und `web`.
+- `server` und `worker` teilen das Volume `positron-data` für `/app/.positron/runs/positron.db`.
+- `redis` nutzt `redis-data`.
+- Server und Worker basieren auf Debian-slim (`node:22-slim`) für glibc-Kompatibilität nativer Module und CLI-Tools; der Web-Container nutzt Alpine (`node:22-alpine`), da er keine nativen Abhängigkeiten benötigt.
+- Nginx deaktiviert Proxy-Buffering für `/api/*`, damit SSE im Inline-Fallback funktioniert.
 
 ---
 
@@ -133,6 +160,7 @@ positron/issue-<number>-<slug>
 - **Evidence-Gated**: Tests müssen ausgeführt und bestanden sein
 - **QA Loop**: Maximal 3 Fix-Iterationen, dann Blockade
 - **Test Command Detection**: Automatische Erkennung der Testbefehle im Repo
+- **Worker-Runs**: Fortschritt wird über DB-Persistenz und API-Polling validiert; SSE-Livetests gelten nur für Inline-Fallback-Runs.
 
 ---
 
@@ -158,6 +186,10 @@ positron/issue-<number>-<slug>
 | MVP 4 | Autonomous Sandbox | Docker/Worktree-Isolation |
 | MVP 5 | Multi-Repo Scheduler | Mehrere Repos, Queue, Metriken |
 
+### v0.2.0 Architekturstand
+
+Der Queue/Worker-Anteil aus der Roadmap ist für den Produktionspfad vorgezogen umgesetzt: BullMQ + Redis entkoppeln API-Annahme von Pipeline-Ausführung. Die Architektur bleibt rückwärtskompatibel, weil lokale und degradierte Umgebungen über Inline-Fallback weiter funktionieren.
+
 ---
 
 ## 10. Wichtigste Risiken (§16)
@@ -168,6 +200,10 @@ positron/issue-<number>-<slug>
 | Agent ändert zu viel | Diff-Größenlimit, Scope-Check, Review-Gate, PR statt Direkt-Merge |
 | Tests fehlen/unzuverlässig | Test Command Detection, Testreport Pflicht, Minimaltest erzwingen |
 | Secrets im Kontext | Secret Redaction, `.env` nicht lesen, Tokenmuster maskieren |
+| Worker nicht verfügbar | Server prüft `queue.getWorkers()` und nutzt Inline-Fallback statt verlorener Queue-Jobs |
+| Redis-Ausfall | Queue-Verbindung hat kurze Timeouts; Fallback verarbeitet Runs direkt im Server |
+| Divergenter Run-Zustand zwischen Server und Worker | Gemeinsame SQLite-Datei auf `positron-data`; Worker persistiert nach Phasenübergängen |
+| SSE-Erwartung bei Worker-Runs | Architektur trennt klar: SSE nur Inline-Fallback, Worker-Runs via Polling |
 | Falsche Webrecherche | Quellenliste, offizielle Dokus priorisieren, Datum dokumentieren |
 
 ---
