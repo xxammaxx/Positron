@@ -20,6 +20,8 @@ export interface RunCommandOptions {
   timeout?: number;
   /** Umgebungsvariablen */
   env?: Record<string, string | undefined>;
+  /** Stdin-Input (optional). Wenn nicht gesetzt, wird stdin geschlossen. */
+  stdin?: string;
 }
 
 /**
@@ -40,6 +42,14 @@ export async function runCommand(
       env: { ...process.env, ...options.env },
       stdio: ['pipe', 'pipe', 'pipe'],
     });
+
+    // Close stdin by default — prevents hangs with CLI tools that wait for input
+    if (options.stdin) {
+      child.stdin?.write(options.stdin);
+      child.stdin?.end();
+    } else {
+      child.stdin?.end();
+    }
 
     let stdout = '';
     let stderr = '';

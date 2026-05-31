@@ -47,21 +47,26 @@ export class RealOpenCodeAdapter implements OpenCodeAdapter {
   }
 
   /**
-   * Führt einen Spec Kit Slash Command über OpenCode aus.
+   * Führt einen opencode Command aus.
    *
-   * Beispiel: runSlashCommand('speckit.specify', input)
-   * → opencode run --command speckit.specify --format json [args]
+   * Nutzt spec-driven-development als opencode Command.
+   * Der phaseName (z.B. "specify", "plan", "tasks") wird als message
+   * an den command übergeben.
+   *
+   * Beispiel: runSlashCommand('spec-driven-development', { phaseName: 'specify', ... })
+   * → opencode run --command spec-driven-development --format json "specify"
    */
-  async runSlashCommand(slashCommand: string, input: OpenCodeRunInput): Promise<OpenCodeCommandResult> {
+  async runSlashCommand(commandName: string, input: OpenCodeRunInput): Promise<OpenCodeCommandResult> {
     const startTime = Date.now();
+    const phaseName = input.phaseName ?? commandName;
 
     // Graceful fallback: CLI-Check vorab
     const health = await this.healthCheck(input.workspacePath);
     if (!health.available) {
       return {
-        phase: this.mapPhase(slashCommand),
+        phase: this.mapPhase(phaseName),
         status: 'blocked',
-        command: `opencode run --command ${slashCommand}`,
+        command: `opencode run --command ${commandName} "${phaseName}"`,
         args: [],
         cwd: input.workspacePath,
         exitCode: null,
@@ -71,18 +76,17 @@ export class RealOpenCodeAdapter implements OpenCodeAdapter {
       };
     }
 
+    // Build message: phase name plus issue context
+    const contextMsg = input.issueBody
+      ? `${phaseName}\n\nIssue #${input.issueNumber ?? '?'}: ${input.issueTitle}\n\n${input.issueBody.slice(0, 2000)}`
+      : `${phaseName}\n\nIssue #${input.issueNumber ?? '?'}: ${input.issueTitle}`;
+
     const args = [
       'run',
-      '--command', slashCommand,
+      '--command', commandName,
       '--format', 'json',
+      contextMsg,
     ];
-
-    if (input.issueNumber) {
-      args.push('--issue', String(input.issueNumber));
-    }
-    if (input.mode) {
-      args.push('--mode', input.mode);
-    }
 
     try {
       const result = await runCommand('opencode', args, {
@@ -91,34 +95,63 @@ export class RealOpenCodeAdapter implements OpenCodeAdapter {
       });
 
       // CLI-Output als Evidence-Dateien speichern
-      const evidencePaths = this.saveEvidence(slashCommand, result.stdout, result.stderr);
+      const evidencePaths = this.saveEvidence(commandName, result.stdout, result.stderr);
+
+      // Parse JSON-Lines für Text-Events (Artefakt-Extraktion)
+      const extractedText = this.extractTextFromOutput(result.stdout);
+      // Save extracted text as artifact if present
+      let artifactFile: string | undefined;
+      if (extractedText && input.workspacePath) {
+        try {
+          const artifactDir = path.join(input.workspacePath, '.positron', 'artifacts');
+          fs.mkdirSync(artifactDir, { recursive: true });
+          artifactFile = path.join(artifactDir, `${phaseName}.md`);
+          fs.writeFileSync(artifactFile, extractedText, 'utf-8');
+        } catch { /* artifact save is non-critical */ }
+      }
+
+      // Prüfe auf JSON-Fehler im Output (opencode exit 0 auch bei Fehlern)
+      let hasJsonError = false;
+      let errorMessage: string | undefined;
+      try {
+        for (const line of result.stdout.split('\n')) {
+          const parsed = JSON.parse(line);
+          if (parsed.type === 'error' && parsed.error?.data?.message) {
+            hasJsonError = true;
+            errorMessage = parsed.error.data.message;
+            break;
+          }
+        }
+      } catch { /* ignore parse errors */ }
+
+      const isSuccess = result.exitCode === 0 && !hasJsonError;
 
       return {
-        phase: this.mapPhase(slashCommand),
-        status: result.exitCode === 0 ? 'success' : 'failed',
+        phase: this.mapPhase(phaseName),
+        status: isSuccess ? 'success' : 'failed',
         command: `opencode ${args.join(' ')}`,
         args,
         cwd: input.workspacePath,
         exitCode: result.exitCode,
         durationMs: Date.now() - startTime,
-        summary: result.exitCode === 0
-          ? `Slash command "${slashCommand}" completed`
-          : `Slash command "${slashCommand}" failed: ${result.stderr.slice(0, 200)}`,
+        summary: isSuccess
+          ? `Command "${commandName}" phase "${phaseName}" completed (${extractedText ? extractedText.length + ' chars' : 'no text output'})`
+          : `Command "${commandName}" phase "${phaseName}" failed: ${errorMessage ?? result.stderr.slice(0, 200)}`,
         stdoutPath: evidencePaths.stdoutPath,
         stderrPath: evidencePaths.stderrPath,
-        blockedReason: result.exitCode !== 0 ? result.stderr.slice(0, 200) : undefined,
+        blockedReason: !isSuccess ? (errorMessage ?? result.stderr.slice(0, 200)) : undefined,
       };
     } catch (err) {
       const errMsg = String(err);
       return {
-        phase: this.mapPhase(slashCommand),
+        phase: this.mapPhase(phaseName),
         status: 'failed',
         command: `opencode ${args.join(' ')}`,
         args,
         cwd: input.workspacePath,
         exitCode: null,
         durationMs: Date.now() - startTime,
-        summary: `Slash command "${slashCommand}" failed: ${errMsg.slice(0, 200)}`,
+        summary: `Command "${commandName}" phase "${phaseName}" failed: ${errMsg.slice(0, 200)}`,
         blockedReason: errMsg,
       };
     }
@@ -126,74 +159,37 @@ export class RealOpenCodeAdapter implements OpenCodeAdapter {
 
   /**
    * Führt OpenCode für die IMPLEMENT-Phase aus (Code-Änderungen).
+   * Nutzt spec-driven-development mit Phase "implement".
    */
   async runImplement(input: OpenCodeRunInput): Promise<OpenCodeCommandResult> {
     const startTime = Date.now();
 
-    // Graceful fallback: CLI-Check vorab
-    const health = await this.healthCheck(input.workspacePath);
-    if (!health.available) {
-      return {
-        phase: 'implement',
-        status: 'blocked',
-        command: 'opencode run --prompt "... (implementation)"',
-        args: [],
-        cwd: input.workspacePath,
-        exitCode: null,
-        durationMs: 0,
-        summary: `OpenCode CLI not available: ${health.reason ?? 'unknown'}`,
-        blockedReason: health.reason,
-      };
-    }
+    // Use spec-driven-development with "implement" phase
+    return this.runSlashCommand('spec-driven-development', {
+      ...input,
+      phaseName: 'implement',
+    });
+  }
 
-    const args = [
-      'run',
-      '--prompt', `Implement the changes for Issue #${input.issueNumber ?? '?'}: ${input.issueTitle}`,
-      '--workspace', input.workspacePath,
-    ];
-
-    if (input.autonomyLevel !== undefined) {
-      args.push('--autonomy', String(input.autonomyLevel));
-    }
-
+  /**
+   * Extrahiert Text-Content aus opencode JSON-Lines Output.
+   * Durchsucht JSON-Lines nach type:"text" Events und extrahiert part.text.
+   */
+  private extractTextFromOutput(stdout: string): string | undefined {
+    const texts: string[] = [];
     try {
-      const result = await runCommand('opencode', args, {
-        cwd: input.workspacePath,
-        timeout: 600_000, // 10 Minuten für Implementation
-      });
-
-      // CLI-Output als Evidence-Dateien speichern
-      const evidencePaths = this.saveEvidence('implement', result.stdout, result.stderr);
-
-      return {
-        phase: 'implement',
-        status: result.exitCode === 0 ? 'success' : 'failed',
-        command: `opencode run --prompt "... (${input.issueTitle})"`,
-        args,
-        cwd: input.workspacePath,
-        exitCode: result.exitCode,
-        durationMs: Date.now() - startTime,
-        summary: result.exitCode === 0
-          ? 'Implementation completed successfully'
-          : `Implementation failed: ${result.stderr.slice(0, 200)}`,
-        stdoutPath: evidencePaths.stdoutPath,
-        stderrPath: evidencePaths.stderrPath,
-        blockedReason: result.exitCode !== 0 ? result.stderr.slice(0, 200) : undefined,
-      };
-    } catch (err) {
-      const errMsg = String(err);
-      return {
-        phase: 'implement',
-        status: 'failed',
-        command: `opencode run --prompt "... (${input.issueTitle})"`,
-        args,
-        cwd: input.workspacePath,
-        exitCode: null,
-        durationMs: Date.now() - startTime,
-        summary: `Implementation failed: ${errMsg.slice(0, 200)}`,
-        blockedReason: errMsg,
-      };
-    }
+      for (const line of stdout.split('\n')) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (parsed.type === 'text' && parsed.part?.text) {
+            texts.push(parsed.part.text);
+          }
+        } catch { /* skip non-json lines */ }
+      }
+    } catch { /* ignore */ }
+    return texts.length > 0 ? texts.join('\n\n') : undefined;
   }
 
   /**
@@ -220,19 +216,17 @@ export class RealOpenCodeAdapter implements OpenCodeAdapter {
   }
 
   /**
-   * Mapped Slash-Command-Namen auf Phasen.
+   * Mapped Phase-Namen auf OpenCodePhase.
    */
-  private mapPhase(slashCommand: string): OpenCodeCommandResult['phase'] {
-    const phaseMap: Record<string, OpenCodeCommandResult['phase']> = {
-      'speckit.specify': 'specify',
-      'speckit.plan': 'plan',
-      'speckit.tasks': 'tasks',
-      'speckit.analyze': 'analyze',
-      'speckit.constitution': 'constitution',
-      'speckit.clarify': 'clarify',
-      'speckit.checklist': 'checklist',
-    };
-    return phaseMap[slashCommand] ?? 'implement';
+  private mapPhase(phaseName: string): OpenCodeCommandResult['phase'] {
+    const validPhases: OpenCodeCommandResult['phase'][] = [
+      'health', 'constitution', 'specify', 'clarify', 'plan',
+      'tasks', 'analyze', 'checklist', 'implement',
+    ];
+    if (validPhases.includes(phaseName as OpenCodeCommandResult['phase'])) {
+      return phaseName as OpenCodeCommandResult['phase'];
+    }
+    return 'implement';
   }
 }
 

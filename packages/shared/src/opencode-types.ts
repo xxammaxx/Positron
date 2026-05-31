@@ -73,6 +73,8 @@ export interface OpenCodeRunInput {
   model?: string;
   /** Autonomie-Level (0-4) */
   autonomyLevel?: number;
+  /** Phase-Name für spec-driven-development (z.B. "specify", "plan", "tasks") */
+  phaseName?: string;
 }
 
 /** OpenCode Adapter Interface */
@@ -80,10 +82,10 @@ export interface OpenCodeAdapter {
   /** Prüft ob OpenCode CLI verfügbar ist */
   healthCheck(workspacePath: string): Promise<OpenCodeHealth>;
   /**
-   * Führt einen Spec Kit Slash Command über OpenCode aus.
+   * Führt einen opencode Command über die CLI aus.
    *
-   * Unterstützte Commands: speckit.specify, speckit.plan, speckit.tasks,
-   * speckit.analyze, speckit.constitution, speckit.clarify
+   * Command: spec-driven-development mit Phase als message
+   * (z.B. opencode run --command spec-driven-development "specify")
    */
   runSlashCommand(command: string, input: OpenCodeRunInput): Promise<OpenCodeCommandResult>;
   /**
