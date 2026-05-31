@@ -1,8 +1,10 @@
 node_modules/
 dist/
 *.tsbuildinfo
+# Local environment files — NEVER commit, contain secrets
 .env
 .env.local
+apps/server/.env
 coverage/
 .positron/runs/
 *.log
@@ -20,6 +22,16 @@ dashboard-*.png
 console-*.txt
 network-*.txt
 dashboard-*.md
+
+# Positron generated evidence/cache artifacts
+.positron/evidence/
+.specify/integrations/.cache/
+
+# Local UI/diagnostic acceptance artifacts
+docs/diagnostics/positron-reality-check/
+
+# Local artifacts (moved diagnostics, temp outputs)
+.local-artifacts/
 
 # Generated JS/DTS/Map files (build artifacts in source directories)
 *.js.map

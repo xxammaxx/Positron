@@ -1,7 +1,7 @@
 # Positron — Evidence-Gated AI Agent for Autonomous GitHub Issue Resolution
 
 [![Version](https://img.shields.io/badge/version-v0.2.0-blue.svg)](https://github.com/xxammaxx/Positron/releases)
-[![Tests](https://img.shields.io/badge/tests-69%20passing-brightgreen.svg)](https://github.com/xxammaxx/Positron/actions)
+[![Tests](https://img.shields.io/badge/tests-107%20passing-brightgreen.svg)](https://github.com/xxammaxx/Positron/actions)
 [![E2E](https://img.shields.io/badge/e2e-17%20passing-brightgreen.svg)](https://github.com/xxammaxx/Positron/actions)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/docker-ready-2496ED?logo=docker)](https://github.com/xxammaxx/Positron)
@@ -30,24 +30,39 @@
 
 ## Quickstart
 
-### Docker (recommended)
+### Docker (Production — Full Stack)
 
 ```bash
-git clone https://github.com/xxammaxx/Positron.git
-cd Positron
-docker compose up -d
-# Server: http://localhost:3000
-# Web UI: http://localhost:5173
+cp .env.example apps/server/.env
+# Edit apps/server/.env: set GITHUB_TOKEN, real modes
+docker compose up --build
+# → http://localhost:5173 (nginx reverse proxy)
 ```
 
-### Manual Start
+### Local Development
 
 ```bash
-git clone https://github.com/xxammaxx/Positron.git
-cd Positron
-./start.sh
-# Server: http://localhost:3000
-# Web UI: http://localhost:5173
+cp .env.example apps/server/.env
+npm install
+# Terminal 1: Server
+npm run dev:server
+# Terminal 2: Web frontend
+npm run dev:web
+# → http://localhost:5173
+# Note: Without Redis, the worker queue falls back to inline execution.
+```
+
+### Local Development (with Redis + Worker)
+
+```bash
+# Terminal 1: Redis
+docker compose up redis -d
+# Terminal 2: Worker
+cd apps/worker && npm run dev
+# Terminal 3: Server
+npm run dev:server
+# Terminal 4: Web
+npm run dev:web
 ```
 
 ### CLI
@@ -69,7 +84,7 @@ cd Positron
 - **⚙️ Admin Panel** — Bulk cancel/retry, database statistics, workspace cleanup, system configuration.
 - **🛡️ Safety Gates** — Kill-switch (`POSITRON_MERGE_KILL_SWITCH`), rate-limiting, CSP headers, secret redaction, audit trail enforcement.
 - **🔔 Notifications** — Slack/Discord webhooks for run completion, failures, and state changes.
-- **🐳 Docker** — Single `docker compose up -d` deploys the full stack.
+- **🐳 Docker** — Single `docker compose up --build` deploys the full stack (redis, worker, server, web, nginx).
 - **📝 CLI** — `positron health`, `runs`, `stats`, `cancel`, `status` for operational management.
 - **🎨 Brutalist Design** — Dark/light theme, mobile-responsive, accessible UI.
 
@@ -110,13 +125,13 @@ All settings via environment variables or `apps/server/.env`:
 ## Tests
 
 ```bash
-npx vitest run                  # 69 unit/integration tests
+npx vitest run                  # 107 unit/integration tests
 cd apps/web && npx vitest run   # 58 frontend tests
 npx playwright test             # 17 E2E tests
 ./scripts/dogfood-test.sh       # Full dogfood pipeline test
 ```
 
-All 69 tests pass. Full E2E workflow proof documented in `docs/release/ui-workflow-proof/`.
+All 107 tests pass. Full E2E workflow proof documented in `docs/release/ui-workflow-proof/`.
 
 ---
 
@@ -169,7 +184,7 @@ Positron/
 Positron successfully completed a **full dogfood run** on its own repository:
 
 - **28-Phase State Machine**: Happy path (CLAIMED → DONE) completed in **13.7 seconds**
-- **69 Tests**: All green
+- **107 Tests**: All green
 - **SSE Live Updates**: Dashboard + Event Timeline functional
 - **PR Auto-Creation**: Blocked by Kill-Switch as configured
 - **Evidence Trail**: Complete with screenshots, logs, test results
