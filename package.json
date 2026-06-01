@@ -45,7 +45,10 @@
     "test:orchestrator:regression": "node scripts/test-orchestrator.mjs regression",
     "lint": "eslint . --ext .ts,.tsx",
     "clean": "find . -name dist -not -path '*/node_modules/*' -exec rm -rf {} +",
-    "typecheck": "tsc -b --dry"
+    "typecheck": "tsc -b --dry",
+    "test:mutation": "stryker run",
+    "test:mutation:fast": "stryker run stryker.fast.config.json",
+    "test:mutation:full": "stryker run stryker.config.json"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",

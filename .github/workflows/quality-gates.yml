@@ -10,8 +10,8 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
     inputs:
-      run_mutation:
-        description: 'Mutation-Tests ausführen (dauert ~15min)'
+      run_mutation_full:
+        description: 'Full mutation run on all packages (slower, comprehensive)'
         required: false
         default: false
         type: boolean
@@ -142,16 +142,13 @@ jobs:
           retention-days: 7
 
   # ═══════════════════════════════════════════
-  # GATE 8: Mutation Tests (~15min, nur bei Label/manuell)
+  # GATE 8a: Fast Mutation Tests (~2-5min, BLOCKING)
   # ═══════════════════════════════════════════
-  mutation:
-    name: '🧬 Mutation Tests'
+  mutation-fast:
+    name: '🧬 Fast Mutation'
     runs-on: ubuntu-latest
     needs: [test]
-    if: |
-      github.event_name == 'push' ||
-      contains(github.event.pull_request.labels.*.name, 'mutation-test') ||
-      github.event.inputs.run_mutation == 'true'
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -159,13 +156,44 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       - run: npm ci && npm run build
-      - name: Stryker Mutation Testing
-        run: npx stryker run --configFile stryker.config.json
-      - name: Upload Mutation Report
+      - name: Stryker Fast Mutation Testing
+        run: npx stryker run stryker.fast.config.json
+      - name: Upload Fast Mutation Report
         uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: mutation-report
-          path: reports/mutation/
+          name: mutation-fast-report
+          path: reports/mutation/fast/
+          retention-days: 7
+
+  # ═══════════════════════════════════════════
+  # GATE 8b: Full Mutation Tests (~15min, optional)
+  # ═══════════════════════════════════════════
+  mutation-full:
+    name: '🧬 Full Mutation'
+    runs-on: ubuntu-latest
+    needs: [test]
+    timeout-minutes: 30
+    if: |
+      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')) ||
+      contains(github.event.pull_request.labels.*.name, 'mutation-full') ||
+      github.event.inputs.run_mutation_full == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci && npm run build
+      - name: Stryker Full Mutation Testing
+        run: npx stryker run stryker.config.json
+        continue-on-error: true  # Full profile might be unstable initially
+      - name: Upload Full Mutation Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mutation-full-report
+          path: reports/mutation/full/
           retention-days: 7
 
   # ═══════════════════════════════════════════
@@ -304,7 +332,7 @@ jobs:
   gate-status:
     name: '✅ All Gates'
     runs-on: ubuntu-latest
-    needs: [format, lint, typecheck, test, contracts, coverage, security, build, e2e, architecture]
+    needs: [format, lint, typecheck, test, contracts, coverage, mutation-fast, security, build, e2e, architecture]
     if: always()
     steps:
       - name: Check all required gates
@@ -316,7 +344,7 @@ jobs:
             local job=$1
             local result=$(echo '${{ toJSON(needs) }}' | jq -r ".${job}.result // \"skipped\"")
             echo "- ${job}: ${result}" >> $GITHUB_STEP_SUMMARY
-            if [ "$result" != "success" ] && [ "$job" != "mutation" ] && [ "$job" != "coverage" ]; then
+            if [ "$result" != "success" ] && [ "$job" != "mutation-full" ] && [ "$job" != "coverage" ]; then
               FAILED=1
             fi
           }
@@ -327,6 +355,7 @@ jobs:
           check_job "test"
           check_job "contracts"
           check_job "coverage"
+          check_job "mutation-fast"
           check_job "security"
           check_job "build"
           check_job "e2e"

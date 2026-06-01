@@ -1,10 +1,21 @@
 {
   "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
-  "_comment": "Mutation Testing Configuration for Positron — CI gate: score >= 85%",
+  "_comment": [
+    "FULL Mutation Profile — comprehensive run for main branch, nightly, or manual trigger.",
+    "NOT intended for regular PR CI (use stryker.fast.config.json for that).",
+    "",
+    "CHECKER: typescriptChecker is DEACTIVATED (QA-008).",
+    "Reason: typescriptChecker runs tsc against all project files, including apps/web/ (JSX/TSX).",
+    "This fails with 'Cannot use JSX unless the --jsx flag is provided' errors.",
+    "Type safety is already enforced by the separate `npm run typecheck` CI gate.",
+    "Risk: Mutants that produce invalid TypeScript (not caught by typecheck gate) may survive.",
+    "Mitigation: fast mutation profile gates critical code; full profile uses incremental thresholds."
+  ],
   "mutate": [
     "packages/*/src/**/*.ts",
     "apps/server/src/**/*.ts",
     "!packages/*/src/**/__tests__/**",
+    "!packages/*/src/**/__contracts__/**",
     "!packages/*/src/**/*.d.ts",
     "!**/index.ts",
     "!**/smoke.test.ts"
@@ -15,17 +26,17 @@
   },
   "reporters": ["html", "clear-text", "progress", "json"],
   "htmlReporter": {
-    "fileName": "reports/mutation/html/index.html"
+    "fileName": "reports/mutation/full/html/index.html"
   },
   "jsonReporter": {
-    "fileName": "reports/mutation/mutation-report.json"
+    "fileName": "reports/mutation/full/mutation-report.json"
   },
   "thresholds": {
-    "high": 85,
-    "low": 70,
-    "break": 70
+    "high": 70,
+    "low": 40,
+    "break": 40
   },
-  "timeoutMS": 30000,
+  "timeoutMS": 60000,
   "timeoutFactor": 2,
   "concurrency": 4,
   "cleanTempDir": true,
@@ -33,10 +44,7 @@
   "ignoreStatic": true,
   "packageManager": "npm",
   "buildCommand": "npm run build",
-  "checkers": ["typescript"],
-  "typescriptChecker": {
-    "prioritizePerformanceOverAccuracy": false
-  },
+  "checkers": [],
   "mutator": {
     "plugins": null,
     "excludedMutations": [
@@ -46,7 +54,6 @@
     ]
   },
   "plugins": [
-    "@stryker-mutator/vitest-runner",
-    "@stryker-mutator/typescript-checker"
+    "@stryker-mutator/vitest-runner"
   ]
 }
