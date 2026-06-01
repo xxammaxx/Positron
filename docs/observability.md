@@ -15,7 +15,7 @@ npm run dev
 docker compose -f docker-compose.observability.yml up
 
 # 3. Access dashboards
-# Grafana: http://localhost:3001 (admin/admin)
+# Grafana: http://localhost:3010 (admin/admin)
 # Prometheus: http://localhost:9090
 ```
 
@@ -51,6 +51,28 @@ curl http://localhost:9090/api/v1/alerts | jq '.data.alerts[] | {alertname: .lab
 # 6. Check Alertmanager
 curl http://localhost:9093/api/v2/alerts | jq '.[].labels.alertname'
 ```
+
+### Observability Drill (QA-016)
+
+Run a comprehensive observability drill to generate metrics and validate alerts:
+
+```bash
+# Run the observability drill (generates test runs, collects metrics)
+npm run observability:drill
+
+# Set custom run count
+POSITRON_DRILL_COUNT=25 npm run observability:drill
+
+# Validate all observability configs
+npm run observability:validate
+```
+
+The drill script:
+- Checks server health
+- Collects baseline metrics before and after
+- Generates configurable number of test runs via the API
+- Reports metric deltas
+- Exit code 0 on success, 1 on failure
 
 ## Architecture
 
@@ -190,6 +212,64 @@ Initial local baselines from E2E validation:
 - **HighRunFailureRate**: In fake mode sind viele FAILED_BLOCKED Runs normal — Threshold auf >50% erhöhen oder Alert deaktivieren
 - **QueueBacklogCritical**: Threshold von 50 ist für Produktion sinnvoll, für Dev zu hoch
 
+## Alert Calibration (QA-016)
+
+### WorkerDown Dev/Prod Toggle
+
+The `WorkerDown` alert can be suppressed in dev/test environments where no worker is running:
+
+```env
+# Disable WorkerDown alert in dev (reports worker as UP)
+POSITRON_ALERT_WORKER_DOWN_ENABLED=false
+
+# Enable WorkerDown alert in production (default: enabled)
+POSITRON_ALERT_WORKER_DOWN_ENABLED=true
+```
+
+When `POSITRON_ALERT_WORKER_DOWN_ENABLED=false`:
+- The `positron_queue_worker_up` metric always reports 1 (UP)
+- WorkerDown alert will NOT fire
+- All other alerts remain unaffected
+- Redis metrics still report actual status
+
+### Updated Baseline Table (QA-016)
+
+| Metrik | 10-Run Drill | Alert-Threshold | Bewertung |
+|--------|-------------|-----------------|-----------|
+| Server Uptime | ~8000s | PositronServerDown: up==0 | ✅ Sinnvoll |
+| Active Runs | 0 (bursts complete) | — | — |
+| Run Failure Rate | variable (fake mode) | >30% → HighRunFailureRate | ⚠️ In fake mode >50% normal |
+| OpenCode Duration p95 | <1s (fake) | >600s → LongRunDuration | ✅ Sinnvoll |
+| Queue Waiting | 0 | >50 → QueueBacklogCritical | ✅ Sinnvoll |
+| Queue Active | 0 | — | — |
+| Redis Up | 1 | ==0 → RedisDown | ✅ Sinnvoll |
+| Worker Up | 1 (dev toggle) / 0–1 (prod) | ==0 → WorkerDown (toggleable) | ✅ QA-016 konfigurierbar |
+| GitHub API Requests | 0 (fake) | rate>0 → GitHubRateLimitHit | ⚠️ Real mode only |
+| Retry Rate | 0 | >0.1/s → HighRetryRate | ✅ Sinnvoll |
+
+### RedisDown Safe Simulation
+
+RedisDown can be safely tested by temporarily stopping the Redis container:
+
+```bash
+# Stop Redis temporarily (alert will fire after 1m)
+docker compose stop redis
+# Wait for alert to fire, then restore
+docker compose up -d redis
+```
+
+This only affects the local observability stack. Never do this in production.
+
+### QueueBacklogCritical Safe Simulation
+
+QueueBacklogCritical (>50 waiting jobs) is difficult to simulate safely without flooding the queue. Options:
+
+1. **Isolated test queue**: Create a separate BullMQ queue for testing
+2. **Metric injection**: Use a test endpoint to directly set queue metrics (future QA task)
+3. **Worker pause**: Pause the worker and enqueue many jobs, then resume
+
+Currently documented as "not locally simulatable without risk" — requires dedicated test infrastructure.
+
 ## Known Limitations
 
 1. **No production baseline** — Alert thresholds are estimates and need calibration after 7+ days of live data.
@@ -198,12 +278,16 @@ Initial local baselines from E2E validation:
 4. **Grafana port changed to 3010 in development** — 3001 may conflict with web frontend.
 5. **Docker dependency** — Prometheus and Grafana run in Docker. For non-Docker setups, install `prometheus` and `grafana` directly.
 6. **Authentication** — Grafana uses default `admin/admin` credentials. Change for production.
+7. **Integration tests affected by running server** — Some integration tests (apps/server) may fail when a production server is already running on port 3000. Stop the server before running `npm test` locally.
 
 ## Known Issues Fixed in QA-015
 
 - **Grafana Dashboard Mount Conflict**: Fixed docker-compose.observability.yml to properly separate provisioning config from dashboard JSON files
 - **Alertmanager Empty slack_api_url**: Removed empty string causing parse error — replaced with commented-out config
 - **Docker Image Tags**: Updated from unavailable versions (grafana:11.7.0, prometheus:v3.7.0) to working versions (grafana:11.5.2, prometheus:v3.5.0)
+- **WorkerDown Dev Toggle (QA-016)**: Added POSITRON_ALERT_WORKER_DOWN_ENABLED env var to suppress WorkerDown alert in dev environments
+- **Observability Drill Script (QA-016)**: Added scripts/observability-drill.mjs for reproducible metric generation
+- **Config Validation CI (QA-016)**: Added scripts/observability-validate.mjs and .github/workflows/quality-gates.yml for CI promtool/amtool validation
 
 ## Local Validation
 
@@ -263,3 +347,5 @@ observability/
 | Dashboard not loaded | Check provisioning config paths in `observability/grafana/provisioning/` |
 | Alertmanager shows no alerts | Check `prometheus_notifications_sent_total` > 0 |
 | Grafana dashboard not auto-loaded | Verify dashboard JSON files are in `/etc/grafana/dashboards/` |
+| WorkerDown fires in dev | Set POSITRON_ALERT_WORKER_DOWN_ENABLED=false or start a worker process |
+| Drill script fails | Ensure server is running on localhost:3000 and Redis is available |

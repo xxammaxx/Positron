@@ -2457,6 +2457,12 @@ export function createApp(options: ServerOptions = {}) {
 	// when the queue is unreachable, so dashboards always show a valid value.
 
 	async function collectQueueStats(): Promise<void> {
+		// QA-016: When POSITRON_ALERT_WORKER_DOWN_ENABLED is explicitly "false",
+		// suppress the WorkerDown alert by reporting worker as UP regardless
+		// of actual worker presence. Useful for dev/test environments without
+		// a running worker process. In production, this should remain "true".
+		const workerDownAlertEnabled =
+			process.env.POSITRON_ALERT_WORKER_DOWN_ENABLED !== "false";
 		try {
 			const { Queue } = await import("bullmq");
 			const { PIPELINE_QUEUE, resolveRedisUrl } = await import(
@@ -2490,7 +2496,8 @@ export function createApp(options: ServerOptions = {}) {
 				const workers = await pipelineQueue.getWorkers();
 				queueWorkerUp.set(
 					{ queue: "positron-pipeline" },
-					workers.length > 0 ? 1 : 0,
+					// QA-016: Suppress WorkerDown in dev mode
+					workerDownAlertEnabled ? (workers.length > 0 ? 1 : 0) : 1,
 				);
 				queueRedisUp.set(1);
 			} catch {

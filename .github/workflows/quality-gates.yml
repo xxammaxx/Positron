@@ -1,0 +1,65 @@
+name: Quality Gates
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit Tests
+        run: npm test
+
+  observability-config-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate Docker Compose Config
+        run: |
+          python3 -c "import yaml; yaml.safe_load(open('observability/prometheus/prometheus.yml'))" && echo "✅ prometheus.yml valid YAML"
+          python3 -c "import yaml; yaml.safe_load(open('observability/prometheus/alerts.yml'))" && echo "✅ alerts.yml valid YAML"
+          python3 -c "import yaml; yaml.safe_load(open('observability/alertmanager/alertmanager.yml'))" && echo "✅ alertmanager.yml valid YAML"
+
+      - name: Validate Prometheus Config (promtool)
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}/observability/prometheus/prometheus.yml:/tmp/prometheus.yml:ro \
+            -v ${{ github.workspace }}/observability/prometheus/alerts.yml:/tmp/alerts.yml:ro \
+            --entrypoint promtool \
+            prom/prometheus:v3.5.0 check config /tmp/prometheus.yml
+
+      - name: Validate Alert Rules (promtool)
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}/observability/prometheus/alerts.yml:/tmp/alerts.yml:ro \
+            --entrypoint promtool \
+            prom/prometheus:v3.5.0 check rules /tmp/alerts.yml
+
+      - name: Validate Alertmanager Config (amtool)
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}/observability/alertmanager/alertmanager.yml:/tmp/alertmanager.yml:ro \
+            --entrypoint amtool \
+            prom/alertmanager:v0.28.0 check-config /tmp/alertmanager.yml
