@@ -2,7 +2,7 @@
 # Minimal, secure, local-testable. No real secrets or webhooks.
 
 global:
-  slack_api_url: ""
+  # slack_api_url not configured — alerts route to webhook receivers only
 
 route:
   receiver: "default"

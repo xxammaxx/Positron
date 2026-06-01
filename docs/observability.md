@@ -19,19 +19,52 @@ docker compose -f docker-compose.observability.yml up
 # Prometheus: http://localhost:9090
 ```
 
+## E2E Validation (QA-015)
+
+The observability stack has been validated end-to-end on 2026-06-01. All components are functional:
+
+| Component | URL/Port | Status |
+|-----------|----------|--------|
+| Positron Server `/metrics` | http://localhost:3000/metrics | UP |
+| Prometheus | http://localhost:9090 | UP |
+| Grafana | http://localhost:3010 | UP |
+| Alertmanager | http://localhost:9093 | UP |
+
+### E2E Smoke Test
+
+```bash
+# 1. Start Positron server
+cd apps/server && PORT=3000 HOST=0.0.0.0 npx tsx src/index.ts
+
+# 2. Start observability stack
+docker compose -f docker-compose.observability.yml up
+
+# 3. Verify Prometheus scrape
+curl http://localhost:9090/api/v1/targets | jq '.data.activeTargets[] | {job: .labels.job, health}'
+
+# 4. Verify Grafana dashboard
+curl -u admin:admin http://localhost:3010/api/search?type=dash-db | jq '.[].title'
+
+# 5. Check alerts
+curl http://localhost:9090/api/v1/alerts | jq '.data.alerts[] | {alertname: .labels.alertname, state}'
+
+# 6. Check Alertmanager
+curl http://localhost:9093/api/v2/alerts | jq '.[].labels.alertname'
+```
+
 ## Architecture
 
 ```
 ┌──────────────┐     scrape /metrics     ┌─────────────┐     query     ┌──────────┐
 │  Positron    │ ◄────────────────────── │ Prometheus   │ ────────────► │ Grafana  │
-│  Server:3000 │                         │ :9090        │              │ :3001    │
+│  Server:3000 │                         │ :9090        │              │ :3010    │
 └──────────────┘                         └──────┬───────┘              └──────────┘
                                                 │ alert rules
                                                 ▼
-                                          ┌──────────┐
-                                          │ Alert    │
-                                          │ Manager  │
-                                          └──────────┘
+                                          ┌──────────────┐
+                                          │ Alertmanager │──► Webhook (critical)
+                                          │ :9093        │──► Webhook (warning)
+                                          └──────────────┘
 ```
 
 ## Metrics Reference
@@ -132,13 +165,45 @@ Defined in `observability/prometheus/alerts.yml`.
 
 **⚠️ Thresholds are initial estimates. Calibrate with production data before relying on them.**
 
+## Baseline Calibration (QA-015)
+
+Initial local baselines from E2E validation:
+
+| Metrik | Lokaler Normalwert | Alert-Threshold | Bewertung |
+|--------|-------------------|-----------------|-----------|
+| Server Uptime | 0–7200s | PositronServerDown: up==0 for 1m | sinnvoll initial |
+| Active Runs | 0–5 | — | — |
+| Run Failure Rate | 0–100% (initial) | >30% for 5m | zu aggressiv für Dev |
+| OpenCode Duration p95 | <1s (fake mode) | p95 > 600s | sinnvoll initial |
+| Queue Waiting | 0 | >50 for 5m | sinnvoll initial |
+| Queue Active | 0 | — | — |
+| Redis Up | 1 (local) | ==0 for 1m | sinnvoll initial |
+| Worker Up | 0 (no worker) | ==0 for 2m | muss deaktiviert werden wenn kein Worker läuft |
+| GitHub API Requests | 0 (fake mode) | rate > 0 | nur bei real mode |
+| Retry Rate | 0 | >0.1/s | sinnvoll initial |
+
+**Hinweis:** Diese Baselines gelten für `fake` mode ohne Worker. Produktionsbaselines müssen nach 7+ Tagen Live-Betrieb kalibriert werden.
+
+### Alert-Schwellen-Empfehlungen
+
+- **WorkerDown**: In Entwicklungsumgebungen ohne Worker deaktivieren oder `for: 10m` setzen
+- **HighRunFailureRate**: In fake mode sind viele FAILED_BLOCKED Runs normal — Threshold auf >50% erhöhen oder Alert deaktivieren
+- **QueueBacklogCritical**: Threshold von 50 ist für Produktion sinnvoll, für Dev zu hoch
+
 ## Known Limitations
 
 1. **No production baseline** — Alert thresholds are estimates and need calibration after 7+ days of live data.
 2. **Worker metrics via server** — Queue stats are collected by the server polling BullMQ. The worker process itself does not expose its own `/metrics` endpoint.
-3. **No Alertmanager integration** — Alert rules are defined but Alertmanager (notifications to Slack/PagerDuty) is not configured. See Prometheus Alertmanager docs.
-4. **Docker dependency** — Prometheus and Grafana run in Docker. For non-Docker setups, install `prometheus` and `grafana` directly.
-5. **Authentication** — Grafana uses default `admin/admin` credentials. Change for production.
+3. **Docker image tags must be updated for production** — currently pinned to tested versions.
+4. **Grafana port changed to 3010 in development** — 3001 may conflict with web frontend.
+5. **Docker dependency** — Prometheus and Grafana run in Docker. For non-Docker setups, install `prometheus` and `grafana` directly.
+6. **Authentication** — Grafana uses default `admin/admin` credentials. Change for production.
+
+## Known Issues Fixed in QA-015
+
+- **Grafana Dashboard Mount Conflict**: Fixed docker-compose.observability.yml to properly separate provisioning config from dashboard JSON files
+- **Alertmanager Empty slack_api_url**: Removed empty string causing parse error — replaced with commented-out config
+- **Docker Image Tags**: Updated from unavailable versions (grafana:11.7.0, prometheus:v3.7.0) to working versions (grafana:11.5.2, prometheus:v3.5.0)
 
 ## Local Validation
 
@@ -161,6 +226,9 @@ python3 -c "import yaml; yaml.safe_load(open('observability/prometheus/prometheu
 
 ```
 observability/
+├── alertmanager/
+│   ├── alertmanager.yml        # Alertmanager configuration
+│   └── runbook-map.md          # Alert routing runbook map
 ├── prometheus/
 │   ├── prometheus.yml          # Scrape configuration
 │   └── alerts.yml              # Alert rules (10 alerts)
@@ -193,3 +261,5 @@ observability/
 | Prometheus target down | Ensure `extra_hosts` mapping works: check `host.docker.internal` or `host-gateway` |
 | No queue metrics | Redis must be running. Queue metrics show 0 when Redis is unavailable. |
 | Dashboard not loaded | Check provisioning config paths in `observability/grafana/provisioning/` |
+| Alertmanager shows no alerts | Check `prometheus_notifications_sent_total` > 0 |
+| Grafana dashboard not auto-loaded | Verify dashboard JSON files are in `/etc/grafana/dashboards/` |

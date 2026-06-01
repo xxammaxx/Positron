@@ -10,7 +10,7 @@
 
 services:
   prometheus:
-    image: prom/prometheus:v3.7.0
+    image: prom/prometheus:v3.5.0
     container_name: positron-prometheus
     ports:
       - "9090:9090"
@@ -29,18 +29,18 @@ services:
     restart: unless-stopped
 
   grafana:
-    image: grafana/grafana:11.7.0
+    image: grafana/grafana:11.5.2
     container_name: positron-grafana
     ports:
-      - "3001:3000"
+      - "3010:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_INSTALL_PLUGINS=
     volumes:
       - ./observability/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
-      - ./observability/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
-      - ./observability/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./observability/grafana/provisioning/dashboards/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
+      - ./observability/grafana/dashboards:/etc/grafana/dashboards:ro
       - grafana_data:/var/lib/grafana
     networks:
       - observability
