@@ -1,0 +1,32 @@
+# syntax=docker/dockerfile:1.7
+# Dockerfile für Security-Scans
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Tools installieren
+RUN apk add --no-cache git curl jq
+
+# Node-Abhängigkeiten
+COPY package.json package-lock.json ./
+RUN npm ci --ignore-scripts
+
+# Quellcode kopieren
+COPY . .
+
+# Non-root user
+RUN addgroup -S security && adduser -S security -G security && \
+    mkdir -p /app/reports && chown -R security:security /app
+
+USER security
+
+# Alle Security-Checks ausführen
+CMD ["sh", "-c", "\
+  echo '=== Dependency Audit ===' && \
+  npm audit --audit-level=high && \
+  echo '=== License Check ===' && \
+  npx license-checker --production --onlyAllow 'MIT;ISC;Apache-2.0;BSD-2-Clause;BSD-3-Clause;CC0-1.0;Unlicense;AGPL-3.0' --summary && \
+  echo '=== Secret Scan ===' && \
+  npx --yes gitleaks@latest detect --config .gitleaks.toml --no-git --verbose && \
+  echo '✅ All Security Checks Passed' \
+"]

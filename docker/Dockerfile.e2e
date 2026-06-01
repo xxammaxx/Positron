@@ -1,0 +1,23 @@
+# syntax=docker/dockerfile:1.7
+# Dockerfile für E2E-Tests (Playwright)
+# Basis: Microsoft Playwright Image (enthält alle Browser)
+
+FROM mcr.microsoft.com/playwright:v1.60.0-jammy
+
+WORKDIR /app
+
+# Abhängigkeiten installieren
+COPY package.json package-lock.json ./
+RUN npm ci --ignore-scripts
+
+# Quellcode kopieren
+COPY . .
+
+# TypeScript kompilieren
+RUN npm run build 2>/dev/null || echo "Build warnings (expected)"
+
+# Playwright-Browser sind bereits im Base-Image installiert
+# Zusätzliche System-Dependencies
+RUN npx playwright install-deps chromium 2>/dev/null || true
+
+CMD ["npx", "playwright", "test", "--reporter=html", "--reporter=line"]

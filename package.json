@@ -47,14 +47,20 @@
     "typecheck": "tsc -b --dry"
   },
   "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
     "@playwright/test": "^1.60.0",
+    "@stryker-mutator/core": "^8.7.0",
+    "@stryker-mutator/typescript-checker": "^8.7.0",
+    "@stryker-mutator/vitest-runner": "^8.7.0",
     "@types/node": "^22.0.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
     "@vitest/coverage-v8": "^4.1.7",
     "concurrently": "^8.2.0",
     "cross-env": "^10.1.0",
+    "dependency-cruiser": "^16.10.0",
     "eslint": "^8.56.0",
+    "license-checker": "^25.0.1",
     "typescript": "^5.4.0",
     "vitest": "^4.0.0"
   }

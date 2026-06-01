@@ -1,0 +1,342 @@
+name: Quality Gates
+
+# Läuft bei jedem Push auf main/develop und jedem PR
+# Dies ist DAS zentrale Qualitäts-Gate für Positron
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      run_mutation:
+        description: 'Mutation-Tests ausführen (dauert ~15min)'
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: quality-gates-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  POSITRON_GITHUB_MODE: fake
+  POSITRON_SPECKIT_MODE: fake
+  POSITRON_OPENCODE_MODE: fake
+
+jobs:
+  # ═══════════════════════════════════════════
+  # GATE 1: Format (1s)
+  # ═══════════════════════════════════════════
+  format:
+    name: '🎨 Format'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: biomejs/setup-biome@v2
+        with:
+          version: latest
+      - run: biome format --check .
+
+  # ═══════════════════════════════════════════
+  # GATE 2: Lint (1s)
+  # ═══════════════════════════════════════════
+  lint:
+    name: '🔍 Lint'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: biomejs/setup-biome@v2
+        with:
+          version: latest
+      - run: biome lint .
+
+  # ═══════════════════════════════════════════
+  # GATE 3: Type Check (~30s)
+  # ═══════════════════════════════════════════
+  typecheck:
+    name: '📐 TypeScript'
+    runs-on: ubuntu-latest
+    needs: [format, lint]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - name: TypeScript Build Check
+        run: |
+          # Prüft ALLE Packages im Composite-Build
+          # tsc -b --noEmit ist nicht mit Composite-Projekten kompatibel (TS6310).
+          # npm run build führt tsc -b mit Emit aus und fängt alle Typfehler.
+          npm run build 2>&1 | tee typecheck.log
+          if grep -q "error TS" typecheck.log; then
+            echo "❌ TypeScript errors found!"
+            exit 1
+          fi
+
+  # ═══════════════════════════════════════════
+  # GATE 4+5: Unit + Integration Tests (~120s)
+  # ═══════════════════════════════════════════
+  test:
+    name: '🧪 Tests'
+    runs-on: ubuntu-latest
+    needs: [typecheck]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - name: Build packages
+        run: npm run build
+      - name: Unit Tests
+        run: npx vitest run --reporter=verbose --reporter=github-actions
+      - name: Integration Tests
+        run: npx vitest run --config vitest.integration.config.ts --reporter=verbose --reporter=github-actions
+        continue-on-error: false
+
+  # ═══════════════════════════════════════════
+  # GATE 6: Contract Tests (~60s)
+  # ═══════════════════════════════════════════
+  contracts:
+    name: '📋 Contract Tests'
+    runs-on: ubuntu-latest
+    needs: [typecheck]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci && npm run build
+      - name: Adapter Contract Tests
+        run: npx vitest run --config vitest.contracts.config.ts --reporter=verbose --reporter=github-actions
+
+  # ═══════════════════════════════════════════
+  # GATE 7: Coverage Gate (~60s)
+  # ═══════════════════════════════════════════
+  coverage:
+    name: '📊 Coverage'
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci && npm run build
+      - name: Coverage Check
+        run: npx vitest run --coverage --coverage.thresholds.lines=60 --coverage.thresholds.branches=50 --coverage.thresholds.functions=55 --coverage.thresholds.statements=60
+        continue-on-error: true  # Warning, not blocking yet
+      - name: Upload Coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+
+  # ═══════════════════════════════════════════
+  # GATE 8: Mutation Tests (~15min, nur bei Label/manuell)
+  # ═══════════════════════════════════════════
+  mutation:
+    name: '🧬 Mutation Tests'
+    runs-on: ubuntu-latest
+    needs: [test]
+    if: |
+      github.event_name == 'push' ||
+      contains(github.event.pull_request.labels.*.name, 'mutation-test') ||
+      github.event.inputs.run_mutation == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci && npm run build
+      - name: Stryker Mutation Testing
+        run: npx stryker run --configFile stryker.config.json
+      - name: Upload Mutation Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-report
+          path: reports/mutation/
+          retention-days: 7
+
+  # ═══════════════════════════════════════════
+  # GATES 9-11: Security (parallel) (~30s)
+  # ═══════════════════════════════════════════
+  security:
+    name: '🔒 Security'
+    runs-on: ubuntu-latest
+    needs: [typecheck]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # gitleaks braucht Git-History
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - name: Dependency Audit
+        run: npm audit --audit-level=high
+        continue-on-error: true  # Warning, not blocking
+      - name: Secret Scan (Gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          config-path: .gitleaks.toml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: License Check
+        run: |
+          npx license-checker --production --onlyAllow 'MIT;ISC;Apache-2.0;BSD-2-Clause;BSD-3-Clause;CC0-1.0;Unlicense;AGPL-3.0' --summary
+
+  # ═══════════════════════════════════════════
+  # GATE 12: Build in Docker (~5min)
+  # ═══════════════════════════════════════════
+  build:
+    name: '🐳 Docker Build'
+    runs-on: ubuntu-latest
+    needs: [test, contracts, security]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build Server Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/server/Dockerfile
+          push: false
+          load: true
+          tags: positron-server:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Smoke Test (Server starts)
+        run: |
+          docker run --rm -d --name positron-smoke \
+            -e POSITRON_GITHUB_MODE=fake \
+            -e POSITRON_SPECKIT_MODE=fake \
+            -e POSITRON_OPENCODE_MODE=fake \
+            -p 3000:3000 \
+            positron-server:ci
+          sleep 3
+          curl -f http://localhost:3000/api/health || (docker logs positron-smoke && exit 1)
+          docker stop positron-smoke
+
+  # ═══════════════════════════════════════════
+  # GATE 13: E2E Tests (~10min)
+  # ═══════════════════════════════════════════
+  e2e:
+    name: '🎭 E2E Tests'
+    runs-on: ubuntu-latest
+    needs: [build]
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci && npm run build
+      - name: Start Server (Background)
+        run: |
+          node apps/server/dist/index.js &
+          sleep 3
+          curl -f http://localhost:3000/api/health
+        env:
+          POSITRON_GITHUB_MODE: fake
+          POSITRON_SPECKIT_MODE: fake
+          POSITRON_OPENCODE_MODE: fake
+          POSITRON_REDIS_URL: redis://localhost:6379
+          PORT: 3000
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+      - name: Run E2E Tests
+        run: npx playwright test --reporter=html --reporter=line
+      - name: Upload Playwright Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: test-results/
+          retention-days: 14
+
+  # ═══════════════════════════════════════════
+  # GATE 14: Architecture (~15s)
+  # ═══════════════════════════════════════════
+  architecture:
+    name: '🏗️ Architecture'
+    runs-on: ubuntu-latest
+    needs: [typecheck]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - run: npm ci
+      - name: Dependency Cruiser
+        run: npx depcruise packages --config .dependency-cruiser.js --output-type err-long
+        continue-on-error: true  # Warning während Migration, später blocking
+
+  # ═══════════════════════════════════════════
+  # FINAL GATE: Merge-Ready Check
+  # ═══════════════════════════════════════════
+  gate-status:
+    name: '✅ All Gates'
+    runs-on: ubuntu-latest
+    needs: [format, lint, typecheck, test, contracts, coverage, security, build, e2e, architecture]
+    if: always()
+    steps:
+      - name: Check all required gates
+        run: |
+          echo "### Quality Gate Summary" >> $GITHUB_STEP_SUMMARY
+          FAILED=0
+
+          check_job() {
+            local job=$1
+            local result=$(echo '${{ toJSON(needs) }}' | jq -r ".${job}.result // \"skipped\"")
+            echo "- ${job}: ${result}" >> $GITHUB_STEP_SUMMARY
+            if [ "$result" != "success" ] && [ "$job" != "mutation" ] && [ "$job" != "coverage" ]; then
+              FAILED=1
+            fi
+          }
+
+          check_job "format"
+          check_job "lint"
+          check_job "typecheck"
+          check_job "test"
+          check_job "contracts"
+          check_job "coverage"
+          check_job "security"
+          check_job "build"
+          check_job "e2e"
+          check_job "architecture"
+
+          if [ $FAILED -eq 1 ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "❌ **BLOCKED**: Required gates failed" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          else
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "✅ **ALL GATES PASSED**" >> $GITHUB_STEP_SUMMARY
+          fi

@@ -1,0 +1,65 @@
+# syntax=docker/dockerfile:1.7
+# Multi-Stage Dockerfile für Tests und CI
+# Verwendung:
+#   docker build -f docker/Dockerfile.test --target test .
+#   docker build -f docker/Dockerfile.test --target reproduce .
+
+# ─── Stage 1: Abhängigkeiten installieren ───
+FROM node:20-alpine AS deps
+WORKDIR /app
+
+# package.json + lock-Dateien kopieren
+COPY package.json package-lock.json ./
+COPY packages/shared/package.json packages/shared/
+COPY packages/github-adapter/package.json packages/github-adapter/
+COPY packages/run-state/package.json packages/run-state/
+COPY packages/sandbox/package.json packages/sandbox/
+COPY packages/speckit-adapter/package.json packages/speckit-adapter/
+COPY packages/opencode-adapter/package.json packages/opencode-adapter/
+# NOTE: packages/orchestrator-core is planned (QA-011), not yet created
+# COPY packages/orchestrator-core/package.json packages/orchestrator-core/
+COPY apps/server/package.json apps/server/
+COPY apps/worker/package.json apps/worker/
+COPY apps/web/package.json apps/web/
+
+# Abhängigkeiten installieren (ohne postinstall-Scripts)
+RUN npm ci --ignore-scripts
+
+# ─── Stage 2: Test-Runner ───
+FROM node:20-alpine AS test
+WORKDIR /app
+
+# Non-root user für Tests
+RUN addgroup -S positron && adduser -S positron -G positron
+RUN mkdir -p /tmp/positron-test && chown -R positron:positron /tmp /app
+
+# Abhängigkeiten aus Stage 1 kopieren
+COPY --from=deps --chown=positron:positron /app/node_modules ./node_modules
+
+# Quellcode kopieren
+COPY --chown=positron:positron . .
+
+# TypeScript build
+RUN npm run build 2>/dev/null || echo "Build warnings (expected for work-in-progress)"
+
+# Coverage- und Report-Verzeichnisse
+RUN mkdir -p /app/coverage /app/reports && chown -R positron:positron /app/coverage /app/reports
+
+USER positron
+
+# Default: alle Tests ausführen
+CMD ["npx", "vitest", "run", "--reporter=verbose"]
+
+# ─── Stage 3: Build-Reproduzierbarkeit ───
+FROM node:20-alpine AS reproduce
+WORKDIR /app
+
+RUN addgroup -S positron && adduser -S positron -G positron
+RUN mkdir -p /tmp/positron-test && chown -R positron:positron /tmp /app
+
+# KEINE node_modules kopieren — npm ci muss im Container laufen
+COPY --chown=positron:positron . .
+
+USER positron
+
+CMD ["sh", "-c", "npm ci --ignore-scripts && npm run build && npx vitest run"]

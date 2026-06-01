@@ -1,0 +1,79 @@
+{
+  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "organizeImports": {
+    "enabled": true
+  },
+  "formatter": {
+    "enabled": true,
+    "formatWithErrors": false,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineEnding": "lf",
+    "lineWidth": 100,
+    "attributePosition": "auto"
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "complexity": {
+        "noBannedTypes": "error",
+        "noExcessiveCognitiveComplexity": {
+          "level": "warn",
+          "options": { "maxAllowedComplexity": 15 }
+        },
+        "noUselessConstructor": "error",
+        "useSimplifiedLogicExpression": "error"
+      },
+      "correctness": {
+        "noUnusedVariables": "error",
+        "noConstAssign": "error",
+        "noUndeclaredVariables": "error",
+        "useExhaustiveDependencies": "warn"
+      },
+      "security": {
+        "noDangerouslySetInnerHtml": "error",
+        "noGlobalEval": "error"
+      },
+      "style": {
+        "noNonNullAssertion": "warn",
+        "useConst": "error",
+        "useTemplate": "error"
+      },
+      "suspicious": {
+        "noConsoleLog": {
+          "level": "warn",
+          "options": { "allow": ["warn", "error"] }
+        },
+        "noExplicitAny": "warn",
+        "noDoubleEquals": "error",
+        "noImplicitAnyLet": "error"
+      }
+    },
+    "ignore": ["node_modules", "dist", "coverage", ".stryker-tmp", "test-results", "playwright-report"]
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "trailingCommas": "all",
+      "semicolons": "always",
+      "arrowParentheses": "always",
+      "bracketSpacing": true
+    }
+  },
+  "files": {
+    "ignore": [
+      "node_modules/**",
+      "dist/**",
+      "coverage/**",
+      ".stryker-tmp/**",
+      "test-results/**",
+      "playwright-report/**",
+      "*.json",
+      "*.md",
+      "*.toml",
+      "*.lock",
+      "package-lock.json"
+    ]
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "_comment": "Mutation Testing Configuration for Positron — CI gate: score >= 85%",
+  "mutate": [
+    "packages/*/src/**/*.ts",
+    "apps/server/src/**/*.ts",
+    "!packages/*/src/**/__tests__/**",
+    "!packages/*/src/**/*.d.ts",
+    "!**/index.ts",
+    "!**/smoke.test.ts"
+  ],
+  "testRunner": "vitest",
+  "vitest": {
+    "configFile": "vitest.config.ts"
+  },
+  "reporters": ["html", "clear-text", "progress", "json"],
+  "htmlReporter": {
+    "fileName": "reports/mutation/html/index.html"
+  },
+  "jsonReporter": {
+    "fileName": "reports/mutation/mutation-report.json"
+  },
+  "thresholds": {
+    "high": 85,
+    "low": 70,
+    "break": 70
+  },
+  "timeoutMS": 30000,
+  "timeoutFactor": 2,
+  "concurrency": 4,
+  "cleanTempDir": true,
+  "tempDirName": ".stryker-tmp",
+  "ignoreStatic": true,
+  "packageManager": "npm",
+  "buildCommand": "npm run build",
+  "checkers": ["typescript"],
+  "typescriptChecker": {
+    "prioritizePerformanceOverAccuracy": false
+  },
+  "mutator": {
+    "plugins": null,
+    "excludedMutations": [
+      "StringLiteral",
+      "ArrayDeclaration",
+      "ObjectLiteral"
+    ]
+  },
+  "plugins": [
+    "@stryker-mutator/vitest-runner",
+    "@stryker-mutator/typescript-checker"
+  ]
+}

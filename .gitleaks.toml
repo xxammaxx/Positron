@@ -1,0 +1,52 @@
+# Gitleaks-Konfiguration für Positron
+# Schützt vor Secret-Leaks in Commits und PRs
+
+# Allowlist für Fake-Tokens in Test-Fixtures
+allowlist:
+  paths:
+    - "**/test/**"
+    - "**/__tests__/**"
+    - "**/spec/**"
+    - "**/fake*.ts"
+    - "**/smoke.test.ts"
+    - "**/*.test.ts"
+    - "**/*.spec.ts"
+    - ".env.example"
+    - "*.md"
+  regexes:
+    # Fake GitHub-Tokens (ghp_fake, ghp_test_...)
+    - "ghp_fake[a-zA-Z0-9]*"
+    - "github_pat_fake[a-zA-Z0-9]*"
+    # Fake Admin-Tokens
+    - "positron-admin-test[a-zA-Z0-9]*"
+    - "positron-admin-prod-fake[a-zA-Z0-9]*"
+
+# Regeln für Secrets (Standard-Gitleaks + Positron-spezifisch)
+rules:
+  # GitHub Personal Access Token
+  - id: "github-pat"
+    description: "GitHub Personal Access Token"
+    regex: "ghp_[a-zA-Z0-9]{36}"
+    tags: ["github", "secret"]
+
+  # GitHub OAuth Access Token
+  - id: "github-oauth"
+    description: "GitHub OAuth Access Token"
+    regex: "gho_[a-zA-Z0-9]{36}"
+    tags: ["github", "secret"]
+
+  # Positron Admin Token (Produktion)
+  - id: "positron-admin-token"
+    description: "Positron Admin Token (Production)"
+    regex: "positron-admin-prod-[a-zA-Z0-9]{32,}"
+    tags: ["positron", "secret"]
+
+  # Generic API Key in Code
+  - id: "generic-api-key"
+    description: "Generic API Key"
+    regex: "(?i)(api[_-]?key|apikey|secret|token|password|passwd|auth).*['\"][a-zA-Z0-9_\\-]{20,}['\"]"
+    tags: ["secret"]
+    allowlist:
+      paths:
+        - "**/test/**"
+        - "**/__tests__/**"
