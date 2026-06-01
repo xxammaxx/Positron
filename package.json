@@ -46,6 +46,7 @@
 		"observability:validate": "node scripts/observability-validate.mjs",
 		"observability:chaos-drill": "node scripts/chaos-drill.mjs",
 		"observability:webhook-mock": "node scripts/alert-webhook-mock.mjs",
+		"observability:queue-backlog": "node scripts/queue-backlog-drill.mjs",
 		"lint": "eslint . --ext .ts,.tsx",
 		"clean": "find . -name dist -not -path '*/node_modules/*' -exec rm -rf {} +",
 		"typecheck": "tsc -b --dry"

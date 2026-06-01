@@ -19,6 +19,7 @@
 | HighRetryRate | warning | [high-run-failure-rate.md](docs/runbooks/high-run-failure-rate.md) |
 | LongRunDuration | warning | [high-run-failure-rate.md](docs/runbooks/high-run-failure-rate.md) |
 | QueueBacklogGrowing | warning | [queue-backlog-critical.md](docs/runbooks/queue-backlog-critical.md) |
+| QueueBacklogCriticalDrill | warning | [queue-backlog-critical.md](docs/runbooks/queue-backlog-critical.md) |
 
 ## Escalation Summary
 

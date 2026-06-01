@@ -67,6 +67,23 @@ groups:
           description: "More than 50 jobs are waiting in the positron-pipeline queue. Check worker health and redis connectivity."
           runbook_url: "docs/runbooks/queue-backlog-critical.md"
 
+  # ── Observability Drill Alerts (QA-018) ───────────────────────
+  # Separate alert group for isolated test-queue validation.
+  # Only fires in local observability drill — never in production.
+  - name: positron-drill
+    rules:
+      - alert: QueueBacklogCriticalDrill
+        expr: positron_queue_jobs_waiting{queue="positron-observability-drill"} > 50
+        for: 30s
+        labels:
+          severity: warning
+          component: queue
+          drill: "true"
+        annotations:
+          summary: "Observability drill: queue backlog > {{ $value }} jobs (test queue)"
+          description: "QueueBacklogCritical drill is active. This validates the alerting pipeline — not a production incident."
+          runbook_url: "docs/runbooks/queue-backlog-critical.md"
+
   - name: positron-warning
     rules:
       # ── GitHub API ───────────────────────────────────────────────

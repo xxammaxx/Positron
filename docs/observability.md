@@ -173,9 +173,9 @@ Defined in `observability/prometheus/alerts.yml`.
 | RedisDown | `positron_queue_redis_up == 0` |
 | WorkerDown | `positron_queue_worker_up == 0` |
 | HighRunFailureRate | Failure rate > 30% |
-| QueueBacklogCritical | > 50 waiting jobs |
+| QueueBacklogCritical | > 50 waiting jobs (positron-pipeline) |
 
-### Warning (5 rules)
+### Warning (5 rules) + Drill (1 rule)
 
 | Alert | Condition |
 |-------|-----------|
@@ -184,6 +184,7 @@ Defined in `observability/prometheus/alerts.yml`.
 | HighRetryRate | Retry rate elevated |
 | LongRunDuration | p95 duration > 10min |
 | QueueBacklogGrowing | Waiting jobs increasing |
+| QueueBacklogCriticalDrill | > 50 waiting jobs (positron-observability-drill) — drill only |
 
 **⚠️ Thresholds are initial estimates. Calibrate with production data before relying on them.**
 
@@ -293,17 +294,46 @@ curl -X POST http://localhost:5001/alertmanager/warning \
   -d '{"status":"firing","alerts":[{"status":"firing","labels":{"alertname":"MultiTest","severity":"warning"},"annotations":{"summary":"Multi-alert test"}}]}'
 ```
 
-### QueueBacklogCritical Safe Simulation
+### QueueBacklogCritical Safe Simulation (QA-018)
 
-QueueBacklogCritical targets the production `positron-pipeline` queue (>50 waiting jobs for 5m). Safe local simulation requires dedicated test infrastructure:
+QueueBacklogCritical can now be safely simulated via an isolated test queue:
 
-**Recommended approach (QA-018):**
-- Isolated test queue `positron-observability-drill`
-- Max 60 test jobs with auto-removal
-- No production queue impact
-- Controlled queue fill script
+```bash
+# Run the queue backlog drill (uses isolated test queue)
+npm run observability:queue-backlog
+# or: node scripts/queue-backlog-drill.mjs --jobs 60
 
-Currently documented as "safe simulation via dedicated test queue deferred to QA-018."
+# Custom job count (55-75 range, threshold is 50)
+POSITRON_DRILL_JOB_COUNT=70 npm run observability:queue-backlog
+```
+
+**Drill architecture:**
+
+| Component | Production | Drill |
+|-----------|-----------|-------|
+| Queue | `positron-pipeline` | `positron-observability-drill` |
+| Alert | `QueueBacklogCritical` (severity: critical) | `QueueBacklogCriticalDrill` (severity: warning) |
+| Jobs | Real pipeline runs | No-op drill jobs with auto-removal |
+| TTL | N/A | 5min lock, auto-complete |
+| Cleanup | Never | Queue obliterated after drill |
+
+**What the drill does:**
+1. Enqueues 55-75 no-op jobs into isolated queue `positron-observability-drill`
+2. Waits for Prometheus scrape cycle (15s+)
+3. Checks that `positron_queue_jobs_waiting{queue="positron-observability-drill"}` > 50
+4. Verifies `QueueBacklogCriticalDrill` alert fires in Prometheus
+5. Optionally checks webhook mock for alert reception
+6. **Drains and obliterates only the drill queue** — never touches `positron-pipeline`
+7. Exits with code 0 on success, 1 on failure
+
+**Safety guarantees:**
+- ✅ Separate BullMQ queue — production pipeline never affected
+- ✅ Separate alert rule — production alerts never triggered by drill
+- ✅ No real agent actions — drill jobs are no-op
+- ✅ No GitHub/OpenCode calls
+- ✅ Queue fully obliterated after cleanup
+- ✅ No `redis-cli FLUSHALL`
+- ✅ No Docker volume deletion
 
 ### Chaos Drill Script
 
@@ -420,6 +450,35 @@ Currently documented as "not locally simulatable without risk" — requires dedi
 6. **Authentication** — Grafana uses default `admin/admin` credentials. Change for production.
 7. **Integration tests affected by running server** — Some integration tests (apps/server) may fail when a production server is already running on port 3000. Stop the server before running `npm test` locally.
 
+### QA Script Reconciliation (QA-018)
+
+Verification of scripts referenced in QA documentation against actual `package.json` state:
+
+| Script | In package.json | File on disk | Status |
+|--------|----------------|-------------|--------|
+| `test:contracts` | ❌ Not present | N/A | Does not exist — should not be referenced in QA criteria |
+| `test:mutation:fast` | ❌ Not present | N/A | Stryker not installed in node_modules — needs separate follow-up |
+| `test:orchestrator:contract` | ✅ Present | ❌ `scripts/test-orchestrator.mjs` missing | Broken reference — script file does not exist |
+| `observability:drill` | ✅ | ✅ | Working |
+| `observability:validate` | ✅ | ✅ | Working |
+| `observability:chaos-drill` | ✅ | ✅ | Working (QA-017) |
+| `observability:webhook-mock` | ✅ | ✅ | Working (QA-017) |
+| `observability:queue-backlog` | ✅ | ✅ | Working (QA-018) |
+
+**Stryker/Mutation Testing:** A configuration artifact exists in `.stryker-tmp/` from a previous run, but `@stryker-mutator` packages are not in `node_modules`. There is no root `stryker.config.json` and no `test:mutation:fast` script. This requires a dedicated follow-up issue to re-establish the mutation testing pipeline.
+
+### Pre-existing Integration Test Failures (QA-018)
+
+3 tests in `apps/server/src/__tests__/integration.test.ts` fail because they expect full pipeline completion (phase `DONE`) but runs stay in `QUEUED` state:
+
+- **Root cause:** No BullMQ/Redis in the test environment. The pipeline relies on BullMQ for execution, but the test uses `createServer()` with `dbPath: ':memory:'` without Redis.
+- **Tests affected:**
+  - `vollständiger Run durchläuft alle Phasen — erreicht DONE` (line 44)
+  - `zwei aufeinanderfolgende Runs — beide erreichen DONE` (line 57)
+  - `Run-Details via GET /api/runs/:id` (line 91)
+- **Pre-existing:** Confirmed — these tests were written before BullMQ was introduced and have been failing since QA-012 queue observability changes.
+- **Recommendation for QA-019:** Either add a BullMQ test fixture (minimal Redis mock or test container) or mark these tests as integration tests that require Redis.
+
 ## Known Issues Fixed in QA-015
 
 - **Grafana Dashboard Mount Conflict**: Fixed docker-compose.observability.yml to properly separate provisioning config from dashboard JSON files
@@ -433,6 +492,9 @@ Currently documented as "not locally simulatable without risk" — requires dedi
 - **Worker Restart Drill (QA-017)**: Validated WorkerDown alert fires on worker stop and resolves on restart
 - **Redis Failover Drill (QA-017)**: Validated RedisDown alert fires on Redis stop and resolves on restart
 - **Multi-Alert Grouping (QA-017)**: Validated Alertmanager grouping by alertname/severity and inhibition rules
+- **Queue Backlog Drill (QA-018)**: Added scripts/queue-backlog-drill.mjs — isolated test queue `positron-observability-drill` with QueueBacklogCriticalDrill alert
+- **QA Script Reconciliation (QA-018)**: Verified all observability scripts against package.json; documented missing `test:contracts` / `test:mutation:fast`
+- **Integration Test Documentation (QA-018)**: Documented 3 pre-existing BullMQ-dependent integration test failures
 
 ## Local Validation
 
@@ -470,8 +532,14 @@ observability/
 │       └── dashboards/
 │           └── dashboards.yml     # Auto-load dashboards
 ├── docker-compose.observability.yml  # Docker Compose profile
+├── scripts/
+│   ├── observability-drill.mjs        # Metric generation drill
+│   ├── observability-validate.mjs     # Config validation (QA-016)
+│   ├── alert-webhook-mock.mjs         # Webhook receiver mock (QA-017)
+│   ├── chaos-drill.mjs                # Alert lifecycle drill (QA-017)
+│   └── queue-backlog-drill.mjs        # Isolated queue backlog drill (QA-018)
 └── docs/
-    └── observability.md             # This document
+    └── observability.md               # This document
 ```
 
 ## Security
