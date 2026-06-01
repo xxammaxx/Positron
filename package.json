@@ -41,6 +41,7 @@
     "test:orchestrator:headed": "node scripts/test-orchestrator.mjs e2e:headed",
     "test:orchestrator:slow": "node scripts/test-orchestrator.mjs e2e:slow",
     "test:orchestrator:contract": "node scripts/test-orchestrator.mjs contract",
+    "test:contracts": "vitest run --config vitest.contracts.config.ts",
     "test:orchestrator:regression": "node scripts/test-orchestrator.mjs regression",
     "lint": "eslint . --ext .ts,.tsx",
     "clean": "find . -name dist -not -path '*/node_modules/*' -exec rm -rf {} +",

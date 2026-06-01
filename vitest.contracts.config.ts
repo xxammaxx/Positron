@@ -1,17 +1,15 @@
 import { defineConfig } from 'vitest/config';
 
-/**
- * Contract-Test-Konfiguration
- * Validiert, dass alle Adapter-Implementierungen (fake und real)
- * dieselbe Verhaltens-Schnittstelle implementieren.
- *
- * Struktur:
- *   packages/*/src/__contracts__/adapter-name.contract.test.ts
- *
- * Jeder Contract-Test wird zweimal ausgeführt:
- *   1. Gegen den Fake-Adapter
- *   2. Gegen den Real-Adapter (wenn CI-Umgebung Tokens hat)
- */
+// Contract-Test-Konfiguration
+// Validiert, dass alle Adapter-Implementierungen (fake und real)
+// dieselbe Verhaltens-Schnittstelle implementieren.
+//
+// Struktur:
+//   packages/*/src/__contracts__/adapter-name.contract.test.ts
+//
+// Jeder Contract-Test wird zweimal ausgeführt:
+//   1. Gegen den Fake-Adapter
+//   2. Gegen den Real-Adapter (wenn CI-Umgebung Tokens hat)
 export default defineConfig({
   test: {
     env: {
