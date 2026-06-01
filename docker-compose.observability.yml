@@ -1,0 +1,57 @@
+# Positron Observability Stack (QA-013)
+# Optional development-only observability profile.
+# Does NOT replace or modify docker-compose.test.yml.
+#
+# Usage:
+#   docker compose -f docker-compose.observability.yml up
+#
+# Prerequisites: Positron server running on port 3000 (host: server)
+# Access: Grafana → http://localhost:3001 (admin/admin), Prometheus → http://localhost:9090
+
+services:
+  prometheus:
+    image: prom/prometheus:v3.7.0
+    container_name: positron-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
+    networks:
+      - observability
+    extra_hosts:
+      - "server:host-gateway"
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.7.0
+    container_name: positron-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=
+    volumes:
+      - ./observability/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./observability/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./observability/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    networks:
+      - observability
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+volumes:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  observability:
+    driver: bridge
