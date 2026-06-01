@@ -122,6 +122,17 @@ import {
 	opencodeCommandFailuresTotal,
 	classifyRuntimeError,
 } from "./observability/metrics.js";
+import {
+	renderQueueMetrics,
+	queueJobsTotal,
+	queueJobsActive,
+	queueJobsWaiting,
+	queueJobsCompletedTotal,
+	queueJobsFailedTotal,
+	queueJobRetriesTotal,
+	queueWorkerUp,
+	queueRedisUp,
+} from "./observability/queue-metrics.js";
 
 const __serverDirname = path.dirname(fileURLToPath(import.meta.url));
 const log = createLogger("Server");
@@ -2436,6 +2447,69 @@ export function createApp(options: ServerOptions = {}) {
 		activeOpenCodeAdapter,
 	);
 	const app = express();
+
+	// ── QA-012: Queue Stats Collector (non-blocking, periodic) ─────────────────
+	//
+	// Periodically collects BullMQ queue statistics and updates Prometheus gauges.
+	// Runs on an interval so /metrics doesn't hang when Redis is unavailable.
+	//
+	// The metrics exist REGARDLESS of Redis availability — they report 0
+	// when the queue is unreachable, so dashboards always show a valid value.
+
+	async function collectQueueStats(): Promise<void> {
+		try {
+			const { Queue } = await import("bullmq");
+			const { PIPELINE_QUEUE, resolveRedisUrl } = await import(
+				"@positron/shared"
+			);
+			const pipelineQueue = new Queue(PIPELINE_QUEUE, {
+				connection: {
+					url: resolveRedisUrl(),
+					connectTimeout: 500,
+					maxRetriesPerRequest: null as unknown as number,
+					retryStrategy: () => null,
+				},
+			});
+
+			try {
+				const counts = await pipelineQueue.getJobCounts(
+					"waiting",
+					"active",
+					"completed",
+					"failed",
+					"delayed",
+				);
+				queueJobsWaiting.set(
+					{ queue: "positron-pipeline" },
+					counts.waiting ?? 0,
+				);
+				queueJobsActive.set({ queue: "positron-pipeline" }, counts.active ?? 0);
+				queueJobsCompletedTotal.inc({ queue: "positron-pipeline" }, 0);
+				queueJobsFailedTotal.inc({ queue: "positron-pipeline" }, 0);
+
+				const workers = await pipelineQueue.getWorkers();
+				queueWorkerUp.set(
+					{ queue: "positron-pipeline" },
+					workers.length > 0 ? 1 : 0,
+				);
+				queueRedisUp.set(1);
+			} catch {
+				queueRedisUp.set(0);
+				queueWorkerUp.set({ queue: "positron-pipeline" }, 0);
+				queueJobsActive.set({ queue: "positron-pipeline" }, 0);
+				queueJobsWaiting.set({ queue: "positron-pipeline" }, 0);
+			} finally {
+				await pipelineQueue.close().catch(() => {});
+			}
+		} catch {
+			queueRedisUp.set(0);
+			queueWorkerUp.set({ queue: "positron-pipeline" }, 0);
+		}
+	}
+
+	// Start periodic queue stats collection (every 30 seconds)
+	const queueStatsInterval = setInterval(collectQueueStats, 30_000);
+	queueStatsInterval.unref();
 	app.use(express.json());
 
 	// GitHub Watcher starten (nur wenn POSITRON_ENABLE_WATCHER=true)
@@ -3090,7 +3164,7 @@ export function createApp(options: ServerOptions = {}) {
 		}
 	});
 
-	// Prometheus Metrics Endpoint (QA-010)
+	// Prometheus Metrics Endpoint (QA-010, QA-011, QA-012)
 	app.get("/metrics", async (_req, res) => {
 		try {
 			// Update gauges before rendering
@@ -3103,8 +3177,9 @@ export function createApp(options: ServerOptions = {}) {
 			activeRuns.set(activeCount);
 
 			const { contentType, body } = await renderMetrics();
+			const { body: queueBody } = await renderQueueMetrics();
 			res.set("Content-Type", contentType);
-			res.status(200).send(body);
+			res.status(200).send(body + "\n" + queueBody);
 		} catch (err) {
 			res
 				.status(500)
