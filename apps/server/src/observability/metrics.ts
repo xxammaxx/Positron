@@ -284,3 +284,71 @@ export async function renderMetrics(): Promise<{
 
 // Export registry for testing
 export { registry };
+
+// --------------------------------------------------------------------------
+// Helper: classify runtime errors (generic, for OpenCode + pipeline use)
+// --------------------------------------------------------------------------
+
+/**
+ * Controlled error classification for runtime errors.
+ * Maps error messages to safe, low-cardinality categories.
+ * Never exposes full error messages, stack traces, stdout, or stderr.
+ */
+export function classifyRuntimeError(err: Error): string {
+	const msg = err.message.toLowerCase();
+	// Timeout patterns
+	if (msg.includes("timeout") || msg.includes("timed out")) return "timeout";
+	// Non-zero exit
+	if (msg.includes("exit code") || msg.includes("exited with"))
+		return "nonzero_exit";
+	// Missing binary
+	if (msg.includes("not found or not executable") || msg.includes("enoent"))
+		return "missing_binary";
+	// Invalid output
+	if (
+		msg.includes("invalid") ||
+		msg.includes("parse error") ||
+		msg.includes("unexpected token")
+	)
+		return "invalid_output";
+	// Auth-related
+	if (
+		msg.includes("authentication") ||
+		msg.includes("unauthorized") ||
+		msg.includes("bad credentials")
+	)
+		return "auth";
+	// Rate limit
+	if (msg.includes("rate limit")) return "rate_limit";
+	// Permission
+	if (
+		msg.includes("permission") ||
+		msg.includes("access denied") ||
+		msg.includes("forbidden")
+	)
+		return "permission_denied";
+	// Not found
+	if (msg.includes("not found")) return "not_found";
+	// Validation
+	if (msg.includes("validation")) return "validation";
+	// Network
+	if (
+		msg.includes("econnrefused") ||
+		msg.includes("enotfound") ||
+		msg.includes("network")
+	)
+		return "network";
+	return "unknown";
+}
+
+// --------------------------------------------------------------------------
+// Test-only: Reset all metrics registry
+// --------------------------------------------------------------------------
+
+/**
+ * Reset all metrics to zero. ONLY for use in tests.
+ * Never expose this in production routes.
+ */
+export function resetMetricsForTest(): void {
+	registry.resetMetrics();
+}

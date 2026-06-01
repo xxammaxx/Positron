@@ -65,6 +65,7 @@ import type {
 	RepositoryConfig,
 	SpecKitAdapter,
 	OpenCodeAdapter,
+	OpenCodeRunInput,
 } from "@positron/shared";
 import type { RunState, RunEventData } from "@positron/run-state";
 import {
@@ -108,6 +109,18 @@ import {
 	renderMetrics,
 	serverUptimeSeconds,
 	activeRuns,
+	runsTotal,
+	runDurationSeconds,
+	runFailuresTotal,
+	retriesTotal,
+	cancellationsTotal,
+	gateRevisionsTotal,
+	blockedMergesTotal,
+	blockedPushesTotal,
+	opencodeCommandTotal,
+	opencodeCommandDurationSeconds,
+	opencodeCommandFailuresTotal,
+	classifyRuntimeError,
 } from "./observability/metrics.js";
 
 const __serverDirname = path.dirname(fileURLToPath(import.meta.url));
@@ -509,6 +522,92 @@ function resolveOpenCodeAdapter(injected?: OpenCodeAdapter): OpenCodeAdapter {
 		return new RealOpenCodeAdapter();
 	}
 	return opencodeAdapter;
+}
+
+/**
+ * QA-011: Creates a metrics-instrumented wrapper around the OpenCode adapter.
+ * Records command total, duration, and failures without modifying adapter code.
+ */
+function createInstrumentedOpenCodeAdapter(
+	base: OpenCodeAdapter,
+): OpenCodeAdapter {
+	return {
+		healthCheck: (wp: string) => base.healthCheck(wp),
+		runSlashCommand: async (commandName: string, input: OpenCodeRunInput) => {
+			const startTime = Date.now();
+			const phaseName = input.phaseName ?? commandName ?? "unknown";
+			try {
+				const result = await base.runSlashCommand(commandName, input);
+				const durationSec = (Date.now() - startTime) / 1000;
+				const outcome = result.status === "success" ? "success" : "error";
+				opencodeCommandTotal.inc({ command_type: phaseName, outcome });
+				opencodeCommandDurationSeconds.observe(
+					{ command_type: phaseName },
+					durationSec,
+				);
+				if (outcome === "error") {
+					const err = new Error(
+						result.blockedReason ?? result.summary ?? "command failed",
+					);
+					opencodeCommandFailuresTotal.inc({
+						command_type: phaseName,
+						error_kind: classifyRuntimeError(err),
+					});
+				}
+				return result;
+			} catch (err) {
+				const durationSec = (Date.now() - startTime) / 1000;
+				const errorObj = err instanceof Error ? err : new Error(String(err));
+				opencodeCommandTotal.inc({ command_type: phaseName, outcome: "error" });
+				opencodeCommandFailuresTotal.inc({
+					command_type: phaseName,
+					error_kind: classifyRuntimeError(errorObj),
+				});
+				opencodeCommandDurationSeconds.observe(
+					{ command_type: phaseName },
+					durationSec,
+				);
+				throw err;
+			}
+		},
+		runImplement: async (input: OpenCodeRunInput) => {
+			const startTime = Date.now();
+			const phaseName = input.phaseName ?? "implement";
+			try {
+				const result = await base.runImplement(input);
+				const durationSec = (Date.now() - startTime) / 1000;
+				const outcome = result.status === "success" ? "success" : "error";
+				opencodeCommandTotal.inc({ command_type: phaseName, outcome });
+				opencodeCommandDurationSeconds.observe(
+					{ command_type: phaseName },
+					durationSec,
+				);
+				if (outcome === "error") {
+					const err = new Error(
+						result.blockedReason ?? result.summary ?? "implementation failed",
+					);
+					opencodeCommandFailuresTotal.inc({
+						command_type: phaseName,
+						error_kind: classifyRuntimeError(err),
+					});
+				}
+				return result;
+			} catch (err) {
+				const durationSec = (Date.now() - startTime) / 1000;
+				const errorObj = err instanceof Error ? err : new Error(String(err));
+				opencodeCommandTotal.inc({ command_type: phaseName, outcome: "error" });
+				opencodeCommandFailuresTotal.inc({
+					command_type: phaseName,
+					error_kind: classifyRuntimeError(errorObj),
+				});
+				opencodeCommandDurationSeconds.observe(
+					{ command_type: phaseName },
+					durationSec,
+				);
+				throw err;
+			}
+		},
+	};
 }
 
 // ---------------------------------------------------------------------------
@@ -1657,6 +1756,9 @@ async function runFullPipeline(
 						createdAt: new Date().toISOString(),
 					});
 					saveRunToDb(cancelledRun as RunState);
+					// ── Metrics: run cancelled ──
+					cancellationsTotal.inc({ cancel_source: "user" });
+					activeRuns.dec();
 					broadcastSSE(current.id, "run-cancelled", {
 						runId: current.id,
 						phase: current.phase,
@@ -1782,6 +1884,9 @@ async function runFullPipeline(
 					createdAt: new Date().toISOString(),
 				});
 
+				// ── Metrics: retry attempt ──
+				retriesTotal.inc({ attempt: String(attempt) });
+
 				// Manually set run state (transition validation rejects FAILED_TRANSIENT → *)
 				current = {
 					...next,
@@ -1817,6 +1922,14 @@ async function runFullPipeline(
 						next.id,
 						"DONE",
 					);
+					// ── Metrics: run completed successfully ──
+					const startedMs = next.startedAt
+						? new Date(next.startedAt).getTime()
+						: Date.now();
+					const durationSec = (Date.now() - startedMs) / 1000;
+					runsTotal.inc({ status: "done" });
+					runDurationSeconds.observe({ status: "done" }, durationSec);
+					activeRuns.dec();
 				} else if (next.phase === "FAILED_BLOCKED") {
 					await safeSync(
 						syncService,
@@ -1831,6 +1944,9 @@ async function runFullPipeline(
 						next.id,
 						"FAILED_BLOCKED",
 					);
+					// ── Metrics: run failed (blocked) ──
+					runFailuresTotal.inc({ failure_type: "FAILED_BLOCKED" });
+					activeRuns.dec();
 				} else if (next.phase.startsWith("FAILED")) {
 					await safeSync(
 						syncService,
@@ -1845,6 +1961,9 @@ async function runFullPipeline(
 						next.id,
 						next.phase,
 					);
+					// ── Metrics: run failed ──
+					runFailuresTotal.inc({ failure_type: next.phase });
+					activeRuns.dec();
 				}
 			}
 			saveRunToDb(next);
@@ -2310,6 +2429,12 @@ export function createApp(options: ServerOptions = {}) {
 	const activeSpecKitAdapter = resolveSpecKitAdapter(options.speckitAdapter);
 	const activeOpenCodeAdapter = resolveOpenCodeAdapter(options.opencodeAdapter);
 	const syncService = new GitHubStatusSyncService(github);
+
+	// ── QA-011: Metrics-decorated OpenCode adapter ──
+	// Wraps the adapter to record telemetry without modifying adapter code.
+	const instrumentedOpenCodeAdapter = createInstrumentedOpenCodeAdapter(
+		activeOpenCodeAdapter,
+	);
 	const app = express();
 	app.use(express.json());
 
@@ -2586,7 +2711,7 @@ export function createApp(options: ServerOptions = {}) {
 						repository,
 						activeWorkspaceAdapter,
 						activeSpecKitAdapter,
-						activeOpenCodeAdapter,
+						instrumentedOpenCodeAdapter,
 						github,
 						syncService,
 					)
@@ -2628,6 +2753,8 @@ export function createApp(options: ServerOptions = {}) {
 			const { issueNumber, autonomyLevel } = validateRunRequest(req.body);
 			const run = createRun(repository.repo, issueNumber, autonomyLevel ?? 2);
 			saveRunToDb(run); // Sofort persistieren — sichtbar noch während Pipeline läuft
+			runsTotal.inc({ status: "active" });
+			activeRuns.inc();
 
 			let queued = false;
 			let pipelineQueue: import("bullmq").Queue | null = null;
@@ -2675,7 +2802,7 @@ export function createApp(options: ServerOptions = {}) {
 						repository,
 						activeWorkspaceAdapter,
 						activeSpecKitAdapter,
-						activeOpenCodeAdapter,
+						instrumentedOpenCodeAdapter,
 						github,
 						syncService,
 					);
@@ -2936,7 +3063,7 @@ export function createApp(options: ServerOptions = {}) {
 			const speckitHealth =
 				await activeSpecKitAdapter.healthCheck(healthWsPath);
 			const opencodeHealth =
-				await activeOpenCodeAdapter.healthCheck(healthWsPath);
+				await instrumentedOpenCodeAdapter.healthCheck(healthWsPath);
 			const isFakeMode = githubMode === "fake";
 			// In Fake-Mode gelten nicht-verfügbare Adapter nicht als "degraded"
 			const adapters = {
@@ -2992,7 +3119,7 @@ export function createApp(options: ServerOptions = {}) {
 			const speckitHealth =
 				await activeSpecKitAdapter.healthCheck(healthWsPath);
 			const opencodeHealth =
-				await activeOpenCodeAdapter.healthCheck(healthWsPath);
+				await instrumentedOpenCodeAdapter.healthCheck(healthWsPath);
 			res.json({
 				github: { available: githubMode !== "fake", mode: githubMode },
 				specKit: speckitHealth,
@@ -3048,7 +3175,7 @@ export function createApp(options: ServerOptions = {}) {
 			repository,
 			activeWorkspaceAdapter,
 			activeSpecKitAdapter,
-			activeOpenCodeAdapter,
+			instrumentedOpenCodeAdapter,
 			github,
 			syncService,
 		)
@@ -3117,7 +3244,7 @@ export function createApp(options: ServerOptions = {}) {
 			repository,
 			activeWorkspaceAdapter,
 			activeSpecKitAdapter,
-			activeOpenCodeAdapter,
+			instrumentedOpenCodeAdapter,
 			github,
 			syncService,
 		)
@@ -3182,7 +3309,7 @@ export function createApp(options: ServerOptions = {}) {
 					repository,
 					activeWorkspaceAdapter,
 					activeSpecKitAdapter,
-					activeOpenCodeAdapter,
+					instrumentedOpenCodeAdapter,
 					github,
 					syncService,
 				),
@@ -3375,6 +3502,8 @@ export function createApp(options: ServerOptions = {}) {
 				setRunSignal(id, "RESUME", targetPhase);
 			} else {
 				// Zurück zur vorherigen Phase (revise)
+				// ── Metrics: gate revision ──
+				gateRevisionsTotal.inc({ phase: run.phase });
 				const targetPhase: Phase = "REVIEW";
 				const updatedRun = {
 					...run,
