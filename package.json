@@ -44,6 +44,8 @@
 		"test:orchestrator:regression": "node scripts/test-orchestrator.mjs regression",
 		"observability:drill": "node scripts/observability-drill.mjs",
 		"observability:validate": "node scripts/observability-validate.mjs",
+		"observability:chaos-drill": "node scripts/chaos-drill.mjs",
+		"observability:webhook-mock": "node scripts/alert-webhook-mock.mjs",
 		"lint": "eslint . --ext .ts,.tsx",
 		"clean": "find . -name dist -not -path '*/node_modules/*' -exec rm -rf {} +",
 		"typecheck": "tsc -b --dry"

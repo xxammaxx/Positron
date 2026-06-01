@@ -212,7 +212,147 @@ Initial local baselines from E2E validation:
 - **HighRunFailureRate**: In fake mode sind viele FAILED_BLOCKED Runs normal — Threshold auf >50% erhöhen oder Alert deaktivieren
 - **QueueBacklogCritical**: Threshold von 50 ist für Produktion sinnvoll, für Dev zu hoch
 
-## Alert Calibration (QA-016)
+## Alert Lifecycle Validation (QA-017)
+
+### Webhook Receiver Mock
+
+A local webhook receiver mock validates Alertmanager routing without real webhooks:
+
+```bash
+# Start the webhook mock (port 5001)
+npm run observability:webhook-mock
+# or: node scripts/alert-webhook-mock.mjs
+```
+
+Endpoints:
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/health` | Health check with alert counts |
+| GET | `/alerts` | List all received alerts |
+| GET | `/alerts/critical` | Critical alerts only |
+| GET | `/alerts/warning` | Warning alerts only |
+| POST | `/alertmanager/critical` | Alertmanager critical webhook |
+| POST | `/alertmanager/warning` | Alertmanager warning webhook |
+
+The mock stores alerts in memory only, uses no secrets, and makes no external calls. Runbook URLs are preserved from Alertmanager annotations.
+
+### Worker Restart Drill
+
+Controlled Worker failure/recovery test:
+
+1. Worker is running → `positron_queue_worker_up = 1`
+2. Stop worker process → `positron_queue_worker_up = 0`
+3. After 2m (alert rule `for: 2m`) → WorkerDown fires
+4. Alertmanager sends to critical webhook → mock receives alert
+5. Start worker process → `positron_queue_worker_up = 1`
+6. After next scrape cycle → alert resolves, resolved notification sent
+
+**Safety:** No queues deleted, no Redis data touched, no volumes removed.
+
+**Dev toggle:** Set `POSITRON_ALERT_WORKER_DOWN_ENABLED=false` to suppress in dev environments without workers.
+
+### Redis Failover Drill
+
+Controlled local Redis failure/recovery test:
+
+```bash
+# Only in local dev — never in production
+docker compose stop redis
+# Wait ~1.5 min for detection (30s collect cycle + 1m alert "for")
+docker compose up -d redis
+```
+
+Expected behavior:
+1. Redis UP → `positron_queue_redis_up = 1`
+2. Redis stopped → `positron_queue_redis_up = 0`
+3. After 1m → RedisDown fires
+4. Alertmanager sends to critical webhook → mock receives alert
+5. Redis restarted → `positron_queue_redis_up = 1`
+6. Alert resolves → resolved notification sent
+
+**Prohibited:** `redis-cli FLUSHALL`, Docker volume deletion, production Redis stop.
+
+### Multi-Alert Grouping & Inhibition
+
+Alertmanager groups alerts by `alertname` and `severity`:
+- Critical alerts: `group_wait: 10s` (faster notification)
+- Warning alerts: `group_wait: 30s` (batched)
+- Inhibition: Critical alert for same `alertname` suppresses Warning
+
+Validate multi-alert handling:
+
+```bash
+# Send simultaneous critical + warning alerts
+curl -X POST http://localhost:5001/alertmanager/critical \
+  -H "Content-Type: application/json" \
+  -d '{"status":"firing","alerts":[{"status":"firing","labels":{"alertname":"MultiTest","severity":"critical"},"annotations":{"summary":"Multi-alert test"}}]}'
+
+curl -X POST http://localhost:5001/alertmanager/warning \
+  -H "Content-Type: application/json" \
+  -d '{"status":"firing","alerts":[{"status":"firing","labels":{"alertname":"MultiTest","severity":"warning"},"annotations":{"summary":"Multi-alert test"}}]}'
+```
+
+### QueueBacklogCritical Safe Simulation
+
+QueueBacklogCritical targets the production `positron-pipeline` queue (>50 waiting jobs for 5m). Safe local simulation requires dedicated test infrastructure:
+
+**Recommended approach (QA-018):**
+- Isolated test queue `positron-observability-drill`
+- Max 60 test jobs with auto-removal
+- No production queue impact
+- Controlled queue fill script
+
+Currently documented as "safe simulation via dedicated test queue deferred to QA-018."
+
+### Chaos Drill Script
+
+Automated validation of the alert lifecycle:
+
+```bash
+# Run the chaos drill (checks reachability, routing, metrics, webhook reception)
+npm run observability:chaos-drill
+
+# Prerequisites:
+# 1. Positron server on port 3000
+# 2. Docker Compose observability stack up
+# 3. Webhook mock on port 5001
+```
+
+The drill checks:
+1. Component reachability (server, prometheus, alertmanager, mock)
+2. Alertmanager routing (critical/warning endpoints)
+3. Runbook URL preservation in annotations
+4. Resolved notification handling
+5. Metric state (uptime, redis_up, worker_up, queue stats)
+6. Webhook mock statistics
+7. Multi-alert simultaneous reception
+8. QueueBacklogCritical documentation
+
+### Start Order (Full E2E)
+
+```bash
+# Terminal 1: Start Positron server
+cd apps/server && PORT=3000 HOST=0.0.0.0 npx tsx src/index.ts
+
+# Terminal 2: Start observability stack
+docker compose -f docker-compose.observability.yml up
+
+# Terminal 3: Start webhook mock
+npm run observability:webhook-mock
+
+# Terminal 4: Run chaos drill
+npm run observability:chaos-drill
+```
+
+### Cleanup
+
+All drills are safe and non-destructive:
+- Webhook mock: `Ctrl+C` to stop (exits cleanly)
+- Redis drill: Only `docker compose stop/start` — never data destruction
+- Worker drill: Only process kill/restart — never queue deletion
+
+
 
 ### WorkerDown Dev/Prod Toggle
 
@@ -288,6 +428,11 @@ Currently documented as "not locally simulatable without risk" — requires dedi
 - **WorkerDown Dev Toggle (QA-016)**: Added POSITRON_ALERT_WORKER_DOWN_ENABLED env var to suppress WorkerDown alert in dev environments
 - **Observability Drill Script (QA-016)**: Added scripts/observability-drill.mjs for reproducible metric generation
 - **Config Validation CI (QA-016)**: Added scripts/observability-validate.mjs and .github/workflows/quality-gates.yml for CI promtool/amtool validation
+- **Alert Webhook Receiver Mock (QA-017)**: Added scripts/alert-webhook-mock.mjs — local webhook receiver for Alertmanager E2E testing
+- **Chaos Engineering Drill (QA-017)**: Added scripts/chaos-drill.mjs — validates alert lifecycle with controlled failure/recovery scenarios
+- **Worker Restart Drill (QA-017)**: Validated WorkerDown alert fires on worker stop and resolves on restart
+- **Redis Failover Drill (QA-017)**: Validated RedisDown alert fires on Redis stop and resolves on restart
+- **Multi-Alert Grouping (QA-017)**: Validated Alertmanager grouping by alertname/severity and inhibition rules
 
 ## Local Validation
 
