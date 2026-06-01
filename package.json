@@ -14,6 +14,7 @@
     "dev:server": "npm run build && node apps/server/dist/index.js",
     "dev:web": "vite apps/web",
     "coverage": "vitest run --coverage",
+    "coverage:safety": "vitest run --config vitest.safety.config.ts --coverage",
     "test": "vitest run && cd apps/web && npx vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
@@ -49,12 +50,14 @@
   "devDependencies": {
     "@playwright/test": "^1.60.0",
     "@types/node": "^22.0.0",
+    "@types/supertest": "^7.2.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
     "@vitest/coverage-v8": "^4.1.7",
     "concurrently": "^8.2.0",
     "cross-env": "^10.1.0",
     "eslint": "^8.56.0",
+    "supertest": "^7.2.2",
     "typescript": "^5.4.0",
     "vitest": "^4.0.0"
   }

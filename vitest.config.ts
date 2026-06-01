@@ -13,6 +13,7 @@ export default defineConfig({
     include: [
       'packages/*/src/__tests__/**/*.test.ts',
       'apps/server/src/__tests__/**/*.test.ts',
+      'apps/worker/src/__tests__/**/*.test.ts',
     ],
     exclude: [
       '**/dist/**',
@@ -26,6 +27,7 @@ export default defineConfig({
       include: [
         'packages/*/src/**',
         'apps/server/src/**',
+        'apps/worker/src/**',
       ],
       exclude: [
         'node_modules/',

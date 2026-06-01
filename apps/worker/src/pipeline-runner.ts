@@ -41,7 +41,7 @@ function getDb(deps: PipelineDeps): Database.Database {
   return deps.db;
 }
 
-function saveRunToDb(run: RunState, deps: PipelineDeps): void {
+export function saveRunToDb(run: RunState, deps: PipelineDeps): void {
   const database = getDb(deps);
   const ensureRepo = database.prepare(`
     INSERT OR IGNORE INTO repositories (id, owner, name, url, local_path, enabled, created_at)
@@ -79,7 +79,7 @@ function saveRunToDb(run: RunState, deps: PipelineDeps): void {
   transaction();
 }
 
-function loadRunFromDb(runId: string, deps: PipelineDeps): RunState | null {
+export function loadRunFromDb(runId: string, deps: PipelineDeps): RunState | null {
   try {
     const row = getDb(deps).prepare('SELECT * FROM runs WHERE id = ?').get(runId) as Record<string, unknown> | undefined;
     if (!row) return null;
@@ -103,7 +103,7 @@ function loadRunFromDb(runId: string, deps: PipelineDeps): RunState | null {
   }
 }
 
-function storeEvent(event: RunEventData, deps: PipelineDeps): void {
+export function storeEvent(event: RunEventData, deps: PipelineDeps): void {
   try {
     const database = getDb(deps);
     database.prepare(`
@@ -119,7 +119,7 @@ function storeEvent(event: RunEventData, deps: PipelineDeps): void {
   }
 }
 
-function getEvents(runId: string, deps: PipelineDeps): RunEventData[] {
+export function getEvents(runId: string, deps: PipelineDeps): RunEventData[] {
   try {
     const rows = getDb(deps).prepare(
       'SELECT * FROM run_events WHERE run_id = ? ORDER BY created_at ASC',
@@ -295,7 +295,7 @@ async function generateResearchDocument(
 // Phase Executor
 // ---------------------------------------------------------------------------
 
-async function executePhase(
+export async function executePhase(
   run: RunState,
   deps: PipelineDeps,
 ): Promise<RunState> {

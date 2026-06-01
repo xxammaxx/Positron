@@ -78,4 +78,5 @@ export declare class SecretManager {
     getProviderNames(): string[];
     private resolveDefaultEnvPath;
 }
+export declare function resolveDefaultEnvPath(cwd: string, existsSync: (path: string) => boolean): string;
 //# sourceMappingURL=secret-manager.d.ts.map

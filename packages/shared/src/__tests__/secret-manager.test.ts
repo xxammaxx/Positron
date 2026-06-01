@@ -1,9 +1,10 @@
-import { describe, expect, test, beforeEach, afterEach } from 'vitest';
+import { describe, expect, test, beforeEach, afterEach, it, vi } from 'vitest';
 import {
   SecretManager,
   EnvSecretProvider,
   DockerSecretProvider,
   FileSecretProvider,
+  resolveDefaultEnvPath,
 } from '../secret-manager.js';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -137,6 +138,18 @@ describe('FileSecretProvider', () => {
     const provider = new FileSecretProvider(envPath);
     expect(provider.name).toBe('file');
   });
+
+  test('handles line without equals sign', () => {
+    fs.writeFileSync(envPath, 'KEY=value\nline_without_equals\n');
+    const provider = new FileSecretProvider(envPath);
+    expect(provider.getSecret('KEY')).toBe('value');
+  });
+
+  test('handles line with empty key name', () => {
+    fs.writeFileSync(envPath, '=orphan-value\n');
+    const provider = new FileSecretProvider(envPath);
+    expect(provider.getSecret('')).toBeNull();
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -248,5 +261,39 @@ describe('SecretManager', () => {
     // Empty string from env should count as "not found", fall through to file
     expect(sm.getSecret('EMPTY_RESOLVE')).toBe('from-file');
     delete process.env['EMPTY_RESOLVE'];
+  });
+});
+
+describe('resolveDefaultEnvPath', () => {
+  it('should return first candidate when it exists', () => {
+    const mockExists = (p: string) => p.includes('.env') && !p.includes('apps/server');
+    expect(resolveDefaultEnvPath('/tmp', mockExists)).toContain('.env');
+  });
+
+  it('should return second candidate when first does not exist', () => {
+    const mockExists = (p: string) => p.includes('apps/server/.env');
+    const result = resolveDefaultEnvPath('/tmp', mockExists);
+    expect(result).toContain('apps/server/.env');
+  });
+
+  it('should return first candidate when neither exists (fallback)', () => {
+    const mockExists = () => false;
+    const result = resolveDefaultEnvPath('/workspace', mockExists);
+    expect(result).toContain('/workspace/.env');
+  });
+
+  it('should handle cwd with trailing components', () => {
+    const mockExists = () => false;
+    const result = resolveDefaultEnvPath('/home/user/project', mockExists);
+    expect(result).toBe('/home/user/project/.env');
+  });
+
+  it('should be callable from SecretManager constructor via private method', () => {
+    // Mock fs.existsSync to return true — triggers resolveDefaultEnvPath() in constructor
+    const spy = vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+    const sm = new SecretManager();
+    expect(sm).toBeDefined();
+    expect(spy).toHaveBeenCalled();
+    spy.mockRestore();
   });
 });

@@ -155,16 +155,19 @@ export class SecretManager {
         return this.providers.map(p => p.name);
     }
     resolveDefaultEnvPath() {
-        // Try common locations
-        const candidates = [
-            path.resolve(process.cwd(), '.env'),
-            path.resolve(process.cwd(), 'apps/server/.env'),
-        ];
-        for (const candidate of candidates) {
-            if (fs.existsSync(candidate))
-                return candidate;
-        }
-        return candidates[0] ?? '.env';
+        return resolveDefaultEnvPath(process.cwd(), fs.existsSync);
     }
+}
+// Pure function extracted from SecretManager for testability
+export function resolveDefaultEnvPath(cwd, existsSync) {
+    const candidates = [
+        path.resolve(cwd, '.env'),
+        path.resolve(cwd, 'apps/server/.env'),
+    ];
+    for (const candidate of candidates) {
+        if (existsSync(candidate))
+            return candidate;
+    }
+    return candidates[0];
 }
 //# sourceMappingURL=secret-manager.js.map

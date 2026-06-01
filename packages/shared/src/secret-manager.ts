@@ -184,14 +184,21 @@ export class SecretManager {
   }
 
   private resolveDefaultEnvPath(): string {
-    // Try common locations
-    const candidates = [
-      path.resolve(process.cwd(), '.env'),
-      path.resolve(process.cwd(), 'apps/server/.env'),
-    ];
-    for (const candidate of candidates) {
-      if (fs.existsSync(candidate)) return candidate;
-    }
-    return candidates[0] ?? '.env';
+    return resolveDefaultEnvPath(process.cwd(), fs.existsSync);
   }
+}
+
+// Pure function extracted from SecretManager for testability
+export function resolveDefaultEnvPath(
+  cwd: string,
+  existsSync: (path: string) => boolean,
+): string {
+  const candidates = [
+    path.resolve(cwd, '.env'),
+    path.resolve(cwd, 'apps/server/.env'),
+  ];
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) return candidate;
+  }
+  return candidates[0]!;
 }

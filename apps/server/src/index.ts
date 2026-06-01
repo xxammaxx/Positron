@@ -53,12 +53,11 @@ import { broadcastSSE, addSSEClient, removeSSEClient, resetEventSequence, primeE
 import { initSignalsDb, setRunSignal, clearRunSignal, checkRunSignal, getResumePhaseTarget } from './signals.js';
 import { createCancelHandler } from './handlers/cancel-run.js';
 import { createDemoLiveRunHandler } from './demo/live-run-handler.js';
+import { SAFETY_KEYS, getSafetyState } from './safety-service.js';
+import { resolveAdapter, resolveRepositoryConfig } from './config/runtime-config.js';
 
 const __serverDirname = path.dirname(fileURLToPath(import.meta.url));
 const log = createLogger('Server');
-
-/** GitHub Adapter Modus: "fake" (Standard/Test) oder "real" (mit GITHUB_TOKEN) */
-type GitHubMode = 'fake' | 'real';
 
 interface ServerOptions {
   adapter?: GitHubAdapter;
@@ -68,35 +67,6 @@ interface ServerOptions {
   opencodeAdapter?: OpenCodeAdapter;
   /** Pfad zur SQLite-Datenbank. Default: ~/.positron/positron.db. Für Tests: ':memory:'. */
   dbPath?: string;
-}
-
-function resolveAdapter(adapter?: GitHubAdapter): { adapter: GitHubAdapter; mode: GitHubMode } {
-  if (adapter) {
-    return { adapter, mode: adapter instanceof FakeGitHubAdapter ? 'fake' : 'real' };
-  }
-
-  // Priorisiere POSITRON_GITHUB_MODE, Fallback auf GITHUB_MODE (Legacy)
-  const mode = (process.env.POSITRON_GITHUB_MODE ?? process.env.GITHUB_MODE ?? 'fake') as GitHubMode;
-  if (mode === 'real') {
-    return { adapter: createRealGitHubAdapter(), mode: 'real' };
-  }
-  if (process.env.NODE_ENV === 'production') {
-    log.warn('PRODUCTION-MODE but POSITRON_GITHUB_MODE is not set to "real" — using fake adapter!');
-    log.warn('Set POSITRON_GITHUB_MODE=real and configure GITHUB_TOKEN for production use.');
-  }
-  return { adapter: new FakeGitHubAdapter(), mode: 'fake' };
-}
-
-function resolveRepositoryConfig(repository?: RepositoryConfig): RepositoryConfig {
-  if (repository) {
-    return normalizeRepositoryConfig(repository);
-  }
-
-  const loaded = loadRepositoryConfig(process.env);
-  if (!loaded) {
-    throw new Error('POSITRON_REPO_OWNER and POSITRON_REPO_NAME must be configured');
-  }
-  return loaded;
 }
 
 // SQLite-Datenbankverbindung (initialisiert in createApp)
@@ -1485,7 +1455,7 @@ export function createApp(options: ServerOptions = {}) {
   db = openDatabase(options.dbPath);
   initSignalsDb(getDb());
   const repository = resolveRepositoryConfig(options.repository);
-  const { adapter: github, mode: githubMode } = resolveAdapter(options.adapter);
+  const { adapter: github, mode: githubMode } = resolveAdapter(options.adapter, log);
   const activeWorkspaceAdapter = options.workspaceAdapter ?? workspaceAdapter;
   const activeSpecKitAdapter = resolveSpecKitAdapter(options.speckitAdapter);
   const activeOpenCodeAdapter = resolveOpenCodeAdapter(options.opencodeAdapter);
@@ -2104,40 +2074,11 @@ export function createApp(options: ServerOptions = {}) {
     getEvents,
   }));
 
-  // Safety State (Issue #28)
-  // Whitelist of allowed safety keys
-  const SAFETY_KEYS = ['enableMerge', 'mergeDryRun', 'enablePush', 'killSwitch', 'enableFixLoop'] as const;
-  const ENV_KEY_MAP: Record<string, string> = {
-    enableMerge: 'POSITRON_ENABLE_MERGE',
-    mergeDryRun: 'POSITRON_MERGE_DRY_RUN',
-    enablePush: 'POSITRON_ENABLE_PUSH',
-    killSwitch: 'POSITRON_MERGE_KILL_SWITCH',
-    enableFixLoop: 'POSITRON_ENABLE_FIX_LOOP',
-  };
-
-  function getSafetyState(): Record<string, boolean> {
-    const result: Record<string, boolean> = {
-      enableMerge: process.env.POSITRON_ENABLE_MERGE === 'true',
-      mergeDryRun: process.env.POSITRON_MERGE_DRY_RUN === 'true',
-      enablePush: process.env.POSITRON_ENABLE_PUSH === 'true',
-      killSwitch: process.env.POSITRON_MERGE_KILL_SWITCH !== 'false',
-      enableFixLoop: process.env.POSITRON_ENABLE_FIX_LOOP === 'true',
-    };
-    // Merge DB overrides
-    try {
-      const rows = getDb().prepare('SELECT key, value FROM settings WHERE key LIKE ?').all('safety.%') as Array<{ key: string; value: string }>;
-      for (const row of rows) {
-        const safetyKey = row.key.replace('safety.', '');
-        if (safetyKey in result) {
-          (result as Record<string, unknown>)[safetyKey] = row.value === 'true';
-        }
-      }
-    } catch { /* table may not exist yet */ }
-    return result;
-  }
+  // Safety State (Issue #28) — extracted to safety-service.ts
+  // SAFETY_KEYS, ENV_KEY_MAP, getSafetyState imported from ./safety-service.js
 
   app.get('/api/safety', (_req, res) => {
-    res.json(getSafetyState());
+    res.json(getSafetyState(getDb));
   });
 
   app.post('/api/safety', (req, res) => {
@@ -2174,7 +2115,7 @@ export function createApp(options: ServerOptions = {}) {
         VALUES (?, ?, datetime('now'))
       `).run(dbKey, String(value));
 
-      res.json({ ok: true, key, value, all: getSafetyState() });
+      res.json({ ok: true, key, value, all: getSafetyState(getDb) });
     } catch (err) {
       res.status(500).json({ error: 'Failed to update safety setting', details: String(err) });
     }
