@@ -14,6 +14,12 @@ global:
 rule_files:
   - "/etc/prometheus/alerts.yml"
 
+# Alertmanager configuration (QA-014)
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["alertmanager:9093"]
+
 # Scrape configurations
 scrape_configs:
   - job_name: "positron-server"

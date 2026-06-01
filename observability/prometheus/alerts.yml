@@ -18,6 +18,7 @@ groups:
         annotations:
           summary: "Positron server is down"
           description: "The Positron server at {{ $labels.instance }} has been unreachable for 1 minute."
+          runbook_url: "docs/runbooks/positron-server-down.md"
 
       # ── Redis / Queue Health ─────────────────────────────────────
       - alert: RedisDown
@@ -29,6 +30,7 @@ groups:
         annotations:
           summary: "Redis is unreachable"
           description: "Redis connectivity check failed. Queue operations are degraded."
+          runbook_url: "docs/runbooks/redis-down.md"
 
       - alert: WorkerDown
         expr: positron_queue_worker_up{queue="positron-pipeline"} == 0
@@ -39,6 +41,7 @@ groups:
         annotations:
           summary: "No active pipeline workers"
           description: "No BullMQ workers are connected to the 'positron-pipeline' queue. Runs are not being processed."
+          runbook_url: "docs/runbooks/worker-down.md"
 
       # ── Run Failure Rate ─────────────────────────────────────────
       - alert: HighRunFailureRate
@@ -50,6 +53,7 @@ groups:
         annotations:
           summary: "High run failure rate ({{ $value | humanizePercentage }})"
           description: "More than 30% of runs are failing. Check recent errors and logs."
+          runbook_url: "docs/runbooks/high-run-failure-rate.md"
 
       # ── Queue Backlog ────────────────────────────────────────────
       - alert: QueueBacklogCritical
@@ -61,6 +65,7 @@ groups:
         annotations:
           summary: "Queue backlog critical: {{ $value }} jobs waiting"
           description: "More than 50 jobs are waiting in the positron-pipeline queue. Check worker health and redis connectivity."
+          runbook_url: "docs/runbooks/queue-backlog-critical.md"
 
   - name: positron-warning
     rules:
@@ -74,6 +79,7 @@ groups:
         annotations:
           summary: "GitHub rate limit hit detected"
           description: "GitHub API rate limit was reached. Requests may be throttled."
+          runbook_url: "docs/runbooks/github-rate-limit.md"
 
       # ── OpenCode Health ──────────────────────────────────────────
       - alert: HighOpenCodeFailureRate
@@ -87,6 +93,7 @@ groups:
         annotations:
           summary: "High OpenCode command failure rate ({{ $value | humanizePercentage }})"
           description: "More than 25% of OpenCode commands are failing."
+          runbook_url: "docs/runbooks/high-opencode-failure-rate.md"
 
       # ── Retry Rate ───────────────────────────────────────────────
       - alert: HighRetryRate
@@ -98,6 +105,7 @@ groups:
         annotations:
           summary: "Elevated retry rate: {{ $value }} retries/second"
           description: "Runs are being retried more frequently than expected."
+          runbook_url: "docs/runbooks/high-run-failure-rate.md"
 
       # ── Run Duration ─────────────────────────────────────────────
       - alert: LongRunDuration
@@ -109,6 +117,7 @@ groups:
         annotations:
           summary: "Long run duration: p95 = {{ $value }}s"
           description: "95th percentile run duration exceeds 10 minutes. Check pipeline performance."
+          runbook_url: "docs/runbooks/high-run-failure-rate.md"
 
       # ── Queue Backlog Growing ────────────────────────────────────
       - alert: QueueBacklogGrowing
@@ -120,3 +129,4 @@ groups:
         annotations:
           summary: "Queue backlog is growing"
           description: "The number of waiting jobs is increasing. Worker may be falling behind."
+          runbook_url: "docs/runbooks/queue-backlog-critical.md"

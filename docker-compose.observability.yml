@@ -48,9 +48,25 @@ services:
     depends_on:
       - prometheus
 
+  alertmanager:
+    image: prom/alertmanager:v0.28.0
+    container_name: positron-alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./observability/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+    networks:
+      - observability
+    restart: unless-stopped
+
 volumes:
   prometheus_data:
   grafana_data:
+  alertmanager_data:
 
 networks:
   observability:
