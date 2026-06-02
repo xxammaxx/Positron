@@ -482,3 +482,54 @@ All tests run in GitHub Actions. Contract tests are **blocking** — if they fai
 - No external dependencies (no Redis, no API calls, no tokens)
 - Deterministic and reliable
 - Catch breaking API changes immediately
+
+## QA-032 & QA-033: E2E Stability Window
+
+### QA-032 Review Decision (2026-06-02)
+
+**E2E remains OPTIONAL (non-blocking).** Promotion to blocking is deferred.
+
+| Criterion | Required | Actual | Met? |
+|-----------|----------|--------|------|
+| Consecutive stable CI runs | ≥5 | 0 | ❌ |
+| Zero flakes | ✓ | N/A | N/A |
+| Stable runtime | ✓ | N/A | N/A |
+| Artifacts present | ✓ | N/A | N/A |
+| QA-031 fixes on main | ✓ | Not merged (at time of review) | ❌ |
+
+### QA-033: Integration Merge (2026-06-02)
+
+QA-030, QA-031, and QA-032 have been merged to the integration branch `positron/qa-033-merge-e2e-stability-window` (Issue #155). After PR merge to main:
+
+- **E2E CI Job** exists in `.github/workflows/quality-gates.yml` on main
+- **E2E remains OPTIONAL** (`continue-on-error: true`)
+- **Fake/Safety env** is active
+- **Stability window is STARTED**
+
+### Prerequisites for Promotion
+
+Before E2E can be promoted to blocking:
+1. ✅ QA-030 and QA-031 merged to main
+2. ⬜ Quality Gates workflow triggers **≥5 consecutive CI runs**
+3. ⬜ All 5 runs have **green** e2e-playwright job results
+4. ⬜ **Zero flakes** across all 5 runs
+5. ⬜ Stable E2E runtime (≤30s target)
+
+### E2E Stability Tracking
+
+| Run | Commit | e2e-playwright | Laufzeit | Flake | Artifact |
+| --- | ------ | -------------- | -------: | ----- | -------- |
+| 1 | TBD | ⬜ | - | - | ⬜ |
+| 2 | TBD | ⬜ | - | - | ⬜ |
+| 3 | TBD | ⬜ | - | - | ⬜ |
+| 4 | TBD | ⬜ | - | - | ⬜ |
+| 5 | TBD | ⬜ | - | - | ⬜ |
+
+**Window started:** 2026-06-02
+**Next review:** QA-034 after ≥5 CI runs
+
+### CI Troubleshooting
+
+- **E2E fails on CI but passes locally:** Check for IPv4/IPv6 `ECONNREFUSED ::1:3001`
+- **Artifacts missing:** The workflow uses `if-no-files-found: warn`
+- **Rate limiting (429):** Ensure `VITEST=true` bypass is active
