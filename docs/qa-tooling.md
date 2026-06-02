@@ -10,11 +10,55 @@ Positron uses multiple layers of testing and validation:
 | **Property-Based Tests** | `npm test` (included) | State machine invariants (37 props, ~18k runs) | ~2s | Blockierend |
 | **Contract Tests** | `npm run test:contracts` | Public API contracts between packages | ~0.4s | Blockierend |
 | **Mutation Fast** | `npm run test:mutation:fast` | Selected high-risk modules | ~25s | Optional |
-| **E2E Tests** | `npm run test:e2e` | Full browser workflow (Run Lifecycle) | ~10s | Optional (QA-030, non-blocking) |
+| **E2E Tests** | `npm run test:e2e` | Full browser workflow (25 tests) | ~60s | Optional (QA-030, non-blocking) |
 
-## E2E Tests (QA-028)
+## E2E Tests (QA-028 / QA-031)
 
-### Test Strategy
+### Test Suite Overview
+
+The E2E suite consists of 4 test files, 25 tests total, all passing green (QA-031):
+
+| File | Tests | Purpose |
+|------|-------|---------|
+| `e2e/smoke.spec.ts` | 3 | Health check, Dashboard, Runs API |
+| `e2e/diagnostic-reality-check.spec.ts` | 6 | Console/network logging, screenshots, API reachability |
+| `e2e/full-run-lifecycle.spec.ts` | 2 | Full QUEUED→DONE lifecycle + console error check |
+| `e2e/workflow-proof.spec.ts` | 14 | 16-step UI workflow proof (S01-S16) |
+
+### QA-031: E2E Suite Stabilization
+
+All 4 pre-existing E2E failures were analyzed and fixed:
+
+| Test | Root Cause | Fix |
+|------|-----------|-----|
+| `diagnostic-reality-check` Test 3 & 6 | Hardcoded `API_BASE = http://localhost:3001` — server runs on port 3000 | Changed `API_BASE` to `http://localhost:3000` |
+| `diagnostic-reality-check` manifest | `baseUrl: http://localhost:5174` — frontend runs on port 5173 | Changed to `http://localhost:5173` |
+| `workflow-proof` S05 | "Load Mini Blueprint" button removed in UI refactoring (commit `9f4ae99`) | Updated to use "Generate Blueprint" + repo/issue inputs |
+| All tests | Rate limiter (100 req/min) blocked cumulative E2E API calls with 429 | Added `VITEST=true` bypass in rate limiter middleware |
+
+### Port 3001 Issue — Root Cause Analysis
+
+Port 3001 was a historical artifact:
+- **Not Grafana** — Grafana runs on port 3000 (conflicts with backend in production)
+- **Not an old UI port** — the frontend always used port 5173 (Vite default)
+- **Originated from** `e2e/diagnostic-reality-check.spec.ts` line 18: `const API_BASE = 'http://localhost:3001'`. This was a stale/incorrect assumption from an earlier configuration.
+
+**Resolution:** All E2E tests use `http://localhost:3000` for the backend and `http://localhost:5173` for the frontend, matching the Playwright `webServer` configuration.
+
+### Rate Limiter Bypass (QA-031)
+
+The server has a global rate limiter (100 requests per 60 seconds per IP, from Issue #93). During E2E testing, the cumulative API calls across 25 tests exceed this limit, causing `429 Too Many Requests` errors.
+
+**Fix:** Added `VITEST=true` bypass in `apps/server/src/index.ts` rate limiter middleware:
+```typescript
+// QA-031: Bypass rate limiting in test environment (E2E tests trigger 100+ requests)
+if (process.env.VITEST === "true") {
+  next();
+  return;
+}
+```
+
+This follows the same pattern as `POSITRON_DISABLE_QUEUE=true` — test-specific configuration that doesn't weaken production security.
 
 E2E tests use a real browser (Chromium via Playwright) to validate the complete Positron user workflow through the web interface.
 
@@ -74,7 +118,7 @@ The UI receives run updates via both mechanisms:
 ### Local Execution
 
 ```bash
-# Headless (CI-compatible)
+# Full suite (headless, CI-compatible)
 npm run test:e2e
 
 # Visible browser (debugging)
@@ -87,10 +131,12 @@ npm run test:e2e:debug
 npm run test:e2e:slow
 
 # Single test file
+npx playwright test e2e/diagnostic-reality-check.spec.ts --workers=1
+npx playwright test e2e/workflow-proof.spec.ts --workers=1
 npx playwright test e2e/full-run-lifecycle.spec.ts --workers=1
 ```
 
-### CI Integration (QA-030)
+### CI Integration (QA-030 / QA-031)
 
 The E2E test runs as a **non-blocking, optional** job (`e2e-playwright`) in the `Quality Gates` GitHub Actions workflow (`.github/workflows/quality-gates.yml`).
 
@@ -101,10 +147,12 @@ The E2E test runs as a **non-blocking, optional** job (`e2e-playwright`) in the 
 | Job name | `e2e-playwright` |
 | Trigger | `push` and `pull_request` on main/master/develop |
 | Timeout | 10 minutes |
-| Blocking | No (`continue-on-error: true`) |
+| Blocking | No (`continue-on-error: true`) — optional until stability window completed |
 | Browser | Chromium only (`npx playwright install chromium`) |
 | Node version | 22 |
 | Dependencies | `npm ci` |
+
+**QA-031 Update:** The E2E suite is now fully green (25/25 tests pass). The suite remains **optional** in CI. The stability window is being monitored. After ≥5 consecutive successful CI runs with 0 flakes, the E2E gate can be promoted to blocking.
 
 **CI-Explicit Safety Env:**
 
@@ -165,6 +213,7 @@ The E2E job is intentionally **non-blocking** (`continue-on-error: true`). It wi
 - **Browser flakiness possible**: Vite hot-reload and React component mounting timing may cause occasional failures. Rerun `npm run test:e2e` if a test flakes. The CI retries up to 2 times.
 - **Worker processing not in UI E2E**: The actual BullMQ worker processing path is not validated through the UI E2E test (covered by integration tests).
 - **Inline-only in test**: E2E and integration tests use inline pipeline execution (`POSITRON_DISABLE_QUEUE=true`). The BullMQ queuing path is validated separately via unit tests and contract tests.
+- **Rate limiter bypass in test**: The production rate limiter (100 req/min) is bypassed during E2E tests via `VITEST=true`. Production rate limiting remains active at all times.
 
 ### Troubleshooting
 
@@ -175,36 +224,45 @@ lsof -i :3000
 lsof -i :5173
 
 # Kill existing processes
-lsof -ti :3000 | xargs kill
-lsof -ti :5173 | xargs kill
+fuser -k 3000/tcp
+fuser -k 5173/tcp
 
 # Or let Playwright reuse existing servers (reuseExistingServer: true)
 ```
 
-**Test hangs on server startup:**
-- Ensure no `.env` file is being loaded with real mode settings
-- The Playwright config explicitly sets `VITEST=true` to skip `.env`
-- Verify all required env vars are set: `POSITRON_REPO_OWNER`, `POSITRON_REPO_NAME`, `POSITRON_REPO_DEFAULT_BRANCH`
+**Port 3001 confusion:**
+Port 3001 is NOT used by Positron. The backend runs on port 3000 and the frontend on port 5173. If you see port 3001 referenced anywhere (e.g., in old tests or documentation), it's a stale artifact. Update to port 3000.
 
-**Stale local Redis/Worker (QUEUED stall):**
+**Stale compiled Playwright files:**
+If you're editing `.spec.ts` files and changes don't take effect, check for stale compiled `.spec.js` files:
 ```bash
-# If runs stay at QUEUED, kill any local Redis or BullMQ worker
-docker ps | grep redis
-ps aux | grep worker
-
-# Or set POSITRON_DISABLE_QUEUE=true to use inline fallback
-POSITRON_DISABLE_QUEUE=true npm run test:e2e
+# Remove stale compiled files
+rm e2e/**/*.spec.js e2e/**/*.spec.js.map e2e/**/*.spec.d.ts.map
 ```
 
-**Browser not found:**
+**Rate limiting / "Too many requests" (429):**
+If you see `429 Too Many Requests` during E2E tests, ensure `VITEST=true` is set. The Playwright config automatically sets this, but if running a custom server manually:
+```bash
+VITEST=true npm run dev  # starts server without rate limiting
+```
+
+Or in `playwright.config.ts`, the rate limiter is bypassed automatically when the webServer is configured with `VITEST: "true"` in its env.
+
+**Stale dev server:**
+```bash
+# Kill all Positron-related processes
+fuser -k 3000/tcp 5173/tcp
+# Then restart via Playwright
+npm run test:e2e
+```
+
+**Wrong baseURL:**
+The Playwright config uses `baseURL: "http://localhost:5173"`. Tests should use relative URLs (`await page.goto('/')`) not hardcoded full URLs. The `full-run-lifecycle.spec.ts` and `diagnostic-reality-check.spec.ts` follow this pattern.
+
+**Missing browsers:**
 ```bash
 npx playwright install chromium
 ```
-
-**CI-specific issues:**
-- If the CI job times out, check if the Playwright browser installed correctly
-- If artifacts are missing, verify file paths match `playwright-report/**` and `test-results/**`
-- CI retries up to 2 times on failure (`retries: process.env.CI ? 2 : 0` in playwright config)
 
 ### Server/Web Autostart
 
