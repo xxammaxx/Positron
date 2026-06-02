@@ -1,0 +1,34 @@
+{
+	"$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+	"_comment": "Positron Fast Mutation Profile — QA-020. Scope: critical core logic only. No Redis/BullMQ/Integration.",
+	"testRunner": "vitest",
+	"packageManager": "npm",
+	"coverageAnalysis": "perTest",
+	"checkers": [],
+	"mutate": [
+		"packages/run-state/src/state-machine.ts",
+		"packages/shared/src/utils.ts",
+		"packages/shared/src/secret-manager.ts"
+	],
+	"vitest": {
+		"configFile": "vitest.config.ts"
+	},
+	"thresholds": {
+		"high": 85,
+		"low": 65,
+		"break": 60
+	},
+	"timeoutMS": 15000,
+	"timeoutFactor": 1.5,
+	"concurrency": 4,
+	"cleanTempDir": true,
+	"tempDirName": ".stryker-tmp",
+	"ignoreStatic": true,
+	"reporters": ["clear-text", "progress", "html"],
+	"htmlReporter": {
+		"fileName": "reports/mutation/fast/html/index.html"
+	},
+	"mutator": {
+		"excludedMutations": ["StringLiteral", "ArrayDeclaration", "ObjectLiteral"]
+	}
+}
