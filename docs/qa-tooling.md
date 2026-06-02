@@ -10,7 +10,114 @@ Positron uses multiple layers of testing and validation:
 | **Property-Based Tests** | `npm test` (included) | State machine invariants (37 props, ~18k runs) | ~2s | Blockierend |
 | **Contract Tests** | `npm run test:contracts` | Public API contracts between packages | ~0.4s | Blockierend |
 | **Mutation Fast** | `npm run test:mutation:fast` | Selected high-risk modules | ~25s | Optional |
-| **E2E Tests** | `npm run test:e2e` | Full browser workflow | ~30s | Optional |
+| **E2E Tests** | `npm run test:e2e` | Full browser workflow (Run Lifecycle) | ~10s | Optional |
+
+## E2E Tests (QA-028)
+
+### Test Strategy
+
+E2E tests use a real browser (Chromium via Playwright) to validate the complete Positron user workflow through the web interface.
+
+**Isolation Rules:**
+- **Fake GitHub Adapter** — `POSITRON_GITHUB_MODE=fake` enforced via Playwright webServer env
+- **Fake OpenCode Adapter** — `POSITRON_OPENCODE_MODE=fake`
+- **Fake SpecKit Adapter** — `POSITRON_SPECKIT_MODE=fake`
+- **No `.env` loading** — `VITEST=true` prevents accidental real-mode activation
+- **No real GitHub tokens** — Explicitly cleared via `GITHUB_TOKEN=""`
+- **No real GitHub API calls** — Fake adapters simulate all operations
+- **No real GitHub writes** — All PR/commit operations are simulated
+- **No real OpenCode process** — Fake adapter simulates CLI execution
+- **Deterministic test data** — `test-owner/test-repo`, Issue #1
+
+### Run Lifecycle E2E Test
+
+`e2e/full-run-lifecycle.spec.ts` — Validates the complete user workflow:
+
+| Step | Action | Assertion |
+|------|--------|-----------|
+| S01 | Dashboard loads | Heading "Dashboard" visible, main nav visible |
+| S02 | Open New Run modal, enter URL | Modal visible, input filled, Start Run clicked |
+| S02 | Navigate to run detail | URL matches `/runs/:id` |
+| S03 | Run detail page loads | Phase pipeline visible, Run heading visible |
+| S04 | FIXME: Wait for DONE | Pipeline regression blocks (see Known Limits) |
+| S05 | All pages reachable | Dashboard, Runs, Evidence, Settings |
+| S06 | Backend health stable | `/api/health` returns ok |
+
+### SSE/Polling Validation
+
+The UI receives run updates via both mechanisms:
+
+| Mechanism | Implementation | E2E Validation |
+|-----------|---------------|----------------|
+| SSE (EventSource) | `useSSE.ts` — connects to `/api/runs/:id/events/stream` | Not directly testable in Playwright (EventSource mocking); covered by polling fallback |
+| Polling | `useRun.ts` — HTTP GET every 3s | Asserted via `page.waitForTimeout` + UI element visibility checks |
+| API Polling | Direct `fetch()` calls | Used for fast DONE verification (when pipeline is working) |
+
+### Local Execution
+
+```bash
+# Headless (CI-compatible)
+npm run test:e2e
+
+# Visible browser (debugging)
+npm run test:e2e:headed
+
+# Debug mode (Playwright Inspector, step-by-step)
+npm run test:e2e:debug
+
+# Slow-motion for visual verification
+npm run test:e2e:slow
+
+# Single test file
+npx playwright test e2e/full-run-lifecycle.spec.ts --workers=1
+```
+
+### CI Decision
+
+| Option | Decision | Rationale |
+|--------|----------|-----------|
+| B | Optional in CI | E2E test is new; `npm run test:e2e` runs optionally, not blocking. Will be upgraded to blocking once multiple stable CI runs complete and pipeline regression is fixed. |
+
+### Known Limits
+
+- **Pipeline regression**: The server pipeline (`runFullPipeline`) has a pre-existing regression where runs stay at QUEUED. The DONE verification step is skipped until the pipeline is fixed (QA-029).
+- **SSE in Playwright**: `EventSource` behavior differs in headless Chromium. Tests rely on HTTP polling fallback for status updates.
+- **Real-Adapter E2E missing**: Only fake adapter E2E testing exists. Real adapter E2E requires controlled GitHub test repos and is planned separately.
+- **Browser flakiness possible**: Vite hot-reload and React component mounting timing may cause occasional failures. Rerun `npm run test:e2e` if a test flakes.
+- **Worker processing not in UI E2E**: The actual BullMQ worker processing path is not validated through the UI E2E test (covered by integration tests).
+
+### Troubleshooting
+
+**Port conflicts (EADDRINUSE 3000/5173):**
+```bash
+# Check what's using the ports
+lsof -i :3000
+lsof -i :5173
+
+# Kill existing processes
+lsof -ti :3000 | xargs kill
+lsof -ti :5173 | xargs kill
+
+# Or let Playwright reuse existing servers (reuseExistingServer: true)
+```
+
+**Test hangs on server startup:**
+- Ensure no `.env` file is being loaded with real mode settings
+- The Playwright config explicitly sets `VITEST=true` to skip `.env`
+- Verify all required env vars are set: `POSITRON_REPO_OWNER`, `POSITRON_REPO_NAME`, `POSITRON_REPO_DEFAULT_BRANCH`
+
+**Browser not found:**
+```bash
+npx playwright install chromium
+```
+
+### Server/Web Autostart
+
+Playwright's `webServer` config automatically starts:
+- Backend: `npx tsx src/index.ts` on port 3000 (health check: `/api/health`)
+- Frontend: `npx vite --port 5173` on port 5173
+
+Both use `reuseExistingServer: true` — manually started servers will be reused.
 
 ## Contract Tests
 
@@ -196,7 +303,7 @@ Covers:
 - Backend: vitest with V8 coverage (100% threshold for lines, functions, branches, statements)
 - Frontend: vitest with React Testing Library
 
-Status: 362 backend tests, 60 frontend tests, 3 known skipped (BullMQ/Redis integration)
+Status: ~450 backend tests, ~60 frontend tests, 3 integration tests have known pipeline regression (runs stay at QUEUED)
 
 ## Mutation Testing
 
