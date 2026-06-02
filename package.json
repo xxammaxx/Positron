@@ -17,6 +17,7 @@
 		"test": "vitest run && cd apps/web && npx vitest run",
 		"test:watch": "vitest",
 		"test:contracts": "vitest run --config vitest.contracts.config.ts",
+		"test:integration": "vitest run apps/server/src/__tests__/integration.test.ts",
 		"test:mutation:fast": "stryker run stryker.fast.config.json",
 		"test:e2e": "playwright test",
 		"test:e2e:headed": "cross-env PW_HEADED=1 playwright test --headed --workers=1",

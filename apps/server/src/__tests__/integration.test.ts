@@ -43,13 +43,11 @@ async function getWithToken(path: string, token: string) {
 }
 
 describe("POST /api/repos/:repoId/runs", () => {
-	// QA-019: These tests require a running Redis instance for BullMQ pipeline execution.
-	// Without Redis, the pipeline falls back to async inline execution which does not
-	// complete before the HTTP response is sent — the run stays in QUEUED state.
-	// To re-enable, start Redis (e.g., docker compose up -d redis) and set
-	// POSITRON_REDIS_URL=redis://localhost:6379.
-	// Follow-up: Implement proper async polling or Redis test container.
-	test.skip("vollständiger Run durchläuft alle Phasen — erreicht DONE", async () => {
+	// QA-027: Reactivated — the POST /api/repos/:repoId/runs route has an
+	// inline fallback (runFullPipeline) that runs synchronously when
+	// BullMQ/Redis is unavailable. Tests go through this fallback path
+	// and complete in-process. ~500ms BullMQ connection timeout per test.
+	test("vollständiger Run durchläuft alle Phasen — erreicht DONE", async () => {
 		// Fake-Adapter simuliert jetzt Änderungen nach prepareWorkspace
 		// → Run erreicht COMMIT → PR_CREATE → MERGE (dry-run) → DONE
 		const res = await post("/api/repos/repo-1/runs", {
@@ -75,7 +73,7 @@ describe("POST /api/repos/:repoId/runs", () => {
 		expect(body.eventCount).toBeGreaterThanOrEqual(15);
 	});
 
-	test.skip("zwei aufeinanderfolgende Runs — beide erreichen DONE", async () => {
+	test("zwei aufeinanderfolgende Runs — beide erreichen DONE", async () => {
 		const r1 = await post("/api/repos/repo-1/runs", { issueNumber: 1 });
 		const b1 = (await r1.json()) as {
 			run: { id: string; phase: string; lastError: string | null };
@@ -115,8 +113,8 @@ describe("GET /api/health", () => {
 });
 
 describe("Run Resume", () => {
-	// QA-019: Skipped — same BullMQ/Redis async pipeline dependency as above.
-	test.skip("Run-Details via GET /api/runs/:id", async () => {
+	// QA-027: Reactivated — same inline fallback as above.
+	test("Run-Details via GET /api/runs/:id", async () => {
 		const create = await post("/api/repos/repo/runs", { issueNumber: 99 });
 		const createBody = (await create.json()) as { run: { id: string } };
 		const res = await get(`/api/runs/${createBody.run.id}`);
