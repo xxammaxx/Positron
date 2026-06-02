@@ -14,9 +14,9 @@
 		"configFile": "vitest.config.ts"
 	},
 	"thresholds": {
-		"high": 70,
-		"low": 55,
-		"break": 45
+		"high": 85,
+		"low": 65,
+		"break": 60
 	},
 	"timeoutMS": 15000,
 	"timeoutFactor": 1.5,
