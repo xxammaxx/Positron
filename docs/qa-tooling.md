@@ -10,7 +10,7 @@ Positron uses multiple layers of testing and validation:
 | **Property-Based Tests** | `npm test` (included) | State machine invariants (37 props, ~18k runs) | ~2s | Blockierend |
 | **Contract Tests** | `npm run test:contracts` | Public API contracts between packages | ~0.4s | Blockierend |
 | **Mutation Fast** | `npm run test:mutation:fast` | Selected high-risk modules | ~25s | Optional |
-| **E2E Tests** | `npm run test:e2e` | Full browser workflow (Run Lifecycle) | ~10s | Optional |
+| **E2E Tests** | `npm run test:e2e` | Full browser workflow (Run Lifecycle) | ~10s | Optional (QA-030, non-blocking) |
 
 ## E2E Tests (QA-028)
 
@@ -90,17 +90,79 @@ npm run test:e2e:slow
 npx playwright test e2e/full-run-lifecycle.spec.ts --workers=1
 ```
 
-### CI Decision (QA-029 Update)
+### CI Integration (QA-030)
 
-| Option | Decision | Rationale |
-|--------|----------|-----------|
-| B | Optional in CI | E2E test is stable in fake mode after QA-029 pipeline fix. Runs <10s. Remains optional until multiple stable CI runs confirm reliability. |
+The E2E test runs as a **non-blocking, optional** job (`e2e-playwright`) in the `Quality Gates` GitHub Actions workflow (`.github/workflows/quality-gates.yml`).
+
+**CI Job Properties:**
+
+| Property | Value |
+|----------|-------|
+| Job name | `e2e-playwright` |
+| Trigger | `push` and `pull_request` on main/master/develop |
+| Timeout | 10 minutes |
+| Blocking | No (`continue-on-error: true`) |
+| Browser | Chromium only (`npx playwright install chromium`) |
+| Node version | 22 |
+| Dependencies | `npm ci` |
+
+**CI-Explicit Safety Env:**
+
+All these environment variables are set at the CI job step level for defense-in-depth:
+
+| Env Var | Value | Purpose |
+|---------|-------|---------|
+| `VITEST` | `true` | Skip `.env` loading, prevent real-mode activation |
+| `NODE_ENV` | `test` | Runtime test mode |
+| `POSITRON_DISABLE_QUEUE` | `true` | Force inline pipeline execution (no BullMQ) |
+| `POSITRON_GITHUB_MODE` | `fake` | Fake GitHub adapter |
+| `POSITRON_OPENCODE_MODE` | `fake` | Fake OpenCode adapter |
+| `POSITRON_SPECKIT_MODE` | `fake` | Fake SpecKit adapter |
+| `GITHUB_TOKEN` | `""` | No real GitHub token |
+| `POSITRON_REPO_OWNER` | `test-owner` | Fake repo for test data |
+| `POSITRON_REPO_NAME` | `test-repo` | Fake repo for test data |
+| `POSITRON_REPO_DEFAULT_BRANCH` | `main` | Default branch for test data |
+| `POSITRON_ADMIN_TOKEN` | `positron-admin-dev` | Test admin token |
+
+**No external dependencies required:**
+- No Redis service
+- No BullMQ worker
+- No external API calls
+- No GitHub tokens
+- No Docker services
+
+**Artifact Upload:**
+
+Playwright reports, traces, and test results are uploaded as CI artifacts on every run (including failures):
+
+| Artifact | Path | Behavior on Failure |
+|----------|------|---------------------|
+| Playwright HTML Report | `playwright-report/**` | Uploaded (`if: always()`) |
+| Test Results (traces, screenshots) | `test-results/**` | Uploaded (`if: always()`) |
+
+Artifacts are available for download from the GitHub Actions run page.
+
+### Stability Window — Upgrade Criteria to Blocking Gate
+
+The E2E job is intentionally **non-blocking** (`continue-on-error: true`). It will be promoted to a blocking gate when all of the following criteria are met:
+
+| Criterion | Target | Rationale |
+|-----------|--------|-----------|
+| Successful CI runs | ≥ 5 consecutive | Confidence in reliability |
+| Flake rate | 0% | No intermittent failures |
+| Runtime | < 30 seconds (target) | Fast feedback for developers |
+| External services | 0 | Self-contained, no Redis/API |
+| Secrets required | 0 | No tokens needed |
+| DONE-step stability | 100% | Pipeline completes reliably |
+| Artifact usability | Reports useful on failure | Debuggable when tests break |
+
+**When criteria are met:** Change `continue-on-error: true` to `continue-on-error: false` (or remove it) in the CI workflow, and update the overview table to mark E2E as "Blockierend".
 
 ### Known Limits
 
 - **SSE in Playwright**: `EventSource` behavior differs in headless Chromium. Tests rely on HTTP polling fallback for status updates.
 - **Real-Adapter E2E missing**: Only fake adapter E2E testing exists. Real adapter E2E requires controlled GitHub test repos and is planned separately.
-- **Browser flakiness possible**: Vite hot-reload and React component mounting timing may cause occasional failures. Rerun `npm run test:e2e` if a test flakes.
+- **Browser flakiness possible**: Vite hot-reload and React component mounting timing may cause occasional failures. Rerun `npm run test:e2e` if a test flakes. The CI retries up to 2 times.
 - **Worker processing not in UI E2E**: The actual BullMQ worker processing path is not validated through the UI E2E test (covered by integration tests).
 - **Inline-only in test**: E2E and integration tests use inline pipeline execution (`POSITRON_DISABLE_QUEUE=true`). The BullMQ queuing path is validated separately via unit tests and contract tests.
 
@@ -124,10 +186,25 @@ lsof -ti :5173 | xargs kill
 - The Playwright config explicitly sets `VITEST=true` to skip `.env`
 - Verify all required env vars are set: `POSITRON_REPO_OWNER`, `POSITRON_REPO_NAME`, `POSITRON_REPO_DEFAULT_BRANCH`
 
+**Stale local Redis/Worker (QUEUED stall):**
+```bash
+# If runs stay at QUEUED, kill any local Redis or BullMQ worker
+docker ps | grep redis
+ps aux | grep worker
+
+# Or set POSITRON_DISABLE_QUEUE=true to use inline fallback
+POSITRON_DISABLE_QUEUE=true npm run test:e2e
+```
+
 **Browser not found:**
 ```bash
 npx playwright install chromium
 ```
+
+**CI-specific issues:**
+- If the CI job times out, check if the Playwright browser installed correctly
+- If artifacts are missing, verify file paths match `playwright-report/**` and `test-results/**`
+- CI retries up to 2 times on failure (`retries: process.env.CI ? 2 : 0` in playwright config)
 
 ### Server/Web Autostart
 
