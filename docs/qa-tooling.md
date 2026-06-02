@@ -93,7 +93,9 @@ Fake adapters provide the contract verification surface, while integration/E2E t
 
 Property-based tests verify **invariants** — statements that must hold for all valid inputs — by testing them against many randomly generated values. Instead of hand-picking edge cases, the testing framework (`fast-check`) generates thousands of random inputs and verifies the invariant holds for each.
 
-In Positron, property-based tests verify the **State Machine** (`packages/run-state`).
+In Positron, property-based tests verify:
+- **State Machine** (`packages/run-state`) — 37 properties, ~18,000 runs
+- **Shared Utilities** (`packages/shared`) — 21 properties, ~11,000 runs
 
 ### Invariants Tested
 
@@ -145,6 +147,42 @@ Property-based tests run as part of `npm test` (vitest). They are **blocking** i
 - Only the state machine is covered (not adapters or utils)
 - Generators don't cover all possible `RunState` variations (e.g., non-null branch paths)
 - `resumeFromEvents` has basic property coverage but could benefit from more exhaustive phase-order verification
+
+### Shared Utilities (QA-025)
+
+Property-based tests for security-critical shared utilities: `redactValue()` and `generateBranchName()`.
+
+**`redactValue()` Invariants** (~4,500 runs):
+
+| # | Property | Runs | What it verifies |
+|---|----------|------|------------------|
+| 1 | No secret leaks in plaintext | 1,000 | Fake tokens are NEVER returned in plaintext |
+| 2 | Secrets in context | 500 | Token patterns embedded in text (headers, query strings) are redacted |
+| 3 | Nested objects | 500 | Secrets at any nesting depth in JSON objects are masked |
+| 4 | Arrays with secrets | 500 | Secrets in arrays are redacted; non-secret arrays pass through safely |
+| 5 | Safe primitives | 1,000 | Non-secret values (strings, numbers, booleans) are never falsely redacted |
+| 6 | Circular references | 10 | Throws produce safe `[Unserializable]` fallback, never crash |
+| 7 | Multiple secrets | 500 | All secrets in a string are redacted, not just the first |
+| 8 | Never throws | 1,000 | Any input type returns a string, never throws |
+
+**`generateBranchName()` Invariants** (~6,500 runs):
+
+| # | Property | Runs | What it verifies |
+|---|----------|------|------------------|
+| 1 | Non-empty output | 1,000 | Always produces a valid branch name string |
+| 2 | No shell metacharacters | 1,000 | Removes `;`, `|`, `&`, `$`, backticks, `()`, `<>`, whitespace |
+| 3 | No path traversal | 1,000 | Removes `..`, `/etc/`, `C:\` patterns |
+| 4 | Determinism | 1,000 | Same input always produces identical output |
+| 5 | Slug length ≤ 50 | 1,000 | Truncation contract is enforced |
+| 6 | Slug charset `[a-z0-9-]` | 1,000 | Only lowercase alphanumeric and hyphens in slug |
+| 7 | No leading/trailing hyphens | 1,000 | Slug never starts or ends with `-` |
+| 8 | ASCII-only | 500 | Unicode/umlauts are stripped to ASCII |
+| 9 | Issue number uniqueness | 500 | Different issue numbers produce different branch names |
+
+**Generators:**
+- Secret patterns: `ghp_`, `sk-`, `anthropic_`, `github_pat_`, `AIza` — all FAKE tokens
+- Dangerous titles: shell metacharacters, path traversal, command injection, unicode
+- Nested objects/arrays with secrets at various depths
 
 ## Unit Tests
 
