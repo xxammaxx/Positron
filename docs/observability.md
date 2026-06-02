@@ -457,7 +457,7 @@ Verification of scripts referenced in QA documentation against actual `package.j
 | Script | Status | Action |
 |--------|--------|--------|
 | `test:contracts` | ❌ Never existed | Do NOT reference in QA criteria |
-| `test:mutation:fast` | ✅ Working (QA-020) | Stryker 9.6.1 + Vitest 4.1.7 compatible, 49.54% score |
+| `test:mutation:fast` | ✅ Working (QA-021) | Stryker 9.6.1 + Vitest 4.1.7 compatible, 85.25% score |
 | `test:orchestrator` | ❌ Broken ref → **Removed (QA-019)** | Script file missing |
 | `test:orchestrator:smoke` | ❌ Broken ref → **Removed (QA-019)** | Script file missing |
 | `test:orchestrator:headed` | ❌ Broken ref → **Removed (QA-019)** | Script file missing |
@@ -472,7 +472,7 @@ Verification of scripts referenced in QA documentation against actual `package.j
 | `verify:issues` | ✅ Working | Script exists |
 | `verify:issue` | ✅ Working | Script exists |
 
-**Stryker/Mutation Testing (QA-020):** Rebuilt as a working fast mutation profile. `@stryker-mutator` 9.6.1 is installed with `vitest-runner` and `typescript-checker`. `.stryker-tmp/` is cleaned and gitignored. The script `test:mutation:fast` runs `stryker run stryker.fast.config.json` against 3 core files: `state-machine.ts`, `utils.ts`, `secret-manager.ts`. Mutation score: 49.54% (215 mutants across 3 files, 107 killed, 18 survived, 91 no-coverage). Runtime: ~20s. No CI integration yet — score is too low for a meaningful gate. See `### Mutation/Stryker Test Status (QA-020)` below for details.
+**Stryker/Mutation Testing (QA-020 → QA-021):** Rebuilt as a working fast mutation profile and hardened in QA-021. `@stryker-mutator` 9.6.1 is installed with `vitest-runner` and `typescript-checker`. `.stryker-tmp/` is cleaned and gitignored. The script `test:mutation:fast` runs `stryker run stryker.fast.config.json` against 3 core files: `state-machine.ts`, `utils.ts`, `secret-manager.ts`. Mutation score: 85.25% (217 mutants across 3 files, 185 killed, 28 survived, 4 no-coverage). Runtime: ~20s. See `### Mutation/Stryker Test Status (QA-021)` below for details.
 
 ### Pre-existing Integration Test Failures (QA-018 + QA-019)
 
@@ -490,9 +490,9 @@ Verification of scripts referenced in QA documentation against actual `package.j
 
 No contract tests exist in the repository. The `vitest.contracts.config.ts` found in `.stryker-tmp/` is a Stryker artifact from a previous setup that referenced `packages/*/src/__contracts__/**/*.contract.test.ts` — these directories and test files were never created. A `test:contracts` npm script does not exist and should not be added until contract tests are actually written.
 
-### Mutation/Stryker Test Status (QA-020)
+### Mutation/Stryker Test Status (QA-021)
 
-Stryker mutation testing has been rebuilt as a working fast mutation profile:
+Stryker mutation testing has been rebuilt as a working fast mutation profile and hardened with comprehensive tests:
 
 | Component | Detail |
 |-----------|--------|
@@ -504,53 +504,60 @@ Stryker mutation testing has been rebuilt as a working fast mutation profile:
 | **npm script** | `npm run test:mutation:fast` |
 | **Temp directory** | `.stryker-tmp/` (gitignored, auto-cleaned) |
 
-#### Fast Mutation Scope
+#### Fast Mutation Scope (3 core files)
 
-| File | Reason | Mutation Score |
-|------|--------|---------------|
-| `packages/run-state/src/state-machine.ts` | Core state machine — phase transitions, retry, resume logic | 28.40% |
-| `packages/shared/src/utils.ts` | Utility functions — redaction, IDs, formatting, branch names | 47.37% |
-| `packages/shared/src/secret-manager.ts` | Secret resolution — env/docker/file providers, masking | 73.08% |
-| **Overall** | | **49.54%** |
+| File | Reason | QA-020 Score | QA-021 Score |
+|------|--------|-------------|-------------|
+| `packages/run-state/src/state-machine.ts` | Core state machine — phase transitions, retry, resume logic | 28.40% | **92.59%** |
+| `packages/shared/src/utils.ts` | Utility functions — redaction, IDs, formatting, branch names | 47.37% | **85.96%** |
+| `packages/shared/src/secret-manager.ts` | Secret resolution — env/docker/file providers, masking | 73.08% | **77.22%** |
+| **Overall** | | **49.54%** | **85.25%** |
 
-#### Mutation Results (Phase 6 run)
+#### Mutation Results (QA-021 final)
 
-| Metric | Value |
-|--------|-------|
-| Total Mutants | 216 |
-| Killed | 107 |
-| Survived | 18 |
-| No Coverage | 91 |
-| Timeout | 0 |
-| Compile Errors | 0 |
-| Mutation Score | 49.54% |
-| Runtime | ~20s |
-| Covered Mutants | 85.60% |
+| Metric | Before QA-021 | After QA-021 |
+|--------|-------------|-------------|
+| Total Mutants | 216 | 217 |
+| Killed | 107 | 185 |
+| Survived | 18 | 28 |
+| No Coverage | 91 | 4 |
+| Timeout | 0 | 0 |
+| Compile Errors | 0 | 0 |
+| Mutation Score | 49.54% | **85.25%** |
+| Runtime | ~20s | ~19s |
+| Covered Mutants | 85.60% | 86.85% |
 
-#### Known Limitations
+#### New Tests Added (QA-021)
 
-1. **Low score on state-machine.ts** (28.40%): Functions `markFailed()`, `retry()`, `transition()` (bad-path), `isFailurePhase()` have no tests — accounting for 56 no-coverage mutants.
-2. **No coverage on `redactValue()` and `generateBranchName()`** in utils.ts (29 no-coverage mutants).
-3. **Survivors in `FileSecretProvider.parseEnvFile()`** (15 survivors): String parsing edge cases where `.trim()`, `.startsWith()`, `.endsWith()`, `||` → `&&`, and `key` truthiness checks survive. These are "nice-to-have" hardening mutants.
-4. **Thresholds** set low (`break: 45`, `low: 55`, `high: 70`) to reflect initial scope.
-5. **No CI integration**: Score is too low for a meaningful gate. Local-only for now.
-6. **No Docker infrastructure**: `docker/Dockerfile.test` and `docker-compose.test.yml` do not exist. Mutation runs directly on the host.
-7. **`typescriptChecker` disabled**: Type safety is already enforced by `npm run typecheck` in CI.
+| Area | Tests | Coverage |
+|------|------:|----------|
+| `state-machine.test.ts` — transition(), markFailed(), retry(), isFailurePhase() | 37 | Eliminated 53 of 56 no-coverage mutants |
+| `utils.test.ts` — redactValue(), generateBranchName() | 27 | Eliminated all 29 no-coverage mutants |
+| `secret-manager.test.ts` — parseEnvFile() edge cases, resolveDefaultEnvPath() | 13 | Reduced survivors, covered resolveDefaultEnvPath |
+| **Total** | **77** | |
 
-#### How to Run Locally
+#### Thresholds (QA-021 update)
 
-```bash
-npm run test:mutation:fast
-# or: npx stryker run stryker.fast.config.json
-```
+| Threshold | QA-020 | QA-021 | Rationale |
+|-----------|--------|--------|-----------|
+| `break` | 45 | **60** | CI gate: prevents merging regressions below this level |
+| `low` | 55 | **65** | Warning threshold |
+| `high` | 70 | **85** | Target quality level |
 
-#### How to Interpret Survivors
+#### CI Decision
 
-- Most survivors are in `FileSecretProvider.parseEnvFile()` string parsing — these are not bugs but hardening opportunities (edge cases in `.env` file parsing).
-- The `canTransition` survivor (`if (false) return false`) is harmless — the `!allowed` check is already tested via true/false paths.
-- The `resumeFromEvents` survivor (`if (true)`) is harmless — it affects event filtering but the full pipeline is tested via integration tests.
-- No security-relevant survivors detected.
-- **Recommendation:** Focus on adding tests for `markFailed`, `retry`, `redactValue`, and `generateBranchName` to reduce no-coverage mutants and improve score to ~65%+.
+**Recommendation: Optional CI job (Option B), not blocking.** The score of 85.25% exceeds the break threshold of 60% significantly and is stable across runs. However, a blocking CI gate should be deferred until:
+
+- The score has been stable for multiple weeks
+- The full integration mutation profile is added (currently only "fast" with 3 files exists)
+- Contract tests are implemented to harden against interface changes
+
+#### Known Limitations (post-QA-021)
+
+1. **4 remaining no-coverage mutants:** 3 in `state-machine.ts` (`canTransition` guard, `resumeFromEvents` event-level check), 1 in `secret-manager.ts` (`resolveDefaultEnvPath` fallback `??`). All are non-critical.
+2. **28 survivors:** Mostly implementation-detail mutants in `FileSecretProvider.parseEnvFile()` (MethodExpression/LogicalOperator on string operations) and `resolveDefaultEnvPath()` (BlockStatement/ConditionalExpression). 8 in `utils.ts` (redactValue conditional branches, generateBranchName regex variants, truncate boundary). These are "nice-to-have" hardening mutants without security impact.
+3. **No full mutation profile:** Only "fast" mode (3 files) exists. A full profile covering all packages would add significant runtime.
+4. **No contract tests:** Contract tests would harden interface boundaries between packages but are not in scope for QA-021.
 
 ## Known Issues Fixed in QA-015
 
@@ -569,6 +576,7 @@ npm run test:mutation:fast
 - **QA Script Reconciliation (QA-018)**: Verified all observability scripts against package.json; documented missing `test:contracts` / `test:mutation:fast`
 - **Integration Test Documentation (QA-018)**: Documented 3 pre-existing BullMQ-dependent integration test failures
 - **QA Tooling Reconciliation (QA-019)**: Removed 6 broken orchestrator script references; marked integration tests as controlled skip; documented Stryker/contract test absence
+- **Fast Mutation Hardening (QA-021)**: Added 77 tests across state-machine, utils, and secret-manager; raised thresholds (break: 45→60, low: 55→65, high: 70→85); mutation score improved from 49.54% to 85.25%; eliminated 87 of 91 no-coverage mutants
 
 ## Local Validation
 
@@ -576,7 +584,7 @@ npm run test:mutation:fast
 # 1. All tests must pass
 npm run build && npm run typecheck && npm test
 
-# 2. Run fast mutation testing (QA-020)
+# 2. Run fast mutation testing (QA-021, score: 85.25%)
 npm run test:mutation:fast
 
 # 3. Validate Prometheus config (if promtool installed)
