@@ -6,9 +6,10 @@ Positron uses multiple layers of testing and validation:
 
 | Layer | Command | Scope | Runtime | CI |
 |-------|---------|-------|---------|----|
-| **Unit Tests** | `npm test` | All public/private functions | ~1.6s | Blockierend |
+| **Unit Tests** | `npm test` | All public/private functions | ~2s | Blockierend |
+| **Property-Based Tests** | `npm test` (included) | State machine invariants (37 props, ~18k runs) | ~2s | Blockierend |
 | **Contract Tests** | `npm run test:contracts` | Public API contracts between packages | ~0.4s | Blockierend |
-| **Mutation Fast** | `npm run test:mutation:fast` | Selected high-risk modules | ~20s | Optional |
+| **Mutation Fast** | `npm run test:mutation:fast` | Selected high-risk modules | ~25s | Optional |
 | **E2E Tests** | `npm run test:e2e` | Full browser workflow | ~30s | Optional |
 
 ## Contract Tests
@@ -85,6 +86,65 @@ Contract tests must NOT make real API calls because:
 3. They must be fast (sub-second execution)
 
 Fake adapters provide the contract verification surface, while integration/E2E tests handle real adapter behavior.
+
+## Property-Based Tests (QA-024)
+
+### What Are Property-Based Tests?
+
+Property-based tests verify **invariants** — statements that must hold for all valid inputs — by testing them against many randomly generated values. Instead of hand-picking edge cases, the testing framework (`fast-check`) generates thousands of random inputs and verifies the invariant holds for each.
+
+In Positron, property-based tests verify the **State Machine** (`packages/run-state`).
+
+### Invariants Tested
+
+| # | Invariant | Runs | Description |
+|---|-----------|------|-------------|
+| 1 | VALID_TRANSITIONS consistency | 4000 | Every valid pair returns `true` from `canTransition`; every invalid pair returns `false`; no phase transitions to itself |
+| 2 | Terminal phase integrity | 3500 | Terminal phases have `isTerminalPhase() = true`, non-terminal phases `false`; no transition possible from terminal phases |
+| 3 | Failure phase classification | 4000 | All failure phases return `isFailurePhase() = true`; non-failure phases return `false`; `isFailurePhase ↔ phase.startsWith('FAILED')` |
+| 4 | Invalid transition safety | 1500 | Invalid transitions preserve run identity, phase unchanged, `lastError` set with error message |
+| 5 | Valid transition correctness | 1500 | Valid transitions preserve run identity, set correct target phase, generate properly structured events |
+| 6 | Retry restrictions | 2001 | Retry succeeds only from `FAILED_TRANSIENT`; all other phases block retry; `TEST` is a valid retry target |
+| 7 | markFailed guarantees | 6000 | `markFailed` always returns `ok:true`; result is always a failure phase; preserves identity; `failedPhase` and `reason` in event payload |
+| 8 | Transition chain integrity | 1000 | Connected transition chains never skip forbidden edges; invalid edges are detected and rejected |
+
+**Total: ~18,000 generated test cases across 37 properties.**
+
+### Generators
+
+| Generator | Coverage |
+|-----------|----------|
+| `phaseArb` | All 28 phases |
+| `terminalPhaseArb` | 7 terminal phases (DONE, FAILED, FAILED_BLOCKED, FAILED_UNSAFE, BLOCKED_PUSH, BLOCKED_MERGE, CLEANUP) |
+| `nonTerminalPhaseArb` | 21 non-terminal phases |
+| `failurePhaseArb` | 4 failure phases (FAILED, FAILED_TRANSIENT, FAILED_BLOCKED, FAILED_UNSAFE) |
+| `validTransitionArb` | All 67 allowed (from, to) pairs in VALID_TRANSITIONS |
+| `invalidTransitionArb` | Forbidden pairs including terminal sources |
+| `transitionChainArb` | Connected chains of 2-20 valid transitions |
+| `failureKindArb` | All 4 failure kinds |
+| `runStateArb` | Random RunState with all fields populated |
+
+### Reproducing Failures
+
+When a property test fails, fast-check prints the **seed** and the **counterexample**:
+
+```
+Property failed after 1 tests
+{ seed: -293364349, path: "0", endOnFailure: true }
+Counterexample: [[["TASKS","ANALYZE"],["ANALYZE","REVIEW"]],"disk full"]
+```
+
+To reproduce: use the seed in a focused test with `fc.assert(property, { seed: -293364349 })`.
+
+### CI Decision
+
+Property-based tests run as part of `npm test` (vitest). They are **blocking** in CI because they run in ~2s with no external dependencies and catch regressions that hand-written tests can miss.
+
+### Known Limits
+
+- Only the state machine is covered (not adapters or utils)
+- Generators don't cover all possible `RunState` variations (e.g., non-null branch paths)
+- `resumeFromEvents` has basic property coverage but could benefit from more exhaustive phase-order verification
 
 ## Unit Tests
 
