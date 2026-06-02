@@ -544,13 +544,37 @@ Stryker mutation testing has been rebuilt as a working fast mutation profile and
 | `low` | 55 | **65** | Warning threshold |
 | `high` | 70 | **85** | Target quality level |
 
-#### CI Decision
+#### CI Integration (QA-022)
 
-**Recommendation: Optional CI job (Option B), not blocking.** The score of 85.25% exceeds the break threshold of 60% significantly and is stable across runs. However, a blocking CI gate should be deferred until:
+Mutation testing is integrated into CI as a **non-blocking, optional job** in `.github/workflows/quality-gates.yml`:
 
-- The score has been stable for multiple weeks
-- The full integration mutation profile is added (currently only "fast" with 3 files exists)
+| Property | Value |
+|----------|-------|
+| **Job name** | `mutation-fast` |
+| **Trigger** | push/PR to main/master/develop + `workflow_dispatch` |
+| **Timeout** | 5 minutes |
+| **Blocking** | No (`continue-on-error: true`) |
+| **Secrets required** | None |
+| **Services required** | None (no Redis/BullMQ) |
+| **Artifact** | `mutation-fast-report` (HTML report from `reports/mutation/`) |
+
+**Rationale:** The score of 85.25% exceeds the break threshold of 60% significantly and is stable across runs (~19s). The job provides visibility without blocking PRs. A blocking CI gate will be considered after:
+
+- The score has been stable for multiple weeks in CI
+- A full integration mutation profile is added (currently only "fast" with 3 files exists)
 - Contract tests are implemented to harden against interface changes
+
+**How to view CI results:**
+1. Go to Actions → Quality Gates → latest run
+2. Scroll to "Artifacts" section
+3. Download `mutation-fast-report` to view the HTML mutation report
+
+**Future: Full Mutation Profile**
+- Config file: `stryker.full.config.json` (not yet created)
+- Scope: all packages (larger than 3 files)
+- Trigger: manual (`workflow_dispatch`) or scheduled
+- Expected runtime: significantly longer than 19s
+- Behavior: non-blocking, artifact upload
 
 #### Known Limitations (post-QA-021)
 
@@ -577,6 +601,7 @@ Stryker mutation testing has been rebuilt as a working fast mutation profile and
 - **Integration Test Documentation (QA-018)**: Documented 3 pre-existing BullMQ-dependent integration test failures
 - **QA Tooling Reconciliation (QA-019)**: Removed 6 broken orchestrator script references; marked integration tests as controlled skip; documented Stryker/contract test absence
 - **Fast Mutation Hardening (QA-021)**: Added 77 tests across state-machine, utils, and secret-manager; raised thresholds (break: 45→60, low: 55→65, high: 70→85); mutation score improved from 49.54% to 85.25%; eliminated 87 of 91 no-coverage mutants
+- **CI Mutation Integration (QA-022)**: Added `mutation-fast` as optional, non-blocking CI job to `quality-gates.yml`; mutation HTML reports uploaded as CI artifacts; workflow validated with YAML linter
 
 ## Local Validation
 
