@@ -450,34 +450,54 @@ Currently documented as "not locally simulatable without risk" — requires dedi
 6. **Authentication** — Grafana uses default `admin/admin` credentials. Change for production.
 7. **Integration tests affected by running server** — Some integration tests (apps/server) may fail when a production server is already running on port 3000. Stop the server before running `npm test` locally.
 
-### QA Script Reconciliation (QA-018)
+### QA Script Reconciliation (QA-018 + QA-019)
 
 Verification of scripts referenced in QA documentation against actual `package.json` state:
 
-| Script | In package.json | File on disk | Status |
-|--------|----------------|-------------|--------|
-| `test:contracts` | ❌ Not present | N/A | Does not exist — should not be referenced in QA criteria |
-| `test:mutation:fast` | ❌ Not present | N/A | Stryker not installed in node_modules — needs separate follow-up |
-| `test:orchestrator:contract` | ✅ Present | ❌ `scripts/test-orchestrator.mjs` missing | Broken reference — script file does not exist |
-| `observability:drill` | ✅ | ✅ | Working |
-| `observability:validate` | ✅ | ✅ | Working |
-| `observability:chaos-drill` | ✅ | ✅ | Working (QA-017) |
-| `observability:webhook-mock` | ✅ | ✅ | Working (QA-017) |
-| `observability:queue-backlog` | ✅ | ✅ | Working (QA-018) |
+| Script | Status | Action |
+|--------|--------|--------|
+| `test:contracts` | ❌ Never existed | Do NOT reference in QA criteria |
+| `test:mutation:fast` | ❌ Never existed | Stryker not installed — needs separate follow-up |
+| `test:orchestrator` | ❌ Broken ref → **Removed (QA-019)** | Script file missing |
+| `test:orchestrator:smoke` | ❌ Broken ref → **Removed (QA-019)** | Script file missing |
+| `test:orchestrator:headed` | ❌ Broken ref → **Removed (QA-019)** | Script file missing |
+| `test:orchestrator:slow` | ❌ Broken ref → **Removed (QA-019)** | Script file missing |
+| `test:orchestrator:contract` | ❌ Broken ref → **Removed (QA-019)** | Script file missing |
+| `test:orchestrator:regression` | ❌ Broken ref → **Removed (QA-019)** | Script file missing |
+| `observability:drill` | ✅ Working | Validated QA-016 |
+| `observability:validate` | ✅ Working | Validated QA-016 |
+| `observability:chaos-drill` | ✅ Working | Validated QA-017 |
+| `observability:webhook-mock` | ✅ Working | Validated QA-017 |
+| `observability:queue-backlog` | ✅ Working | Validated QA-018 |
+| `verify:issues` | ✅ Working | Script exists |
+| `verify:issue` | ✅ Working | Script exists |
 
 **Stryker/Mutation Testing:** A configuration artifact exists in `.stryker-tmp/` from a previous run, but `@stryker-mutator` packages are not in `node_modules`. There is no root `stryker.config.json` and no `test:mutation:fast` script. This requires a dedicated follow-up issue to re-establish the mutation testing pipeline.
 
-### Pre-existing Integration Test Failures (QA-018)
+### Pre-existing Integration Test Failures (QA-018 + QA-019)
 
-3 tests in `apps/server/src/__tests__/integration.test.ts` fail because they expect full pipeline completion (phase `DONE`) but runs stay in `QUEUED` state:
+3 tests in `apps/server/src/__tests__/integration.test.ts` have been marked as `test.skip()` because they require a running Redis instance for BullMQ pipeline execution:
 
-- **Root cause:** No BullMQ/Redis in the test environment. The pipeline relies on BullMQ for execution, but the test uses `createServer()` with `dbPath: ':memory:'` without Redis.
-- **Tests affected:**
-  - `vollständiger Run durchläuft alle Phasen — erreicht DONE` (line 44)
-  - `zwei aufeinanderfolgende Runs — beide erreichen DONE` (line 57)
-  - `Run-Details via GET /api/runs/:id` (line 91)
-- **Pre-existing:** Confirmed — these tests were written before BullMQ was introduced and have been failing since QA-012 queue observability changes.
-- **Recommendation for QA-019:** Either add a BullMQ test fixture (minimal Redis mock or test container) or mark these tests as integration tests that require Redis.
+- **Root cause:** The server falls back to async inline execution when BullMQ/Redis is unavailable, which does not complete before the HTTP response is sent — the run stays in `QUEUED` state.
+- **Tests skipped (QA-019):**
+  - `vollständiger Run durchläuft alle Phasen — erreicht DONE`
+  - `zwei aufeinanderfolgende Runs — beide erreichen DONE`
+  - `Run-Details via GET /api/runs/:id`
+- **To re-enable:** Start Redis (e.g., `docker compose up -d redis`) and set `POSITRON_REDIS_URL=redis://localhost:6379`.
+- **Follow-up:** Proper Redis test container or async test polling.
+
+### Contract Test Status (QA-019)
+
+No contract tests exist in the repository. The `vitest.contracts.config.ts` found in `.stryker-tmp/` is a Stryker artifact from a previous setup that referenced `packages/*/src/__contracts__/**/*.contract.test.ts` — these directories and test files were never created. A `test:contracts` npm script does not exist and should not be added until contract tests are actually written.
+
+### Mutation/Stryker Test Status (QA-019)
+
+Stryker (`@stryker-mutator`) is not currently installed in the project. A configuration artifact exists in `.stryker-tmp/sandbox-GnQzN3/stryker.config.json` from a previous setup, but:
+- `@stryker-mutator/core` and `@stryker-mutator/vitest-runner` are not in `node_modules`
+- `docker/Dockerfile.test` and other Docker infrastructure referenced in `docker-compose.test.yml` do not exist
+- No `test:mutation:fast` script exists
+
+**Recommendation:** Re-introduce mutation testing as a dedicated QA follow-up (QA-020) with proper Vitest version compatibility checks and Docker infrastructure setup.
 
 ## Known Issues Fixed in QA-015
 
@@ -495,6 +515,7 @@ Verification of scripts referenced in QA documentation against actual `package.j
 - **Queue Backlog Drill (QA-018)**: Added scripts/queue-backlog-drill.mjs — isolated test queue `positron-observability-drill` with QueueBacklogCriticalDrill alert
 - **QA Script Reconciliation (QA-018)**: Verified all observability scripts against package.json; documented missing `test:contracts` / `test:mutation:fast`
 - **Integration Test Documentation (QA-018)**: Documented 3 pre-existing BullMQ-dependent integration test failures
+- **QA Tooling Reconciliation (QA-019)**: Removed 6 broken orchestrator script references; marked integration tests as controlled skip; documented Stryker/contract test absence
 
 ## Local Validation
 
