@@ -16,6 +16,7 @@
 		"coverage": "vitest run --coverage",
 		"test": "vitest run && cd apps/web && npx vitest run",
 		"test:watch": "vitest",
+		"test:mutation:fast": "stryker run stryker.fast.config.json",
 		"test:e2e": "playwright test",
 		"test:e2e:headed": "cross-env PW_HEADED=1 playwright test --headed --workers=1",
 		"test:e2e:slow": "cross-env PW_HEADED=1 PW_SLOWMO=1000 playwright test --headed --workers=1",
@@ -47,6 +48,9 @@
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.60.0",
+		"@stryker-mutator/core": "^9.6.1",
+		"@stryker-mutator/typescript-checker": "^9.6.1",
+		"@stryker-mutator/vitest-runner": "^9.6.1",
 		"@types/node": "^22.0.0",
 		"@typescript-eslint/eslint-plugin": "^7.0.0",
 		"@typescript-eslint/parser": "^7.0.0",

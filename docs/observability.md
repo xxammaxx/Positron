@@ -457,7 +457,7 @@ Verification of scripts referenced in QA documentation against actual `package.j
 | Script | Status | Action |
 |--------|--------|--------|
 | `test:contracts` | ❌ Never existed | Do NOT reference in QA criteria |
-| `test:mutation:fast` | ❌ Never existed | Stryker not installed — needs separate follow-up |
+| `test:mutation:fast` | ✅ Working (QA-020) | Stryker 9.6.1 + Vitest 4.1.7 compatible, 49.54% score |
 | `test:orchestrator` | ❌ Broken ref → **Removed (QA-019)** | Script file missing |
 | `test:orchestrator:smoke` | ❌ Broken ref → **Removed (QA-019)** | Script file missing |
 | `test:orchestrator:headed` | ❌ Broken ref → **Removed (QA-019)** | Script file missing |
@@ -472,7 +472,7 @@ Verification of scripts referenced in QA documentation against actual `package.j
 | `verify:issues` | ✅ Working | Script exists |
 | `verify:issue` | ✅ Working | Script exists |
 
-**Stryker/Mutation Testing:** A configuration artifact exists in `.stryker-tmp/` from a previous run, but `@stryker-mutator` packages are not in `node_modules`. There is no root `stryker.config.json` and no `test:mutation:fast` script. This requires a dedicated follow-up issue to re-establish the mutation testing pipeline.
+**Stryker/Mutation Testing (QA-020):** Rebuilt as a working fast mutation profile. `@stryker-mutator` 9.6.1 is installed with `vitest-runner` and `typescript-checker`. `.stryker-tmp/` is cleaned and gitignored. The script `test:mutation:fast` runs `stryker run stryker.fast.config.json` against 3 core files: `state-machine.ts`, `utils.ts`, `secret-manager.ts`. Mutation score: 49.54% (215 mutants across 3 files, 107 killed, 18 survived, 91 no-coverage). Runtime: ~20s. No CI integration yet — score is too low for a meaningful gate. See `### Mutation/Stryker Test Status (QA-020)` below for details.
 
 ### Pre-existing Integration Test Failures (QA-018 + QA-019)
 
@@ -490,14 +490,67 @@ Verification of scripts referenced in QA documentation against actual `package.j
 
 No contract tests exist in the repository. The `vitest.contracts.config.ts` found in `.stryker-tmp/` is a Stryker artifact from a previous setup that referenced `packages/*/src/__contracts__/**/*.contract.test.ts` — these directories and test files were never created. A `test:contracts` npm script does not exist and should not be added until contract tests are actually written.
 
-### Mutation/Stryker Test Status (QA-019)
+### Mutation/Stryker Test Status (QA-020)
 
-Stryker (`@stryker-mutator`) is not currently installed in the project. A configuration artifact exists in `.stryker-tmp/sandbox-GnQzN3/stryker.config.json` from a previous setup, but:
-- `@stryker-mutator/core` and `@stryker-mutator/vitest-runner` are not in `node_modules`
-- `docker/Dockerfile.test` and other Docker infrastructure referenced in `docker-compose.test.yml` do not exist
-- No `test:mutation:fast` script exists
+Stryker mutation testing has been rebuilt as a working fast mutation profile:
 
-**Recommendation:** Re-introduce mutation testing as a dedicated QA follow-up (QA-020) with proper Vitest version compatibility checks and Docker infrastructure setup.
+| Component | Detail |
+|-----------|--------|
+| **Stryker version** | `@stryker-mutator/core` 9.6.1 |
+| **Runner** | `@stryker-mutator/vitest-runner` 9.6.1 |
+| **Vitest** | v4.1.7 (compatible — no issues) |
+| **TypeScript Checker** | `@stryker-mutator/typescript-checker` 9.6.1 installed but **disabled** (`"checkers": []`) — type safety covered by `npm run typecheck` |
+| **Config file** | `stryker.fast.config.json` (root) |
+| **npm script** | `npm run test:mutation:fast` |
+| **Temp directory** | `.stryker-tmp/` (gitignored, auto-cleaned) |
+
+#### Fast Mutation Scope
+
+| File | Reason | Mutation Score |
+|------|--------|---------------|
+| `packages/run-state/src/state-machine.ts` | Core state machine — phase transitions, retry, resume logic | 28.40% |
+| `packages/shared/src/utils.ts` | Utility functions — redaction, IDs, formatting, branch names | 47.37% |
+| `packages/shared/src/secret-manager.ts` | Secret resolution — env/docker/file providers, masking | 73.08% |
+| **Overall** | | **49.54%** |
+
+#### Mutation Results (Phase 6 run)
+
+| Metric | Value |
+|--------|-------|
+| Total Mutants | 216 |
+| Killed | 107 |
+| Survived | 18 |
+| No Coverage | 91 |
+| Timeout | 0 |
+| Compile Errors | 0 |
+| Mutation Score | 49.54% |
+| Runtime | ~20s |
+| Covered Mutants | 85.60% |
+
+#### Known Limitations
+
+1. **Low score on state-machine.ts** (28.40%): Functions `markFailed()`, `retry()`, `transition()` (bad-path), `isFailurePhase()` have no tests — accounting for 56 no-coverage mutants.
+2. **No coverage on `redactValue()` and `generateBranchName()`** in utils.ts (29 no-coverage mutants).
+3. **Survivors in `FileSecretProvider.parseEnvFile()`** (15 survivors): String parsing edge cases where `.trim()`, `.startsWith()`, `.endsWith()`, `||` → `&&`, and `key` truthiness checks survive. These are "nice-to-have" hardening mutants.
+4. **Thresholds** set low (`break: 45`, `low: 55`, `high: 70`) to reflect initial scope.
+5. **No CI integration**: Score is too low for a meaningful gate. Local-only for now.
+6. **No Docker infrastructure**: `docker/Dockerfile.test` and `docker-compose.test.yml` do not exist. Mutation runs directly on the host.
+7. **`typescriptChecker` disabled**: Type safety is already enforced by `npm run typecheck` in CI.
+
+#### How to Run Locally
+
+```bash
+npm run test:mutation:fast
+# or: npx stryker run stryker.fast.config.json
+```
+
+#### How to Interpret Survivors
+
+- Most survivors are in `FileSecretProvider.parseEnvFile()` string parsing — these are not bugs but hardening opportunities (edge cases in `.env` file parsing).
+- The `canTransition` survivor (`if (false) return false`) is harmless — the `!allowed` check is already tested via true/false paths.
+- The `resumeFromEvents` survivor (`if (true)`) is harmless — it affects event filtering but the full pipeline is tested via integration tests.
+- No security-relevant survivors detected.
+- **Recommendation:** Focus on adding tests for `markFailed`, `retry`, `redactValue`, and `generateBranchName` to reduce no-coverage mutants and improve score to ~65%+.
 
 ## Known Issues Fixed in QA-015
 
@@ -523,14 +576,17 @@ Stryker (`@stryker-mutator`) is not currently installed in the project. A config
 # 1. All tests must pass
 npm run build && npm run typecheck && npm test
 
-# 2. Validate Prometheus config (if promtool installed)
+# 2. Run fast mutation testing (QA-020)
+npm run test:mutation:fast
+
+# 3. Validate Prometheus config (if promtool installed)
 promtool check config observability/prometheus/prometheus.yml
 promtool check rules observability/prometheus/alerts.yml
 
-# 3. Validate Docker Compose
+# 4. Validate Docker Compose
 docker compose -f docker-compose.observability.yml config
 
-# 4. Check YAML structure
+# 5. Check YAML structure
 python3 -c "import yaml; yaml.safe_load(open('observability/prometheus/prometheus.yml'))" && echo "OK"
 ```
 

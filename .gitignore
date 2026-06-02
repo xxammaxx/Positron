@@ -33,6 +33,9 @@ docs/diagnostics/positron-reality-check/
 # Local artifacts (moved diagnostics, temp outputs)
 .local-artifacts/
 
+# Stryker mutation testing temporary files
+.stryker-tmp/
+
 # Generated JS/DTS/Map files (build artifacts in source directories)
 *.js.map
 *.d.ts.map
