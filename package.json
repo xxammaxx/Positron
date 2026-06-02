@@ -16,6 +16,7 @@
 		"coverage": "vitest run --coverage",
 		"test": "vitest run && cd apps/web && npx vitest run",
 		"test:watch": "vitest",
+		"test:contracts": "vitest run --config vitest.contracts.config.ts",
 		"test:mutation:fast": "stryker run stryker.fast.config.json",
 		"test:e2e": "playwright test",
 		"test:e2e:headed": "cross-env PW_HEADED=1 playwright test --headed --workers=1",
