@@ -19,6 +19,8 @@ const FAKE_MODE_ENV = {
 	POSITRON_GITHUB_MODE: "fake",
 	POSITRON_OPENCODE_MODE: "fake",
 	POSITRON_SPECKIT_MODE: "fake",
+	// QA-029: Force inline pipeline execution (no BullMQ dependency)
+	POSITRON_DISABLE_QUEUE: "true",
 	// Required repository config (needed when .env is skipped)
 	POSITRON_REPO_OWNER: "test-owner",
 	POSITRON_REPO_NAME: "test-repo",

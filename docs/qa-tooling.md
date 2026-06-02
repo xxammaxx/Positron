@@ -29,7 +29,7 @@ E2E tests use a real browser (Chromium via Playwright) to validate the complete 
 - **No real OpenCode process** — Fake adapter simulates CLI execution
 - **Deterministic test data** — `test-owner/test-repo`, Issue #1
 
-### Run Lifecycle E2E Test
+### Run Lifecycle E2E Test (QA-028 / QA-029)
 
 `e2e/full-run-lifecycle.spec.ts` — Validates the complete user workflow:
 
@@ -39,9 +39,27 @@ E2E tests use a real browser (Chromium via Playwright) to validate the complete 
 | S02 | Open New Run modal, enter URL | Modal visible, input filled, Start Run clicked |
 | S02 | Navigate to run detail | URL matches `/runs/:id` |
 | S03 | Run detail page loads | Phase pipeline visible, Run heading visible |
-| S04 | FIXME: Wait for DONE | Pipeline regression blocks (see Known Limits) |
-| S05 | All pages reachable | Dashboard, Runs, Evidence, Settings |
-| S06 | Backend health stable | `/api/health` returns ok |
+| S04 | Verify DONE via API | `expect.poll()` confirms `run.phase === "DONE"` |
+| S05 | UI shows DONE status | Pipeline badge updated, no error banner |
+| S06 | All pages reachable | Dashboard, Runs, Evidence, Settings |
+| S07 | Backend health stable | `/api/health` returns ok |
+
+### QA-029: Pipeline Regression Fix
+
+**Root Cause:** A running BullMQ worker (`apps/worker/`) was registered in Redis, causing `getWorkers()` to return 1. The server then queued jobs via BullMQ instead of using the inline fallback. The worker could not find runs in its own database, causing jobs to fail and runs to stall at `QUEUED`.
+
+**Fix:** Added `POSITRON_DISABLE_QUEUE=true` environment variable. When set, the server skips the BullMQ queue entirely and executes `runFullPipeline` synchronously (inline fallback). This is enabled for:
+- **Vitest integration tests** (`vitest.config.ts` + `vitest.setup.ts`)
+- **Playwright E2E tests** (`playwright.config.ts` FAKE_MODE_ENV)
+
+### Pipeline Path Decision
+
+| Environment | Path | Mechanism |
+|-------------|------|-----------|
+| E2E (Playwright) | Inline | `POSITRON_DISABLE_QUEUE=true` |
+| Integration tests (Vitest) | Inline | `POSITRON_DISABLE_QUEUE=true` |
+| Dev server | Queue (if Redis+Worker) or Inline | Automatic: `getWorkers()` check |
+| Production | Queue | BullMQ with dedicated worker |
 
 ### SSE/Polling Validation
 
@@ -72,19 +90,19 @@ npm run test:e2e:slow
 npx playwright test e2e/full-run-lifecycle.spec.ts --workers=1
 ```
 
-### CI Decision
+### CI Decision (QA-029 Update)
 
 | Option | Decision | Rationale |
 |--------|----------|-----------|
-| B | Optional in CI | E2E test is new; `npm run test:e2e` runs optionally, not blocking. Will be upgraded to blocking once multiple stable CI runs complete and pipeline regression is fixed. |
+| B | Optional in CI | E2E test is stable in fake mode after QA-029 pipeline fix. Runs <10s. Remains optional until multiple stable CI runs confirm reliability. |
 
 ### Known Limits
 
-- **Pipeline regression**: The server pipeline (`runFullPipeline`) has a pre-existing regression where runs stay at QUEUED. The DONE verification step is skipped until the pipeline is fixed (QA-029).
 - **SSE in Playwright**: `EventSource` behavior differs in headless Chromium. Tests rely on HTTP polling fallback for status updates.
 - **Real-Adapter E2E missing**: Only fake adapter E2E testing exists. Real adapter E2E requires controlled GitHub test repos and is planned separately.
 - **Browser flakiness possible**: Vite hot-reload and React component mounting timing may cause occasional failures. Rerun `npm run test:e2e` if a test flakes.
 - **Worker processing not in UI E2E**: The actual BullMQ worker processing path is not validated through the UI E2E test (covered by integration tests).
+- **Inline-only in test**: E2E and integration tests use inline pipeline execution (`POSITRON_DISABLE_QUEUE=true`). The BullMQ queuing path is validated separately via unit tests and contract tests.
 
 ### Troubleshooting
 

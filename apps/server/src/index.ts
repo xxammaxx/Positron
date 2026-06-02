@@ -2837,67 +2837,98 @@ export function createApp(options: ServerOptions = {}) {
 			runsTotal.inc({ status: "active" });
 			activeRuns.inc();
 
+			// QA-029: POSITRON_DISABLE_QUEUE=true forces inline execution for tests
+			// even when Redis and workers are available.
+			const disableQueue = process.env.POSITRON_DISABLE_QUEUE === "true";
+
 			let queued = false;
 			let pipelineQueue: import("bullmq").Queue | null = null;
-			try {
-				const { Queue } = await import("bullmq");
-				const { PIPELINE_QUEUE, resolveRedisUrl } = await import(
-					"@positron/shared"
-				);
-
-				const redisUrl = resolveRedisUrl();
-				pipelineQueue = new Queue(PIPELINE_QUEUE, {
-					connection: {
-						url: redisUrl,
-						connectTimeout: 500,
-						retryStrategy: () => null,
-					},
-				});
-
-				// Check if at least one worker is listening before enqueuing.
-				// If no workers are available, the run would never execute — fall back to inline.
-				const workers = await pipelineQueue.getWorkers();
-				if (workers.length === 0) {
-					throw new Error("NO_WORKERS");
-				}
-
-				// Use run.id as deterministic jobId to prevent double-execution on retry
-				const job = await pipelineQueue.add(
-					"pipeline",
-					{
-						runId: run.id,
-						repoId: repository.repo,
-						issueNumber,
-						autonomyLevel: autonomyLevel ?? 2,
-					},
-					{ jobId: run.id },
-				);
-				queued = true;
-
-				res.json({ run, runId: run.id, jobId: job.id, message: "Run queued" });
-			} catch (_queueErr: unknown) {
-				if (!queued) {
-					// Queue completely unavailable — fall back to inline execution
-					const completed = await runFullPipeline(
-						run,
-						repository,
-						activeWorkspaceAdapter,
-						activeSpecKitAdapter,
-						instrumentedOpenCodeAdapter,
-						github,
-						syncService,
+			if (!disableQueue) {
+				try {
+					const { Queue } = await import("bullmq");
+					const { PIPELINE_QUEUE, resolveRedisUrl } = await import(
+						"@positron/shared"
 					);
-					const evts = getEvents(completed.id);
-					res.json({
-						run: completed,
-						runId: completed.id,
-						events: evts,
-						eventCount: evts.length,
+
+					const redisUrl = resolveRedisUrl();
+					pipelineQueue = new Queue(PIPELINE_QUEUE, {
+						connection: {
+							url: redisUrl,
+							connectTimeout: 500,
+							retryStrategy: () => null,
+						},
 					});
+
+					// Check if at least one worker is listening before enqueuing.
+					// If no workers are available, the run would never execute — fall back to inline.
+					const workers = await pipelineQueue.getWorkers();
+					if (workers.length === 0) {
+						throw new Error("NO_WORKERS");
+					}
+
+					// Use run.id as deterministic jobId to prevent double-execution on retry
+					const job = await pipelineQueue.add(
+						"pipeline",
+						{
+							runId: run.id,
+							repoId: repository.repo,
+							issueNumber,
+							autonomyLevel: autonomyLevel ?? 2,
+						},
+						{ jobId: run.id },
+					);
+					queued = true;
+
+					res.json({
+						run,
+						runId: run.id,
+						jobId: job.id,
+						message: "Run queued",
+					});
+				} catch (_queueErr: unknown) {
+					if (!queued) {
+						// Queue completely unavailable — fall back to inline execution
+						const completed = await runFullPipeline(
+							run,
+							repository,
+							activeWorkspaceAdapter,
+							activeSpecKitAdapter,
+							instrumentedOpenCodeAdapter,
+							github,
+							syncService,
+						);
+						const evts = getEvents(completed.id);
+						res.json({
+							run: completed,
+							runId: completed.id,
+							events: evts,
+							eventCount: evts.length,
+						});
+					}
+					// If close() threw but job was queued, the job is still in Redis — no fallback needed
+				} finally {
+					await pipelineQueue?.close().catch(() => {});
 				}
-				// If close() threw but job was queued, the job is still in Redis — no fallback needed
-			} finally {
-				await pipelineQueue?.close().catch(() => {});
+			}
+
+			// If queue is disabled, run inline directly
+			if (disableQueue) {
+				const completed = await runFullPipeline(
+					run,
+					repository,
+					activeWorkspaceAdapter,
+					activeSpecKitAdapter,
+					instrumentedOpenCodeAdapter,
+					github,
+					syncService,
+				);
+				const evts = getEvents(completed.id);
+				res.json({
+					run: completed,
+					runId: completed.id,
+					events: evts,
+					eventCount: evts.length,
+				});
 			}
 		} catch (err) {
 			res.status(400).json({
