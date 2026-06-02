@@ -2576,6 +2576,11 @@ export function createApp(options: ServerOptions = {}) {
 	}, 300_000);
 	rateLimitCleanup.unref();
 	app.use((req, res, next) => {
+		// QA-031: Bypass rate limiting in test environment (E2E tests trigger 100+ requests)
+		if (process.env.VITEST === "true") {
+			next();
+			return;
+		}
 		// Exempt SSE streams (per-run and dashboard) from rate limiting
 		if (req.path === "/api/stream" || req.path.endsWith("/events/stream")) {
 			next();
