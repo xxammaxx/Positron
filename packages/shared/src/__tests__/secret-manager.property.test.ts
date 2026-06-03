@@ -427,7 +427,18 @@ describe("SecretManager envFilePath option", () => {
 	it("accepts custom env file path", () => {
 		fc.assert(
 			fc.property(validKeyArb, envValueArb, (key, value) => {
-				if (value === "") return; // empty values are skipped by SecretManager
+				// Skip values that are empty or become empty after parser quote-stripping.
+				// SecretManager.getSecret() filters empty strings (value.length > 0 gate),
+				// so a value like '"' (sole quote) is stripped to '' and returns null,
+				// but the test oracle would predict ''. This gate closes that gap.
+				// See QA-034 edge-case analysis for details.
+				if (value === "") return;
+				if (
+					(value.startsWith('"') && value.endsWith('"') && value.length <= 2) ||
+					(value.startsWith("'") && value.endsWith("'") && value.length <= 2)
+				) {
+					return; // value becomes empty after quote stripping
+				}
 				// Use a custom provider list to avoid EnvSecretProvider collision
 				const tmpFile = createTempEnvFile([`${key}=${value}`]);
 				try {
