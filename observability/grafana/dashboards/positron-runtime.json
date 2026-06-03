@@ -1,0 +1,457 @@
+{
+	"__inputs": [],
+	"__requires": [],
+	"annotations": { "list": [] },
+	"editable": true,
+	"fiscalYearStartMonth": 0,
+	"graphTooltip": 0,
+	"id": null,
+	"links": [],
+	"liveNow": false,
+	"panels": [
+		{
+			"collapsed": false,
+			"gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+			"id": 100,
+			"panels": [],
+			"title": "Runtime Health",
+			"type": "row"
+		},
+		{
+			"datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+			"fieldConfig": {
+				"defaults": {
+					"color": { "mode": "thresholds" },
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{ "color": "green", "value": null },
+							{ "color": "red", "value": 0 }
+						]
+					}
+				}
+			},
+			"gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+			"id": 1,
+			"options": {
+				"colorMode": "background",
+				"orientation": "auto",
+				"reduceOptions": { "values": false, "calcs": ["lastNotNull"] },
+				"textMode": "auto"
+			},
+			"targets": [{ "expr": "positron_server_uptime_seconds", "refId": "A" }],
+			"title": "Server Uptime (s)",
+			"type": "stat"
+		},
+		{
+			"datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+			"fieldConfig": {
+				"defaults": {
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{ "color": "green", "value": null },
+							{ "color": "yellow", "value": 0 }
+						]
+					}
+				}
+			},
+			"gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
+			"id": 2,
+			"options": {
+				"colorMode": "value",
+				"orientation": "auto",
+				"reduceOptions": { "calcs": ["lastNotNull"] },
+				"textMode": "auto"
+			},
+			"targets": [{ "expr": "positron_runs_active", "refId": "A" }],
+			"title": "Active Runs",
+			"type": "stat"
+		},
+		{
+			"datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+			"fieldConfig": {
+				"defaults": {
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [{ "color": "green", "value": null }]
+					}
+				}
+			},
+			"gridPos": { "h": 4, "w": 5, "x": 8, "y": 1 },
+			"id": 3,
+			"options": { "showThresholdMarkers": true },
+			"targets": [
+				{
+					"expr": "rate(positron_runs_total{status=\"done\"}[5m])",
+					"legendFormat": "Success",
+					"refId": "A"
+				},
+				{
+					"expr": "rate(positron_run_failures_total[5m])",
+					"legendFormat": "Failed",
+					"refId": "B"
+				}
+			],
+			"title": "Runs / Failures (rate)",
+			"type": "timeseries"
+		},
+		{
+			"datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+			"fieldConfig": { "defaults": { "unit": "s" } },
+			"gridPos": { "h": 8, "w": 11, "x": 13, "y": 1 },
+			"id": 4,
+			"options": { "orientation": "horizontal" },
+			"targets": [
+				{
+					"expr": "histogram_quantile(0.50, rate(positron_run_duration_seconds_bucket[1h]))",
+					"legendFormat": "p50",
+					"refId": "A"
+				},
+				{
+					"expr": "histogram_quantile(0.95, rate(positron_run_duration_seconds_bucket[1h]))",
+					"legendFormat": "p95",
+					"refId": "B"
+				},
+				{
+					"expr": "histogram_quantile(0.99, rate(positron_run_duration_seconds_bucket[1h]))",
+					"legendFormat": "p99",
+					"refId": "C"
+				}
+			],
+			"title": "Run Duration (p50/p95/p99)",
+			"type": "bargauge"
+		},
+		{
+			"collapsed": false,
+			"gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 },
+			"id": 200,
+			"panels": [],
+			"title": "Pipeline Health",
+			"type": "row"
+		},
+		{
+			"datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+			"gridPos": { "h": 8, "w": 8, "x": 0, "y": 10 },
+			"id": 5,
+			"targets": [
+				{
+					"expr": "rate(positron_run_failures_total[10m])",
+					"legendFormat": "{{failure_type}}",
+					"refId": "A"
+				}
+			],
+			"title": "Failures by Type",
+			"type": "timeseries"
+		},
+		{
+			"datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+			"gridPos": { "h": 8, "w": 8, "x": 8, "y": 10 },
+			"id": 6,
+			"targets": [
+				{
+					"expr": "rate(positron_retries_total[10m])",
+					"legendFormat": "{{attempt}}",
+					"refId": "A"
+				}
+			],
+			"title": "Retry Rate",
+			"type": "timeseries"
+		},
+		{
+			"datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+			"gridPos": { "h": 8, "w": 8, "x": 16, "y": 10 },
+			"id": 7,
+			"targets": [
+				{
+					"expr": "rate(positron_cancellations_total[10m])",
+					"legendFormat": "{{cancel_source}}",
+					"refId": "A"
+				}
+			],
+			"title": "Cancellations",
+			"type": "timeseries"
+		},
+		{
+			"collapsed": false,
+			"gridPos": { "h": 1, "w": 24, "x": 0, "y": 18 },
+			"id": 300,
+			"panels": [],
+			"title": "Adapter Health",
+			"type": "row"
+		},
+		{
+			"datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+			"gridPos": { "h": 8, "w": 8, "x": 0, "y": 19 },
+			"id": 8,
+			"targets": [
+				{
+					"expr": "rate(positron_github_api_requests_total[5m])",
+					"legendFormat": "{{method}} {{outcome}}",
+					"refId": "A"
+				}
+			],
+			"title": "GitHub API Requests",
+			"type": "timeseries"
+		},
+		{
+			"datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+			"fieldConfig": { "defaults": { "unit": "s" } },
+			"gridPos": { "h": 8, "w": 8, "x": 8, "y": 19 },
+			"id": 9,
+			"targets": [
+				{
+					"expr": "histogram_quantile(0.95, rate(positron_github_api_duration_seconds_bucket[5m]))",
+					"legendFormat": "{{method}}",
+					"refId": "A"
+				}
+			],
+			"title": "GitHub Latency p95",
+			"type": "timeseries"
+		},
+		{
+			"datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+			"gridPos": { "h": 8, "w": 8, "x": 16, "y": 19 },
+			"id": 10,
+			"targets": [
+				{
+					"expr": "rate(positron_github_rate_limit_hits_total[5m])",
+					"legendFormat": "{{rate_limit_type}}",
+					"refId": "A"
+				}
+			],
+			"title": "GitHub Rate Limit Hits",
+			"type": "timeseries"
+		},
+		{
+			"datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+			"gridPos": { "h": 8, "w": 12, "x": 0, "y": 27 },
+			"id": 11,
+			"targets": [
+				{
+					"expr": "rate(positron_opencode_command_total[5m])",
+					"legendFormat": "{{command_type}} {{outcome}}",
+					"refId": "A"
+				}
+			],
+			"title": "OpenCode Commands",
+			"type": "timeseries"
+		},
+		{
+			"datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+			"fieldConfig": { "defaults": { "unit": "s" } },
+			"gridPos": { "h": 8, "w": 12, "x": 12, "y": 27 },
+			"id": 12,
+			"targets": [
+				{
+					"expr": "histogram_quantile(0.95, rate(positron_opencode_command_duration_seconds_bucket[5m]))",
+					"legendFormat": "{{command_type}}",
+					"refId": "A"
+				}
+			],
+			"title": "OpenCode Duration p95",
+			"type": "timeseries"
+		},
+		{
+			"collapsed": false,
+			"gridPos": { "h": 1, "w": 24, "x": 0, "y": 35 },
+			"id": 400,
+			"panels": [],
+			"title": "Safety Gates",
+			"type": "row"
+		},
+		{
+			"datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+			"gridPos": { "h": 6, "w": 8, "x": 0, "y": 36 },
+			"id": 13,
+			"targets": [
+				{ "expr": "rate(positron_blocked_merges_total[10m])", "refId": "A" }
+			],
+			"title": "Blocked Merges",
+			"type": "timeseries"
+		},
+		{
+			"datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+			"gridPos": { "h": 6, "w": 8, "x": 8, "y": 36 },
+			"id": 14,
+			"targets": [
+				{ "expr": "rate(positron_blocked_pushes_total[10m])", "refId": "A" }
+			],
+			"title": "Blocked Pushes",
+			"type": "timeseries"
+		},
+		{
+			"datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+			"gridPos": { "h": 6, "w": 8, "x": 16, "y": 36 },
+			"id": 15,
+			"targets": [
+				{
+					"expr": "rate(positron_gate_revisions_total[10m])",
+					"legendFormat": "{{phase}}",
+					"refId": "A"
+				}
+			],
+			"title": "Gate Revisions",
+			"type": "timeseries"
+		},
+		{
+			"collapsed": false,
+			"gridPos": { "h": 1, "w": 24, "x": 0, "y": 42 },
+			"id": 500,
+			"panels": [],
+			"title": "Queue / Worker",
+			"type": "row"
+		},
+		{
+			"datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+			"gridPos": { "h": 6, "w": 6, "x": 0, "y": 43 },
+			"id": 16,
+			"targets": [
+				{
+					"expr": "positron_queue_jobs_waiting{queue=\"positron-pipeline\"}",
+					"refId": "A"
+				}
+			],
+			"title": "Queue Waiting",
+			"type": "timeseries"
+		},
+		{
+			"datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+			"gridPos": { "h": 6, "w": 6, "x": 6, "y": 43 },
+			"id": 17,
+			"targets": [
+				{
+					"expr": "positron_queue_jobs_active{queue=\"positron-pipeline\"}",
+					"refId": "A"
+				}
+			],
+			"title": "Queue Active",
+			"type": "timeseries"
+		},
+		{
+			"datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+			"gridPos": { "h": 6, "w": 6, "x": 12, "y": 43 },
+			"id": 18,
+			"targets": [
+				{
+					"expr": "rate(positron_queue_jobs_completed_total{queue=\"positron-pipeline\"}[5m])",
+					"legendFormat": "Completed",
+					"refId": "A"
+				},
+				{
+					"expr": "rate(positron_queue_jobs_failed_total{queue=\"positron-pipeline\"}[5m])",
+					"legendFormat": "Failed",
+					"refId": "B"
+				}
+			],
+			"title": "Queue Completed / Failed",
+			"type": "timeseries"
+		},
+		{
+			"datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+			"fieldConfig": { "defaults": { "unit": "s" } },
+			"gridPos": { "h": 6, "w": 6, "x": 18, "y": 43 },
+			"id": 19,
+			"targets": [
+				{
+					"expr": "histogram_quantile(0.95, rate(positron_queue_job_duration_seconds_bucket[10m]))",
+					"refId": "A"
+				}
+			],
+			"title": "Job Duration p95",
+			"type": "timeseries"
+		},
+		{
+			"datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+			"fieldConfig": {
+				"defaults": {
+					"mappings": [
+						{
+							"options": { "0": { "text": "DOWN" }, "1": { "text": "UP" } },
+							"type": "value"
+						}
+					],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{ "color": "red", "value": null },
+							{ "color": "green", "value": 1 }
+						]
+					}
+				}
+			},
+			"gridPos": { "h": 4, "w": 4, "x": 0, "y": 49 },
+			"id": 20,
+			"options": {
+				"colorMode": "background",
+				"orientation": "auto",
+				"reduceOptions": { "calcs": ["lastNotNull"] },
+				"textMode": "auto"
+			},
+			"targets": [
+				{
+					"expr": "positron_queue_worker_up{queue=\"positron-pipeline\"}",
+					"refId": "A"
+				}
+			],
+			"title": "Worker",
+			"type": "stat"
+		},
+		{
+			"datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+			"fieldConfig": {
+				"defaults": {
+					"mappings": [
+						{
+							"options": { "0": { "text": "DOWN" }, "1": { "text": "UP" } },
+							"type": "value"
+						}
+					],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{ "color": "red", "value": null },
+							{ "color": "green", "value": 1 }
+						]
+					}
+				}
+			},
+			"gridPos": { "h": 4, "w": 4, "x": 4, "y": 49 },
+			"id": 21,
+			"options": {
+				"colorMode": "background",
+				"orientation": "auto",
+				"reduceOptions": { "calcs": ["lastNotNull"] },
+				"textMode": "auto"
+			},
+			"targets": [{ "expr": "positron_queue_redis_up", "refId": "A" }],
+			"title": "Redis",
+			"type": "stat"
+		}
+	],
+	"refresh": "10s",
+	"schemaVersion": 38,
+	"style": "dark",
+	"tags": ["positron", "observability"],
+	"templating": {
+		"list": [
+			{
+				"datasource": { "type": "prometheus" },
+				"name": "DS_PROMETHEUS",
+				"label": "Prometheus",
+				"query": "prometheus",
+				"type": "datasource",
+				"hide": 0
+			}
+		]
+	},
+	"time": { "from": "now-1h", "to": "now" },
+	"timepicker": {},
+	"timezone": "browser",
+	"title": "Positron Runtime",
+	"uid": "positron-runtime",
+	"version": 1
+}

@@ -1,0 +1,38 @@
+# Positron Alertmanager Configuration (QA-014)
+# Minimal, secure, local-testable. No real secrets or webhooks.
+
+global:
+  # slack_api_url not configured — alerts route to webhook receivers only
+
+route:
+  receiver: "default"
+  group_by: ["alertname", "severity"]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    - matchers:
+        - severity="critical"
+      receiver: "critical-webhook"
+      group_wait: 10s
+    - matchers:
+        - severity="warning"
+      receiver: "warning-webhook"
+
+receivers:
+  - name: "default"
+  - name: "critical-webhook"
+    webhook_configs:
+      - url: "http://localhost:5001/alertmanager/critical"
+        send_resolved: true
+  - name: "warning-webhook"
+    webhook_configs:
+      - url: "http://localhost:5001/alertmanager/warning"
+        send_resolved: true
+
+inhibit_rules:
+  - source_matchers:
+      - severity="critical"
+    target_matchers:
+      - severity="warning"
+    equal: ["alertname"]
