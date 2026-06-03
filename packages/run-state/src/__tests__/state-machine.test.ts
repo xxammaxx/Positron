@@ -372,7 +372,158 @@ describe("isFailurePhase", () => {
 		expect(isFailurePhase("BLOCKED_MERGE")).toBe(false);
 	});
 
-	test("RESUME_PENDING is not a failure phase", () => {
-		expect(isFailurePhase("RESUME_PENDING")).toBe(false);
-	});
+  test("RESUME_PENDING is not a failure phase", () => {
+    expect(isFailurePhase("RESUME_PENDING")).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// isTerminalPhase
+// ---------------------------------------------------------------------------
+describe("isTerminalPhase", () => {
+  test("DONE is terminal", () => {
+    expect(isTerminalPhase("DONE")).toBe(true);
+  });
+
+  test("FAILED is terminal", () => {
+    expect(isTerminalPhase("FAILED")).toBe(true);
+  });
+
+  test("FAILED_BLOCKED is terminal", () => {
+    expect(isTerminalPhase("FAILED_BLOCKED")).toBe(true);
+  });
+
+  test("FAILED_UNSAFE is terminal", () => {
+    expect(isTerminalPhase("FAILED_UNSAFE")).toBe(true);
+  });
+
+  test("CLEANUP is terminal", () => {
+    expect(isTerminalPhase("CLEANUP")).toBe(true);
+  });
+
+  test("QUEUED is not terminal", () => {
+    expect(isTerminalPhase("QUEUED")).toBe(false);
+  });
+
+  test("IMPLEMENT is not terminal", () => {
+    expect(isTerminalPhase("IMPLEMENT")).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// canTransition — branch coverage: unknown from-phase
+// ---------------------------------------------------------------------------
+describe("canTransition edge cases", () => {
+  test("returns false for unknown from-phase", () => {
+    // TypeScript enforces Phase type, but runtime must handle invalid values
+    expect(canTransition("INVALID" as any, "DONE")).toBe(false);
+  });
+
+  test("returns false for unknown from-phase (empty string)", () => {
+    expect(canTransition("" as any, "QUEUED")).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// resumeFromEvents — branch coverage for GATE and non-INFO/GATE levels
+// ---------------------------------------------------------------------------
+describe("resumeFromEvents", () => {
+  test("resumes from empty events (QUEUED)", () => {
+    const result = resumeFromEvents("run-1", "repo-1", 42, []);
+    expect(result.phase).toBe("QUEUED");
+    expect(result.id).toBe("run-1");
+    expect(result.repoId).toBe("repo-1");
+    expect(result.issueNumber).toBe(42);
+  });
+
+  test("resumes with only INFO events", () => {
+    const makeEvent = (phase: string, level: string, msg: string): RunEventData => ({
+      id: `evt-${phase}`, runId: "run-1", phase: phase as any, level: level as any,
+      message: msg, payload: null, createdAt: new Date().toISOString(),
+    });
+    const events: RunEventData[] = [
+      makeEvent("CLAIMED", "INFO", "started"),
+      makeEvent("REPO_SYNC", "INFO", "synced"),
+    ];
+    const result = resumeFromEvents("run-1", "repo-1", 42, events);
+    expect(result.phase).toBe("REPO_SYNC");
+  });
+
+  test("resumes with GATE events (covers GATE branch of ||)", () => {
+    const makeEvent = (phase: string, level: string, msg: string): RunEventData => ({
+      id: `evt-${phase}`, runId: "run-1", phase: phase as any, level: level as any,
+      message: msg, payload: null, createdAt: new Date().toISOString(),
+    });
+    const events: RunEventData[] = [
+      makeEvent("QUEUED", "GATE", "gate passed"),
+    ];
+    const result = resumeFromEvents("run-1", "repo-1", 42, events);
+    expect(result.phase).toBe("QUEUED");
+  });
+
+  test("ignores WARN events (does not advance phase)", () => {
+    const makeEvent = (phase: string, level: string, msg: string): RunEventData => ({
+      id: `evt-${phase}`, runId: "run-1", phase: phase as any, level: level as any,
+      message: msg, payload: null, createdAt: new Date().toISOString(),
+    });
+    const events: RunEventData[] = [
+      makeEvent("IMPLEMENT", "WARN", "warning"),
+    ];
+    const result = resumeFromEvents("run-1", "repo-1", 42, events);
+    expect(result.phase).toBe("QUEUED");
+  });
+
+  test("ignores ERROR events (does not advance phase)", () => {
+    const makeEvent = (phase: string, level: string, msg: string): RunEventData => ({
+      id: `evt-${phase}`, runId: "run-1", phase: phase as any, level: level as any,
+      message: msg, payload: null, createdAt: new Date().toISOString(),
+    });
+    const events: RunEventData[] = [
+      makeEvent("IMPLEMENT", "ERROR", "error"),
+    ];
+    const result = resumeFromEvents("run-1", "repo-1", 42, events);
+    expect(result.phase).toBe("QUEUED");
+  });
+
+  test("mixes INFO and GATE events with WARN/ERROR", () => {
+    const makeEvent = (phase: string, level: string, msg: string): RunEventData => ({
+      id: `evt-${phase}`, runId: "run-1", phase: phase as any, level: level as any,
+      message: msg, payload: null, createdAt: new Date().toISOString(),
+    });
+    const events: RunEventData[] = [
+      makeEvent("CLAIMED", "INFO", "ok"),
+      makeEvent("REPO_SYNC", "WARN", "warn"),
+      makeEvent("ISSUE_CONTEXT", "GATE", "gate ok"),
+      makeEvent("IMPLEMENT", "ERROR", "err"),
+    ];
+    const result = resumeFromEvents("run-1", "repo-1", 42, events);
+    expect(result.phase).toBe("ISSUE_CONTEXT");
+    expect(result.id).toBe("run-1");
+  });
+
+  test("preserves runId and repoId through resume", () => {
+    const makeEvent = (phase: string, level: string, msg: string): RunEventData => ({
+      id: `evt-${phase}`, runId: "my-run-id", phase: phase as any, level: level as any,
+      message: msg, payload: null, createdAt: new Date().toISOString(),
+    });
+    const events: RunEventData[] = [
+      makeEvent("CLAIMED", "INFO", "started"),
+    ];
+    const result = resumeFromEvents("my-run-id", "my-repo", 99, events);
+    expect(result.id).toBe("my-run-id");
+    expect(result.repoId).toBe("my-repo");
+    expect(result.issueNumber).toBe(99);
+  });
+
+  test("resumeFromEvents with HUMAN level does not advance", () => {
+    const makeEvent = (phase: string, level: string, msg: string): RunEventData => ({
+      id: `evt-${phase}`, runId: "run-1", phase: phase as any, level: level as any,
+      message: msg, payload: null, createdAt: new Date().toISOString(),
+    });
+    const events: RunEventData[] = [
+      makeEvent("GATE_APPROVE", "HUMAN", "manual"),
+    ];
+    const result = resumeFromEvents("run-1", "repo-1", 42, events);
+    expect(result.phase).toBe("QUEUED");
+  });
 });

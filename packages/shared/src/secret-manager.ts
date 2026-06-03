@@ -192,6 +192,6 @@ export class SecretManager {
     for (const candidate of candidates) {
       if (fs.existsSync(candidate)) return candidate;
     }
-    return candidates[0] ?? '.env';
+    return candidates[0]!;
   }
 }
