@@ -510,26 +510,124 @@ QA-030, QA-031, and QA-032 have been merged to the integration branch `positron/
 
 Before E2E can be promoted to blocking:
 1. ✅ QA-030 and QA-031 merged to main
-2. ⬜ Quality Gates workflow triggers **≥5 consecutive CI runs**
-3. ⬜ All 5 runs have **green** e2e-playwright job results
-4. ⬜ **Zero flakes** across all 5 runs
-5. ⬜ Stable E2E runtime (≤30s target)
+2. ✅ QA-033 / QA-034 merged to main (PR #156)
+3. ✅ QA-035: E2E CI build step fixed (PR #158)
+4. ⬜ Quality Gates workflow triggers **≥5 consecutive CI runs**
+5. ⬜ All 5 runs have **green** e2e-playwright job results
+6. ⬜ **Zero flakes** across all 5 runs
+7. ⬜ Stable E2E runtime (≤30s target)
 
 ### E2E Stability Tracking
 
 | Run | Commit | e2e-playwright | Laufzeit | Flake | Artifact |
 | --- | ------ | -------------- | -------: | ----- | -------- |
-| 1 | TBD | ⬜ | - | - | ⬜ |
-| 2 | TBD | ⬜ | - | - | ⬜ |
+| 1 | `9587344` (main) | ❌ FAIL | ~2s | N/A | ⬜ |
+| 2 | `66d5490` (PR #158) | ✅ GREEN (PR) | 88s | 0 | ✅ |
 | 3 | TBD | ⬜ | - | - | ⬜ |
 | 4 | TBD | ⬜ | - | - | ⬜ |
 | 5 | TBD | ⬜ | - | - | ⬜ |
 
 **Window started:** 2026-06-02
-**Next review:** QA-034 after ≥5 CI runs
+**First main CI run:** 2026-06-03 (merge commit `9587344`) — e2e FAILED (module not found)
+**QA-035 PR CI:** 2026-06-03 (PR #158, commit `66d5490`) — e2e ✅ GREEN (88s, 25/25)
+**Current green runs:** 0/5 (PR runs counted separately; only main runs after merge count toward stability window)
+**Fix implemented:** `npm run build` step added to `e2e-playwright` job in `quality-gates.yml` (PR #158)
+**Next action:** Merge PR #158 to main, then monitor ≥5 consecutive green main CI runs
+
+---
+
+## QA-034: Merge Readiness & Property Edge Case Fix (2026-06-03)
+
+### Decision: MERGE — PR #156
+
+PR #156 (`positron/qa-033-merge-e2e-stability-window` → `main`) was approved and merged.
+
+**Merge Criteria Assessment:**
+
+| Criterion | Status | Detail |
+|-----------|--------|--------|
+| Merge conflicts | None | MERGEABLE |
+| build-and-test CI | SUCCESS | Unit tests all green |
+| Local validation | ALL GREEN | See below |
+| E2E blocking? | No | `continue-on-error: true` |
+| Security risk | None | No real secrets, tokens, or API calls |
+
+**Local Validation — All Green:**
+
+| Check | Result |
+|-------|--------|
+| Build | Green |
+| Typecheck | Green |
+| Unit Tests | 452/452 Green |
+| Integration Tests | 8/8 Green |
+| Contract Tests | 140/140 Green |
+| Mutation Fast | 85.25% (>=60% threshold) |
+| Observability Config | All valid (promtool skipped, Docker unavailable) |
+| E2E | 25/25 Green |
+
+### Non-Blocking CI Failures (Known)
+
+| Job | Root Cause | Severity |
+|-----|-----------|----------|
+| `observability-config-check` | Docker daemon not available on CI runner for `promtool`/`amtool` Docker containers. YAML syntax check stage still passes. | Non-blocking |
+| `mutation-fast` | Stryker sandbox file-copy error (`ENOENT` on `test-results/.last-run.json`). Works correctly locally (85.25%). | Non-blocking |
+| `e2e-playwright` | Missing `npm run build` — `@positron/*` packages resolve to `dist/` which is not built in CI. Fix in QA-035. | Non-blocking |
+
+---
+
+## QA-035: Fix E2E CI Build Step & Restart Stability Window (2026-06-03)
+
+### Root Cause Fix
+
+**Symptom:** `e2e-playwright` CI job: `ERR_MODULE_NOT_FOUND` for `@positron/run-state/dist/index.js`
+**Cause:** Playwright webServer uses `tsx`, but npm workspace packages resolve via `package.json` `"main": "./dist/index.js"` — built artifacts don't exist in CI
+**Fix:** Added `npm run build` step before `npm run test:e2e` in the `e2e-playwright` job
+
+### CI Job After QA-035
+
+| Property | Value |
+|----------|-------|
+| Build step | ✅ `npm run build` added |
+| Blocking | No (`continue-on-error: true`) |
+| Timeout | 10 minutes |
+| Artifact upload | `if: always()` |
+| Fake/Safety env | All 11 env vars preserved |
+| Secrets required | 0 |
+
+### Per-Job Build Dependencies
+
+| Job | Builds itself? | Uses dist/? | Fix required? |
+|-----|---------------|-------------|---------------|
+| `build-and-test` | ✅ `npm run build` | ✅ | No |
+| `e2e-playwright` | ✅ NOW `npm run build` | ✅ | **QA-035** |
+| `observability-config-check` | ❌ No build needed | ❌ | No |
+| `mutation-fast` | ❌ No build needed | ❌ | No |
+
+### Local Validation (QA-035)
+
+| Check | Result |
+|-------|--------|
+| Build | ✅ Green |
+| Typecheck | ✅ Green |
+| Unit Tests | ✅ 452 backend + 60 frontend |
+| Integration Tests | ✅ 8/8 |
+| Contract Tests | ✅ 140/140 |
+| Mutation Fast | ✅ 85.25% (>=60%) |
+| Observability Validate | ✅ All configs valid |
+| E2E | ✅ 25/25 (50.5s) |
+| YAML Syntax | ✅ Valid |
+
+### Known Non-Blocking CI Failures (Post QA-035)
+
+| Job | Problem | Status |
+|-----|---------|--------|
+| `e2e-playwright` | ~~Missing build step~~ | **FIXED** in QA-035 |
+| `observability-config-check` | Docker/promtool unavailable | Open — recommended QA-036 |
+| `mutation-fast` | Stryker sandbox file-copy issue | Open — recommended QA-036 or QA-037 |
 
 ### CI Troubleshooting
 
 - **E2E fails on CI but passes locally:** Check for IPv4/IPv6 `ECONNREFUSED ::1:3001`
 - **Artifacts missing:** The workflow uses `if-no-files-found: warn`
 - **Rate limiting (429):** Ensure `VITEST=true` bypass is active
+- **Module not found in CI:** Ensure `npm run build` runs before `npm run test:e2e` (fixed in QA-035)
