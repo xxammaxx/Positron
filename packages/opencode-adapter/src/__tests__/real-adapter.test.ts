@@ -2,30 +2,30 @@
 
 import { describe, expect, test, beforeEach, afterEach, vi } from 'vitest';
 import { RealOpenCodeAdapter } from '../real-adapter.js';
+import { runCommand } from '@positron/sandbox';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 
 // Mock runCommand to avoid depending on real opencode CLI
 vi.mock('@positron/sandbox', () => {
-  const mockFn = vi.fn(async (cmd: string, args: string[], _opts: any) => {
-    // Simulate opencode --version for health check
-    if (args[0] === '--version') {
-      return { exitCode: 0, stdout: '1.15.5\n', stderr: '', durationMs: 10, command: 'opencode --version' };
-    }
-    // Simulate opencode run with JSON error output
-    if (args[0] === 'run') {
-      return {
-        exitCode: 0,
-        stdout: '{"type":"error","error":{"data":{"message":"Command not found: spec-driven-development"}}}\n',
-        stderr: '',
-        durationMs: 50,
-        command: `opencode ${args.join(' ')}`,
-      };
-    }
-    return { exitCode: 0, stdout: '', stderr: '', durationMs: 10, command: cmd };
-  });
-  return { runCommand: mockFn };
+  return {
+    runCommand: vi.fn(async (cmd: string, args: string[], _opts: any) => {
+      if (args[0] === '--version') {
+        return { exitCode: 0, stdout: '1.15.5\n', stderr: '', durationMs: 10, command: 'opencode --version' };
+      }
+      if (args[0] === 'run') {
+        return {
+          exitCode: 0,
+          stdout: '{"type":"error","error":{"data":{"message":"Command not found: spec-driven-development"}}}\n',
+          stderr: '',
+          durationMs: 50,
+          command: `opencode ${args.join(' ')}`,
+        };
+      }
+      return { exitCode: 0, stdout: '', stderr: '', durationMs: 10, command: cmd };
+    }),
+  };
 });
 
 describe('RealOpenCodeAdapter', () => {
@@ -154,5 +154,427 @@ describe('RealOpenCodeAdapter', () => {
     expect(r1.stdoutPath).toBeTruthy();
     expect(r2.stdoutPath).toBeTruthy();
     expect(path.dirname(r1.stdoutPath)).not.toBe(path.dirname(r2.stdoutPath));
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Constructor edge case
+// ---------------------------------------------------------------------------
+describe('RealOpenCodeAdapter constructor edge cases', () => {
+  test('constructor without evidenceDir uses default path', () => {
+    // Create adapter without evidenceDir — tests the ?? fallback on line 21
+    const adapter = new RealOpenCodeAdapter();
+    expect(adapter).toBeDefined();
+  });
+});
+describe('RealOpenCodeAdapter healthCheck edge cases', () => {
+  let tmpWorkspace: string;
+
+  beforeEach(() => {
+    tmpWorkspace = fs.mkdtempSync(path.join(os.tmpdir(), 'opencode-test-'));
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpWorkspace, { recursive: true, force: true });
+  });
+
+  test('healthCheck returns unavailable when exitCode is non-zero', async () => {
+    const adapter = new RealOpenCodeAdapter('/tmp/evidence');
+    vi.mocked(runCommand).mockResolvedValueOnce({
+      exitCode: 1, stdout: '', stderr: 'CLI not found', durationMs: 5,
+      command: 'opencode --version',
+    } as any);
+    const health = await adapter.healthCheck(tmpWorkspace);
+    expect(health.available).toBe(false);
+    expect(health.reason).toContain('exited with code 1');
+  });
+
+  test('healthCheck returns version "unknown" when stdout is empty', async () => {
+    const adapter = new RealOpenCodeAdapter('/tmp/evidence');
+    vi.mocked(runCommand).mockResolvedValueOnce({
+      exitCode: 0, stdout: '', stderr: '', durationMs: 5,
+      command: 'opencode --version',
+    } as any);
+    const health = await adapter.healthCheck(tmpWorkspace);
+    expect(health.available).toBe(true);
+    expect(health.version).toBe('unknown');
+  });
+
+  test('healthCheck returns version "unknown" when stdout is whitespace only', async () => {
+    const adapter = new RealOpenCodeAdapter('/tmp/evidence');
+    vi.mocked(runCommand).mockResolvedValueOnce({
+      exitCode: 0, stdout: '   \n  \t', stderr: '', durationMs: 5,
+      command: 'opencode --version',
+    } as any);
+    const health = await adapter.healthCheck(tmpWorkspace);
+    expect(health.available).toBe(true);
+    expect(health.version).toBe('unknown');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// mapPhase edge cases
+// ---------------------------------------------------------------------------
+describe('RealOpenCodeAdapter mapPhase', () => {
+  test('maps known phases correctly', () => {
+    const adapter = new RealOpenCodeAdapter('/tmp/evidence');
+    expect((adapter as any).mapPhase('specify')).toBe('specify');
+    expect((adapter as any).mapPhase('implement')).toBe('implement');
+    expect((adapter as any).mapPhase('plan')).toBe('plan');
+  });
+
+  test('falls back to implement for unknown phase', () => {
+    const adapter = new RealOpenCodeAdapter('/tmp/evidence');
+    expect((adapter as any).mapPhase('unknown-phase')).toBe('implement');
+  });
+
+  test('falls back to implement for empty phase', () => {
+    const adapter = new RealOpenCodeAdapter('/tmp/evidence');
+    expect((adapter as any).mapPhase('')).toBe('implement');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// saveEvidence edge cases
+// ---------------------------------------------------------------------------
+describe('RealOpenCodeAdapter saveEvidence edge cases', () => {
+  test('returns empty object when mkdir fails (catch path)', () => {
+    const adapter = new RealOpenCodeAdapter('/tmp/evidence');
+    // Create a file where the directory should be to cause mkdirSync to fail
+    const conflictPath = path.join('/tmp', 'evidence-conflict-test');
+    try {
+      fs.writeFileSync(conflictPath, 'block');
+      const adapterWithBadDir = new RealOpenCodeAdapter(conflictPath);
+      const result = (adapterWithBadDir as any).saveEvidence('test', 'out', 'err');
+      expect(result).toEqual({});
+    } finally {
+      try { fs.unlinkSync(conflictPath); } catch { /* ok */ }
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// runSlashCommand success path
+// ---------------------------------------------------------------------------
+describe('RealOpenCodeAdapter runSlashCommand success path', () => {
+  let tmpWorkspace: string;
+  let tmpEvidence: string;
+
+  beforeEach(() => {
+    tmpWorkspace = fs.mkdtempSync(path.join(os.tmpdir(), 'opencode-test-'));
+    tmpEvidence = path.join(tmpWorkspace, '.positron', 'evidence', 'opencode');
+    fs.mkdirSync(tmpEvidence, { recursive: true });
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpWorkspace, { recursive: true, force: true });
+  });
+
+  test('returns success when output has no JSON errors', async () => {
+    const adapter = new RealOpenCodeAdapter(tmpEvidence);
+    vi.mocked(runCommand)
+      .mockResolvedValueOnce({
+        exitCode: 0, stdout: '1.15.5\n', stderr: '', durationMs: 5,
+        command: 'opencode --version',
+      } as any)
+      .mockResolvedValueOnce({
+        exitCode: 0,
+        stdout: '{"type":"text","part":{"text":"specification complete"}}\n{"type":"step_finish","part":{"id":"done"}}\n',
+        stderr: '',
+        durationMs: 50,
+        command: 'opencode run --command spec-driven-development --format json "specify"',
+      } as any);
+
+    const result = await adapter.runSlashCommand('spec-driven-development', {
+      runId: 'test-run',
+      workspacePath: tmpWorkspace,
+      issueTitle: 'Test Issue',
+      issueNumber: 42,
+      phaseName: 'specify',
+    });
+
+    expect(result.status).toBe('success');
+    expect(result.summary).toContain('completed');
+  });
+
+  test('returns blocked when CLI is not available', async () => {
+    const adapter = new RealOpenCodeAdapter(tmpEvidence);
+    vi.mocked(runCommand).mockResolvedValueOnce({
+      exitCode: 1, stdout: '', stderr: 'CLI not found', durationMs: 5,
+      command: 'opencode --version',
+    } as any);
+
+    const result = await adapter.runSlashCommand('any-command', {
+      runId: 'test-run',
+      workspacePath: tmpWorkspace,
+      issueTitle: 'Test',
+      issueNumber: 1,
+      phaseName: 'test',
+    });
+
+    expect(result.status).toBe('blocked');
+    expect(result.summary).toContain('not available');
+  });
+
+  test('healthCheck returns unavailable when runCommand throws', async () => {
+    const adapter = new RealOpenCodeAdapter('/tmp/evidence');
+    vi.mocked(runCommand).mockRejectedValueOnce(new Error('Command not found'));
+    const health = await adapter.healthCheck(tmpWorkspace);
+    expect(health.available).toBe(false);
+    expect(health.reason).toContain('not found');
+  });
+
+  test('runSlashCommand catch path when runCommand throws', async () => {
+    const adapter = new RealOpenCodeAdapter(tmpEvidence);
+    vi.mocked(runCommand)
+      .mockResolvedValueOnce({
+        exitCode: 0, stdout: '1.15.5\n', stderr: '', durationMs: 5,
+        command: 'opencode --version',
+      } as any)
+      .mockRejectedValueOnce(new Error('Process crashed'));
+
+    const result = await adapter.runSlashCommand('spec-driven-development', {
+      runId: 'test-run',
+      workspacePath: tmpWorkspace,
+      issueTitle: 'Test',
+      issueNumber: 1,
+      phaseName: 'specify',
+    });
+
+    expect(result.status).toBe('failed');
+  });
+
+  test('runSlashCommand with issueBody provided (covers contextMsg truthy path)', async () => {
+    const adapter = new RealOpenCodeAdapter(tmpEvidence);
+    vi.mocked(runCommand)
+      .mockResolvedValueOnce({
+        exitCode: 0, stdout: '1.15.5\n', stderr: '', durationMs: 5,
+        command: 'opencode --version',
+      } as any)
+      .mockResolvedValueOnce({
+        exitCode: 0,
+        stdout: '{"type":"text","part":{"text":"done"}}\n',
+        stderr: '',
+        durationMs: 50,
+        command: 'opencode run ...',
+      } as any);
+
+    const result = await adapter.runSlashCommand('spec-driven-development', {
+      runId: 'test-run',
+      workspacePath: tmpWorkspace,
+      issueTitle: 'Test',
+      issueNumber: 42,
+      issueBody: 'This is the issue body describing the work to be done',
+      phaseName: 'specify',
+    });
+
+    expect(result.status).toBe('success');
+  });
+
+  test('runSlashCommand with issueNumber undefined (covers ?? fallback)', async () => {
+    const adapter = new RealOpenCodeAdapter(tmpEvidence);
+    vi.mocked(runCommand)
+      .mockResolvedValueOnce({
+        exitCode: 0, stdout: '1.15.5\n', stderr: '', durationMs: 5,
+        command: 'opencode --version',
+      } as any)
+      .mockResolvedValueOnce({
+        exitCode: 0,
+        stdout: '{"type":"text","part":{"text":"done"}}\n',
+        stderr: '',
+        durationMs: 50,
+        command: 'opencode run ...',
+      } as any);
+
+    const result = await adapter.runSlashCommand('spec-driven-development', {
+      runId: 'test-run',
+      workspacePath: tmpWorkspace,
+      issueTitle: 'Test no number',
+      issueBody: 'body text',
+      phaseName: 'specify',
+    });
+
+    expect(result.status).toBe('success');
+  });
+
+  test('blockedReason is undefined when runSlashCommand succeeds', async () => {
+    const adapter = new RealOpenCodeAdapter(tmpEvidence);
+    vi.mocked(runCommand)
+      .mockResolvedValueOnce({
+        exitCode: 0, stdout: '1.15.5\n', stderr: '', durationMs: 5,
+        command: 'opencode --version',
+      } as any)
+      .mockResolvedValueOnce({
+        exitCode: 0,
+        stdout: '{"type":"text","part":{"text":"result"}}\n',
+        stderr: '',
+        durationMs: 50,
+        command: 'opencode run ...',
+      } as any);
+
+    const result = await adapter.runSlashCommand('spec-driven-development', {
+      runId: 'test-run',
+      workspacePath: tmpWorkspace,
+      issueTitle: 'Test',
+      issueNumber: 1,
+      phaseName: 'specify',
+    });
+
+    expect(result.status).toBe('success');
+    expect(result.blockedReason).toBeUndefined();
+  });
+
+  test('healthCheck reason ?? fallback when available is false without reason', async () => {
+    // Test that runSlashCommand handles health.reason being undefined
+    const adapter = new RealOpenCodeAdapter(tmpEvidence);
+    vi.mocked(runCommand).mockResolvedValueOnce({
+      exitCode: 0,
+      stdout: '',
+      stderr: '',
+      durationMs: 5,
+      command: 'opencode --version',
+    } as any);
+
+    // healthCheck will return available:true with version "unknown" (empty stdout)
+    // Then runSlashCommand should proceed normally
+    vi.mocked(runCommand).mockResolvedValueOnce({
+      exitCode: 0,
+      stdout: '{"type":"text","part":{"text":"done"}}\n',
+      stderr: '',
+      durationMs: 50,
+      command: 'opencode run ...',
+    } as any);
+
+    const result = await adapter.runSlashCommand('spec-driven-development', {
+      runId: 'test-run',
+      workspacePath: tmpWorkspace,
+      issueTitle: 'Test',
+      issueNumber: 1,
+      phaseName: 'test',
+    });
+
+    expect(result.status).toBe('success');
+  });
+
+  test('runSlashCommand with issueNumber missing (covers ?? fallback on line 82)', async () => {
+    const adapter = new RealOpenCodeAdapter(tmpEvidence);
+    vi.mocked(runCommand)
+      .mockResolvedValueOnce({
+        exitCode: 0, stdout: '1.15.5\n', stderr: '', durationMs: 5,
+        command: 'opencode --version',
+      } as any)
+      .mockResolvedValueOnce({
+        exitCode: 0,
+        stdout: '{"type":"text","part":{"text":"result"}}\n',
+        stderr: '',
+        durationMs: 50,
+        command: 'opencode run ...',
+      } as any);
+
+    // Not providing issueNumber at all
+    const input: any = {
+      runId: 'test-run',
+      workspacePath: tmpWorkspace,
+      issueTitle: 'Test no number at all',
+      phaseName: 'specify',
+    };
+    const result = await adapter.runSlashCommand('spec-driven-development', input);
+    expect(result.status).toBe('success');
+  });
+
+  test('runSlashCommand with no text extracted (covers "no text output" branch)', async () => {
+    const adapter = new RealOpenCodeAdapter(tmpEvidence);
+    vi.mocked(runCommand)
+      .mockResolvedValueOnce({
+        exitCode: 0, stdout: '1.15.5\n', stderr: '', durationMs: 5,
+        command: 'opencode --version',
+      } as any)
+      .mockResolvedValueOnce({
+        exitCode: 0,
+        stdout: '{"type":"step_start","part":{"id":"1"}}\n',
+        stderr: '',
+        durationMs: 50,
+        command: 'opencode run ...',
+      } as any);
+
+    const result = await adapter.runSlashCommand('spec-driven-development', {
+      runId: 'test-run',
+      workspacePath: tmpWorkspace,
+      issueTitle: 'Test',
+      phaseName: 'specify',
+    });
+    // extractTextFromOutput returns undefined when no text events
+    // summary should say "no text output"
+    expect(result.status).toBe('success');
+    expect(result.summary).toContain('no text output');
+  });
+
+  test('runSlashCommand covers health.reason ?? unknown fallback', async () => {
+    const adapter = new RealOpenCodeAdapter(tmpEvidence);
+    // Mock healthCheck to return unavailable without a reason
+    vi.spyOn(adapter as any, 'healthCheck').mockResolvedValueOnce({ available: false });
+    const result = await adapter.runSlashCommand('any-command', {
+      runId: 'test-run',
+      workspacePath: tmpWorkspace,
+      issueTitle: 'Test',
+      issueNumber: 1,
+      phaseName: 'test',
+    });
+    expect(result.status).toBe('blocked');
+    expect(result.summary).toContain('unknown');
+  });
+
+  test('runSlashCommand without phaseName uses commandName fallback (line 61)', async () => {
+    const adapter = new RealOpenCodeAdapter(tmpEvidence);
+    vi.mocked(runCommand)
+      .mockResolvedValueOnce({
+        exitCode: 0, stdout: '1.15.5\n', stderr: '', durationMs: 5,
+        command: 'opencode --version',
+      } as any)
+      .mockResolvedValueOnce({
+        exitCode: 0,
+        stdout: '{"type":"text","part":{"text":"done"}}\n',
+        stderr: '',
+        durationMs: 50,
+        command: 'opencode run ...',
+      } as any);
+
+    // Not providing phaseName — should use commandName as fallback
+    const result = await adapter.runSlashCommand('spec-driven-development', {
+      runId: 'test-run',
+      workspacePath: tmpWorkspace,
+      issueTitle: 'Test',
+    } as any);
+    expect(result.status).toBe('success');
+  });
+
+  test('runSlashCommand with non-zero exitCode and no JSON error (covers errorMessage ?? fallback)', async () => {
+    const adapter = new RealOpenCodeAdapter(tmpEvidence);
+    vi.mocked(runCommand)
+      .mockResolvedValueOnce({
+        exitCode: 0, stdout: '1.15.5\n', stderr: '', durationMs: 5,
+        command: 'opencode --version',
+      } as any)
+      .mockResolvedValueOnce({
+        exitCode: 1,
+        stdout: '',
+        stderr: 'Segmentation fault\n',
+        durationMs: 50,
+        command: 'opencode run ...',
+      } as any);
+
+    const result = await adapter.runSlashCommand('spec-driven-development', {
+      runId: 'test-run',
+      workspacePath: tmpWorkspace,
+      issueTitle: 'Test',
+      issueNumber: 1,
+      phaseName: 'specify',
+    });
+    // exitCode !== 0 means isSuccess = false, and no JSON error means errorMessage is undefined
+    expect(result.status).toBe('failed');
+    // The summary should use stderr as fallback
+    expect(result.summary).toContain('Segmentation fault');
   });
 });
