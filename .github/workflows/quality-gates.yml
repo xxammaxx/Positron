@@ -46,7 +46,7 @@ jobs:
         run: |
           docker run --rm \
             -v ${{ github.workspace }}/observability/prometheus/prometheus.yml:/tmp/prometheus.yml:ro \
-            -v ${{ github.workspace }}/observability/prometheus/alerts.yml:/tmp/alerts.yml:ro \
+            -v ${{ github.workspace }}/observability/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro \
             --entrypoint promtool \
             prom/prometheus:v3.5.0 check config /tmp/prometheus.yml
 
@@ -79,6 +79,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Build packages (required for cross-package imports)
+        run: npm run build
 
       - name: Run fast mutation tests (Stryker)
         run: npm run test:mutation:fast
