@@ -519,21 +519,23 @@ Before E2E can be promoted to blocking:
 
 ### E2E Stability Tracking
 
-| Run | Commit | e2e-playwright | Laufzeit | Flake | Artifact |
-| --- | ------ | -------------- | -------: | ----- | -------- |
-| 1 | `a91b8d8` (main) | ✅ GREEN | 89s | 0 | ✅ |
-| 2 | TBD | ⬜ | - | - | ⬜ |
-| 3 | TBD | ⬜ | - | - | ⬜ |
-| 4 | TBD | ⬜ | - | - | ⬜ |
-| 5 | TBD | ⬜ | - | - | ⬜ |
+| Run | Commit | e2e-playwright | Laufzeit | Flake | Artifact | Zählt? |
+| --- | ------ | -------------- | -------: | ----- | -------- | ------ |
+| 1 | `9587344` (main, pre-fix) | ❌ FAILED | ~47s | N/A | ⬜ | ❌ |
+| 2 | `a91b8d8` (main, post-fix) | ✅ GREEN | 89s | 0 | ✅ (584KB) | ✅ |
+| 3 | `b4d3228` (QA-036 docs) | ⬜ | - | - | ⬜ | ❌ |
+| 4 | TBD | ⬜ | - | - | ⬜ | ⬜ |
+| 5 | TBD | ⬜ | - | - | ⬜ | ⬜ |
 
-**Window started:** 2026-06-02
-**First main CI run (failed):** 2026-06-03 (merge commit `9587344`) — e2e FAILED (module not found, pre-fix)
-**QA-035 PR CI:** 2026-06-03 (PR #158, commit `66d5490`) — e2e ✅ GREEN (88s, 25/25)
-**First green main run:** 2026-06-03 (merge commit `a91b8d8`) — e2e ✅ GREEN (89s, 25/25)
-**Current green runs:** 1/5 (only main runs after QA-035 fix count toward stability window)
-**Fix implemented:** `npm run build` step added to `e2e-playwright` job in `quality-gates.yml` (PR #158) — merged via QA-036
-**Next action:** Monitor 4 more consecutive green main CI runs (QA-037+)
+**Window started:** 2026-06-02  
+**First main CI run (failed):** 2026-06-03 (merge commit `9587344`) — e2e FAILED (module not found, pre-fix)  
+**QA-035 PR CI:** 2026-06-03 (PR #158, commit `66d5490`) — e2e ✅ GREEN (88s, 25/25)  
+**First green main run:** 2026-06-03 (merge commit `a91b8d8`) — e2e ✅ GREEN (89s, 25/25) — counts as 1/5  
+**QA-036 docs commit:** 2026-06-03 (`b4d3228`) — No CI run triggered (push coalesced)  
+**QA-037 triage:** 2026-06-03 — Local ECONNRESET NOT reproducible (3/3 green). Server lifecycle root causes documented.  
+**Current green runs:** 1/5 (only main runs after QA-035 fix with green e2e count)  
+**Fix implemented:** `npm run build` step added to `e2e-playwright` job in `quality-gates.yml` (PR #158) — merged via QA-036  
+**Next action:** Monitor 4 more consecutive green main CI runs (QA-038+)
 
 ---
 
@@ -627,6 +629,137 @@ PR #156 (`positron/qa-033-merge-e2e-stability-window` → `main`) was approved a
 | `mutation-fast` | Stryker sandbox file-copy issue | Open — recommended QA-036 or QA-037 |
 
 ### CI Troubleshooting
+
+---
+
+## QA-037: E2E Stability Window Continuation & Flake Triage (2026-06-03)
+
+### Phase 1: Main CI History
+
+Two Quality Gates workflow runs exist on main since QA-035 merge:
+
+| Run | Commit | e2e-playwright | Laufzeit | Flake | Artifact | Zählt? |
+| --- | ------ | -------------- | -------: | ----- | -------- | ------ |
+| 1 | `9587344` (pre-fix) | ❌ FAILED | ~47s | N/A | ⬜ | ❌ |
+| 2 | `a91b8d8` (post-fix) | ✅ GREEN | 89s | 0 | ✅ (584KB) | ✅ |
+| 3 | `b4d3228` (QA-036 docs) | ⬜ Not triggered | - | - | ⬜ | ❌ |
+| 4 | TBD | ⬜ | - | - | ⬜ | ⬜ |
+| 5 | TBD | ⬜ | - | - | ⬜ | ⬜ |
+
+**Current count: 1/5 green main runs.** Run #3 (QA-036 docs commit) did not trigger a new CI workflow run — it was pushed immediately after the merge and may have been coalesced with the existing run.
+
+### Phase 2: Local ECONNRESET Flake Triage
+
+Three sequential E2E runs were executed locally to reproduce the `ECONNRESET` flake:
+
+| Lauf | Ergebnis | Laufzeit | Fehler |
+| ---- | -------- | -------: | ------ |
+| 1 | 25/25 ✅ | 46.6s | None |
+| 2 | 25/25 ✅ | 51.4s | None |
+| 3 | 25/25 ✅ | 54.7s | None |
+
+**ECONNRESET was NOT reproduced.** All 3 runs passed with 25/25 tests green. No stale server processes on ports 3000/5173 were detected. Classification: **Observed local one-off**, not a systemic flake.
+
+### Phase 3: Server Lifecycle Analysis
+
+| Bereich | Aktuell | Risiko | Maßnahme |
+| ------- | ------- | ------ | -------- |
+| Shutdown-Mechanismus | Force `process.exit(1)` nach 5s (SIGINT) / 10s (SIGTERM) | **HIGH** — Hartes Killen aktiver Verbindungen (SSE, API-Polling) erzeugt TCP RST | `server.closeAllConnections()` + Graceful SSE‑Client‑Close vor Force‑Exit |
+| Doppelte SIGTERM-Handler | `createServer()` (Zeile 4563) + Auto‑Start‑Block (Zeile 4601) | **MEDIUM** — Zwei `server.close()`-Aufrufe + zwei Force‑Exit‑Timer | Nur einen Handler registrieren |
+| SSE-Clients beim Shutdown | `dashboardClients` Set und Broadcaster‑`clients` Map werden nicht explizit geschlossen | **HIGH** — Offene SSE‑Streams werden durch `process.exit()` abgewürgt | Vor `process.exit()` alle SSE‑Clients mit `res.end()` schließen |
+| `reuseExistingServer: true` | Playwright lässt Server nach Test laufen | **MEDIUM** — Stale Server mit altem State (Zombie-SSE-Clients, DB‑Corruption) | Für CI auf `false` setzen oder expliziten Cleanup einbauen |
+| Rate Limiter im E2E | Via `VITEST=true` komplett deaktiviert | **LOW** — Kein Risiko; sauberer 429 statt RST selbst wenn aktiv | Keine Änderung nötig |
+| CORS Middleware | Nur Header‑Manipulation | **NONE** | Keine Änderung nötig |
+| Body Parser (100KB) | Express‑Standard; 413 bei Überschreitung | **NONE** | Keine Änderung nötig |
+
+**Root Cause Assessment für lokalen ECONNRESET:** Am wahrscheinlichsten ist eine Race Condition, bei der:
+1. Der letzte E2E‑Test schließt den Browser (SSE‑Verbindungen werden getrennt)
+2. Playwright sendet SIGHUP an den Server‑Prozess
+3. Der Server läuft in den Force‑Shutdown (5s Timer)
+4. Browser‑Seite versucht während des Shutdowns noch einen API‑Call (z.B. Navigations‑Polling)
+5. `process.exit(1)` killt die Verbindung → ECONNRESET
+
+Da dieser Pfad von vielen Faktoren abhängt (Timing, OS‑Scheduling, SSE‑State), ist er statistisch selten (hier 0/3 Versuche).
+
+### Phase 4: Flake Fix
+
+**Kein Fix erforderlich.** Der `ECONNRESET`-Flake ist nicht reproduzierbar und in 3 lokalen Läufen nicht aufgetreten. Die dokumentierten Root Causes (siehe Phase 3) erklären, unter welchen Bedingungen ein ECONNRESET auftreten KANN. Ein stabiler Fix würde eine Generalüberholung des Server‑Shutdown‑Lifecycles erfordern — das ist Scope für ein separates Ticket (siehe Empfehlung QA-038).
+
+### Phase 5: E2E Runtime Analysis
+
+**Main CI (Run `a91b8d8`, 89s total):**
+
+| Bereich | Zeitanteil | Optimierung möglich |
+| ------- | ---------: | ------------------- |
+| `npm ci` | ~10s | CI Node Cache bereits aktiv (hit) |
+| `npm run build` | ~11s | Build-Cache möglich (npm/github cache) |
+| `npx playwright install chromium` | ~5s | Playwright Browser Cache möglich |
+| WebServer Startup | ~5s | `reuseExistingServer` bereits aktiv |
+| E2E Tests (25 tests) | ~55s | Test-Sharding nicht nötig bei 25 Tests |
+| Artifact Upload | ~1s | 584KB — gut |
+
+**Lokale Läufe (46–55s):** Deutlich schneller als CI, da `npm ci` und `npm run build` entfallen (bereits lokal vorhanden).
+
+**Bewertung:** 89s ist akzeptabel für einen optionalen, non-blocking Job mit `continue-on-error: true`. Das Ziel von ≤30s ist ambitioniert, aber nicht kritisch in der aktuellen Phase. Optimierungen sind erst sinnvoll, wenn E2E zum Blocking Gate befördert wird.
+
+Mögliche Optimierungen (später):
+- Playwright Browser Cache (spart ~5s)
+- Build Cache (spart ~11s)
+- `reuseExistingServer: false` in CI für deterministischere Läufe (Trade-off: langsamerer Startup)
+- Kein Test-Sharding nötig bei nur 25 Tests
+
+### Phase 6: Non-blocking CI Triage
+
+| Bereich | Problem | Follow-up |
+| ------- | ------- | --------- |
+| `observability-config-check` | Docker/promtool nicht auf CI-Runner verfügbar. YAML‑Syntax‑Check (python3) funktioniert. Docker‑Schritt (`docker run prom/prometheus`) schlägt fehl. | **QA-038** — promtool/amtool Binary statt Docker installieren, oder Docker‑Fallback verbessern |
+| `mutation-fast` | Stryker sandbox file‑copy error (`ENOENT` auf `test‑results/.last‑run.json`). Läuft lokal korrekt (85.25%). | **QA-039** — `.stryker‑tmp` cleanup, Stryker temp dir konfigurieren, CI‑only config prüfen |
+
+Beide Probleme bleiben **non‑blocking** und werden nicht in QA‑037 behandelt.
+
+### Phase 7: Stability Window Update
+
+| Kriterium | Status |
+| --------- | ------ |
+| Benötigte grüne Main-Runs | 5 |
+| Aktuelle grüne Main-Runs | **1/5** |
+| Flakes beobachtet | 0 (lokal: 1, nicht reproduzierbar) |
+| Gate Mode | optional |
+| `continue-on-error` | `true` |
+| Promotion möglich | ❌ Nach 4 weiteren grünen Main-Runs |
+
+### Phase 8: Validation Results
+
+| Check | Ergebnis |
+| ----- | -------- |
+| `npm run build` | ✅ Green |
+| `npm run typecheck` | ✅ Green |
+| `npm test` | ✅ 452 backend + 60 frontend |
+| `npm run test:integration` | ✅ 8/8 |
+| `npm run test:contracts` | ✅ 140/140 |
+| `npm run test:mutation:fast` | ✅ 85.25% (≥60%) |
+| `npm run observability:validate` | ✅ All configs valid |
+| `docker compose config` | ✅ Valid |
+| `npm run test:e2e` (3x) | ✅ 25/25, 25/25, 25/25 |
+
+### Security Review
+
+| Kriterium | Status |
+| --------- | ------ |
+| Keine echten Secrets | ✅ `GITHUB_TOKEN=""`, Fake‑Adapter‑Mode |
+| Keine echten Tokens | ✅ `POSITRON_ADMIN_TOKEN=positron-admin-dev` |
+| Keine externen API-Calls | ✅ Fake‑Adapter simulieren alle Operationen |
+| Kein Redis-/Worker-Zwang | ✅ `POSITRON_DISABLE_QUEUE=true` |
+| DONE-Check aktiv | ✅ |
+| `VITEST=true` Bypass | ✅ Rate‑Limiter und `.env`‑Loading übersprungen |
+
+### Empfehlung für QA-038
+
+**Fokus: Observability CI Fix (promtool/amtool Binary statt Docker)**
+
+Der `observability-config-check`-Job verwendet Docker zum Ausführen von `promtool` und `amtool`. Da auf dem CI-Runner kein Docker verfügbar ist, schlägt dieser Schritt fehl. Lösung: `promtool` und `amtool` als native Binaries installieren (z.B. via `promtool` npm-Paket oder direkter Download von GitHub Releases), statt den Docker-Umweg zu gehen.
+
+Alternativ: QA-038 und QA-039 zusammenlegen (beide sind non‑blocking CI‑Fixes), oder QA-038 für observability und QA-039 für mutation aufteilen.
 
 ---
 
