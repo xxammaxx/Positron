@@ -512,27 +512,28 @@ Before E2E can be promoted to blocking:
 1. ✅ QA-030 and QA-031 merged to main
 2. ✅ QA-033 / QA-034 merged to main (PR #156)
 3. ✅ QA-035: E2E CI build step fixed (PR #158)
-4. ⬜ Quality Gates workflow triggers **≥5 consecutive CI runs**
-5. ⬜ All 5 runs have **green** e2e-playwright job results
-6. ⬜ **Zero flakes** across all 5 runs
-7. ⬜ Stable E2E runtime (≤30s target)
+4. 🔄 Quality Gates workflow triggers **≥5 consecutive CI runs** (1/5)
+5. 🔄 All 5 runs have **green** e2e-playwright job results (1/5)
+6. ⬜ **Zero flakes** across all 5 runs (0 so far)
+7. ⬜ Stable E2E runtime (≤30s target) — current: 89s
 
 ### E2E Stability Tracking
 
 | Run | Commit | e2e-playwright | Laufzeit | Flake | Artifact |
 | --- | ------ | -------------- | -------: | ----- | -------- |
-| 1 | `9587344` (main) | ❌ FAIL | ~2s | N/A | ⬜ |
-| 2 | `66d5490` (PR #158) | ✅ GREEN (PR) | 88s | 0 | ✅ |
+| 1 | `a91b8d8` (main) | ✅ GREEN | 89s | 0 | ✅ |
+| 2 | TBD | ⬜ | - | - | ⬜ |
 | 3 | TBD | ⬜ | - | - | ⬜ |
 | 4 | TBD | ⬜ | - | - | ⬜ |
 | 5 | TBD | ⬜ | - | - | ⬜ |
 
 **Window started:** 2026-06-02
-**First main CI run:** 2026-06-03 (merge commit `9587344`) — e2e FAILED (module not found)
+**First main CI run (failed):** 2026-06-03 (merge commit `9587344`) — e2e FAILED (module not found, pre-fix)
 **QA-035 PR CI:** 2026-06-03 (PR #158, commit `66d5490`) — e2e ✅ GREEN (88s, 25/25)
-**Current green runs:** 0/5 (PR runs counted separately; only main runs after merge count toward stability window)
-**Fix implemented:** `npm run build` step added to `e2e-playwright` job in `quality-gates.yml` (PR #158)
-**Next action:** Merge PR #158 to main, then monitor ≥5 consecutive green main CI runs
+**First green main run:** 2026-06-03 (merge commit `a91b8d8`) — e2e ✅ GREEN (89s, 25/25)
+**Current green runs:** 1/5 (only main runs after QA-035 fix count toward stability window)
+**Fix implemented:** `npm run build` step added to `e2e-playwright` job in `quality-gates.yml` (PR #158) — merged via QA-036
+**Next action:** Monitor 4 more consecutive green main CI runs (QA-037+)
 
 ---
 
@@ -624,6 +625,53 @@ PR #156 (`positron/qa-033-merge-e2e-stability-window` → `main`) was approved a
 | `e2e-playwright` | ~~Missing build step~~ | **FIXED** in QA-035 |
 | `observability-config-check` | Docker/promtool unavailable | Open — recommended QA-036 |
 | `mutation-fast` | Stryker sandbox file-copy issue | Open — recommended QA-036 or QA-037 |
+
+### CI Troubleshooting
+
+---
+
+## QA-036: Merge PR #158 & Start Main E2E Stability Tracking (2026-06-03)
+
+### Decision: MERGE — PR #158
+
+PR #158 (`positron/qa-035-fix-e2e-ci-build-step` → `main`) was approved and merged.
+
+**Merge Criteria Assessment:**
+
+| Criterion | Status | Detail |
+|-----------|--------|--------|
+| Merge conflicts | None | MERGEABLE |
+| build-and-test CI | SUCCESS | All unit tests green |
+| e2e-playwright CI | SUCCESS | 25/25, 88s, artifact present |
+| observability CI | FAILURE | Known: Docker/promtool (non-blocking) |
+| mutation-fast CI | FAILURE | Known: Stryker sandbox (non-blocking) |
+| Reviews | N/A | Self-review, project convention |
+| Branch vs main | Ahead +2, Behind 0 | Up-to-date |
+
+**Merge result:**
+- Merged at: 2026-06-03T04:40:14Z
+- Merge commit: `a91b8d8a89cb5f92c73c62db8ffec9cd70ffbc53`
+
+### First Main CI Run After Merge
+
+| Run | Commit | e2e-playwright | Laufzeit | Flake | Artifact | Zählt? |
+| --- | ------ | -------------- | -------: | ----- | -------- | ------ |
+| 1 | `a91b8d8` | ✅ GREEN | 89s | 0 | ✅ | ✅ (1/5) |
+
+- E2E job: 25/25 tests pass, artifact `playwright-report` (584KB) present
+- build-and-test: ✅ SUCCESS
+- observability-config-check: ❌ FAILURE (non-blocking, Docker/promtool)
+- mutation-fast: ❌ FAILURE (non-blocking, Stryker sandbox)
+
+### Stability Window Status
+
+| Criterion | Status |
+|-----------|--------|
+| Required green main runs | 5 |
+| Current green main runs | 1/5 |
+| Flakes | 0 |
+| Gate mode | optional |
+| Promotion possible | After 4 more green runs |
 
 ### CI Troubleshooting
 
