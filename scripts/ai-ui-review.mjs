@@ -26,26 +26,28 @@ import path from "node:path";
 
 // ── Provider Interface ──────────────────────────────────────────────
 
-interface ReviewResult {
-	provider: string;
-	passed: boolean;
-	issues: string[];
-	summary: string;
-}
+/**
+ * @typedef {Object} ReviewResult
+ * @property {string} provider
+ * @property {boolean} passed
+ * @property {string[]} issues
+ * @property {string} summary
+ */
 
-interface Provider {
-	name: string;
-	isAvailable: () => boolean;
-	review: (screenshots: string[]) => Promise<ReviewResult>;
-}
+/**
+ * @typedef {Object} Provider
+ * @property {string} name
+ * @property {function(): boolean} isAvailable
+ * @property {function(string[]): Promise<ReviewResult>} review
+ */
 
 // ── Provider Implementations ────────────────────────────────────────
 
 /** Local placeholder — always available, always skips with warning. */
-const localProvider: Provider = {
+const localProvider = {
 	name: "local",
 	isAvailable: () => true,
-	async review(screenshots: string[]): Promise<ReviewResult> {
+	async review(screenshots) {
 		return {
 			provider: "local",
 			passed: true,
@@ -56,11 +58,11 @@ const localProvider: Provider = {
 };
 
 /** OpenAI-compatible provider (GPT-4V or any compatible API). */
-const openaiProvider: Provider = {
+const openaiProvider = {
 	name: "openai",
 	isAvailable: () => !!process.env.OPENAI_API_KEY,
-	async review(screenshots: string[]): Promise<ReviewResult> {
-		const apiKey = process.env.OPENAI_API_KEY!;
+	async review(screenshots) {
+		const apiKey = process.env.OPENAI_API_KEY;
 		const baseUrl = process.env.OPENAI_BASE_URL ?? "https://api.openai.com/v1";
 
 		// Build a multimodal message with screenshots as base64 images
@@ -70,8 +72,8 @@ const openaiProvider: Provider = {
 				const base64 = data.toString("base64");
 				const ext = path.extname(file).slice(1);
 				return {
-					type: "image_url" as const,
-					image_url: {
+			type: "image_url",
+				image_url: {
 						url: `data:image/${ext};base64,${base64}`,
 					},
 				};
@@ -113,9 +115,7 @@ Respond with a structured review.`,
 			throw new Error(`OpenAI API error (${response.status}): ${errText}`);
 		}
 
-		const data = (await response.json()) as {
-			choices: [{ message: { content: string } }];
-		};
+		const data = await response.json();
 		const content = data.choices[0].message.content;
 
 		return {
@@ -128,11 +128,11 @@ Respond with a structured review.`,
 };
 
 /** Anthropic provider (Claude Vision). */
-const anthropicProvider: Provider = {
+const anthropicProvider = {
 	name: "anthropic",
 	isAvailable: () => !!process.env.ANTHROPIC_API_KEY,
-	async review(screenshots: string[]): Promise<ReviewResult> {
-		const apiKey = process.env.ANTHROPIC_API_KEY!;
+	async review(screenshots) {
+		const apiKey = process.env.ANTHROPIC_API_KEY;
 
 		const imageContents = await Promise.all(
 			screenshots.slice(0, 10).map(async (file) => {
@@ -142,9 +142,9 @@ const anthropicProvider: Provider = {
 				const mediaType =
 					ext === "png" ? "image/png" : ext === "jpg" || ext === "jpeg" ? "image/jpeg" : "image/png";
 				return {
-					type: "image" as const,
+					type: "image",
 					source: {
-						type: "base64" as const,
+						type: "base64",
 						media_type: mediaType,
 						data: base64,
 					},
@@ -182,9 +182,7 @@ const anthropicProvider: Provider = {
 			throw new Error(`Anthropic API error (${response.status}): ${errText}`);
 		}
 
-		const data = (await response.json()) as {
-			content: [{ text: string }];
-		};
+		const data = await response.json();
 		const content = data.content[0].text;
 
 		return {
@@ -197,10 +195,10 @@ const anthropicProvider: Provider = {
 };
 
 /** Gemini provider. */
-const geminiProvider: Provider = {
+const geminiProvider = {
 	name: "gemini",
 	isAvailable: () => !!process.env.GEMINI_API_KEY,
-	async review(_screenshots: string[]): Promise<ReviewResult> {
+	async review(_screenshots) {
 		return {
 			provider: "gemini",
 			passed: true,
@@ -212,7 +210,7 @@ const geminiProvider: Provider = {
 
 // ── Provider Chain ──────────────────────────────────────────────────
 
-const PROVIDER_CHAIN: Provider[] = [
+const PROVIDER_CHAIN = [
 	localProvider,
 	openaiProvider,
 	anthropicProvider,
@@ -221,7 +219,7 @@ const PROVIDER_CHAIN: Provider[] = [
 
 // ── Main ────────────────────────────────────────────────────────────
 
-async function main(): Promise<void> {
+async function main() {
 	const screenshotsDir = process.argv[2];
 
 	if (!screenshotsDir) {
@@ -248,7 +246,7 @@ async function main(): Promise<void> {
 
 	// Resolve provider
 	const forcedProvider = process.env.AI_UI_PROVIDER;
-	let provider: Provider | null = null;
+	let provider = null;
 
 	if (forcedProvider) {
 		provider = PROVIDER_CHAIN.find((p) => p.name === forcedProvider) ?? null;
