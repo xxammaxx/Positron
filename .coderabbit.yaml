@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# CodeRabbit Configuration for Positron
+# Layer 1 — Automated PR Review (Issue #166)
+#
+# CodeRabbit is optional. System works fully without it.
+# Install: https://github.com/apps/coderabbit-ai
+language: en-US
+early_access: false
+reviews:
+  profile: assertive
+  request_changes_workflow: false
+  high_level_summary: true
+  review_status: true
+  review_details: true
+  path_filters:
+    - "!dist/**"
+    - "!node_modules/**"
+    - "!coverage/**"
+    - "!playwright-report/**"
+    - "!test-results/**"
+    - "!reports/**"
+  auto_review:
+    enabled: true
+    drafts: false
+  tools:
+    eslint:
+      enabled: true
+    semgrep:
+      enabled: true
+      config_file: .semgrep.yaml
+    actionlint:
+      enabled: true
+    gitleaks:
+      enabled: true
+chat:
+  auto_reply: true

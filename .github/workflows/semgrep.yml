@@ -1,0 +1,51 @@
+# Semgrep SAST — Static Analysis Security Testing
+# Layer 2a (Issue #167)
+#
+# Runs on every PR and push to main.
+# Blocking: ERROR findings fail the job.
+# SARIF results uploaded to GitHub Code Scanning.
+
+name: Semgrep SAST
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+  workflow_dispatch:
+
+jobs:
+  semgrep:
+    name: Semgrep Scan
+    runs-on: ubuntu-latest
+
+    # Upload SARIF to GitHub Code Scanning
+    permissions:
+      security-events: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Semgrep
+        id: semgrep
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: .semgrep.yaml
+          generateSarif: "1"
+        env:
+          SEMGREP_AGENT_DEBUG: 0
+
+      - name: Upload SARIF to GitHub
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep.sarif
+
+      - name: Save SARIF as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-sarif
+          path: semgrep.sarif
+          retention-days: 7

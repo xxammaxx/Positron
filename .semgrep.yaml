@@ -1,0 +1,36 @@
+# Semgrep Configuration for Positron
+# Layer 2a — Static Analysis Security Testing (Issue #167)
+#
+# Rulesets: OSS Registry (free, no login required)
+# Blocking: ERROR findings block merge
+# Run locally: semgrep --config .semgrep.yaml
+
+rules:
+  # ── Language-specific rules ──
+  - r/typescript.best-practice
+  - r/typescript.lang.security
+  - r/typescript.react.security
+  - r/javascript.browser.security
+
+  # ── Vulnerability detection ──
+  - r/secrets           # Hardcoded secrets detection
+  - r/sql-injection     # SQL injection patterns
+  - r/xss               # Cross-site scripting patterns
+
+  # ── Dependency security ──
+  - r/supply-chain1     # Known vulnerable dependencies
+  - r/ssrf              # Server-side request forgery
+
+# ── Path exclusions ──
+# Only exclude generated/built artifacts. Test files ARE scanned.
+paths:
+  exclude:
+    - "dist/"
+    - "node_modules/"
+    - "coverage/"
+    - "playwright-report/"
+    - "test-results/"
+    - "reports/"
+    - ".stryker-tmp/"
+    - "*.config.js"
+    - "*.config.js.map"

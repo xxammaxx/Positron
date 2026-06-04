@@ -2448,6 +2448,18 @@ export function createApp(options: ServerOptions = {}) {
 	);
 	const app = express();
 
+	// ── L6: Runtime Verification — Optional Sentry + OpenTelemetry ────────────
+	//
+	// Fire-and-forget: instrumentation initializes in the background.
+	// Gracefully disabled when SENTRY_DSN / OTEL_EXPORTER_OTLP_ENDPOINT
+	// environment variables are not set. No startup delay.
+	import("./instrumentation/sentry.js")
+		.then(({ initSentry }) => initSentry())
+		.catch(() => {});
+	import("./instrumentation/otel.js")
+		.then(({ initOtel }) => initOtel())
+		.catch(() => {});
+
 	// ── QA-012: Queue Stats Collector (non-blocking, periodic) ─────────────────
 	//
 	// Periodically collects BullMQ queue statistics and updates Prometheus gauges.

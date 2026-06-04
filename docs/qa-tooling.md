@@ -1,5 +1,18 @@
 # Positron QA Tooling Guide
 
+## 7-Layer Testing & Verification Framework
+
+Issue #165 defines a 7-layer verification stack. Start here, then jump to the layer-specific docs:
+
+| Layer | Topic | Doc |
+|-------|-------|-----|
+| 1 | Code Review (CodeRabbit optional) | [qa/layer-1-code-review.md](qa/layer-1-code-review.md) |
+| 2a | Semgrep SAST | [qa/layer-2-semgrep.md](qa/layer-2-semgrep.md) |
+| 2b | CodeQL code scanning | [qa/layer-2-codeql.md](qa/layer-2-codeql.md) |
+| 4 | Browser verification | [qa/layer-4-browser-verification.md](qa/layer-4-browser-verification.md) |
+| 5 | AI UI Review (Optional — requires LLM provider) | See [issue plan](../.specify/issue-165-testing-verification-framework/plan.md) |
+| 3, 6, 7 | Existing backend verification, runtime verification, evidence collection | See [spec](../.specify/issue-165-testing-verification-framework/spec.md) and [plan](../.specify/issue-165-testing-verification-framework/plan.md) |
+
 ## Overview
 
 Positron uses multiple layers of testing and validation:

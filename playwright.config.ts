@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * Positron Playwright E2E Configuration (QA-028)
+ * Positron Playwright E2E Configuration (QA-028 / L4 — Issue #170)
  *
  * Strategy:
  * - Fake adapters only — no real GitHub/OpenCode calls
@@ -10,6 +10,13 @@ import { defineConfig, devices } from "@playwright/test";
  * - webServer auto-starts backend (port 3000) and frontend (port 5173)
  * - reuseExistingServer: true — works with manually started servers
  * - Single worker — sequential execution avoids port conflicts
+ *
+ * Evidence (L4 — Issue #170):
+ * - trace: "on" — trace for every test (Playwright Trace Viewer)
+ * - video: "retain-on-failure" — video recording on failure
+ * - screenshot: "only-on-failure" — automatic screenshots on failure
+ * - Named screenshots captured via e2e/support/artifacts.ts helper
+ * - Console and network logs captured via e2e/support/console-network.ts
  */
 
 const FAKE_MODE_ENV = {
@@ -38,7 +45,10 @@ export default defineConfig({
 	reporter: "html",
 	use: {
 		baseURL: "http://localhost:5173",
-		trace: "on-first-retry",
+		// L4: Evidence collection — trace for every test, video on failure, screenshot on failure
+		trace: "on",
+		video: "retain-on-failure",
+		screenshot: "only-on-failure",
 	},
 	projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
 	webServer: [
