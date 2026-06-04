@@ -62,15 +62,16 @@ const ARTIFACT_PATHS = {
 
 // ── Collectors ──────────────────────────────────────────────────────
 
-interface EvidenceClaim {
-	layer: number;
-	claim: string;
-	artifact: string | null;
-	verified: boolean;
-	value: string;
-}
+/**
+ * @typedef {Object} EvidenceClaim
+ * @property {number} layer
+ * @property {string} claim
+ * @property {string|null} artifact
+ * @property {boolean} verified
+ * @property {string} value
+ */
 
-function collectArtifact(filePath: string, description: string): EvidenceClaim {
+function collectArtifact(filePath, description) {
 	const exists = filePath ? fs.existsSync(filePath) : false;
 	return {
 		layer: 0,
@@ -81,8 +82,9 @@ function collectArtifact(filePath: string, description: string): EvidenceClaim {
 	};
 }
 
-async function collectAll(): Promise<EvidenceClaim[]> {
-	const claims: EvidenceClaim[] = [];
+async function collectAll() {
+	/** @type {EvidenceClaim[]} */
+	const claims = [];
 
 	// Backend Tests
 	try {
@@ -157,7 +159,7 @@ async function collectAll(): Promise<EvidenceClaim[]> {
 
 // ── Report Generation ──────────────────────────────────────────────
 
-function generateReport(claims: EvidenceClaim[]): string {
+function generateReport(claims) {
 	const timestamp = new Date().toISOString();
 	const commit = (() => {
 		try {
@@ -183,7 +185,7 @@ function generateReport(claims: EvidenceClaim[]): string {
 	const verifiedCount = claims.filter((c) => c.verified).length;
 	const totalCount = claims.length;
 
-	const lines: string[] = [
+	const lines = [
 		"## 📊 Evidence Report",
 		"",
 		"### Context",
@@ -223,7 +225,7 @@ function generateReport(claims: EvidenceClaim[]): string {
 
 // ── Main ────────────────────────────────────────────────────────────
 
-async function main(): Promise<void> {
+async function main() {
 	console.log("[L7 Evidence] Collecting artifacts from all layers...\n");
 
 	const claims = await collectAll();
