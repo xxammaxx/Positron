@@ -47,6 +47,8 @@ apps/web/src/**/*.js.map
 apps/web/src/**/*.d.ts.map
 apps/server/src/**/*.js
 apps/server/src/**/*.d.ts
+!apps/server/src/**/env.d.ts
+!apps/server/src/**/*.ambient.d.ts
 apps/server/src/**/*.js.map
 apps/server/src/**/*.d.ts.map
 apps/server/vitest.config.d.ts
