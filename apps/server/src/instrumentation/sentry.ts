@@ -37,7 +37,8 @@ export async function initSentry(): Promise<boolean> {
 				process.env.SENTRY_TRACES_SAMPLE_RATE ?? "0.1",
 			),
 			// Do not capture request bodies (may contain tokens)
-			beforeSend(event) {
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			beforeSend(event: any) {
 				// Redact any potential secrets from event data
 				if (event.request?.data) {
 					event.request.data = "[redacted]";
@@ -94,7 +95,8 @@ export function captureRunException(
 
 	try {
 		import("@sentry/node").then((Sentry) => {
-			Sentry.withScope((scope) => {
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			Sentry.withScope((scope: any) => {
 				if (context) {
 					const safe = safeRunContext(context);
 					scope.setTags(safe);
