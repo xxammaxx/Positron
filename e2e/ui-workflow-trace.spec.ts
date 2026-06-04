@@ -46,12 +46,14 @@ test.describe("UI Workflow Trace & Network Proof", () => {
 	test("Full workflow: Blueprint → Demo Run → Run Detail → DONE", async ({
 		browser,
 	}) => {
-		// Create a dedicated context with tracing and video enabled
+		// Create a dedicated context with tracing and video enabled.
+		// NOTE: tracing.start() is NOT called explicitly here because
+		// playwright.config.ts sets `use.trace: "on"` which auto-starts
+		// tracing before each test. Calling tracing.start() again would
+		// throw "Tracing has been already started".
 		const context: BrowserContext = await browser.newContext({
 			recordVideo: { dir: ARTIFACT_DIR, size: { width: 1280, height: 720 } },
 		});
-
-		await context.tracing.start({ screenshots: true, snapshots: true });
 
 		const page: Page = await context.newPage();
 
