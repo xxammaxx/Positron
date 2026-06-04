@@ -644,3 +644,96 @@ PR #156 (`positron/qa-033-merge-e2e-stability-window` → `main`) was approved a
 - **Artifacts missing:** The workflow uses `if-no-files-found: warn`
 - **Rate limiting (429):** Ensure `VITEST=true` bypass is active
 - **Module not found in CI:** Ensure `npm run build` runs before `npm run test:e2e` (fixed in QA-035)
+
+## E2E Stability Window Tracking (Block 3 — Issue #165)
+
+### Gate Promotion Criteria
+
+The E2E job is currently **non-blocking** (`continue-on-error: true`).
+To promote it to blocking (`continue-on-error: false`), we need:
+
+> **≥5 consecutive green main-branch E2E runs** with 0 flaky failures.
+
+| # | Date | Run ID | Branch | Result | Notes |
+|---|------|--------|--------|--------|-------|
+| 1 | TBD | TBD | main | ⏳ Pending | — |
+| 2 | TBD | TBD | main | ⏳ Pending | — |
+| 3 | TBD | TBD | main | ⏳ Pending | — |
+| 4 | TBD | TBD | main | ⏳ Pending | — |
+| 5 | TBD | TBD | main | ⏳ Pending | — |
+
+**Stability Window:** 0/5 green runs (window reset on 2026-06-04)
+
+### Promotion Process
+
+1. Track each main-branch push that triggers `quality-gates.yml`
+2. Record E2E result (✅ pass / ❌ fail / ⚠️ flaky)
+3. If any failure: **reset counter to 0**, investigate root cause
+4. At 5/5 green: change `continue-on-error: true` → `continue-on-error: false` in `e2e-playwright` job
+5. Document the promotion in this table and post evidence to Issue #165
+
+### Gate Demotion Criteria
+
+If a promoted E2E gate shows ≥2 failures within 10 runs after promotion:
+- Revert to `continue-on-error: true`
+- Open investigation issue
+- Reset stability counter
+
+## SonarQube Quality Gate (Block 2 — Issue #165)
+
+### Local Setup
+
+```bash
+# Start SonarQube (first time takes ~2 min to initialize)
+docker compose -f docker-compose.sonarqube.yml up -d
+
+# Verify it's running
+curl http://localhost:9000/api/system/health
+
+# Run analysis (requires sonarqube-scanner)
+npx sonarqube-scanner -Dsonar.host.url=http://localhost:9000 -Dsonar.token=<token>
+
+# Check quality gate
+node scripts/sonarqube-quality-gate.mjs
+```
+
+### CI Integration
+
+The `sonarqube-quality-gate` job in `quality-gates.yml` is:
+- **Opt-in**: only runs when `SONAR_HOST_URL` and `SONAR_TOKEN` secrets are configured
+- **Non-blocking**: `continue-on-error: true` by default
+- Can be promoted to blocking once a stable SonarQube instance is available
+
+## Evidence CI Integration (Block 4 — Issue #165)
+
+The `evidence-collect` job in `quality-gates.yml`:
+- Depends on `build-and-test`, `e2e-playwright`, and `mutation-fast`
+- Downloads all CI artifacts
+- Runs `scripts/collect-evidence.mjs`
+- Posts structured evidence comment to Issue #165 (default, configurable via `POSITRON_EVIDENCE_ISSUE`)
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `POSITRON_EVIDENCE_ISSUE` | `165` | Target issue for evidence comments |
+| `GITHUB_TOKEN` | (CI) | Required for posting comments |
+
+## AI UI Review CI (Block 5 — Issue #165)
+
+The `ai-ui-review` job in `quality-gates.yml`:
+- Depends on `e2e-playwright`
+- Downloads E2E screenshots
+- Runs `scripts/ai-ui-review.mjs` with the configured provider
+- Non-blocking (`continue-on-error: true`)
+- Gracefully skips when no AI provider is configured
+
+### Provider Chain
+
+The AI UI review tries providers in this order (configurable via `AI_UI_PROVIDER`):
+1. **local** — Ollama with vision-capable model (default: `llava`)
+2. **openai** — GPT-4V via OpenAI API
+3. **anthropic** — Claude 3 via Anthropic API
+4. **gemini** — Gemini Pro Vision via Google API
+
+Set `AI_UI_PROVIDER=none` to skip entirely.
