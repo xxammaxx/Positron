@@ -1,0 +1,41 @@
+{
+	"$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+	"_comment": "Positron Safety Mutation Baseline — QA-006. Scope: Safety/Core modules only. No CI gating — baseline only.",
+	"testRunner": "vitest",
+	"packageManager": "npm",
+	"coverageAnalysis": "perTest",
+	"checkers": [],
+	"mutate": [
+		"packages/shared/src/secret-manager.ts",
+		"packages/run-state/src/state-machine.ts",
+		"packages/sandbox/src/paths.ts",
+		"packages/sandbox/src/commit-policy.ts",
+		"packages/sandbox/src/opencode-policy.ts",
+		"packages/sandbox/src/speckit-policy.ts",
+		"packages/github-adapter/src/templates.ts"
+	],
+	"vitest": {
+		"configFile": "vitest.config.ts"
+	},
+	"thresholds": {
+		"high": 85,
+		"low": 50,
+		"break": 0
+	},
+	"timeoutMS": 30000,
+	"timeoutFactor": 2,
+	"concurrency": 2,
+	"cleanTempDir": true,
+	"tempDirName": ".stryker-tmp-safety",
+	"ignoreStatic": true,
+	"reporters": ["clear-text", "progress", "html", "json"],
+	"htmlReporter": {
+		"fileName": "reports/mutation/safety-baseline/html/index.html"
+	},
+	"jsonReporter": {
+		"fileName": "reports/mutation/safety-baseline/report.json"
+	},
+	"mutator": {
+		"excludedMutations": ["StringLiteral", "ArrayDeclaration", "ObjectLiteral"]
+	}
+}
