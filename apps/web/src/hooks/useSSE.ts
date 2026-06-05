@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { RunEvent, Run, RunStatus } from '../types.js';
+import { speakEvent } from '../voice/voice-output.js';
 
 interface EvidenceItem {
   id: string;
@@ -113,6 +114,8 @@ export function useSSE(runId: string | null): UseSSEResult {
                 : next,
             };
           });
+          // Voice Output: fire-and-forget, non-blocking, handled internally
+          speakEvent(data);
         } catch {
           if (process.env.NODE_ENV !== 'production') console.warn('[SSE] Failed to parse run-event data');
         }
