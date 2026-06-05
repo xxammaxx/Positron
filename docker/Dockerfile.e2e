@@ -1,0 +1,34 @@
+# Positron E2E Runner — Playwright Browser Tests
+# Uses Microsoft Playwright image with all browsers pre-installed.
+# Runs full browser-based UI workflow and lifecycle tests.
+FROM mcr.microsoft.com/playwright:v1.60.0-noble
+
+WORKDIR /app
+
+# System dependencies for native modules (git for workspace tools)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+	git python3 make g++ && \
+	rm -rf /var/lib/apt/lists/*
+
+# ── Layer 1: Dependencies (cache-friendly) ──
+COPY package*.json ./
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/run-state/package.json ./packages/run-state/
+COPY packages/github-adapter/package.json ./packages/github-adapter/
+COPY packages/speckit-adapter/package.json ./packages/speckit-adapter/
+COPY packages/opencode-adapter/package.json ./packages/opencode-adapter/
+COPY packages/sandbox/package.json ./packages/sandbox/
+COPY apps/server/package.json ./apps/server/
+COPY apps/worker/package.json ./apps/worker/
+COPY apps/web/package.json ./apps/web/
+
+RUN npm ci
+
+# ── Layer 2: Source + Build ──
+COPY . .
+
+# Build packages needed by e2e server (webServer uses tsx to run apps/server)
+RUN npm run build
+
+# Default: run all Playwright E2E tests
+CMD ["npx", "playwright", "test"]
