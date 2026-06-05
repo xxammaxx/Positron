@@ -42,7 +42,7 @@ export const DEFAULT_VOICE_SETTINGS: VoiceSettings = {
 export function loadVoiceSettings(): VoiceSettings {
 	try {
 		const raw = localStorage.getItem(STORAGE_KEY);
-		if (!raw) return { ...DEFAULT_VOICE_SETTINGS };
+		if (!raw) return { ...DEFAULT_VOICE_SETTINGS, enabledEventTypes: [...DEFAULT_VOICE_SETTINGS.enabledEventTypes] };
 
 		const parsed = JSON.parse(raw) as Partial<VoiceSettings>;
 
@@ -60,16 +60,16 @@ export function loadVoiceSettings(): VoiceSettings {
 				? parsed.volume
 				: DEFAULT_VOICE_SETTINGS.volume,
 			enabledEventTypes: Array.isArray(parsed.enabledEventTypes)
-				? parsed.enabledEventTypes.filter(
+				? [...parsed.enabledEventTypes.filter(
 						(t): t is VoiceEventType =>
 							typeof t === 'string' &&
 							DEFAULT_VOICE_SETTINGS.enabledEventTypes.includes(t as VoiceEventType),
-					)
-				: DEFAULT_VOICE_SETTINGS.enabledEventTypes,
+					)]
+				: [...DEFAULT_VOICE_SETTINGS.enabledEventTypes],
 		};
 	} catch {
 		// Invalid JSON → Fallback auf Defaults
-		return { ...DEFAULT_VOICE_SETTINGS };
+		return { ...DEFAULT_VOICE_SETTINGS, enabledEventTypes: [...DEFAULT_VOICE_SETTINGS.enabledEventTypes] };
 	}
 }
 

@@ -122,4 +122,14 @@ describe('voice-settings', () => {
 			saveVoiceSettings(DEFAULT_VOICE_SETTINGS),
 		).not.toThrow();
 	});
+
+	test('loadVoiceSettings returns deep-cloned defaults (no shared references)', () => {
+		const s1 = loadVoiceSettings();
+		const s2 = loadVoiceSettings();
+		// Arrays should be different instances
+		expect(s1.enabledEventTypes).not.toBe(s2.enabledEventTypes);
+		// Mutation of one should not affect the other
+		s1.enabledEventTypes.push('run_started' as never);
+		expect(s2.enabledEventTypes).toHaveLength(6);
+	});
 });

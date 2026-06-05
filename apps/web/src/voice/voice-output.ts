@@ -142,24 +142,26 @@ export function speakEvent(event: RunEvent): void {
 	// 2. Browser unterstützt TTS?
 	if (!isSpeechSupported()) return;
 
-	// 3. Event klassifizieren
+	// 3. SpeechSynthesisUtterance constructor verfügbar? (jsdom/Node guard)
+	if (typeof SpeechSynthesisUtterance === 'undefined') return;
+
+	// 4. Event klassifizieren
 	const type = classifyEvent(event);
 	if (!type) return;
 
-	// 4. Event-Typ in Settings enabled?
+	// 5. Event-Typ in Settings enabled?
 	if (!settings.enabledEventTypes.includes(type)) return;
 
-	// 5. Rate-Limit
+	// 6. Rate-Limit
 	if (rateLimitExceeded()) return;
 
-	// 6. Text generieren + redacten
+	// 7. Text generieren + redacten
 	const text = cleanForSpeech(mapEventToSpeech(event, type));
 
-	// 7. Deduplizierung
+	// 8. Deduplizierung
 	if (isDuplicate(text)) return;
 
-	// 8. Sprachausgabe (guard against jsdom/Node where constructor is unavailable)
-	if (typeof SpeechSynthesisUtterance === 'undefined') return;
+	// 9. Sprachausgabe
 	const utterance = new SpeechSynthesisUtterance(text);
 
 	if (settings.selectedVoiceURI) {

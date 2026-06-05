@@ -97,6 +97,55 @@ describe('redactForSpeech', () => {
 		expect(result).toBe(input);
 	});
 
+	test('redacts AWS access key (AKIA)', () => {
+		const input = 'Key: AKIA1234567890ABCDEF';
+		const result = redactForSpeech(input);
+		expect(result).not.toContain('AKIA');
+		expect(result).toContain('[TOKEN]');
+	});
+
+	test('redacts AWS access key (ASIA)', () => {
+		const input = 'Token ASIA1234567890ABCDEF for session';
+		const result = redactForSpeech(input);
+		expect(result).not.toContain('ASIA');
+		expect(result).toContain('[TOKEN]');
+	});
+
+	test('redacts Bearer token', () => {
+		const input = 'Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJqd3QifQ.signature1234567890';
+		const result = redactForSpeech(input);
+		expect(result).not.toContain('eyJhbGci');
+		expect(result).toContain('Bearer [TOKEN]');
+	});
+
+	test('redacts Slack bot token (xoxb-)', () => {
+		const input = 'Token: xoxb-123456789012-123456789012-abcdefghijklmnopqrstuvwx';
+		const result = redactForSpeech(input);
+		expect(result).not.toContain('xoxb-');
+		expect(result).toContain('[TOKEN]');
+	});
+
+	test('redacts Slack user token (xoxp-)', () => {
+		const input = 'Using xoxp-123456789012-123456789012-abcdefghijklmnopqrstuvwx';
+		const result = redactForSpeech(input);
+		expect(result).not.toContain('xoxp-');
+		expect(result).toContain('[TOKEN]');
+	});
+
+	test('redacts npm token', () => {
+		const input = 'npm_token: npm_abcdefghijklmnopqrstuvwxyz1234567890';
+		const result = redactForSpeech(input);
+		expect(result).not.toContain('npm_abcdef');
+		expect(result).toContain('[TOKEN]');
+	});
+
+	test('redacts PEM certificate blocks', () => {
+		const input = 'Cert: -----BEGIN CERTIFICATE-----\nABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\n-----END CERTIFICATE-----';
+		const result = redactForSpeech(input);
+		expect(result).not.toContain('BEGIN CERTIFICATE');
+		expect(result).toContain('[CERTIFICATE]');
+	});
+
 	test('handles empty string', () => {
 		expect(redactForSpeech('')).toBe('');
 	});
