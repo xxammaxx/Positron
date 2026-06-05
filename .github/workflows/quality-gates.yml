@@ -98,6 +98,37 @@ jobs:
             reports/mutation/**
           if-no-files-found: warn
 
+  # ── QA-007: Mutation Safety Baseline (non-blocking) ──────────────
+  # Targets 7 safety-critical modules only. Fast runtime (~34s).
+  # Non-blocking: baseline only — will be hardened in QA-008.
+  mutation-safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run safety mutation tests (Stryker)
+        run: npm run test:mutation:safety
+
+      - name: Upload mutation safety report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-safety-report
+          path: |
+            reports/mutation/safety-baseline/**
+          if-no-files-found: warn
+
   # ── QA-030: Playwright E2E (non-blocking, optional) ─────────────
   # This job runs the full browser-based run lifecycle test.
   # It is intentionally non-blocking until proven stable across

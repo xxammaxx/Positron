@@ -110,12 +110,18 @@
 
 ### Current (QA-006)
 - **blocking:** NO — baseline only
-- **non-blocking:** YES — `npm run test:mutation:safety` can run as optional check
-- **threshold:** Break=0 (never fails)
+- **non-blocking:** YES — `mutation-safety` job in quality-gates.yml (QA-007)
 
-### Future (QA-007+)
+### Implemented (QA-007)
+- CI job: `mutation-safety` in `.github/workflows/quality-gates.yml`
+- Status: non-blocking (`continue-on-error: true`)
+- Trigger: push to main/develop + pull_request
+- Artifact: `mutation-safety-report` uploaded on every run
+- Command: `npm run test:mutation:safety` (stryker.safety.config.json)
+
+### Future (QA-008+)
 - Raise break threshold to 70% once survivors are addressed
-- Add `stryker.safety.config.json` to CI as non-blocking job
+- Add blocking gate after stability window
 - Target: 90%+ mutation score on safety modules
 
 ## Release Impact
