@@ -1,0 +1,57 @@
+# Positron Test Orchestration
+# Provides containerized test, E2E, and security scan services.
+#
+# Usage:
+#   docker compose -f docker-compose.test.yml build          # Build all images
+#   docker compose -f docker-compose.test.yml run --rm test   # Run unit tests
+#   docker compose -f docker-compose.test.yml run --rm e2e    # Run E2E tests
+#   docker compose -f docker-compose.test.yml run --rm security  # Run security audit
+
+services:
+  test:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.test
+    # Network isolation: tests run in fake mode, no external calls
+    network_mode: "none"
+    environment:
+      - NODE_ENV=test
+      - CI=true
+      - POSITRON_GITHUB_MODE=fake
+      - POSITRON_OPENCODE_MODE=fake
+      - POSITRON_SPECKIT_MODE=fake
+      - POSITRON_DISABLE_QUEUE=true
+      - POSITRON_WORKSPACE_ROOT=
+      - POSITRON_REPO_OWNER=test-owner
+      - POSITRON_REPO_NAME=test-repo
+      - POSITRON_REPO_DEFAULT_BRANCH=main
+      - POSITRON_ADMIN_TOKEN=positron-admin-dev
+      - GITHUB_TOKEN=
+    command: npx vitest run
+
+  e2e:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.e2e
+    environment:
+      - CI=true
+      - VITEST=true
+      - NODE_ENV=test
+      - POSITRON_GITHUB_MODE=fake
+      - POSITRON_OPENCODE_MODE=fake
+      - POSITRON_SPECKIT_MODE=fake
+      - POSITRON_DISABLE_QUEUE=true
+      - POSITRON_REPO_OWNER=test-owner
+      - POSITRON_REPO_NAME=test-repo
+      - POSITRON_REPO_DEFAULT_BRANCH=main
+      - POSITRON_ADMIN_TOKEN=positron-admin-dev
+      - GITHUB_TOKEN=
+    command: npx playwright test
+
+  security:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.security
+    # npm audit requires network access to registry.npmjs.org
+    # network_mode: "none" would block audit — use default bridge network
+    command: npm audit --audit-level=high
