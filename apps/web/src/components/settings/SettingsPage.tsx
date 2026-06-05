@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { api } from '../../api.js';
 import ErrorBanner from '../shared/ErrorBanner.js';
 import LoadingSkeleton from '../shared/LoadingSkeleton.js';
+import VoiceControls from '../VoiceControls.jsx';
 
 interface McpServer {
   name: string;
@@ -311,6 +312,9 @@ export default function SettingsPage(): React.ReactElement {
             </div>
           )}
         </div>
+
+        {/* ── Voice Output ── */}
+        <VoiceControls />
       </div>
     </div>
   );

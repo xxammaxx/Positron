@@ -10,6 +10,7 @@ import EmptyState from '../shared/EmptyState.js';
 import ErrorBanner from '../shared/ErrorBanner.js';
 import NewRunModal from './NewRunModal.jsx';
 import BlueprintPanel from './BlueprintPanel.jsx';
+import VoiceStatusIndicator from '../VoiceStatusIndicator.jsx';
 
 export default function DashboardPage(): React.ReactElement {
   const navigate = useNavigate();
@@ -40,9 +41,12 @@ export default function DashboardPage(): React.ReactElement {
             )}
           </p>
         </div>
-        <button onClick={() => setIsNewRunModalOpen(true)} className="btn-primary">
-          + New Run
-        </button>
+        <div className="flex items-center gap-3">
+          <VoiceStatusIndicator />
+          <button onClick={() => setIsNewRunModalOpen(true)} className="btn-primary">
+            + New Run
+          </button>
+        </div>
       </div>
 
       {/* Completely Empty State */}
