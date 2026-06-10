@@ -164,7 +164,7 @@ export class SecretManager {
             if (fs.existsSync(candidate))
                 return candidate;
         }
-        return candidates[0] ?? '.env';
+        return candidates[0];
     }
 }
 //# sourceMappingURL=secret-manager.js.map

@@ -48,10 +48,10 @@ export default defineConfig({
 	reporter: "html",
 	use: {
 		baseURL: "http://localhost:5173",
-		// L4: Trace on every test for full failure replay
-		trace: "retain-on-failure",
-		// L4: Record video on failure in CI (saves storage in local dev)
-		video: process.env.CI ? "retain-on-failure" : "off",
+		// L4: Trace handled manually in e2e tests (avoiding double-start conflicts)
+		trace: "off",
+		// L4: Record video on failure in CI, on for headed/local tests
+		video: process.env.CI ? "retain-on-failure" : "on",
 		// L4: Screenshot on failure (automatic fallback)
 		screenshot: "only-on-failure",
 	},

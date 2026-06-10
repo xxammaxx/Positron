@@ -1,4 +1,4 @@
-import { describe, expect, test, beforeEach, afterEach } from "vitest";
+import { describe, expect, test, beforeEach, afterEach, vi } from "vitest";
 import { SecretManager, EnvSecretProvider, DockerSecretProvider, FileSecretProvider, } from "../secret-manager.js";
 import fs from "node:fs";
 import path from "node:path";
@@ -206,6 +206,20 @@ describe("SecretManager", () => {
         expect(names[0]).toBe("env");
         expect(names[1]).toBe("docker-secret");
         expect(names[2]).toBe("file");
+    });
+    test("resolveDefaultEnvPath fallback when no .env files exist", () => {
+        // Mock fs.existsSync to return false for all candidate paths
+        const realExistsSync = fs.existsSync;
+        const spy = vi.spyOn(fs, 'existsSync').mockReturnValue(false);
+        try {
+            const sm = new SecretManager();
+            const names = sm.getProviderNames();
+            expect(names).toHaveLength(3);
+            // Fallback should still create providers, using candidates[0] path
+        }
+        finally {
+            spy.mockRestore();
+        }
     });
 });
 // ---------------------------------------------------------------------------

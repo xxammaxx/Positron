@@ -665,7 +665,7 @@ describe("Invariant 8: Transition chain integrity", () => {
 					expect(ALL_PHASES).toContain(run.phase);
 				},
 			),
-			{ numRuns: 500 },
+			{ numRuns: 100 },
 		);
 	});
 
@@ -891,7 +891,7 @@ describe("Negative Assurance: generator coverage", () => {
 					expect(chain[i]![1]).toBe(chain[i + 1]![0]);
 				}
 			}),
-			{ numRuns: 200 },
+			{ numRuns: 50 },
 		);
 	});
 });

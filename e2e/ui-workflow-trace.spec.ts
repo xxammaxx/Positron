@@ -51,6 +51,7 @@ test.describe("UI Workflow Trace & Network Proof", () => {
 			recordVideo: { dir: ARTIFACT_DIR, size: { width: 1280, height: 720 } },
 		});
 
+		// Start tracing for full replay capability
 		await context.tracing.start({ screenshots: true, snapshots: true });
 
 		const page: Page = await context.newPage();
