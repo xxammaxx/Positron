@@ -8,12 +8,14 @@ on:
       - '*.md'
       - 'mkdocs.yml'
       - 'requirements-docs.txt'
+      - 'scripts/check_docs_secrets.py'
   pull_request:
     paths:
       - 'docs/**'
       - '*.md'
       - 'mkdocs.yml'
       - 'requirements-docs.txt'
+      - 'scripts/check_docs_secrets.py'
   workflow_dispatch:
 
 jobs:
@@ -42,15 +44,15 @@ jobs:
           npx markdownlint "docs/**/*.md" "*.md" --config .markdownlint.json || true
         continue-on-error: true
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
       - name: Check for secrets in docs
         run: |
           echo "::group::Secret Scan in Documentation"
-          if grep -rE "(ghp_|github_pat_|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,})" docs/ *.md 2>/dev/null; then
-            echo "::error::SECRETS FOUND IN DOCUMENTATION"
-            exit 1
-          else
-            echo "No secrets found in documentation files."
-          fi
+          python3 scripts/check_docs_secrets.py docs .
           echo "::endgroup::"
 
       - name: Check for .env references in docs
@@ -60,11 +62,6 @@ jobs:
             echo "::warning::Found .env references in documentation. Ensure these are references to templates, not real files."
           fi
           echo "::endgroup::"
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
 
       - name: Install Python dependencies
         run: pip install -r requirements-docs.txt

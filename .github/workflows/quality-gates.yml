@@ -23,10 +23,10 @@ jobs:
         run: npm ci
 
       - name: Format check (Biome)
-        run: npx @biomejs/biome format .
+        run: npm run format:check
 
       - name: Lint (Biome)
-        run: npx @biomejs/biome lint .
+        run: npm run lint -- --reporter=summary
 
       - name: Build
         run: npm run build

@@ -54,7 +54,7 @@ Live-updating dashboard showing:
 Screenshots:
 | Dashboard | Evidence Explorer | Admin Panel |
 |:---:|:---:|:---:|
-| ![Dashboard](../../docs/screenshots/dashboard.png) | ![Evidence](../../docs/screenshots/evidence.png) | ![Admin](../../docs/screenshots/admin.png) |
+| ![Dashboard](../screenshots/dashboard.png) | ![Evidence](../screenshots/evidence.png) | ![Admin](../screenshots/admin.png) |
 
 ---
 
