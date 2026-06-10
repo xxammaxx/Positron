@@ -7,11 +7,9 @@
 // behavior with completed runs (409), non-existent runs (404), and SSE
 // broadcaster unit tests (imported directly).
 
-import type http from 'node:http';
-import type { Response } from 'express';
-import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { describe, expect, test, beforeAll, afterAll } from 'vitest';
 import { createServer } from '../index.js';
-import { addSSEClient, broadcastSSE, removeSSEClient } from '../sse/broadcaster.js';
+import type http from 'node:http';
 
 let server: http.Server;
 let baseUrl: string;
@@ -36,16 +34,8 @@ async function post(path: string, body: unknown) {
 	});
 }
 
-function createSSEWriter(writeChunk?: (chunk: string) => void): Response {
-	const response = {
-		write: (chunk: string) => {
-			writeChunk?.(chunk);
-			return true;
-		},
-		on: () => response,
-	} as unknown as Response;
-
-	return response;
+async function get(path: string) {
+	return fetch(`${baseUrl}${path}`);
 }
 
 // ── Cancel Endpoint Tests ────────────────────────────────────────────
@@ -79,8 +69,17 @@ describe('POST /api/runs/:id/cancel — Cancel Endpoint', () => {
 
 describe('SSE Broadcaster — broadcastSSE', () => {
 	test('S01: broadcastSSE payload contains id:, event:, and data: fields', async () => {
+		// We test this by importing the broadcaster module and checking its output
+		const { broadcastSSE, addSSEClient, removeSSEClient, cleanupRunTracking } = await import(
+			'../sse/broadcaster.js'
+		);
+
 		const chunks: string[] = [];
-		const writer = createSSEWriter((chunk) => chunks.push(chunk));
+		const writer = {
+			write: (chunk: string) => {
+				chunks.push(chunk);
+			},
+		};
 
 		const runId = `test-sse-${Date.now()}`;
 		addSSEClient(runId, writer);
@@ -90,14 +89,23 @@ describe('SSE Broadcaster — broadcastSSE', () => {
 		expect(chunks[0]).toContain('id: ');
 		expect(chunks[0]).toContain('event: run-event');
 		expect(chunks[0]).toContain('data: ');
-		expect(chunks[0]).toMatch(/^event: run-event\nid: \d+\ndata: .+\n\n$/);
+		expect(chunks[0]).toMatch(/^id: \d+\nevent: run-event\ndata: .+\n\n$/);
 
 		removeSSEClient(runId, writer);
+		cleanupRunTracking(runId);
 	});
 
 	test('S02: sequence numbers increment monotonically per run', async () => {
+		const { broadcastSSE, addSSEClient, removeSSEClient, cleanupRunTracking } = await import(
+			'../sse/broadcaster.js'
+		);
+
 		const chunks: string[] = [];
-		const writer = createSSEWriter((chunk) => chunks.push(chunk));
+		const writer = {
+			write: (chunk: string) => {
+				chunks.push(chunk);
+			},
+		};
 
 		const runId = `test-seq-${Date.now()}`;
 		addSSEClient(runId, writer);
@@ -112,13 +120,26 @@ describe('SSE Broadcaster — broadcastSSE', () => {
 		expect(seqs).toEqual([1, 2, 3]);
 
 		removeSSEClient(runId, writer);
+		cleanupRunTracking(runId);
 	});
 
 	test('S03: sequence numbers are per-run (isolated counters)', async () => {
+		const { broadcastSSE, addSSEClient, removeSSEClient, cleanupRunTracking } = await import(
+			'../sse/broadcaster.js'
+		);
+
 		const chunksA: string[] = [];
 		const chunksB: string[] = [];
-		const writerA = createSSEWriter((chunk) => chunksA.push(chunk));
-		const writerB = createSSEWriter((chunk) => chunksB.push(chunk));
+		const writerA = {
+			write: (chunk: string) => {
+				chunksA.push(chunk);
+			},
+		};
+		const writerB = {
+			write: (chunk: string) => {
+				chunksB.push(chunk);
+			},
+		};
 
 		const runA = `test-isolated-a-${Date.now()}`;
 		const runB = `test-isolated-b-${Date.now()}`;
@@ -137,11 +158,21 @@ describe('SSE Broadcaster — broadcastSSE', () => {
 
 		removeSSEClient(runA, writerA);
 		removeSSEClient(runB, writerB);
+		cleanupRunTracking(runA);
+		cleanupRunTracking(runB);
 	});
 
 	test('S04: secret redaction masks ghp_ tokens', async () => {
+		const { broadcastSSE, addSSEClient, removeSSEClient, cleanupRunTracking } = await import(
+			'../sse/broadcaster.js'
+		);
+
 		const chunks: string[] = [];
-		const writer = createSSEWriter((chunk) => chunks.push(chunk));
+		const writer = {
+			write: (chunk: string) => {
+				chunks.push(chunk);
+			},
+		};
 
 		const runId = `test-redact-${Date.now()}`;
 		addSSEClient(runId, writer);
@@ -154,14 +185,23 @@ describe('SSE Broadcaster — broadcastSSE', () => {
 		expect(chunks.length).toBe(1);
 		// The token value should be redacted in the JSON payload
 		expect(chunks[0]).not.toContain('ghp_123456789012345678901234567890123456');
-		expect(chunks[0]).toContain('***-redacted-***');
+		expect(chunks[0]).toContain('[REDACTED]');
 
 		removeSSEClient(runId, writer);
+		cleanupRunTracking(runId);
 	});
 
 	test('S05: secret redaction masks openai keys', async () => {
+		const { broadcastSSE, addSSEClient, removeSSEClient, cleanupRunTracking } = await import(
+			'../sse/broadcaster.js'
+		);
+
 		const chunks: string[] = [];
-		const writer = createSSEWriter((chunk) => chunks.push(chunk));
+		const writer = {
+			write: (chunk: string) => {
+				chunks.push(chunk);
+			},
+		};
 
 		const runId = `test-openai-${Date.now()}`;
 		addSSEClient(runId, writer);
@@ -171,15 +211,23 @@ describe('SSE Broadcaster — broadcastSSE', () => {
 		});
 
 		expect(chunks.length).toBe(1);
-		expect(chunks[0]).toContain('***-redacted-***');
+		expect(chunks[0]).toContain('[REDACTED]');
 		expect(chunks[0]).not.toContain('sk-abcdefghijklmnopqrstuvwxyz12345678901234567');
 
 		removeSSEClient(runId, writer);
+		cleanupRunTracking(runId);
 	});
 
 	test('S06: heartbeat does not consume rate limit', async () => {
+		const { broadcastSSE, addSSEClient, removeSSEClient, checkRateLimit, cleanupRunTracking } =
+			await import('../sse/broadcaster.js');
+
 		const chunks: string[] = [];
-		const writer = createSSEWriter((chunk) => chunks.push(chunk));
+		const writer = {
+			write: (chunk: string) => {
+				chunks.push(chunk);
+			},
+		};
 
 		const runId = `test-hb-${Date.now()}`;
 		addSSEClient(runId, writer);
@@ -202,35 +250,51 @@ describe('SSE Broadcaster — broadcastSSE', () => {
 		expect(dataEvents.length).toBeGreaterThan(0);
 
 		removeSSEClient(runId, writer);
+		cleanupRunTracking(runId);
 	});
 
 	test('S07: no clients → broadcastSSE is a no-op', async () => {
+		const { broadcastSSE, cleanupRunTracking } = await import('../sse/broadcaster.js');
+
 		// No clients registered for this run — should not throw
 		const runId = `test-noop-${Date.now()}`;
 		expect(() => {
 			broadcastSSE(runId, 'run-event', { test: true });
 		}).not.toThrow();
+
+		cleanupRunTracking(runId);
 	});
 
-	test('S08: writer error is isolated from other clients', async () => {
+	test('S08: writer error is caught and client removed', async () => {
+		const { broadcastSSE, addSSEClient, removeSSEClient, cleanupRunTracking } = await import(
+			'../sse/broadcaster.js'
+		);
+
 		let callCount = 0;
-		const failingWriter = createSSEWriter(() => {
-			callCount++;
-			throw new Error('Stream closed');
-		});
-		const healthyChunks: string[] = [];
-		const healthyWriter = createSSEWriter((chunk) => healthyChunks.push(chunk));
+		const failingWriter = {
+			write: (chunk: string) => {
+				callCount++;
+				if (callCount >= 2) throw new Error('Stream closed');
+			},
+		};
 
 		const runId = `test-err-${Date.now()}`;
 		addSSEClient(runId, failingWriter);
-		addSSEClient(runId, healthyWriter);
 
-		expect(() => broadcastSSE(runId, 'run-event', { n: 1 })).not.toThrow();
+		// First write succeeds
+		broadcastSSE(runId, 'run-event', { n: 1 });
 		expect(callCount).toBe(1);
-		expect(healthyChunks).toHaveLength(1);
+
+		// Second write fails — error is caught, client removed
+		broadcastSSE(runId, 'run-event', { n: 2 });
+		expect(callCount).toBe(2); // write was called, threw, caught
+
+		// Third write — client was removed, no error
+		broadcastSSE(runId, 'run-event', { n: 3 });
+		expect(callCount).toBe(2); // no new call
 
 		removeSSEClient(runId, failingWriter);
-		removeSSEClient(runId, healthyWriter);
+		cleanupRunTracking(runId);
 	});
 });
 

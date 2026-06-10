@@ -25,10 +25,10 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": false,
+			"recommended": true,
 			"complexity": {
-				"noBannedTypes": "warn",
-				"noUselessConstructor": "warn",
+				"noBannedTypes": "error",
+				"noUselessConstructor": "error",
 				"useLiteralKeys": "warn"
 			},
 			"correctness": {
@@ -37,7 +37,7 @@
 			},
 			"style": {
 				"noNonNullAssertion": "warn",
-				"useConst": "warn",
+				"useConst": "error",
 				"useTemplate": "warn"
 			},
 			"suspicious": {
