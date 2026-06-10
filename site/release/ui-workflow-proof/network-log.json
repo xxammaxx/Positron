@@ -1,0 +1,145 @@
+{
+	"timestamp": "2026-05-26T11:11:40.097Z",
+	"totalCalls": 21,
+	"calls": [
+		{
+			"method": "GET",
+			"url": "/health",
+			"status": 200,
+			"timestamp": "2026-05-26T11:11:04.416Z"
+		},
+		{
+			"method": "GET",
+			"url": "/runs?limit=50",
+			"status": 200,
+			"timestamp": "2026-05-26T11:11:04.393Z"
+		},
+		{
+			"method": "GET",
+			"url": "/metrics",
+			"status": 200,
+			"timestamp": "2026-05-26T11:11:04.392Z"
+		},
+		{
+			"method": "GET",
+			"url": "/evidence",
+			"status": 200,
+			"timestamp": "2026-05-26T11:11:04.393Z"
+		},
+		{
+			"method": "GET",
+			"url": "health",
+			"status": 200,
+			"timestamp": "2026-05-26T11:11:37.298Z"
+		},
+		{
+			"method": "GET",
+			"url": "metrics",
+			"status": 200,
+			"timestamp": "2026-05-26T11:11:37.291Z"
+		},
+		{
+			"method": "GET",
+			"url": "runs?limit=50",
+			"status": 200,
+			"timestamp": "2026-05-26T11:11:37.295Z"
+		},
+		{
+			"method": "GET",
+			"url": "evidence",
+			"status": 200,
+			"timestamp": "2026-05-26T11:11:37.296Z"
+		},
+		{
+			"method": "GET",
+			"url": "/api/health",
+			"status": 200,
+			"timestamp": "2026-05-26T11:11:40.097Z"
+		}
+	],
+	"summary": {
+		"health": [
+			{
+				"method": "GET",
+				"url": "/health",
+				"status": 200,
+				"timestamp": "2026-05-26T11:11:04.375Z"
+			},
+			{
+				"method": "GET",
+				"url": "/health",
+				"status": 200,
+				"timestamp": "2026-05-26T11:11:04.377Z"
+			},
+			{
+				"method": "GET",
+				"url": "/health",
+				"status": 200,
+				"timestamp": "2026-05-26T11:11:04.392Z"
+			},
+			{
+				"method": "GET",
+				"url": "/health",
+				"status": 200,
+				"timestamp": "2026-05-26T11:11:04.416Z"
+			},
+			{
+				"method": "GET",
+				"url": "health",
+				"status": 200,
+				"timestamp": "2026-05-26T11:11:37.274Z"
+			},
+			{
+				"method": "GET",
+				"url": "health",
+				"status": 200,
+				"timestamp": "2026-05-26T11:11:37.285Z"
+			},
+			{
+				"method": "GET",
+				"url": "health",
+				"status": 200,
+				"timestamp": "2026-05-26T11:11:37.296Z"
+			},
+			{
+				"method": "GET",
+				"url": "health",
+				"status": 200,
+				"timestamp": "2026-05-26T11:11:37.298Z"
+			},
+			{
+				"method": "GET",
+				"url": "/api/health",
+				"status": 200,
+				"timestamp": "2026-05-26T11:11:40.097Z"
+			}
+		],
+		"runs": [
+			{
+				"method": "GET",
+				"url": "/runs?limit=50",
+				"status": 200,
+				"timestamp": "2026-05-26T11:11:04.377Z"
+			},
+			{
+				"method": "GET",
+				"url": "/runs?limit=50",
+				"status": 200,
+				"timestamp": "2026-05-26T11:11:04.393Z"
+			},
+			{
+				"method": "GET",
+				"url": "runs?limit=50",
+				"status": 200,
+				"timestamp": "2026-05-26T11:11:37.280Z"
+			},
+			{
+				"method": "GET",
+				"url": "runs?limit=50",
+				"status": 200,
+				"timestamp": "2026-05-26T11:11:37.295Z"
+			}
+		],
+		"errors": []
+	}
+}

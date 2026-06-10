@@ -1,0 +1,79 @@
+# Positron
+
+> Evidence-Gated GitHub Issue Execution System — KI-gesteuerte, überprüfbare Softwareentwicklung.
+
+## Projektzweck
+
+Positron verwandelt GitHub-Issues in getestete, dokumentierte Pull Requests durch kontrollierte KI-Agenten-Orchestrierung. Jeder Schritt ist evidence-gated: Kein Code ohne Spec, kein Fortschritt ohne GitHub-Kommentar, kein Erfolg ohne Testbeweis.
+
+## Tech Stack
+
+TypeScript | Node.js | Express | React/Vite/Tailwind | SQLite | Vitest | Playwright
+
+## Architektur (kurz)
+
+- **8 TypeScript Packages** im Monorepo (npm Workspaces)
+- **State Machine** mit 18 Phasen (QUEUED → DONE)
+- **Adapter Pattern** für GitHub, SpecKit, OpenCode
+- **SQLite** für persistente Run-/Event-/Artifact-Speicherung
+- **SSE** für Live-Updates zwischen Server und Frontend
+
+## Wichtigste Einstiegspunkte
+
+- [README.md](README.md) — Projektüberblick und Quick Start
+- [docs/index.md](docs/index.md) — Zentraler Dokumentationseinstieg
+- [docs/getting-started/quickstart.md](docs/getting-started/quickstart.md) — Installation und erster Run
+- [docs/architecture/README.md](docs/architecture/README.md) — Architekturüberblick
+- [docs/runbooks/development.md](docs/runbooks/development.md) — Entwicklungsumgebung
+- [docs/glossary.md](docs/glossary.md) — Zentrale Begriffe und Definitionen
+
+## API-Referenz
+
+- [docs/architecture/api-overview.md](docs/architecture/api-overview.md) — 14 REST/SSE-Endpunkte
+- [docs/workflows/cli.md](docs/workflows/cli.md) — CLI-Befehlserferenz
+
+## Relevante Dokumentationsseiten
+
+- [docs/reference/project-structure.md](docs/reference/project-structure.md)
+- [docs/module-map.md](docs/module-map.md)
+- [docs/dependency-graph.md](docs/dependency-graph.md)
+- [docs/architecture/adr/](docs/architecture/adr/) — Architecture Decision Records
+
+## Regeln für KI-Agenten
+
+**Vor jeder Aktion:**
+1. Lies `AGENTS.md`
+2. Lies `.specify/memory/constitution.md`
+3. Lies den aktiven Issue-Kontext
+4. Keine Implementierung ohne Spec, Plan, Tasks
+5. Jeder Schritt muss in GitHub dokumentiert werden
+6. Keine Secrets in Logs, Commits oder Agent-Ausgaben
+
+**Evidence-Pflicht:**
+- Tests müssen ausgeführt und bestanden sein
+- Build/Lint/Typecheck müssen dokumentiert sein
+- Diff muss zusammengefasst sein
+- Akzeptanzkriterien müssen gemappt sein
+- GitHub-Issue muss kommentiert sein
+
+**Docs-Updates:**
+- Jede Code-Änderung, die API, Konfiguration oder Verhalten ändert, MUSS die Dokumentation aktualisieren
+- Feature-Code und Docs-Update im selben PR/MR
+- KI-generierte Dokumentation darf nicht ungeprüft gemerged werden
+- Siehe [CONTRIBUTING.md](CONTRIBUTING.md)
+
+## Source of Truth
+
+- **Primär:** GitHub Issues + Repository Code
+- **Governance:** `.specify/memory/constitution.md`
+- **Dokumentation:** `docs/` (MkDocs-gebaut, versioniert in Git)
+- **Architekturentscheidungen:** `docs/architecture/adr/`
+
+## Datenschutz & Sicherheit
+
+- Niemals Secrets, Tokens oder Zugangsdaten in Dokumentation, Logs oder Beispiele schreiben
+- `.env` ist in `.gitignore`
+- Agenten laufen standardmäßig im `fake`-Modus (keine echten externen API-Aufrufe)
+- Trust-Tier-System für alle MCP-Tools (Tier 0: Readonly, Tier 1: Sandboxed, Tier 2: Human-Gate)
+- Vollautonomie nur in isolierten Workspaces
+- DSGVO-konforme Datenminimierung und Audit-Trail-Pflicht

@@ -1,0 +1,17 @@
+{
+	"default": true,
+	"line-length": false,
+	"no-duplicate-heading": { "siblings_only": true },
+	"no-trailing-punctuation": {
+		"punctuation": ".,;:!。，；：！"
+	},
+	"no-inline-html": { "allowed_elements": ["br", "details", "summary"] },
+	"no-emphasis-as-heading": true,
+	"first-line-heading": false,
+	"no-alt-text": false,
+	"MD013": false,
+	"MD033": { "allowed_elements": ["br", "details", "summary"] },
+	"MD041": false,
+	"MD046": { "style": "fenced" },
+	"MD048": { "style": "backtick" }
+}

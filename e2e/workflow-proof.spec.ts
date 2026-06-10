@@ -9,13 +9,13 @@
  *
  * Artifacts saved to: docs/release/ui-workflow-proof/
  */
-import { test, expect } from "./fixtures/observe";
-import fs from "fs";
-import path from "path";
+import { test, expect } from './fixtures/observe';
+import fs from 'fs';
+import path from 'path';
 
-const ARTIFACT_DIR = "docs/release/ui-workflow-proof";
-const BACKEND_URL = "http://localhost:3000";
-const FRONTEND_URL = "http://localhost:5173";
+const ARTIFACT_DIR = 'docs/release/ui-workflow-proof';
+const BACKEND_URL = 'http://localhost:3000';
+const FRONTEND_URL = 'http://localhost:5173';
 
 // Ensure artifact directory exists
 if (!fs.existsSync(ARTIFACT_DIR)) {
@@ -33,25 +33,25 @@ const apiCalls: ApiCall[] = [];
 
 /** Normalize a response URL to a consistent /api/<path> format */
 function normalizeApiUrl(url: string): string | null {
-	const apiIndex = url.indexOf("/api/");
+	const apiIndex = url.indexOf('/api/');
 	if (apiIndex >= 0) return url.substring(apiIndex);
 	return null; // Not an API URL
 }
 
 test.describe
-	.serial("UI Workflow Proof — 16 Steps", () => {
-		test("S01: Frontend loads and UI opens", async ({ page }) => {
+	.serial('UI Workflow Proof — 16 Steps', () => {
+		test('S01: Frontend loads and UI opens', async ({ page }) => {
 			const errors: string[] = [];
-			page.on("console", (msg) => {
-				if (msg.type() === "error") {
+			page.on('console', (msg) => {
+				if (msg.type() === 'error') {
 					errors.push(msg.text());
-					console.warn("[workflow-proof] Console error:", msg.text());
+					console.warn('[workflow-proof] Console error:', msg.text());
 				}
 			});
-			page.on("pageerror", (err) => errors.push(err.message));
+			page.on('pageerror', (err) => errors.push(err.message));
 
 			// Track API calls with consistent /api/<path> format
-			page.on("response", (response) => {
+			page.on('response', (response) => {
 				const url = response.url();
 				const normalized = normalizeApiUrl(url);
 				if (normalized) {
@@ -65,15 +65,15 @@ test.describe
 			});
 
 			await page.goto(FRONTEND_URL, {
-				waitUntil: "domcontentloaded",
+				waitUntil: 'domcontentloaded',
 				timeout: 30_000,
 			});
 
 			// Verify main content renders (don't fail on benign console errors)
-			await expect(page.getByRole("main")).toBeVisible({ timeout: 10_000 });
-			await expect(
-				page.getByRole("heading", { name: "Dashboard" }),
-			).toBeVisible({ timeout: 10_000 });
+			await expect(page.getByRole('main')).toBeVisible({ timeout: 10_000 });
+			await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible({
+				timeout: 10_000,
+			});
 
 			// Take initial screenshot (captured regardless of benign console errors)
 			await page.screenshot({
@@ -82,9 +82,9 @@ test.describe
 			});
 		});
 
-		test("S02: Backend health verified in UI", async ({ page }) => {
+		test('S02: Backend health verified in UI', async ({ page }) => {
 			await page.goto(FRONTEND_URL, {
-				waitUntil: "domcontentloaded",
+				waitUntil: 'domcontentloaded',
 				timeout: 30_000,
 			});
 
@@ -95,21 +95,21 @@ test.describe
 			});
 
 			// Soft-check: health indicator shows connected state
-			const healthDot = page.locator("header .rounded-full").first();
+			const healthDot = page.locator('header .rounded-full').first();
 			await expect(healthDot).toBeVisible({ timeout: 10_000 });
 		});
 
-		test("S03: Backend direct health check succeeds", async () => {
+		test('S03: Backend direct health check succeeds', async () => {
 			const response = await fetch(`${BACKEND_URL}/api/health`);
 			expect(response.ok).toBe(true);
 			const data = await response.json();
-			expect(data).toHaveProperty("status");
-			expect(["ok", "degraded"]).toContain(data.status);
+			expect(data).toHaveProperty('status');
+			expect(['ok', 'degraded']).toContain(data.status);
 		});
 
-		test("S04: Dashboard renders completely", async ({ page }) => {
+		test('S04: Dashboard renders completely', async ({ page }) => {
 			await page.goto(FRONTEND_URL, {
-				waitUntil: "domcontentloaded",
+				waitUntil: 'domcontentloaded',
 				timeout: 30_000,
 			});
 
@@ -120,19 +120,19 @@ test.describe
 			});
 
 			// Dashboard heading
-			await expect(
-				page.getByRole("heading", { name: "Dashboard" }),
-			).toBeVisible({ timeout: 10_000 });
+			await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible({
+				timeout: 10_000,
+			});
 
 			// Demo Blueprint Panel (core feature)
-			await expect(page.getByText("Demo Blueprint")).toBeVisible({
+			await expect(page.getByText('Demo Blueprint')).toBeVisible({
 				timeout: 10_000,
 			});
 		});
 
-		test("S05: Demo Blueprint can be loaded", async ({ page }) => {
+		test('S05: Demo Blueprint can be loaded', async ({ page }) => {
 			await page.goto(FRONTEND_URL, {
-				waitUntil: "domcontentloaded",
+				waitUntil: 'domcontentloaded',
 				timeout: 30_000,
 			});
 
@@ -144,23 +144,19 @@ test.describe
 
 			// Fill repo and issue inputs for dynamic blueprint generation
 			// UI was refactored: "Load Mini Blueprint" → "Generate Blueprint" + inputs
-			await page
-				.getByLabel("Repository (owner/repo)")
-				.fill("test-owner/test-repo");
-			await page.getByLabel("Issue number").fill("1");
+			await page.getByLabel('Repository (owner/repo)').fill('test-owner/test-repo');
+			await page.getByLabel('Issue number').fill('1');
 
 			// Click "Generate Blueprint" to fetch the blueprint from the API
-			const generateBtn = page.getByRole("button", {
+			const generateBtn = page.getByRole('button', {
 				name: /Generate Blueprint/i,
 			});
 			await expect(generateBtn).toBeVisible({ timeout: 10_000 });
 			await generateBtn.click();
 
 			// Wait for textarea to be filled (API response populates it)
-			const textarea = page.locator("textarea");
-			await expect
-				.poll(() => textarea.inputValue(), { timeout: 15_000 })
-				.toMatch(/.{50,}/s); // at least 50 characters
+			const textarea = page.locator('textarea');
+			await expect.poll(() => textarea.inputValue(), { timeout: 15_000 }).toMatch(/.{50,}/s); // at least 50 characters
 
 			await page.screenshot({
 				path: `${ARTIFACT_DIR}/05-blueprint-loaded.png`,
@@ -168,9 +164,9 @@ test.describe
 			});
 		});
 
-		test("S06: Start Demo Run creates a run", async ({ page }) => {
+		test('S06: Start Demo Run creates a run', async ({ page }) => {
 			await page.goto(FRONTEND_URL, {
-				waitUntil: "domcontentloaded",
+				waitUntil: 'domcontentloaded',
 				timeout: 30_000,
 			});
 
@@ -181,19 +177,17 @@ test.describe
 			});
 
 			// Generate blueprint first (updated for new UI flow)
-			await page
-				.getByLabel("Repository (owner/repo)")
-				.fill("test-owner/test-repo");
-			await page.getByLabel("Issue number").fill("1");
-			await page.getByRole("button", { name: /Generate Blueprint/i }).click();
+			await page.getByLabel('Repository (owner/repo)').fill('test-owner/test-repo');
+			await page.getByLabel('Issue number').fill('1');
+			await page.getByRole('button', { name: /Generate Blueprint/i }).click();
 			await expect
-				.poll(() => page.locator("textarea").inputValue(), {
+				.poll(() => page.locator('textarea').inputValue(), {
 					timeout: 15_000,
 				})
 				.toMatch(/.{50,}/s);
 
 			// Click Start Demo Run
-			const startBtn = page.getByRole("button", {
+			const startBtn = page.getByRole('button', {
 				name: /Start Demo Run/i,
 			});
 			await expect(startBtn).toBeVisible({ timeout: 10_000 });
@@ -210,11 +204,9 @@ test.describe
 			});
 		});
 
-		test("S07: Run appears in recent activity or run list", async ({
-			page,
-		}) => {
+		test('S07: Run appears in recent activity or run list', async ({ page }) => {
 			await page.goto(FRONTEND_URL, {
-				waitUntil: "domcontentloaded",
+				waitUntil: 'domcontentloaded',
 				timeout: 30_000,
 			});
 
@@ -228,15 +220,15 @@ test.describe
 			});
 
 			// Dashboard should show activity (Recent Activity card or run list)
-			await expect(
-				page.getByText(/Recent Activity|Runs|Dashboard/i).first(),
-			).toBeVisible({ timeout: 10_000 });
+			await expect(page.getByText(/Recent Activity|Runs|Dashboard/i).first()).toBeVisible({
+				timeout: 10_000,
+			});
 		});
 
-		test("S08: Run detail and pipeline", async ({ page }) => {
+		test('S08: Run detail and pipeline', async ({ page }) => {
 			// Navigate directly to runs page
 			await page.goto(`${FRONTEND_URL}/runs`, {
-				waitUntil: "domcontentloaded",
+				waitUntil: 'domcontentloaded',
 				timeout: 15_000,
 			});
 			await page.waitForTimeout(2000);
@@ -258,9 +250,9 @@ test.describe
 			}
 		});
 
-		test("S09: Evidence page", async ({ page }) => {
+		test('S09: Evidence page', async ({ page }) => {
 			await page.goto(`${FRONTEND_URL}/evidence`, {
-				waitUntil: "domcontentloaded",
+				waitUntil: 'domcontentloaded',
 				timeout: 15_000,
 			});
 			await page.waitForTimeout(1000);
@@ -270,9 +262,9 @@ test.describe
 			});
 		});
 
-		test("S10: Settings page", async ({ page }) => {
+		test('S10: Settings page', async ({ page }) => {
 			await page.goto(`${FRONTEND_URL}/settings`, {
-				waitUntil: "domcontentloaded",
+				waitUntil: 'domcontentloaded',
 				timeout: 15_000,
 			});
 			await page.waitForTimeout(1000);
@@ -282,9 +274,9 @@ test.describe
 			});
 		});
 
-		test("S11: System Health and safety", async ({ page }) => {
+		test('S11: System Health and safety', async ({ page }) => {
 			await page.goto(FRONTEND_URL, {
-				waitUntil: "domcontentloaded",
+				waitUntil: 'domcontentloaded',
 				timeout: 15_000,
 			});
 			await page.waitForTimeout(1000);
@@ -294,55 +286,50 @@ test.describe
 			});
 		});
 
-		test("S14: Backend verified via direct API checks", async ({ page }) => {
+		test('S14: Backend verified via direct API checks', async ({ page }) => {
 			// Verify backend is reachable and healthy via direct Node.js fetch
 			const healthRes = await fetch(`${BACKEND_URL}/api/health`);
-			expect(healthRes.ok, "Backend health check must pass").toBe(true);
+			expect(healthRes.ok, 'Backend health check must pass').toBe(true);
 			const healthData = await healthRes.json();
-			expect(healthData.status, "Backend status must be ok").toBe("ok");
+			expect(healthData.status, 'Backend status must be ok').toBe('ok');
 
 			// Verify runs endpoint returns data
 			const runsRes = await fetch(`${BACKEND_URL}/api/runs`);
-			expect(runsRes.ok, "Runs endpoint must respond").toBe(true);
+			expect(runsRes.ok, 'Runs endpoint must respond').toBe(true);
 			const runsData = (await runsRes.json()) as { runs: Array<unknown> };
-			expect(
-				runsData.runs,
-				"Runs response must contain runs array",
-			).toBeDefined();
+			expect(runsData.runs, 'Runs response must contain runs array').toBeDefined();
 
 			// Track successful API calls for the network log
 			apiCalls.push({
-				method: "GET",
-				url: "/api/health",
+				method: 'GET',
+				url: '/api/health',
 				status: healthRes.status,
 				timestamp: new Date().toISOString(),
 			});
 			apiCalls.push({
-				method: "GET",
-				url: "/api/runs",
+				method: 'GET',
+				url: '/api/runs',
 				status: runsRes.status,
 				timestamp: new Date().toISOString(),
 			});
 
 			// Navigate to dashboard to verify UI is rendering
 			await page.goto(FRONTEND_URL, {
-				waitUntil: "domcontentloaded",
+				waitUntil: 'domcontentloaded',
 				timeout: 15_000,
 			});
 			await page.waitForTimeout(2000);
 
 			// Verify UI shows dashboard content
-			await expect(
-				page.getByRole("heading", { name: /Dashboard/i }),
-			).toBeVisible({ timeout: 5_000 });
+			await expect(page.getByRole('heading', { name: /Dashboard/i })).toBeVisible({
+				timeout: 5_000,
+			});
 
 			// Write network log
 			const networkLog = {
 				timestamp: new Date().toISOString(),
 				totalCalls: apiCalls.length,
-				uniqueEndpoints: [
-					...new Set(apiCalls.map((c) => `${c.method} ${c.url}`)),
-				],
+				uniqueEndpoints: [...new Set(apiCalls.map((c) => `${c.method} ${c.url}`))],
 				calls: apiCalls.map((c) => ({
 					method: c.method,
 					url: c.url,
@@ -356,13 +343,10 @@ test.describe
 				},
 			};
 
-			fs.writeFileSync(
-				`${ARTIFACT_DIR}/network-log.json`,
-				JSON.stringify(networkLog, null, 2),
-			);
+			fs.writeFileSync(`${ARTIFACT_DIR}/network-log.json`, JSON.stringify(networkLog, null, 2));
 		});
 
-		test("S15: Write manifest and verify backend state", async () => {
+		test('S15: Write manifest and verify backend state', async () => {
 			// Verify backend state directly via API calls
 			const healthRes = await fetch(`${BACKEND_URL}/api/health`);
 			const runsRes = await fetch(`${BACKEND_URL}/api/runs`);
@@ -370,54 +354,52 @@ test.describe
 			// Track these for the network log
 			if (healthRes.ok)
 				apiCalls.push({
-					method: "GET",
-					url: "/api/health",
+					method: 'GET',
+					url: '/api/health',
 					status: healthRes.status,
 					timestamp: new Date().toISOString(),
 				});
 			if (runsRes.ok)
 				apiCalls.push({
-					method: "GET",
-					url: "/api/runs",
+					method: 'GET',
+					url: '/api/runs',
 					status: runsRes.status,
 					timestamp: new Date().toISOString(),
 				});
 
 			// Assert critical backend endpoints work
-			expect(healthRes.ok, "Backend health check must return 200").toBe(true);
-			expect(runsRes.ok, "Runs endpoint must return 200").toBe(true);
+			expect(healthRes.ok, 'Backend health check must return 200').toBe(true);
+			expect(runsRes.ok, 'Runs endpoint must return 200').toBe(true);
 
 			const runsData = (await runsRes.json()) as {
 				runs: Array<{ id: string }>;
 			};
-			const runId = runsData.runs?.[0]?.id ?? "not captured";
+			const runId = runsData.runs?.[0]?.id ?? 'not captured';
 
 			// Count any API errors from captured calls
-			const clientErrors = apiCalls.filter(
-				(c) => c.status >= 400 && c.status < 500,
-			);
+			const clientErrors = apiCalls.filter((c) => c.status >= 400 && c.status < 500);
 			const serverErrors = apiCalls.filter((c) => c.status >= 500);
 
 			const manifest = {
 				timestamp: new Date().toISOString(),
-				backendCommand: "npm start",
-				frontendCommand: "npm run build && npx vite preview --port 4173",
+				backendCommand: 'npm start',
+				frontendCommand: 'npm run build && npx vite preview --port 4173',
 				backendHealth: {
-					status: healthRes.ok ? "ok" : "error",
+					status: healthRes.ok ? 'ok' : 'error',
 					url: `${BACKEND_URL}/api/health`,
 				},
 				frontendUrl: FRONTEND_URL,
 				apiBaseUrl: BACKEND_URL,
-				mode: "demo",
+				mode: 'demo',
 				runId,
-				finalStatus: "DONE",
+				finalStatus: 'DONE',
 				artifacts: {
 					screenshots: [],
-					networkLog: "network-log.json",
+					networkLog: 'network-log.json',
 				},
 				network: {
 					totalCalls: apiCalls.length,
-					requiredCalls: ["GET /api/health", "GET /api/runs"],
+					requiredCalls: ['GET /api/health', 'GET /api/runs'],
 					allRequiredPresent: healthRes.ok && runsRes.ok,
 					clientErrors: clientErrors.length,
 					serverErrors: serverErrors.length,
@@ -428,20 +410,16 @@ test.describe
 			if (fs.existsSync(ARTIFACT_DIR)) {
 				manifest.artifacts.screenshots = fs
 					.readdirSync(ARTIFACT_DIR)
-					.filter((f) => f.endsWith(".png"))
+					.filter((f) => f.endsWith('.png'))
 					.map((f) => ({ file: f, path: `${ARTIFACT_DIR}/${f}` }));
 			}
 
-			fs.writeFileSync(
-				`${ARTIFACT_DIR}/manifest.json`,
-				JSON.stringify(manifest, null, 2),
-			);
+			fs.writeFileSync(`${ARTIFACT_DIR}/manifest.json`, JSON.stringify(manifest, null, 2));
 		});
 
-		test("S16: Final proof report is generated with strong assertions", async () => {
+		test('S16: Final proof report is generated with strong assertions', async () => {
 			const hasScreenshots =
-				fs.existsSync(ARTIFACT_DIR) &&
-				fs.readdirSync(ARTIFACT_DIR).some((f) => f.endsWith(".png"));
+				fs.existsSync(ARTIFACT_DIR) && fs.readdirSync(ARTIFACT_DIR).some((f) => f.endsWith('.png'));
 			const hasNetworkLog = fs.existsSync(`${ARTIFACT_DIR}/network-log.json`);
 
 			// Direct backend verification (most reliable approach)
@@ -454,34 +432,27 @@ test.describe
 
 			// Summary results
 			const results: Record<string, boolean | string> = {
-				"Backend health": healthOk,
-				"Runs endpoint": runsOk,
-				"UI screenshots captured": hasScreenshots,
-				"Network log file exists": hasNetworkLog,
-				"Captured API calls": `${apiCalls.length} calls logged`,
-				"No server errors (5xx)":
-					apiCalls.filter((c) => c.status >= 500).length === 0,
-				"Screenshots count": `${fs.readdirSync(ARTIFACT_DIR).filter((f) => f.endsWith(".png")).length} screenshots`,
+				'Backend health': healthOk,
+				'Runs endpoint': runsOk,
+				'UI screenshots captured': hasScreenshots,
+				'Network log file exists': hasNetworkLog,
+				'Captured API calls': `${apiCalls.length} calls logged`,
+				'No server errors (5xx)': apiCalls.filter((c) => c.status >= 500).length === 0,
+				'Screenshots count': `${fs.readdirSync(ARTIFACT_DIR).filter((f) => f.endsWith('.png')).length} screenshots`,
 			};
 
 			// Fail fast if critical checks fail
-			expect(healthOk, "Backend must be reachable (health endpoint)").toBe(
-				true,
-			);
-			expect(runsOk, "Runs endpoint must be reachable").toBe(true);
-			expect(hasScreenshots, "At least one UI screenshot must exist").toBe(
-				true,
-			);
-			expect(hasNetworkLog, "Network log must exist").toBe(true);
+			expect(healthOk, 'Backend must be reachable (health endpoint)').toBe(true);
+			expect(runsOk, 'Runs endpoint must be reachable').toBe(true);
+			expect(hasScreenshots, 'At least one UI screenshot must exist').toBe(true);
+			expect(hasNetworkLog, 'Network log must exist').toBe(true);
 
-			const allPassed = Object.values(results).every(
-				(v) => v === true || typeof v === "string",
-			);
+			const allPassed = Object.values(results).every((v) => v === true || typeof v === 'string');
 
 			const report = `# UI Workflow Proof Report
 
 ## Summary
-- **Status:** ${allPassed ? "PASS" : "PARTIAL"}
+- **Status:** ${allPassed ? 'PASS' : 'PARTIAL'}
 - **Timestamp:** ${new Date().toISOString()}
 
 ## Verification Results
@@ -489,29 +460,26 @@ test.describe
 | Check | Result |
 |-------|--------|
 ${Object.entries(results)
-	.map(([k, v]) => `| ${k} | ${v ? "✅" : "❌"} ${v} |`)
-	.join("\n")}
+	.map(([k, v]) => `| ${k} | ${v ? '✅' : '❌'} ${v} |`)
+	.join('\n')}
 
 ## Network Calls
 Total API calls captured: ${apiCalls.length}
 
 | Method | URL | Status |
 |--------|-----|--------|
-${apiCalls.map((c) => `| ${c.method} | ${c.url} | ${c.status} |`).join("\n")}
+${apiCalls.map((c) => `| ${c.method} | ${c.url} | ${c.status} |`).join('\n')}
 
 ## Artifacts
 ${fs
 	.readdirSync(ARTIFACT_DIR)
 	.map((f) => `- ${ARTIFACT_DIR}/${f}`)
-	.join("\n")}
+	.join('\n')}
 
 ## Final Verdict
-**${allPassed ? "PASS — Workflow proof complete. Ready for release." : "PARTIAL — Some checks failed. See details above."}**
+**${allPassed ? 'PASS — Workflow proof complete. Ready for release.' : 'PARTIAL — Some checks failed. See details above.'}**
 `;
 
-			fs.writeFileSync(
-				`${ARTIFACT_DIR}/../ui-workflow-proof-report.md`,
-				report,
-			);
+			fs.writeFileSync(`${ARTIFACT_DIR}/../ui-workflow-proof-report.md`, report);
 		});
 	});

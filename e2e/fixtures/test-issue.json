@@ -1,0 +1,11 @@
+{
+	"issueNumber": 42,
+	"autonomyLevel": 2,
+	"title": "Test Issue for E2E Fixtures",
+	"body": "This is a test issue used for E2E testing fixtures.",
+	"labels": ["bug", "test"],
+	"repository": {
+		"owner": "test-owner",
+		"repo": "test-repo"
+	}
+}

@@ -1,0 +1,14 @@
+- title: "v3.1.0 - Critical Fixes"
+  description: "Behebt kritische Bugs und Sicherheitslücken (Real-Adapter, Shell-Injection)."
+  due_date: "2024-03-15"
+  labels: ["priority: high", "needs-triage"]
+
+- title: "v3.2.0 - Test Coverage & Stability"
+  description: "Erweitert die Testabdeckung und behebt mittlere Prioritäten (Dogfood-Fixture, Sync-Templates)."
+  due_date: "2024-04-01"
+  labels: ["priority: medium", "needs-discussion"]
+
+- title: "v3.3.0 - DevOps & Documentation"
+  description: "CI/CD, Docker, API-Dokumentation und langfristige Optimierungen."
+  due_date: "2024-04-15"
+  labels: ["priority: low", "documentation"]

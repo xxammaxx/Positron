@@ -1,0 +1,106 @@
+# Positron Documentation Build Configuration
+site_name: Positron
+site_description: Evidence-Gated GitHub Issue Execution System — Documentation
+site_author: Positron Team
+repo_url: https://github.com/xxammaxx/Positron
+repo_name: xxammaxx/Positron
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - navigation.tracking
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+
+plugins:
+  - search:
+      lang: en
+  - awesome-pages:
+      collapse_single_pages: true
+
+markdown_extensions:
+  - admonition
+  - codehilite:
+      guess_lang: false
+  - footnotes
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - tables
+  - attr_list
+  - md_in_html
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Quickstart: getting-started/quickstart.md
+  - How-to:
+      - Development Setup: runbooks/development.md
+      - CLI Usage: workflows/cli.md
+      - Iterations-Workflow: workflows/iterations.md
+      - Vibe-Coding-Prinzipien: reference/vibe-coding.md
+  - Reference:
+      - Project Structure: reference/project-structure.md
+      - Module Map: module-map.md
+      - Dependency Graph: dependency-graph.md
+      - API Overview: architecture/api-overview.md
+      - Context Engineering: reference/context-engineering.md
+      - Quality-Gate-Matrix: workflows/qualitaetspruefung.md
+      - CI/Security Gate Matrix: ci/POSITRON_GATE_MATRIX.md
+      - Fehlerbehandlung: reference/fehlerbehandlung.md
+      - Verification Contract: reference/verification-contract.md
+      - Agentenmetriken: reference/agentenmetriken.md
+      - Glossary: glossary.md
+  - Explanation:
+      - Architecture: architecture/README.md
+      - SDD & Fleet Architecture: architecture/POSITRON_SDD_FLEET_ARCHITECTURE.md
+      - State Machine Mapping: architecture/POSITRON_STATE_MACHINE_MAPPING.md
+      - Blueprint Analysis: blueprint-analysis.md
+      - Security Model: security/security-model.md
+      - Orchestrierung: workflows/orchestrierung.md
+  - Architecture Decisions:
+      - ADR Index: architecture/adr/index.md
+      - ADR-0004 Hybrid Tests: architecture/adr/0004-hybrid-test-architecture.md
+      - ADR-0005 SSE Transport: architecture/adr/0005-sse-realtime-transport.md
+      - ADR-0006 HTTP Cancel: architecture/adr/0006-http-cancel-in-memory-signal.md
+      - ADR-0007 Docs Platform: architecture/adr/0007-docs-as-code-platform.md
+  - Development:
+      - Development Workflow: workflows/development.md
+      - Testing Strategy: testing/fixture-strategy.md
+  - Security:
+      - Security Model: security/security-model.md
+      - MCP Security Rules: security/mcp-security-rules.md
+      - Agent Isolation: security/agent-environment-isolation.md
+  - Releases:
+      - v0.1.0-rc.1: release/v0.1.0-rc.1.md
+  - Agent Resources:
+      - Context Manifest: agent/CONTEXT_MANIFEST_TEMPLATE.md
+      - Evidence Log: agent/EVIDENCE_LOG_TEMPLATE.md
+  - Audits:
+      - Docs-as-Code Audit: audits/DOCS_AS_CODE_AUDIT.md
+      - SDD/Fleet Gap Analysis: audits/POSITRON_NEW_INSIGHTS_GAP_ANALYSIS.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/xxammaxx/Positron
+
+copyright: Copyright &copy; 2026 Positron Team — MIT License

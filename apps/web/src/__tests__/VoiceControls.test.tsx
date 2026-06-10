@@ -14,15 +14,18 @@ const mockVoices: SpeechSynthesisVoice[] = [
 
 function setupSpeech(enabled = true): void {
 	if (enabled) {
-		vi.stubGlobal('SpeechSynthesisUtterance', class {
-			text = '';
-			voice: SpeechSynthesisVoice | null = null;
-			rate = 1;
-			volume = 1;
-			constructor(t: string) {
-				this.text = t;
-			}
-		});
+		vi.stubGlobal(
+			'SpeechSynthesisUtterance',
+			class {
+				text = '';
+				voice: SpeechSynthesisVoice | null = null;
+				rate = 1;
+				volume = 1;
+				constructor(t: string) {
+					this.text = t;
+				}
+			},
+		);
 		vi.stubGlobal('speechSynthesis', {
 			speak: mockSpeak,
 			cancel: mockCancel,
@@ -132,9 +135,7 @@ describe('VoiceControls', () => {
 
 	test('shows privacy notice about local browser TTS', () => {
 		render(<VoiceControls />);
-		expect(
-			screen.getByText(/Voice output is local browser TTS/),
-		).toBeDefined();
+		expect(screen.getByText(/Voice output is local browser TTS/)).toBeDefined();
 		expect(screen.getByText(/No audio is sent to external services/)).toBeDefined();
 	});
 

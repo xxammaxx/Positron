@@ -36,23 +36,50 @@ export const BRANCH_PREFIX = 'positron/issue';
 export const MAX_BRANCH_SLUG_LENGTH = 50;
 /** Reihenfolge der Phasen (für Fortschrittsberechnung) */
 export const PHASE_ORDER = [
-    'QUEUED', 'CLAIMED', 'REPO_SYNC', 'ISSUE_CONTEXT',
-    'WEB_RESEARCH', 'SPECIFY', 'CLARIFY_OPTIONAL', 'PLAN', 'TASKS',
-    'ANALYZE', 'REVIEW', 'IMPLEMENT', 'TEST', 'VERIFY',
-    'COMMIT', 'PR_CREATE', 'MERGE', 'DONE',
-    'FAILED', 'FAILED_TRANSIENT', 'FAILED_BLOCKED', 'FAILED_UNSAFE',
-    'BLOCKED_PUSH', 'BLOCKED_MERGE',
-    'GATE_APPROVE', 'GATE_REVISE', 'RESUME_PENDING',
+    'QUEUED',
+    'CLAIMED',
+    'REPO_SYNC',
+    'ISSUE_CONTEXT',
+    'WEB_RESEARCH',
+    'SPECIFY',
+    'CLARIFY_OPTIONAL',
+    'PLAN',
+    'TASKS',
+    'ANALYZE',
+    'REVIEW',
+    'IMPLEMENT',
+    'TEST',
+    'VERIFY',
+    'COMMIT',
+    'PR_CREATE',
+    'MERGE',
+    'DONE',
+    'FAILED',
+    'FAILED_TRANSIENT',
+    'FAILED_BLOCKED',
+    'FAILED_UNSAFE',
+    'BLOCKED_PUSH',
+    'BLOCKED_MERGE',
+    'GATE_APPROVE',
+    'GATE_REVISE',
+    'RESUME_PENDING',
     'CLEANUP',
 ];
 /** Terminale Phasen (abgeschlossen, keine weiteren Übergänge) */
 export const TERMINAL_PHASES = [
-    'DONE', 'FAILED', 'FAILED_BLOCKED', 'FAILED_UNSAFE', 'CLEANUP',
+    'DONE',
+    'FAILED',
+    'FAILED_BLOCKED',
+    'FAILED_UNSAFE',
+    'CLEANUP',
 ];
 /** Blockierte/wartende Phasen */
 export const BLOCKED_PHASES = [
-    'BLOCKED_PUSH', 'BLOCKED_MERGE', 'GATE_APPROVE',
-    'GATE_REVISE', 'RESUME_PENDING',
+    'BLOCKED_PUSH',
+    'BLOCKED_MERGE',
+    'GATE_APPROVE',
+    'GATE_REVISE',
+    'RESUME_PENDING',
 ];
 /** Autonomie-Level-Konstanten */
 export const AUTONOMY_LEVELS = {

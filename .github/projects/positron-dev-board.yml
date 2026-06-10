@@ -1,0 +1,31 @@
+name: Positron v3.0 - Development Board
+description: "Systematische Bearbeitung der Positron-Analyse (v3.0)."
+columns:
+  - name: "🔴 To Do (Hochpriorität)"
+    filters:
+      - label: "priority: high"
+      - label: "needs-triage"
+      - label: "security"
+    limit: 5
+
+  - name: "🟡 In Progress (Mittel)"
+    filters:
+      - label: "priority: medium"
+      - label: "enhancement"
+    limit: 10
+
+  - name: "🟢 Review"
+    filters:
+      - label: "needs-review"
+    limit: 5
+
+  - name: "✅ Done"
+    filters:
+      - label: "closed"
+    limit: 20
+
+  - name: "🗑️ Backlog"
+    filters:
+      - no: label
+      - label: "needs-discussion"
+    limit: 50

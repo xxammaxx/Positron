@@ -1,0 +1,3166 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Evidence-Gated GitHub Issue Execution System — Documentation">
+      
+      
+        <meta name="author" content="Positron Team">
+      
+      
+      
+        <link rel="prev" href="../">
+      
+      
+        <link rel="next" href="../0005-sse-realtime-transport/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>ADR-0004 Hybrid Tests - Positron</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#adr-0004-mcp-powered-hybrid-test-architecture" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="Positron" class="md-header__button md-logo" aria-label="Positron" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Positron
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              ADR-0004 Hybrid Tests
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/xxammaxx/Positron" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    xxammaxx/Positron
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Positron" class="md-nav__button md-logo" aria-label="Positron" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Positron
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/xxammaxx/Positron" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    xxammaxx/Positron
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How-to
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    How-to
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../runbooks/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../workflows/cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Usage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../workflows/iterations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Iterations-Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/vibe-coding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vibe-Coding-Prinzipien
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/project-structure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project Structure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../module-map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module Map
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../dependency-graph/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dependency Graph
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/context-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Context Engineering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../workflows/qualitaetspruefung/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quality-Gate-Matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../ci/POSITRON_GATE_MATRIX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI/Security Gate Matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/fehlerbehandlung/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fehlerbehandlung
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/verification-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Verification Contract
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/agentenmetriken/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agentenmetriken
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Explanation
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Explanation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../POSITRON_SDD_FLEET_ARCHITECTURE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SDD & Fleet Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../POSITRON_STATE_MACHINE_MAPPING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    State Machine Mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../blueprint-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blueprint Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../security/security-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../workflows/orchestrierung/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Orchestrierung
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Decisions
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture Decisions
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-0004 Hybrid Tests
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-0004 Hybrid Tests
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Context">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#limitations-of-the-current-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limitations of the current setup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-a-hybrid-approach-is-necessary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why a hybrid approach is necessary
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decision
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Decision">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#layer-1-ki-agent-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer 1: KI Agent Layer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#layer-2-mcp-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer 2: MCP Layer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#layer-3-classical-test-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer 3: Classical Test Layer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#layer-4-visible-observation-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer 4: Visible Observation Layer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alternatives-considered" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alternatives Considered
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Alternatives Considered">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#alternative-1-pure-playwright-without-mcp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alternative 1: Pure Playwright without MCP
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alternative-2-mcp-only-testing-without-classical-framework" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alternative 2: MCP-only Testing without Classical Framework
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alternative-3-cypress-instead-of-playwright" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alternative 3: Cypress instead of Playwright
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alternative-4-fully-autonomous-testing-agent-decides-passfail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alternative 4: Fully Autonomous Testing (Agent decides pass/fail)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#consequences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Consequences
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Consequences">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#positive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Positive
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#negative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Negative
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#risks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risks
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Security Considerations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Security Considerations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mcp-least-privilege" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MCP Least-Privilege
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#readonly-first-principle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Readonly-First Principle
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#secret-protection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Secret Protection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tool-poisoning-protection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tool Poisoning Protection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#audit-trail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audit Trail
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Notes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implementation Notes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phased-rollout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phased Rollout
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Summary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deprecation-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deprecation Path
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-documents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Documents
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../0005-sse-realtime-transport/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-0005 SSE Transport
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../0006-http-cancel-in-memory-signal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-0006 HTTP Cancel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../0007-docs-as-code-platform/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-0007 Docs Platform
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../workflows/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../testing/fixture-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Security
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../security/security-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../security/mcp-security-rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP Security Rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../security/agent-environment-isolation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Isolation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Releases
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Releases
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../release/v0.1.0-rc.1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v0.1.0-rc.1
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Resources
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Agent Resources
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../agent/CONTEXT_MANIFEST_TEMPLATE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Context Manifest
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../agent/EVIDENCE_LOG_TEMPLATE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence Log
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audits
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Audits
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../audits/DOCS_AS_CODE_AUDIT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docs-as-Code Audit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../audits/POSITRON_NEW_INSIGHTS_GAP_ANALYSIS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SDD/Fleet Gap Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Context">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#limitations-of-the-current-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limitations of the current setup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-a-hybrid-approach-is-necessary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why a hybrid approach is necessary
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decision
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Decision">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#layer-1-ki-agent-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer 1: KI Agent Layer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#layer-2-mcp-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer 2: MCP Layer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#layer-3-classical-test-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer 3: Classical Test Layer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#layer-4-visible-observation-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer 4: Visible Observation Layer
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alternatives-considered" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alternatives Considered
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Alternatives Considered">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#alternative-1-pure-playwright-without-mcp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alternative 1: Pure Playwright without MCP
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alternative-2-mcp-only-testing-without-classical-framework" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alternative 2: MCP-only Testing without Classical Framework
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alternative-3-cypress-instead-of-playwright" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alternative 3: Cypress instead of Playwright
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alternative-4-fully-autonomous-testing-agent-decides-passfail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alternative 4: Fully Autonomous Testing (Agent decides pass/fail)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#consequences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Consequences
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Consequences">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#positive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Positive
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#negative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Negative
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#risks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risks
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Security Considerations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Security Considerations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mcp-least-privilege" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MCP Least-Privilege
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#readonly-first-principle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Readonly-First Principle
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#secret-protection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Secret Protection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tool-poisoning-protection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tool Poisoning Protection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#audit-trail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audit Trail
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Notes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implementation Notes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phased-rollout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phased Rollout
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Summary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deprecation-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deprecation Path
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-documents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Documents
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="adr-0004-mcp-powered-hybrid-test-architecture">ADR-0004: MCP-powered Hybrid Test Architecture<a class="headerlink" href="#adr-0004-mcp-powered-hybrid-test-architecture" title="Permanent link">&para;</a></h1>
+<ul>
+<li><strong>Date:</strong> 2026-05-25</li>
+<li><strong>Status:</strong> Proposed</li>
+<li><strong>Deciders:</strong> Positron Architecture Team</li>
+<li><strong>Supersedes:</strong> None</li>
+</ul>
+<hr />
+<h2 id="context">Context<a class="headerlink" href="#context" title="Permanent link">&para;</a></h2>
+<p>Positron v3.0 is an evidence-gated GitHub Issue execution system. Every unit of work — from issue ingestion through implementation to PR merge — must produce verifiable evidence (test results, build status, acceptance criteria mapping) that is logged as run events and persisted in SQLite.</p>
+<p>The current test architecture relies on two disconnected pillars:</p>
+<ol>
+<li>
+<p><strong>Vitest</strong> (unit/integration): 7 test files across packages and <code>apps/server</code>, executed via <code>vitest run</code>. Tests validate state machine transitions, adapter contracts, command-runner paths, and HTTP endpoints. Coverage is reasonable within packages but does not exercise cross-package workflows, real browser interaction, or MCP-layer behavior.</p>
+</li>
+<li>
+<p><strong>Playwright</strong> (E2E smoke): A single <code>e2e/smoke.spec.ts</code> file with 3 tests — health check, dashboard loading, and <code>/api/runs</code> response. The Playwright config supports headed mode (<code>PW_HEADED=1</code>) and slow-motion (<code>PW_SLOWMO</code>), but these are optional overrides, not a designed observation layer.</p>
+</li>
+</ol>
+<h3 id="limitations-of-the-current-setup">Limitations of the current setup<a class="headerlink" href="#limitations-of-the-current-setup" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Limitation</th>
+<th>Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No KI-driven test generation</td>
+<td>Tests are hand-written; test coverage is static and human-dependent. The KI agent cannot analyze code changes and propose or generate targeted test scenarios.</td>
+</tr>
+<tr>
+<td>No MCP-layer testing</td>
+<td>The server orchestrates adapters that call GitHub, SpecKit, and OpenCode. None of these adapter calls are tested through the MCP protocol layer that agents actually use. This leaves a gap between "the adapter works in isolation" and "the agent can successfully use the adapter via MCP tools".</td>
+</tr>
+<tr>
+<td>Binary headless/headed switch</td>
+<td><code>PW_HEADED=1</code> is a global toggle, not a layered observation mode. There is no way to selectively enable visible execution for specific test steps or provide a split view of agent-generated vs. framework-verified assertions.</td>
+</tr>
+<tr>
+<td>No unified execution model</td>
+<td>Vitest and Playwright run as separate <code>npm test</code> and <code>npx playwright test</code> commands. There is no orchestration layer that sequences agent-led exploration with classical assertion validation within a single test run.</td>
+</tr>
+<tr>
+<td>Evidence-gating is theoretical</td>
+<td>The constitution mandates "no silent failure" and evidence-gated progression, but evidence collection (test outputs, diffs, coverage) is manual or script-level, not systematically captured as run events.</td>
+</tr>
+<tr>
+<td>Cross-platform fragility</td>
+<td>The current env-var approach (<code>PW_HEADED</code>, <code>PW_SLOWMO</code>) works but lacks standardized cross-platform handling (Windows PowerShell vs. Unix shell, <code>cross-env</code> usage is inconsistent).</td>
+</tr>
+</tbody>
+</table>
+<h3 id="why-a-hybrid-approach-is-necessary">Why a hybrid approach is necessary<a class="headerlink" href="#why-a-hybrid-approach-is-necessary" title="Permanent link">&para;</a></h3>
+<p>Positron's core value proposition is <strong>controlled autonomy</strong>: KI agents perform work, but every action is gated by evidence. Testing is the primary evidence source. A hybrid architecture is required because:</p>
+<ul>
+<li><strong>KI agents can plan tests but should not be the sole arbiter of test truth.</strong> The agent may hallucinate a passing test or misinterpret a failure. The classical framework (Vitest/Playwright) must remain the authoritative truth layer.</li>
+<li><strong>MCP tools are the agent's interface to the world.</strong> Testing the MCP layer itself (tool invocation, parameter validation, error propagation) is essential for validating agent behavior end-to-end.</li>
+<li><strong>Visible execution is a governance requirement.</strong> Human operators must be able to observe what the agent is doing — not just read logs after the fact. A visible browser with slow-motion replay provides the audit trail demanded by the evidence-gated constitution.</li>
+</ul>
+<hr />
+<h2 id="decision">Decision<a class="headerlink" href="#decision" title="Permanent link">&para;</a></h2>
+<p>We will adopt a <strong>4-layer Hybrid Test Architecture</strong> that combines KI-driven test planning, MCP-controlled tool execution, classical framework assertion, and a visible observation layer.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>┌─────────────────────────────────────────────────────────────┐
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>│ Layer 1: KI Agent Layer (Test Planning &amp; Code Analysis)     │
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>│ - Analyzes issue context, code diff, and existing coverage  │
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│ - Generates test plans, identifies gap scenarios            │
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│ - Prüft Akzeptanzkriterien gegen Testabdeckung               │
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>├─────────────────────────────────────────────────────────────┤
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│ Layer 2: MCP Layer (Controlled Tool Execution)              │
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>│ - MCP tools for browser navigation, repo access, test data  │
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>│ - Tool invocation audit trail → run events in SQLite        │
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>│ - Tiered trust: readonly tools (Tier 0) first               │
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>├─────────────────────────────────────────────────────────────┤
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>│ Layer 3: Classical Test Layer (Ground Truth)                │
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>│ - Playwright for browser E2E (headed/headless)              │
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>│ - Vitest for unit/integration assertions                    │
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>│ - This layer is authoritative — KI assertions are advisory  │
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>│   until confirmed by classical framework results            │
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>├─────────────────────────────────────────────────────────────┤
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>│ Layer 4: Visible Observation Layer (Human-in-the-Loop)      │
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>│ - Headed browser with slowMo for interactive debugging      │
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>│ - Vitest UI mode for visual test exploration                │
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>│ - Playwright Trace Viewer for post-hoc analysis             │
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>│ - SSE event stream to web UI for live run observation       │
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>│ - Screenshot/video capture on failure                       │
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>└─────────────────────────────────────────────────────────────┘
+</code></pre></div>
+<h3 id="layer-1-ki-agent-layer">Layer 1: KI Agent Layer<a class="headerlink" href="#layer-1-ki-agent-layer" title="Permanent link">&para;</a></h3>
+<p><strong>Responsibilities:</strong>
+- Ingest the issue specification, plan, and tasks (Speckit artifacts).
+- Analyze the codebase diff and existing test coverage.
+- Propose a <strong>test plan</strong> that maps acceptance criteria to specific test scenarios.
+- Generate Playwright test stubs and Vitest test templates.
+- Produce <strong>test evidence comments</strong> posted to the GitHub issue.</p>
+<p><strong>Boundaries:</strong>
+- The KI agent <strong>may propose</strong> tests and <strong>may report</strong> observations but <strong>may not</strong> declare a test as passing based solely on its own analysis.
+- Agent-generated tests must be reviewed by the classical layer before being accepted as evidence.
+- Agent assertions that conflict with Vitest/Playwright results are automatically flagged as <code>EVIDENCE_CONFLICT</code>.</p>
+<h3 id="layer-2-mcp-layer">Layer 2: MCP Layer<a class="headerlink" href="#layer-2-mcp-layer" title="Permanent link">&para;</a></h3>
+<p><strong>Responsibilities:</strong>
+- Provide controlled MCP tools for the KI agent to interact with the test environment:
+  - <code>browser_navigate</code>, <code>browser_click</code>, <code>browser_screenshot</code> (Playwright-backed, readonly by default)
+  - <code>repo_read_file</code>, <code>repo_list_tests</code> (readonly repository access)
+  - <code>testdata_seed</code>, <code>testdata_reset</code> (sandboxed test data management)
+  - <code>run_vitest</code>, <code>run_playwright</code> (test execution, gated)
+- Log every MCP tool invocation as a <code>RunEvent</code> in SQLite with:
+  - Tool name, parameters (redacted for secrets), timestamp, result status.
+- Enforce <strong>trust tiers</strong> from <code>.opencode/policies/mcp-trust-tiers.json</code>:
+  - Tier 0 (Readonly): <code>browser_navigate</code>, <code>browser_screenshot</code>, <code>repo_read_file</code>
+  - Tier 1 (Sandboxed): <code>testdata_seed</code>, <code>testdata_reset</code>, Playwright in headless mode
+  - Tier 2 (Trusted, Human-Gate): <code>browser_click</code>, <code>run_vitest</code>, <code>run_playwright</code> in headed mode</p>
+<p><strong>Boundaries:</strong>
+- MCP tools do not replace Playwright or Vitest. They wrap them. The tool invocation is recorded; the framework result is authoritative.
+- MCP tool parameters are validated server-side before dispatch.
+- The <code>run_vitest</code> and <code>run_playwright</code> tools return the framework's raw output, not the agent's interpretation.</p>
+<h3 id="layer-3-classical-test-layer">Layer 3: Classical Test Layer<a class="headerlink" href="#layer-3-classical-test-layer" title="Permanent link">&para;</a></h3>
+<p><strong>Responsibilities:</strong>
+- <strong>Playwright</strong> executes browser-based E2E scenarios. Playwright is the sole arbiter of browser truth — DOM assertions, network responses, visual state.
+- <strong>Vitest</strong> executes unit and integration tests. Vitest is the sole arbiter of logic truth — function outputs, state transitions, adapter contracts.
+- Test results are captured in structured form (pass/fail, duration, error messages, stack traces) and stored as run events.
+- Coverage data (via v8 provider in Vitest) is collected and attached to the run.</p>
+<p><strong>Configuration:</strong>
+- <code>POSITRON_TEST_MODE</code> env var controls the execution mode:
+  - <code>headless</code> — CI mode, no browser UI (default)
+  - <code>headed</code> — visible browser, single test at a time
+  - <code>observe</code> — headed + slowMo + trace + video always-on
+- Existing <code>PW_HEADED</code> and <code>PW_SLOWMO</code> vars continue to work but are deprecated in favor of <code>POSITRON_TEST_MODE</code>.
+- <code>cross-env</code> is added as a devDependency to ensure consistent env-var setting across platforms.</p>
+<h3 id="layer-4-visible-observation-layer">Layer 4: Visible Observation Layer<a class="headerlink" href="#layer-4-visible-observation-layer" title="Permanent link">&para;</a></h3>
+<p><strong>Responsibilities:</strong>
+- <strong>Headed browser mode</strong> (<code>POSITRON_TEST_MODE=headed</code>): Browser window is visible during test execution. Useful for development, debugging, and stakeholder demos.
+- <strong>Slow-motion replay</strong> (<code>POSITRON_TEST_MODE=observe</code>): Each Playwright action is executed with a configurable delay (default 500ms) so a human observer can follow along.
+- <strong>Vitest UI mode</strong> (<code>vitest --ui</code>): Provides an interactive test explorer in the browser for visual inspection of test results and coverage.
+- <strong>Playwright Trace Viewer</strong>: Post-hoc timeline of every action, network request, and DOM snapshot for failed tests.
+- <strong>SSE Event Stream</strong>: The existing <code>/api/runs/:id/events/stream</code> SSE endpoint is extended to emit test-layer events (<code>test_started</code>, <code>test_passed</code>, <code>test_failed</code>, <code>test_evidence</code>) so the web UI can display a live testing dashboard.
+- <strong>Screenshot/Video on Failure</strong>: Playwright is configured with <code>screenshot: 'only-on-failure'</code> and <code>video: 'retain-on-failure'</code> (already in place, extended to the <code>observe</code> mode for always-on capture).</p>
+<hr />
+<h2 id="alternatives-considered">Alternatives Considered<a class="headerlink" href="#alternatives-considered" title="Permanent link">&para;</a></h2>
+<h3 id="alternative-1-pure-playwright-without-mcp">Alternative 1: Pure Playwright without MCP<a class="headerlink" href="#alternative-1-pure-playwright-without-mcp" title="Permanent link">&para;</a></h3>
+<p><strong>Description:</strong> Expand the existing Playwright E2E suite without introducing MCP-managed test tools or a KI agent layer.</p>
+<p><strong>Evaluation:</strong>
+- <strong>Pros:</strong> Simpler architecture, fewer moving parts, lower setup complexity. Playwright is a mature, well-understood framework.
+- <strong>Cons:</strong> No KI-driven test generation — test coverage remains static. No MCP-layer testing means the agent's primary interface to the world is untested. The evidence-gated constitution cannot be fully implemented because test planning and evidence collection remain manual. Does not address the visible observation requirement beyond the existing <code>PW_HEADED</code> toggle.</p>
+<p><strong>Rejection reason:</strong> Fails to address the core requirement of KI agent testing and evidence-gated progression. Playwright alone cannot test the MCP protocol layer that Positron agents depend on.</p>
+<h3 id="alternative-2-mcp-only-testing-without-classical-framework">Alternative 2: MCP-only Testing without Classical Framework<a class="headerlink" href="#alternative-2-mcp-only-testing-without-classical-framework" title="Permanent link">&para;</a></h3>
+<p><strong>Description:</strong> Use MCP tools as the sole test execution mechanism. The KI agent navigates the browser via MCP, inspects DOM state, and asserts correctness through MCP tool responses. No Playwright or Vitest under the hood.</p>
+<p><strong>Evaluation:</strong>
+- <strong>Pros:</strong> Tightly integrated with the agent workflow. Single execution model. Agent has full control over test scenarios.
+- <strong>Cons:</strong> The KI agent becomes the arbiter of truth — a direct violation of the evidence-gated principle (agents execute, but do not judge). MCP tool responses are agent-interpreted text, not structured test assertions. No built-in retry, trace, or coverage. No equivalent of Vitest's deterministic unit testing. Hallucinated "pass" results are undetectable.</p>
+<p><strong>Rejection reason:</strong> Fundamentally incompatible with Positron's constitution. "Evidence-Gated Progression" (Article IV) requires that test execution produce verifiable, framework-attested results, not agent self-reports. An MCP-only approach would make the system trust the agent to judge its own work.</p>
+<h3 id="alternative-3-cypress-instead-of-playwright">Alternative 3: Cypress instead of Playwright<a class="headerlink" href="#alternative-3-cypress-instead-of-playwright" title="Permanent link">&para;</a></h3>
+<p><strong>Description:</strong> Replace Playwright with Cypress as the browser E2E framework.</p>
+<p><strong>Evaluation:</strong>
+- <strong>Pros:</strong> Cypress has a well-known developer experience, real-time reloading, and a built-in dashboard. Some teams may already be familiar with it.
+- <strong>Cons:</strong> Cypress runs inside the browser (no multi-tab, no cross-origin without hacks), which limits test scenarios. No MCP-native integration. Playwright's multi-browser support (Chromium, Firefox, WebKit) and its trace viewer are superior for evidence collection. Playwright's <code>launchOptions.slowMo</code> and <code>headless</code> toggles map directly to our visible observation needs. Cypress would require a separate MCP bridge layer.</p>
+<p><strong>Rejection reason:</strong> Playwright is already integrated in the project (v1.60.0 in devDependencies, <code>playwright.config.ts</code> configured with headed/slowMo support). Switching to Cypress would add migration cost with no architectural benefit. Playwright's architecture (out-of-process browser control) aligns better with the MCP tool model than Cypress's in-browser execution.</p>
+<h3 id="alternative-4-fully-autonomous-testing-agent-decides-passfail">Alternative 4: Fully Autonomous Testing (Agent decides pass/fail)<a class="headerlink" href="#alternative-4-fully-autonomous-testing-agent-decides-passfail" title="Permanent link">&para;</a></h3>
+<p><strong>Description:</strong> Let the KI agent run tests, interpret results, and decide whether tests pass or fail without human or framework validation.</p>
+<p><strong>Rejection reason (no detailed evaluation):</strong> This is a direct violation of Positron Constitution Article IV (Evidence-Gated Progression) and Article IX (Security by Default). Positron's autonomy model is "controlled autonomy," not "blind autonomy." The agent executes; the framework judges.</p>
+<hr />
+<h2 id="consequences">Consequences<a class="headerlink" href="#consequences" title="Permanent link">&para;</a></h2>
+<h3 id="positive">Positive<a class="headerlink" href="#positive" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Consequence</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Visible test execution</strong></td>
+<td>Human operators can observe agent-driven tests in real time via headed browser, slowMo replay, and the SSE event stream in the web UI. This satisfies the auditability requirements of the evidence-gated constitution.</td>
+</tr>
+<tr>
+<td><strong>Evidence-gated testing</strong></td>
+<td>Every test result — whether generated by the KI agent or executed by the classical layer — is captured as a structured run event in SQLite. No test passes silently; no test fails without a trace.</td>
+</tr>
+<tr>
+<td><strong>Human-in-the-loop</strong></td>
+<td>The visible observation layer enables a human to pause, inspect, and override at any point. The KI agent proposes; the human (and the classical framework) dispose.</td>
+</tr>
+<tr>
+<td><strong>MCP-layer validation</strong></td>
+<td>For the first time, the MCP tools that Positron agents use (browser navigation, repo access, test execution) are themselves testable. This closes the "adapter works, agent fails" gap.</td>
+</tr>
+<tr>
+<td><strong>Unified execution model</strong></td>
+<td>A single <code>POSITRON_TEST_MODE</code> env var controls the entire test execution posture across CI, development, and observation modes. No more juggling <code>PW_HEADED</code>, <code>PW_SLOWMO</code>, and <code>CI</code> independently.</td>
+</tr>
+<tr>
+<td><strong>KI-assisted test coverage</strong></td>
+<td>The KI agent can analyze diffs and propose targeted tests, catching regressions that static test suites would miss.</td>
+</tr>
+<tr>
+<td><strong>Post-hoc forensic capability</strong></td>
+<td>Playwright traces, screenshots, and videos for failed runs enable root-cause analysis without reproducing the issue.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="negative">Negative<a class="headerlink" href="#negative" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Consequence</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Increased setup complexity</strong></td>
+<td>The 4-layer architecture requires coordinating Vitest, Playwright, MCP tools, and the KI agent in a single test run. Setup scripts, configuration files, and documentation must cover all four layers.</td>
+</tr>
+<tr>
+<td><strong>Cross-platform env var handling</strong></td>
+<td>Windows PowerShell vs. Unix shell differences require <code>cross-env</code> for all test scripts. Environment variable names must be consistently cased and documented across <code>package.json</code>, CI configs, and developer documentation.</td>
+</tr>
+<tr>
+<td><strong>Slower execution in observe mode</strong></td>
+<td><code>POSITRON_TEST_MODE=observe</code> with slowMo delays adds significant wall-clock time. This is acceptable for development and demos but must never be the default in CI.</td>
+</tr>
+<tr>
+<td><strong>Agent-test coupling risk</strong></td>
+<td>If the KI agent generates tests that are too tightly coupled to its own implementation decisions, test fragility increases. Test plans must be reviewed for high-level correctness, not implementation-detail verification.</td>
+</tr>
+<tr>
+<td><strong>More moving parts in CI</strong></td>
+<td>CI pipelines must now coordinate Vitest, Playwright, MCP tool servers, and the KI agent's test-planning step. Failure in any layer must not block the others from producing evidence.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risks">Risks<a class="headerlink" href="#risks" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Risk</th>
+<th>Likelihood</th>
+<th>Impact</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>MCP tool poisoning</strong> — a compromised or buggy MCP tool returns manipulated results that the agent trusts</td>
+<td>Medium</td>
+<td>High (false evidence)</td>
+<td>All MCP tool outputs are treated as potentially untrusted (per MCP Safety Rules in AGENTS.md). Layer 3 (classical framework) is authoritative; MCP results are advisory only. Tool responses are logged verbatim for audit.</td>
+</tr>
+<tr>
+<td><strong>Prompt injection via test data</strong> — test fixtures contain strings that are interpreted as agent instructions</td>
+<td>Medium</td>
+<td>High (agent hijacking)</td>
+<td>Test data must be treated as untrusted input. Test data files are read via MCP Tier 1 (sandboxed), not passed directly to the agent's prompt. All test data is sanitized before agent ingestion.</td>
+</tr>
+<tr>
+<td><strong>Secret leakage through MCP tool parameters</strong> — secrets (tokens, keys) in tool invocations are logged to SQLite</td>
+<td>Low</td>
+<td>Critical</td>
+<td>All MCP tool parameters are redacted before logging (existing <code>redactSecrets</code> utility extended to MCP parameter schemas). <code>run_vitest</code> and <code>run_playwright</code> tools do not accept environment variables as parameters.</td>
+</tr>
+<tr>
+<td><strong>Cross-platform path divergence</strong> — Windows path separators break test scripts or MCP tool file references</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>All file paths in MCP tool parameters use forward slashes and are normalized by the server. <code>cross-env</code> ensures consistent env var syntax. CI runs on both Windows and Linux to catch regressions.</td>
+</tr>
+<tr>
+<td><strong>Agent over-trusting test output</strong> — KI agent interprets Vitest/Playwright output and draws incorrect conclusions</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Test output is captured as structured JSON, not free-text. The agent receives parsed results (<code>{ passed: number, failed: number, suites: [...] }</code>), not raw stdout. Evidence comments include both the raw output and the structured parse.</td>
+</tr>
+<tr>
+<td><strong>Performance regression in observe mode</strong> — slowMo + trace + video capture overwhelms CI runners</td>
+<td>Low (CI runs headless)</td>
+<td>Medium (if misconfigured)</td>
+<td><code>POSITRON_TEST_MODE</code> defaults to <code>headless</code> in CI. The <code>observe</code> mode has a hard timeout limit (configurable, default 5 minutes per test) and is blocked in CI via a guard in <code>playwright.config.ts</code>.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="security-considerations">Security Considerations<a class="headerlink" href="#security-considerations" title="Permanent link">&para;</a></h2>
+<h3 id="mcp-least-privilege">MCP Least-Privilege<a class="headerlink" href="#mcp-least-privilege" title="Permanent link">&para;</a></h3>
+<p>Every MCP tool used in the test architecture is assigned to one of three trust tiers:</p>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Tools</th>
+<th>Constraints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tier 0 (Readonly)</strong></td>
+<td><code>browser_navigate</code>, <code>browser_screenshot</code>, <code>repo_read_file</code>, <code>repo_list_tests</code></td>
+<td>No mutation of any system. Responses are treated as untrusted and validated before use.</td>
+</tr>
+<tr>
+<td><strong>Tier 1 (Sandboxed)</strong></td>
+<td><code>testdata_seed</code>, <code>testdata_reset</code>, Playwright in headless mode</td>
+<td>Mutation is confined to ephemeral test databases (<code>:memory:</code> SQLite or temp directories). No access to production data, real repositories, or live tokens.</td>
+</tr>
+<tr>
+<td><strong>Tier 2 (Trusted, Human-Gate)</strong></td>
+<td><code>browser_click</code>, <code>browser_type</code>, <code>run_vitest</code>, <code>run_playwright</code> in headed mode</td>
+<td>Requires <code>POSITRON_TEST_MODE=headed</code> or <code>observe</code> (human-initiated). Never available in CI. All actions are logged with full parameter audit.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="readonly-first-principle">Readonly-First Principle<a class="headerlink" href="#readonly-first-principle" title="Permanent link">&para;</a></h3>
+<ul>
+<li>All MCP tools default to readonly mode. Mutation-capable tools require explicit opt-in via environment configuration.</li>
+<li>Browser tools start in "inspect" mode before "interact" mode. The agent must demonstrate understanding of the page state before it is allowed to click or type.</li>
+<li>This prevents "blind automation" where the agent clicks through pages without verifying state.</li>
+</ul>
+<h3 id="secret-protection">Secret Protection<a class="headerlink" href="#secret-protection" title="Permanent link">&para;</a></h3>
+<ul>
+<li>The existing <code>redactSecrets</code> utility (referenced in <code>docs/architecture/README.md</code> Security Model) is extended to cover MCP tool parameter schemas. Any parameter matching a known secret pattern (<code>ghp_</code>, <code>github_pat_</code>, <code>sk-</code>, bearer tokens, etc.) is replaced with <code>[REDACTED]</code> before logging.</li>
+<li><code>process.env</code> is never passed as an MCP tool parameter. Environment variables required by tests are injected server-side from a <code>.env.test</code> file (gitignored) or CI secret store.</li>
+<li>Test data files (fixtures, seeds) are stored in <code>packages/*/src/__tests__/__fixtures__/</code> and must never contain real credentials, PII, or production endpoints.</li>
+</ul>
+<h3 id="tool-poisoning-protection">Tool Poisoning Protection<a class="headerlink" href="#tool-poisoning-protection" title="Permanent link">&para;</a></h3>
+<p>Per the MCP Safety Rules in <code>AGENTS.md</code>:
+- All MCP tool responses are treated as potentially untrusted. The classical test layer (Layer 3) is always authoritative.
+- MCP tool responses are never piped directly to shell commands without validation.
+- File paths returned by MCP tools are validated against allowed workspace paths before any filesystem operation.
+- Suspicious MCP behavior (unexpected tool calls, parameter anomalies, response size outliers) is logged to <code>.opencode/logs/audit/</code> and flags the run for human review.</p>
+<h3 id="audit-trail">Audit Trail<a class="headerlink" href="#audit-trail" title="Permanent link">&para;</a></h3>
+<p>Every test-layer event is persisted as a <code>RunEvent</code> in SQLite with:
+- <code>id</code>, <code>runId</code>, <code>phase</code>, <code>level</code>, <code>message</code>, <code>payload</code>, <code>createdAt</code>
+- <code>payload</code> for test events includes: <code>{ layer: "mcp" | "classical" | "agent", tool?: string, testFile?: string, passed?: number, failed?: number, skipped?: number, duration?: number, evidenceUrl?: string }</code></p>
+<p>This ensures a complete, queryable audit trail of every test action, assertion, and result — satisfying the constitution's requirement that evidence be "documented in GitHub" and "persisted" (Article I, Article VIII).</p>
+<hr />
+<h2 id="implementation-notes">Implementation Notes<a class="headerlink" href="#implementation-notes" title="Permanent link">&para;</a></h2>
+<h3 id="phased-rollout">Phased Rollout<a class="headerlink" href="#phased-rollout" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Phase 1 — Foundation:</strong> Wire <code>POSITRON_TEST_MODE</code> env var. Extend Playwright config to support <code>headed</code>, <code>headless</code>, and <code>observe</code> modes. Add <code>cross-env</code> to test scripts.</li>
+<li><strong>Phase 2 — MCP Layer:</strong> Implement MCP tools for browser and repo access (Tier 0 first). Add tool invocation logging to SQLite.</li>
+<li><strong>Phase 3 — Agent Integration:</strong> KI agent generates test plans from Speckit artifacts. Agent proposes Playwright test stubs. Agent observes test execution via MCP tools.</li>
+<li><strong>Phase 4 — Visible Dashboard:</strong> Extend web UI to display live test events via SSE. Add Vitest UI mode integration.</li>
+<li><strong>Phase 5 — Evidence Gating:</strong> Programmatic gate that blocks PR creation/merge until test evidence is complete (all acceptance criteria mapped, all tests passed, coverage threshold met).</li>
+</ol>
+<h3 id="configuration-summary">Configuration Summary<a class="headerlink" href="#configuration-summary" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># .env.test (gitignored, template in .env.test.example)</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nv">POSITRON_TEST_MODE</span><span class="o">=</span>headless<span class="w">    </span><span class="c1"># headless | headed | observe</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nv">POSITRON_MCP_TRUST_TIER</span><span class="o">=</span><span class="m">0</span><span class="w">      </span><span class="c1"># 0=readonly, 1=sandboxed, 2=trusted</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="nv">POSITRON_TEST_TIMEOUT</span><span class="o">=</span><span class="m">60000</span><span class="w">    </span><span class="c1"># per-test timeout in ms</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="nv">POSITRON_TEST_SLOWMO</span><span class="o">=</span><span class="m">500</span><span class="w">       </span><span class="c1"># slowMo delay in observe mode</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="nv">POSITRON_EVIDENCE_DIR</span><span class="o">=</span>.positron/evidence<span class="w">  </span><span class="c1"># screenshot/video/trace output</span>
+</code></pre></div>
+<h3 id="deprecation-path">Deprecation Path<a class="headerlink" href="#deprecation-path" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>PW_HEADED=1</code> → Deprecated in favor of <code>POSITRON_TEST_MODE=headed</code>. Retained with a deprecation warning for one release cycle.</li>
+<li><code>PW_SLOWMO=N</code> → Deprecated in favor of <code>POSITRON_TEST_MODE=observe</code> + <code>POSITRON_TEST_SLOWMO=N</code>. Retained with a deprecation warning for one release cycle.</li>
+</ul>
+<hr />
+<h2 id="related-documents">Related Documents<a class="headerlink" href="#related-documents" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="https://github.com/xxammaxx/Positron/blob/main/.specify/memory/constitution.md">Positron Constitution</a> — especially Articles I, IV, VIII, IX</li>
+<li><a href="../../">Positron Architecture Overview</a></li>
+<li><a href="https://github.com/xxammaxx/Positron/blob/main/AGENTS.md">AGENTS.md — Trust Tier System</a></li>
+<li><a href="https://github.com/positron/positron/issues/64">Issue #64: MCP-powered Hybrid Test Architecture</a></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2026 Positron Team — MIT License
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/xxammaxx/Positron" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.sections", "navigation.indexes", "navigation.top", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

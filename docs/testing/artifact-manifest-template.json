@@ -1,0 +1,59 @@
+{
+	"$schema": "Positron Artifact Manifest v1",
+	"description": "JSON template for tracking test artifacts per run. Every documented test result MUST reference a completed manifest.",
+	"runId": "run-<uuid>",
+	"issueRef": "<owner>/<repo>#<issue-number>",
+	"timestamp": "2026-05-25T12:00:00.000Z",
+	"generatedBy": "Positron Test Runner / Human / <agent-name>",
+	"totalArtifacts": 0,
+	"artifacts": [
+		{
+			"type": "screenshot",
+			"path": "artifacts/screenshots/<runId>/<test-name>-<step>.png",
+			"sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+			"description": "Full-page screenshot after step 3 — showing dashboard with issue list loaded"
+		},
+		{
+			"type": "video",
+			"path": "artifacts/videos/<runId>/<test-name>-video.webm",
+			"sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+			"description": "Screen recording of the full headed test run — duration 12.4s"
+		},
+		{
+			"type": "trace",
+			"path": "artifacts/traces/<runId>/<test-name>-trace.zip",
+			"sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+			"description": "Playwright trace including network, console, DOM snapshots"
+		},
+		{
+			"type": "log",
+			"path": "artifacts/logs/<runId>/<test-name>-console.log",
+			"sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+			"description": "Browser console log output during test execution"
+		},
+		{
+			"type": "log",
+			"path": "artifacts/logs/<runId>/<test-name>-server.log",
+			"sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+			"description": "Server stdout/stderr captured during test execution"
+		},
+		{
+			"type": "report",
+			"path": "artifacts/reports/<runId>/vitest-report.json",
+			"sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+			"description": "Vitest JSON test report — full suite results"
+		},
+		{
+			"type": "report",
+			"path": "artifacts/reports/<runId>/playwright-report/index.html",
+			"sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+			"description": "Playwright HTML report — trace viewer, screenshots, video"
+		}
+	],
+	"notes": [
+		"Each artifact entry must have a unique path per runId.",
+		"SHA256 is computed client-side before upload. Use: certutil -hashfile <path> SHA256 (Windows) or sha256sum <path> (Unix).",
+		"Artifact paths are relative to the Positron workspace root unless absolute paths are explicitly required.",
+		"The manifest itself MUST be stored alongside the artifacts it describes (e.g., artifacts/manifests/<runId>-manifest.json)."
+	]
+}

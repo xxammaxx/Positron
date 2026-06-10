@@ -1,0 +1,2916 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Evidence-Gated GitHub Issue Execution System — Documentation">
+      
+      
+        <meta name="author" content="Positron Team">
+      
+      
+      
+        <link rel="prev" href="../../agent/EVIDENCE_LOG_TEMPLATE/">
+      
+      
+        <link rel="next" href="../POSITRON_NEW_INSIGHTS_GAP_ANALYSIS/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Docs-as-Code Audit - Positron</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#docs-as-code-audit-report" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Positron" class="md-header__button md-logo" aria-label="Positron" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Positron
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Docs-as-Code Audit
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/xxammaxx/Positron" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    xxammaxx/Positron
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Positron" class="md-nav__button md-logo" aria-label="Positron" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Positron
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/xxammaxx/Positron" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    xxammaxx/Positron
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How-to
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    How-to
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../runbooks/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../workflows/cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Usage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../workflows/iterations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Iterations-Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/vibe-coding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Vibe-Coding-Prinzipien
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/project-structure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project Structure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../module-map/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module Map
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dependency-graph/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dependency Graph
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/api-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/context-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Context Engineering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../workflows/qualitaetspruefung/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quality-Gate-Matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ci/POSITRON_GATE_MATRIX/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CI/Security Gate Matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/fehlerbehandlung/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fehlerbehandlung
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/verification-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Verification Contract
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/agentenmetriken/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agentenmetriken
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../architecture/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Explanation
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Explanation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/POSITRON_SDD_FLEET_ARCHITECTURE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SDD & Fleet Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/POSITRON_STATE_MACHINE_MAPPING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    State Machine Mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../blueprint-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blueprint Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../security/security-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../workflows/orchestrierung/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Orchestrierung
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../architecture/adr/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Decisions
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture Decisions
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/adr/0004-hybrid-test-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-0004 Hybrid Tests
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/adr/0005-sse-realtime-transport/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-0005 SSE Transport
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/adr/0006-http-cancel-in-memory-signal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-0006 HTTP Cancel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/adr/0007-docs-as-code-platform/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-0007 Docs Platform
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../workflows/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../testing/fixture-strategy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Security
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../security/security-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../security/mcp-security-rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP Security Rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../security/agent-environment-isolation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Isolation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Releases
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Releases
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release/v0.1.0-rc.1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v0.1.0-rc.1
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Resources
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Agent Resources
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../agent/CONTEXT_MANIFEST_TEMPLATE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Context Manifest
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../agent/EVIDENCE_LOG_TEMPLATE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence Log
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Audits
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Audits
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docs-as-Code Audit
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docs-as-Code Audit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-projekt-steckbrief" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Projekt-Steckbrief
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-vorhandene-dokumentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Vorhandene Dokumentation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Vorhandene Dokumentation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-root-ebene" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Root-Ebene
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-docs-verzeichnis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 docs/ Verzeichnis
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-governance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Governance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-risiken-fur-dokumentationsdrift" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Risiken für Dokumentationsdrift
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-empfohlene-dokumentationsplattform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Empfohlene Dokumentationsplattform
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Empfohlene Dokumentationsplattform">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#entscheidung-mkdocs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Entscheidung: MkDocs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-dateien-die-nicht-uberschrieben-werden-durfen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Dateien, die NICHT überschrieben werden dürfen
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-konkrete-umsetzungsschritte" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Konkrete Umsetzungsschritte
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-offene-annahmen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Offene Annahmen
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-zusammenfassung" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Zusammenfassung
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../POSITRON_NEW_INSIGHTS_GAP_ANALYSIS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SDD/Fleet Gap Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-projekt-steckbrief" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Projekt-Steckbrief
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-vorhandene-dokumentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Vorhandene Dokumentation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Vorhandene Dokumentation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-root-ebene" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Root-Ebene
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-docs-verzeichnis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 docs/ Verzeichnis
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-governance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Governance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-risiken-fur-dokumentationsdrift" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Risiken für Dokumentationsdrift
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-empfohlene-dokumentationsplattform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Empfohlene Dokumentationsplattform
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Empfohlene Dokumentationsplattform">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#entscheidung-mkdocs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Entscheidung: MkDocs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-dateien-die-nicht-uberschrieben-werden-durfen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Dateien, die NICHT überschrieben werden dürfen
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-konkrete-umsetzungsschritte" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Konkrete Umsetzungsschritte
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-offene-annahmen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Offene Annahmen
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-zusammenfassung" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Zusammenfassung
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="docs-as-code-audit-report">Docs-as-Code Audit Report<a class="headerlink" href="#docs-as-code-audit-report" title="Permanent link">&para;</a></h1>
+<p><strong>Datum:</strong> 2026-06-09
+<strong>Auditor:</strong> issue-orchestrator (AI Agent)
+<strong>Projekt:</strong> Positron v3.0 — Evidence-Gated GitHub Issue Execution System
+<strong>Status:</strong> Audit abgeschlossen</p>
+<hr />
+<h2 id="1-projekt-steckbrief">1. Projekt-Steckbrief<a class="headerlink" href="#1-projekt-steckbrief" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Merkmal</th>
+<th>Wert</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Sprachen</strong></td>
+<td>TypeScript (vollständig)</td>
+</tr>
+<tr>
+<td><strong>Laufzeit</strong></td>
+<td>Node.js v22+</td>
+</tr>
+<tr>
+<td><strong>Build-System</strong></td>
+<td>TypeScript Compiler (<code>tsc -b</code>), Vite (Frontend)</td>
+</tr>
+<tr>
+<td><strong>Paketmanager</strong></td>
+<td>npm (Workspaces: <code>apps/*</code>, <code>packages/*</code>)</td>
+</tr>
+<tr>
+<td><strong>Repository-Typ</strong></td>
+<td>Monorepo (2 Apps, 6 Packages)</td>
+</tr>
+<tr>
+<td><strong>Frontend</strong></td>
+<td>React + Vite + Tailwind CSS</td>
+</tr>
+<tr>
+<td><strong>Backend</strong></td>
+<td>Node.js + Express + SQLite (better-sqlite3)</td>
+</tr>
+<tr>
+<td><strong>Testing</strong></td>
+<td>Vitest (Unit/Integration), Playwright (E2E)</td>
+</tr>
+<tr>
+<td><strong>CI/CD</strong></td>
+<td>GitHub Actions (<code>verify-issues.yml</code>)</td>
+</tr>
+<tr>
+<td><strong>Governance</strong></td>
+<td>Constitution-driven (<code>.specify/memory/constitution.md</code>), AGENTS.md für KI-Agenten</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2-vorhandene-dokumentation">2. Vorhandene Dokumentation<a class="headerlink" href="#2-vorhandene-dokumentation" title="Permanent link">&para;</a></h2>
+<h3 id="21-root-ebene">2.1 Root-Ebene<a class="headerlink" href="#21-root-ebene" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Datei</th>
+<th>Zustand</th>
+<th>Bewertung</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>README.md</code></td>
+<td>Existiert</td>
+<td>Gut: Quick Start, Architektur-Skizze, Testing-Infos</td>
+</tr>
+<tr>
+<td><code>AGENTS.md</code></td>
+<td>Existiert</td>
+<td>Gut: Agenten-Regeln, Trust-Tier-System, aber keine Docs-Update-Regeln</td>
+</tr>
+<tr>
+<td><code>Blueprint.md</code></td>
+<td>Existiert</td>
+<td>Projektskizze (Deutsch)</td>
+</tr>
+<tr>
+<td><code>Meta-Prompt für eine KI zur iterativen Projekt-Orchestrierung_v2.md</code></td>
+<td>Existiert</td>
+<td>Design-Dokument (Deutsch)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="22-docs-verzeichnis">2.2 docs/ Verzeichnis<a class="headerlink" href="#22-docs-verzeichnis" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Pfad</th>
+<th>Typ</th>
+<th>Bewertung</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>docs/architecture/README.md</code></td>
+<td>Architekturüberblick</td>
+<td>Gut: Stack, Diagramm, Datenfluss, Patterns, Security-Modell</td>
+</tr>
+<tr>
+<td><code>docs/architecture/api-overview.md</code></td>
+<td>API-Referenz</td>
+<td>Gut: 14 Endpunkte dokumentiert</td>
+</tr>
+<tr>
+<td><code>docs/architecture/adr/0004-*.md</code></td>
+<td>ADR</td>
+<td>Gut: Gründliche Hybrid-Test-Architektur-Entscheidung</td>
+</tr>
+<tr>
+<td><code>docs/architecture/adr/0005-*.md</code></td>
+<td>ADR</td>
+<td>SSE Realtime Transport</td>
+</tr>
+<tr>
+<td><code>docs/architecture/adr/0006-*.md</code></td>
+<td>ADR</td>
+<td>HTTP Cancel mit In-Memory-Signal</td>
+</tr>
+<tr>
+<td><code>docs/architecture.md</code></td>
+<td>Architektur-Summary</td>
+<td>Teilweise redundant mit <code>docs/architecture/README.md</code></td>
+</tr>
+<tr>
+<td><code>docs/blueprint-analysis.md</code></td>
+<td>Analyse</td>
+<td>Projekt-Genese aus Blueprint</td>
+</tr>
+<tr>
+<td><code>docs/module-map.md</code></td>
+<td>Referenz</td>
+<td>Detaillierte Modulbeschreibungen mit API, Typen, Zuständen</td>
+</tr>
+<tr>
+<td><code>docs/dependency-graph.md</code></td>
+<td>Referenz</td>
+<td>Abhängigkeitsgraph</td>
+</tr>
+<tr>
+<td><code>docs/workflows/development.md</code></td>
+<td>How-to</td>
+<td>Dev-Setup, Build, Tests, Troubleshooting</td>
+</tr>
+<tr>
+<td><code>docs/workflows/cli.md</code></td>
+<td>Referenz</td>
+<td>CLI-Befehle</td>
+</tr>
+<tr>
+<td><code>docs/security/security-model.md</code></td>
+<td>Explanation</td>
+<td>Sicherheitsmodell</td>
+</tr>
+<tr>
+<td><code>docs/security/mcp-security-rules.md</code></td>
+<td>Reference</td>
+<td>MCP-Sicherheitsregeln</td>
+</tr>
+<tr>
+<td><code>docs/security/agent-environment-isolation.md</code></td>
+<td>Explanation</td>
+<td>Agenten-Isolierung</td>
+</tr>
+<tr>
+<td><code>docs/security/external-skills-inventory.md</code></td>
+<td>Reference</td>
+<td>Externe Skill-Inventur</td>
+</tr>
+<tr>
+<td><code>docs/security/isolated-agent-startup.md</code></td>
+<td>How-to</td>
+<td>Agent-Startup-Prozedur</td>
+</tr>
+<tr>
+<td><code>docs/changelog/iteration-{1,2,3}.md</code></td>
+<td>Changelog</td>
+<td>Iterations-Changelogs</td>
+</tr>
+<tr>
+<td><code>docs/release/v0.1.0-rc.1.md</code></td>
+<td>Release Notes</td>
+<td>v0.1.0 RC1</td>
+</tr>
+<tr>
+<td><code>docs/release/ui-workflow-proof-report.md</code></td>
+<td>Evidence</td>
+<td>UI-Workflow-Testbeweis</td>
+</tr>
+<tr>
+<td><code>docs/testing/fixture-strategy.md</code></td>
+<td>Reference</td>
+<td>Test-Fixture-Strategie</td>
+</tr>
+<tr>
+<td><code>docs/testing/*-template.md</code> (4 Dateien)</td>
+<td>Templates</td>
+<td>Test-Plan/Result/Regression/Visual-Templates</td>
+</tr>
+<tr>
+<td><code>docs/ui-audit/01-audit-report.md</code></td>
+<td>Audit</td>
+<td>UI-Audit</td>
+</tr>
+<tr>
+<td><code>docs/ui-audit/02-redesign-plan.md</code></td>
+<td>Plan</td>
+<td>UI-Redesign-Plan</td>
+</tr>
+<tr>
+<td><code>docs/ui-audit/03-functional-data-audit.md</code></td>
+<td>Audit</td>
+<td>Funktionale Datenprüfung</td>
+</tr>
+<tr>
+<td><code>docs/live-operations/DATA-AUDIT.md</code></td>
+<td>Audit</td>
+<td>Live-Ops Datenprüfung</td>
+</tr>
+<tr>
+<td><code>docs/alles_verbinden.md</code></td>
+<td>Fragment</td>
+<td>Unsortierte Notizen</td>
+</tr>
+<tr>
+<td><code>docs/GitHub Issues vs Code Verifikation.md</code></td>
+<td>Fragment</td>
+<td>Naming-Notizen</td>
+</tr>
+</tbody>
+</table>
+<h3 id="23-governance">2.3 Governance<a class="headerlink" href="#23-governance" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Datei</th>
+<th>Zustand</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.specify/memory/constitution.md</code></td>
+<td>10 Artikel, verbindliche Projektgrundlage</td>
+</tr>
+<tr>
+<td><code>.github/PULL_REQUEST_TEMPLATE.md</code></td>
+<td>Existiert</td>
+</tr>
+<tr>
+<td><code>.github/ISSUE_TEMPLATE/*.md</code> (3 Templates)</td>
+<td>Existiert (Bug, Feature, Security)</td>
+</tr>
+<tr>
+<td><code>CONTRIBUTING.md</code></td>
+<td><strong>Fehlt</strong></td>
+</tr>
+<tr>
+<td><code>CHANGELOG.md</code> (Root)</td>
+<td><strong>Fehlt</strong> (nur <code>docs/changelog/</code>)</td>
+</tr>
+<tr>
+<td><code>SECURITY.md</code></td>
+<td><strong>Fehlt</strong></td>
+</tr>
+<tr>
+<td><code>llms.txt</code></td>
+<td><strong>Fehlt</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-risiken-fur-dokumentationsdrift">3. Risiken für Dokumentationsdrift<a class="headerlink" href="#3-risiken-fur-dokumentationsdrift" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Risiko</th>
+<th>Schweregrad</th>
+<th>Beschreibung</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Kein index.md</strong></td>
+<td>Hoch</td>
+<td>Es gibt keinen zentralen Einstiegspunkt in die Dokumentation. README ist Start, aber <code>docs/index.md</code> fehlt.</td>
+</tr>
+<tr>
+<td><strong>Fragmentierte Struktur</strong></td>
+<td>Mittel</td>
+<td>Dateien wie <code>alles_verbinden.md</code> und <code>GitHub Issues vs Code Verifikation.md</code> sind isolierte Fragmente ohne klare Zugehörigkeit.</td>
+</tr>
+<tr>
+<td><strong>Redundanz</strong></td>
+<td>Mittel</td>
+<td><code>docs/architecture.md</code> und <code>docs/architecture/README.md</code> haben überlappenden Inhalt.</td>
+</tr>
+<tr>
+<td><strong>Kein Link-Checking</strong></td>
+<td>Hoch</td>
+<td>Keine automatische Validierung interner Links. Link-Rot unentdeckt.</td>
+</tr>
+<tr>
+<td><strong>Kein Docs-Build</strong></td>
+<td>Hoch</td>
+<td>Keine CI-Pipeline für Dokumentation. Syntax-Fehler in Markdown unentdeckt.</td>
+</tr>
+<tr>
+<td><strong>Keine Agent-Docs-Regeln</strong></td>
+<td>Hoch</td>
+<td>AGENTS.md enthält keine Regeln, wann Agenten Dokumentation aktualisieren müssen.</td>
+</tr>
+<tr>
+<td><strong>Kein Glossary</strong></td>
+<td>Mittel</td>
+<td>Kein zentrales Glossar für Projekt-Terminologie (<code>Run</code>, <code>Phase</code>, <code>Gate</code>, <code>Evidence</code>).</td>
+</tr>
+<tr>
+<td><strong>Kein CONTRIBUTING</strong></td>
+<td>Mittel</td>
+<td>Kein Leitfaden für Contributors (Docs-Regeln, PR-Prozess, Code-Stil).</td>
+</tr>
+<tr>
+<td><strong>Fehlende Diátaxis-Struktur</strong></td>
+<td>Mittel</td>
+<td>Vorhandene docs folgen keinem einheitlichen Organisationsprinzip (Tutorial/How-to/Reference/Explanation).</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-empfohlene-dokumentationsplattform">4. Empfohlene Dokumentationsplattform<a class="headerlink" href="#4-empfohlene-dokumentationsplattform" title="Permanent link">&para;</a></h2>
+<h3 id="entscheidung-mkdocs">Entscheidung: <strong>MkDocs</strong><a class="headerlink" href="#entscheidung-mkdocs" title="Permanent link">&para;</a></h3>
+<p><strong>Begründung:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Kriterium</th>
+<th>Bewertung</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Projektsprache</td>
+<td>TypeScript/Node.js — Sphinx wäre unpassend (kein Python-Stack)</td>
+</tr>
+<tr>
+<td>Dokumentationsformat</td>
+<td>Bestehendes Material ist 100% Markdown</td>
+</tr>
+<tr>
+<td>Build-Komplexität</td>
+<td>MkDocs ist minimal (Python + YAML-Konfiguration)</td>
+</tr>
+<tr>
+<td>Docusaurus-Overhead</td>
+<td>Projekt hat React, aber interaktive Docs-Komponenten sind nicht gefordert</td>
+</tr>
+<tr>
+<td>Diátaxis-Unterstützung</td>
+<td>MkDocs mit <code>material</code>-Theme + Navigation passt perfekt zur Diátaxis-Struktur</td>
+</tr>
+<tr>
+<td>Suchfunktion</td>
+<td>Built-in (<code>search</code> Plugin)</td>
+</tr>
+<tr>
+<td>Theme</td>
+<td><code>mkdocs-material</code> für modernes, durchsuchbares Design</td>
+</tr>
+<tr>
+<td>CI-Integration</td>
+<td>Trivial: <code>mkdocs build --strict</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Abhängigkeit:</strong> Python 3.14 ist verfügbar. <code>requirements-docs.txt</code> wird hinzugefügt.</p>
+<hr />
+<h2 id="5-dateien-die-nicht-uberschrieben-werden-durfen">5. Dateien, die NICHT überschrieben werden dürfen<a class="headerlink" href="#5-dateien-die-nicht-uberschrieben-werden-durfen" title="Permanent link">&para;</a></h2>
+<p>Diese Dateien sind etablierte Sources of Truth und werden nur ergänzt, nicht ersetzt:</p>
+<ol>
+<li><strong><code>README.md</code></strong> — Projekteinstieg, bleibt erhalten. Neue Docs-Sektion hinzugefügt.</li>
+<li><strong><code>AGENTS.md</code></strong> — KI-Agenten-Regeln. Wird um Docs-Update-Regeln <strong>erweitert</strong>.</li>
+<li><strong><code>.specify/memory/constitution.md</code></strong> — Unantastbare Projektgrundlage.</li>
+<li><strong><code>docs/architecture/README.md</code></strong> — Architektur-Hauptdokument.</li>
+<li><strong><code>docs/architecture/adr/*.md</code></strong> — ADR-Entscheidungen (immutable).</li>
+<li><strong><code>docs/workflows/development.md</code></strong> — Entwickler-Setup.</li>
+<li><strong><code>docs/module-map.md</code></strong> — Modul-Referenz.</li>
+<li><strong><code>docs/security/security-model.md</code></strong> — Sicherheitsmodell.</li>
+<li><strong><code>.github/workflows/verify-issues.yml</code></strong> — Bestehende CI-Pipeline.</li>
+<li><strong><code>.github/ISSUE_TEMPLATE/*.md</code></strong> — Issue-Templates.</li>
+<li><strong><code>docs/changelog/*.md</code></strong> — Bestehende Changelogs.</li>
+<li><strong><code>docs/testing/*-template.md</code></strong> — Test-Templates.</li>
+</ol>
+<hr />
+<h2 id="6-konkrete-umsetzungsschritte">6. Konkrete Umsetzungsschritte<a class="headerlink" href="#6-konkrete-umsetzungsschritte" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Schritt</th>
+<th>Neue/Geänderte Dateien</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2</td>
+<td>Architekturentscheidung dokumentieren</td>
+<td><code>docs/architecture/adr/0007-docs-as-code-platform.md</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>Diátaxis-Zielstruktur anlegen</td>
+<td><code>docs/index.md</code>, <code>docs/getting-started/</code>, <code>docs/how-to/</code>, <code>docs/reference/</code>, <code>docs/explanation/</code>, <code>docs/glossary.md</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>Agent-Templates erstellen</td>
+<td><code>docs/agent/CONTEXT_MANIFEST_TEMPLATE.md</code>, <code>docs/agent/EVIDENCE_LOG_TEMPLATE.md</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>MkDocs konfigurieren</td>
+<td><code>mkdocs.yml</code>, <code>requirements-docs.txt</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td>llms.txt + AGENTS.md erweitern</td>
+<td><code>llms.txt</code>, <code>AGENTS.md</code> (ergänzt)</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Quality Gates implementieren</td>
+<td><code>.markdownlint.json</code>, <code>.github/workflows/docs-quality.yml</code>, <code>scripts/docs-check.sh</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td>CONTRIBUTING + Review-Workflow</td>
+<td><code>CONTRIBUTING.md</code></td>
+</tr>
+<tr>
+<td>8</td>
+<td>Red Tests</td>
+<td>Dokumentation der manuellen Checks</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Build &amp; Preview</td>
+<td>Build-Log in <code>docs/audits/</code></td>
+</tr>
+<tr>
+<td>10</td>
+<td>Abschlussreport</td>
+<td><code>docs/audits/DOCS_AS_CODE_IMPLEMENTATION_REPORT.md</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="7-offene-annahmen">7. Offene Annahmen<a class="headerlink" href="#7-offene-annahmen" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Annahme</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A1</td>
+<td><code>mkdocs-material</code> Theme ist kompatibel mit Python 3.14</td>
+<td>Zu verifizieren (Phase 9)</td>
+</tr>
+<tr>
+<td>A2</td>
+<td><code>mkdocs-ezlinks-plugin</code> oder <code>mkdocs-wikilinks-plugin</code> funktionieren mit MkDocs 1.x</td>
+<td>Zu verifizieren</td>
+</tr>
+<tr>
+<td>A3</td>
+<td>GitHub Actions Runner hat Python 3 verfügbar</td>
+<td>Standard (ubuntu-latest)</td>
+</tr>
+<tr>
+<td>A4</td>
+<td>Markdown-Dateien enthalten keine kaputten internen Links</td>
+<td>Zu verifizieren (Phase 8)</td>
+</tr>
+<tr>
+<td>A5</td>
+<td>Das Projekt hat keine Anforderung an öffentliche/private Docs-Trennung</td>
+<td>Aktuell internal-only</td>
+</tr>
+<tr>
+<td>A6</td>
+<td><code>docs/alles_verbinden.md</code> und <code>docs/GitHub Issues vs Code Verifikation.md</code> können sicher archiviert oder integriert werden</td>
+<td>Zu klären mit Human Review</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="8-zusammenfassung">8. Zusammenfassung<a class="headerlink" href="#8-zusammenfassung" title="Permanent link">&para;</a></h2>
+<p>Das Positron-Projekt hat eine <strong>solide, aber fragmentierte</strong> Dokumentationsbasis. Die technische Dokumentation (Architektur, API, ADRs, Module, Sicherheit) ist von guter Qualität. Was fehlt, ist:</p>
+<ol>
+<li><strong>Ein zentraler Einstiegspunkt</strong> (kein <code>docs/index.md</code>)</li>
+<li><strong>Eine einheitliche Organisationsstruktur</strong> (Diátaxis)</li>
+<li><strong>Automatisierte Qualitätssicherung</strong> (Link-Check, Markdown-Lint, Docs-Build)</li>
+<li><strong>KI/Agent-optimierte Einstiegspunkte</strong> (llms.txt, erweiterte AGENTS.md)</li>
+<li><strong>Ein Docs-Change-Workflow</strong> (CONTRIBUTING.md, Docs-Update-Regeln)</li>
+</ol>
+<p>Die gewählte Plattform <strong>MkDocs</strong> ist die leichtgewichtigste und passendste Lösung für ein TypeScript-Monorepo mit Markdown-basierter Dokumentation.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2026 Positron Team — MIT License
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/xxammaxx/Positron" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.indexes", "navigation.top", "navigation.tracking", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,17 +1,18 @@
 {
-  "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "composite": true
-  },
-  "include": ["src/**/*"],
-  "references": [
-    { "path": "../../packages/shared" },
-    { "path": "../../packages/github-adapter" },
-    { "path": "../../packages/run-state" },
-    { "path": "../../packages/sandbox" },
-    { "path": "../../packages/speckit-adapter" },
-    { "path": "../../packages/opencode-adapter" }
-  ]
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"outDir": "./dist",
+		"rootDir": "./src",
+		"composite": true
+	},
+	"include": ["src/**/*"],
+	"exclude": ["**/__tests__/**", "dist"],
+	"references": [
+		{ "path": "../../packages/shared" },
+		{ "path": "../../packages/github-adapter" },
+		{ "path": "../../packages/run-state" },
+		{ "path": "../../packages/sandbox" },
+		{ "path": "../../packages/speckit-adapter" },
+		{ "path": "../../packages/opencode-adapter" }
+	]
 }

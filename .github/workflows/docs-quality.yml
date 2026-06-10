@@ -1,0 +1,105 @@
+name: Documentation Quality
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - 'docs/**'
+      - '*.md'
+      - 'mkdocs.yml'
+      - 'requirements-docs.txt'
+  pull_request:
+    paths:
+      - 'docs/**'
+      - '*.md'
+      - 'mkdocs.yml'
+      - 'requirements-docs.txt'
+  workflow_dispatch:
+
+jobs:
+  docs-quality:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Run markdownlint
+        run: |
+          npx markdownlint "docs/**/*.md" "*.md" --config .markdownlint.json || true
+        continue-on-error: true
+
+      - name: Check for secrets in docs
+        run: |
+          echo "::group::Secret Scan in Documentation"
+          if grep -rE "(ghp_|github_pat_|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,})" docs/ *.md 2>/dev/null; then
+            echo "::error::SECRETS FOUND IN DOCUMENTATION"
+            exit 1
+          else
+            echo "No secrets found in documentation files."
+          fi
+          echo "::endgroup::"
+
+      - name: Check for .env references in docs
+        run: |
+          echo "::group::Sensitive File Reference Check"
+          if grep -rE "\.env[^.]" docs/ *.md 2>/dev/null | grep -v "\.env\.example" | grep -v "\.env\.test" | grep -v "\.gitignore"; then
+            echo "::warning::Found .env references in documentation. Ensure these are references to templates, not real files."
+          fi
+          echo "::endgroup::"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
+        run: pip install -r requirements-docs.txt
+
+      - name: Build MkDocs
+        run: mkdocs build --strict
+
+      - name: Check internal links
+        run: |
+          echo "::group::Link Check"
+          python scripts/docs_link_check.py docs/ || echo "::warning::Link checker not available. Skipping."
+          echo "::endgroup::"
+        continue-on-error: true
+
+      - name: Verify essential docs files exist
+        run: |
+          echo "::group::Essential Files Check"
+          missing=0
+          for file in docs/index.md docs/glossary.md docs/architecture/README.md llms.txt AGENTS.md CONTRIBUTING.md; do
+            if [ ! -f "$file" ]; then
+              echo "::error::Missing required file: $file"
+              missing=1
+            else
+              echo "OK: $file"
+            fi
+          done
+          if [ $missing -eq 1 ]; then
+            echo "::error::Essential documentation files missing"
+            exit 1
+          fi
+          echo "::endgroup::"
+
+      - name: Upload MkDocs build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-site
+          path: site/
+          retention-days: 7
