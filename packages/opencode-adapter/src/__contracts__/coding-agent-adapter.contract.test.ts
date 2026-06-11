@@ -11,6 +11,7 @@ import { describe, test, expect } from 'vitest';
 import { RealOpenCodeAdapter, FakeOpenCodeAdapter } from '../index.js';
 import {
 	validateAgentDeclaration,
+	isSecretPattern,
 	type AgentDeclaration,
 	type CodingAgentResult,
 } from '@positron/shared';
@@ -115,25 +116,22 @@ describe('RealOpenCodeAdapter Conformance', () => {
 		expect(decl.trustTier).toBe(1);
 	});
 
-	test('RealOpenCodeAdapter implements healthCheck method', () => {
-		const adapter = new RealOpenCodeAdapter();
-		expect(adapter).toHaveProperty('healthCheck');
-		expect(typeof adapter.healthCheck).toBe('function');
-		// healthCheck must return an object with `available: boolean`
-		const result = adapter.healthCheck('/tmp/dummy');
-		expect(result).toBeInstanceOf(Promise);
+	// NOTE: RealOpenCodeAdapter structural checks are limited to declaration-only
+	// inspection. Instantiating RealOpenCodeAdapter or calling its methods (e.g.
+	// healthCheck) in contract tests risks real side effects (CLI detection,
+	// file-system enumeration). Full integration/live tests belong in the
+	// opencode-adapter test suite, not here.
+	test('RealOpenCodeAdapter declaration capabilities include terminal_exec', () => {
+		const decl = makeRealDeclaration();
+		expect(decl.capabilities).toContain('terminal_exec');
+		expect(decl.capabilities).toContain('repo_read');
+		expect(decl.capabilities).toContain('code_write');
 	});
 
-	test('RealOpenCodeAdapter implements runPhase method', () => {
-		const adapter = new RealOpenCodeAdapter();
-		// CodingAgentAdapter expects `runPhase(input: CodingPhaseInput): Promise<CodingAgentResult>`.
-		// The current adapter exposes `runSlashCommand` and `runImplement` which fulfil
-		// the same contract semantically. Check that at least one phase-execution method
-		// exists with the right shape.
-		expect(typeof adapter.runSlashCommand).toBe('function');
-		expect(typeof adapter.runImplement).toBe('function');
-		// Both methods return a Promise with a result object that has a `status` field
-		// matching CodingAgentResult['status']
+	test('Real adapter declares run-phase capabilities', () => {
+		const decl = makeRealDeclaration();
+		expect(decl.capabilities).toContain('terminal_exec');
+		expect(decl.capabilities).toContain('code_write');
 	});
 
 	test('Real adapter does NOT set isFake flag', () => {
@@ -221,34 +219,24 @@ describe('Adapter Contract Rules', () => {
 		expect(realDecl.isFake).not.toBe(fakeDecl.isFake);
 	});
 
-	test('adapter must not write unredacted secrets', () => {
-		// Structural check: adapter result objects must not contain secret patterns
-		const adapter = new RealOpenCodeAdapter();
-		const resultPromise = adapter.healthCheck('/tmp/dummy');
+	test('isSecretPattern detects known secret formats in result-like strings', () => {
+		// Use the shared isSecretPattern validator against realistic strings
+		// that could appear in CodingAgentResult fields (command, summary, output, etc.)
 
-		// Verify that the return type shape doesn't contain known secret patterns
-		expect(resultPromise).toBeInstanceOf(Promise);
-		// The command result types don't carry raw token fields; verify structurally
-		// that result fields like `command` and `summary` are not secret patterns
-		const resultShape: CodingAgentResult = {
-			status: 'success',
-			command: 'opencode --version',
-			summary: 'health check completed',
-			durationMs: 0,
-			cwd: '/tmp',
-		};
-		// None of the string fields should match known secret patterns (ghp_, sk-, etc.)
-		const secretPatterns = [
-			/\bghp_[a-zA-Z0-9]{36}\b/,
-			/\bsk-[a-zA-Z0-9]{48,}\b/,
-			/\bgithub_pat_[a-zA-Z0-9_]{82}\b/,
-		];
-		const allStrings = [resultShape.command, resultShape.summary, resultShape.cwd];
-		for (const str of allStrings) {
-			for (const pattern of secretPatterns) {
-				expect(pattern.test(str)).toBe(false);
-			}
-		}
+		// Positive cases — patterns that MUST be detected
+		expect(isSecretPattern('ghp_abc123def456ghi789jkl012mno345pqr678')).toBe(true);
+		expect(isSecretPattern('sk-aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789abcdefghijklmnop')).toBe(true);
+		expect(isSecretPattern('AIzaSyDummyKey1234567890123456789012345')).toBe(true);
+
+		// Negative cases — patterns that must NOT be detected
+		expect(isSecretPattern('opencode --version')).toBe(false);
+		expect(isSecretPattern('health check completed')).toBe(false);
+		expect(isSecretPattern('/tmp/workspace')).toBe(false);
+		expect(isSecretPattern('')).toBe(false);
+
+		// Boundary: partial patterns without valid structure
+		expect(isSecretPattern('ghp_ab')).toBe(false); // too short
+		expect(isSecretPattern('sk-tooshort')).toBe(false); // too short
 	});
 
 	test('adapter must return typed errors', () => {

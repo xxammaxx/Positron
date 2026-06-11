@@ -334,6 +334,7 @@ function collectStringValues(
 	obj: unknown,
 	prefix = '',
 	depth = 0,
+	visited: WeakSet<object> = new WeakSet(),
 ): { path: string; value: string }[] {
 	const results: { path: string; value: string }[] = [];
 	const MAX_DEPTH = 10;
@@ -342,13 +343,21 @@ function collectStringValues(
 	if (typeof obj === 'string') {
 		results.push({ path: prefix || '(root)', value: obj });
 	} else if (Array.isArray(obj)) {
+		if (visited.has(obj)) return results; // circular reference guard
+		visited.add(obj);
 		for (let i = 0; i < obj.length; i++) {
-			results.push(...collectStringValues(obj[i], `${prefix}[${i}]`, depth + 1));
+			results.push(...collectStringValues(obj[i], `${prefix}[${i}]`, depth + 1, visited));
 		}
 	} else if (typeof obj === 'object') {
+		if (visited.has(obj)) return results; // circular reference guard
+		visited.add(obj);
 		for (const [key, val] of Object.entries(obj as Record<string, unknown>)) {
+			if (typeof val === 'object' && val !== null && !Array.isArray(val)) {
+				// Handle typed object wrappers (Date, Map, Set, etc.) — skip non-plain objects
+				if (val instanceof Date || val instanceof Map || val instanceof Set) continue;
+			}
 			const childPath = prefix ? `${prefix}.${key}` : key;
-			results.push(...collectStringValues(val, childPath, depth + 1));
+			results.push(...collectStringValues(val, childPath, depth + 1, visited));
 		}
 	}
 
