@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config";
+import { defineConfig } from 'vitest/config';
 
 /**
  * Vitest configuration for Contract Tests.
@@ -17,17 +17,17 @@ export default defineConfig({
 	test: {
 		env: {
 			// Ensure fake mode for all contract tests
-			POSITRON_GITHUB_MODE: "fake",
-			GITHUB_MODE: "fake",
-			POSITRON_WORKSPACE_ROOT: "",
+			POSITRON_GITHUB_MODE: 'fake',
+			GITHUB_MODE: 'fake',
+			POSITRON_WORKSPACE_ROOT: '',
 		},
 		include: [
-			"packages/*/src/__tests__/**/*.contract.test.ts",
-			"packages/*/src/__contracts__/**/*.test.ts",
+			'packages/*/src/__tests__/**/*.contract.test.ts',
+			'packages/*/src/__contracts__/**/*.test.ts',
 		],
-		exclude: ["**/dist/**", "**/node_modules/**", "**/coverage/**"],
-		environment: "node",
-		reporters: ["verbose"],
+		exclude: ['**/dist/**', '**/node_modules/**', '**/coverage/**'],
+		environment: 'node',
+		reporters: ['verbose'],
 		// Contract tests should be fast — enforce a reasonable timeout
 		testTimeout: 5000,
 	},

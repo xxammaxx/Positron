@@ -17,13 +17,9 @@
  * SECURITY: No real secrets. All values are fakes in test scope only.
  */
 
-import { describe, it, expect } from "vitest";
-import {
-	validateEvidenceLog,
-	validateContextManifest,
-	isSecretPattern,
-} from "@positron/shared";
-import type { EvidenceLog, ContextManifest } from "@positron/shared";
+import { describe, it, expect } from 'vitest';
+import { validateEvidenceLog, validateContextManifest, isSecretPattern } from '@positron/shared';
+import type { EvidenceLog, ContextManifest } from '@positron/shared';
 
 // ---------------------------------------------------------------------------
 // Helpers — minimal valid building blocks
@@ -31,39 +27,39 @@ import type { EvidenceLog, ContextManifest } from "@positron/shared";
 
 function validMinimalLog(overrides?: Partial<EvidenceLog>): EvidenceLog {
 	return {
-		runId: "550e8400-e29b-41d4-a716-446655440000",
+		runId: '550e8400-e29b-41d4-a716-446655440000',
 		issueNumber: 42,
-		branch: "positron/issue-42-test",
+		branch: 'positron/issue-42-test',
 		agent: {
-			type: "opencode",
-			version: "1.0.0",
-			capabilities: ["repo_read", "code_write"],
+			type: 'opencode',
+			version: '1.0.0',
+			capabilities: ['repo_read', 'code_write'],
 		},
 		timing: {
-			startedAt: "2026-06-10T10:00:00Z",
-			completedAt: "2026-06-10T10:30:00Z",
+			startedAt: '2026-06-10T10:00:00Z',
+			completedAt: '2026-06-10T10:30:00Z',
 			durationMs: 1_800_000,
 		},
 		gates: [
 			{
-				name: "test_run",
-				status: "pass" as const,
+				name: 'test_run',
+				status: 'pass' as const,
 				evidence: { passed: 10, total: 10 },
 			},
 		],
 		reviewerVerdict: {
-			verdict: "pass" as const,
+			verdict: 'pass' as const,
 			blockingFindings: [],
 			nonBlockingFindings: [],
 			checklistResults: {},
-			evidenceChecked: ["test_report"],
+			evidenceChecked: ['test_report'],
 			missingEvidence: [],
-			riskLevel: "low" as const,
+			riskLevel: 'low' as const,
 			humanApprovalRequired: false,
-			summary: "All good",
+			summary: 'All good',
 			recommendations: [],
-			reviewedAt: "2026-06-10T10:30:00Z",
-			reviewedBy: "review-agent v1.0",
+			reviewedAt: '2026-06-10T10:30:00Z',
+			reviewedBy: 'review-agent v1.0',
 		},
 		artifacts: [],
 		humanApproval: {
@@ -72,7 +68,7 @@ function validMinimalLog(overrides?: Partial<EvidenceLog>): EvidenceLog {
 		},
 		merge: {
 			prNumber: 1,
-			prUrl: "https://github.com/test/test/pull/1",
+			prUrl: 'https://github.com/test/test/pull/1',
 			mergeable: true,
 			merged: false,
 			blockers: [],
@@ -81,61 +77,59 @@ function validMinimalLog(overrides?: Partial<EvidenceLog>): EvidenceLog {
 	};
 }
 
-function validMinimalManifest(
-	overrides?: Partial<ContextManifest>,
-): ContextManifest {
+function validMinimalManifest(overrides?: Partial<ContextManifest>): ContextManifest {
 	return {
-		manifestVersion: "1.0.0",
-		generatedAt: "2026-06-10T10:00:00Z",
-		generatedBy: "positron-orchestrator",
+		manifestVersion: '1.0.0',
+		generatedAt: '2026-06-10T10:00:00Z',
+		generatedBy: 'positron-orchestrator',
 		run: {
-			id: "550e8400-e29b-41d4-a716-446655440000",
-			phase: "implement",
+			id: '550e8400-e29b-41d4-a716-446655440000',
+			phase: 'implement',
 			autonomyLevel: 2,
 			attempt: 1,
 			maxAttempts: 3,
 		},
 		issue: {
 			number: 42,
-			title: "Fix login timeout",
-			body: "The login page times out after 30 seconds.",
-			labels: ["bug"],
-			url: "https://github.com/test/test/issues/42",
+			title: 'Fix login timeout',
+			body: 'The login page times out after 30 seconds.',
+			labels: ['bug'],
+			url: 'https://github.com/test/test/issues/42',
 		},
 		repository: {
-			owner: "test-owner",
-			name: "test-repo",
-			defaultBranch: "main",
-			remoteUrl: "https://github.com/test-owner/test-repo.git",
-			language: "typescript",
-			packageManager: "npm",
-			runtime: "node >= 22",
+			owner: 'test-owner',
+			name: 'test-repo',
+			defaultBranch: 'main',
+			remoteUrl: 'https://github.com/test-owner/test-repo.git',
+			language: 'typescript',
+			packageManager: 'npm',
+			runtime: 'node >= 22',
 		},
 		workspace: {
-			path: "/tmp/positron/test",
-			branch: "positron/issue-42-test",
-			baseCommit: "abc123def456",
-			isolation: "worktree",
+			path: '/tmp/positron/test',
+			branch: 'positron/issue-42-test',
+			baseCommit: 'abc123def456',
+			isolation: 'worktree',
 		},
 		context: {
-			affectedModules: ["packages/shared/src/evidence-types.ts"],
-			existingTests: ["packages/shared/src/__tests__/types.test.ts"],
+			affectedModules: ['packages/shared/src/evidence-types.ts'],
+			existingTests: ['packages/shared/src/__tests__/types.test.ts'],
 			typeDefinitions: [],
 			configurationFiles: [],
 			recentChanges: [],
 		},
 		agent: {
-			type: "opencode",
+			type: 'opencode',
 			declaration: {
-				capabilities: ["repo_read", "code_write"],
+				capabilities: ['repo_read', 'code_write'],
 				trustTier: 1,
-				riskLevel: "low",
-				allowedPaths: ["/tmp/positron"],
+				riskLevel: 'low',
+				allowedPaths: ['/tmp/positron'],
 				deniedPaths: [],
 			},
 		},
 		constraints: {
-			constitution: ".specify/memory/constitution.md",
+			constitution: '.specify/memory/constitution.md',
 			policies: [],
 		},
 		evidenceRequirements: {
@@ -148,8 +142,8 @@ function validMinimalManifest(
 			humanApproval: false,
 		},
 		output: {
-			evidenceDir: "/tmp/positron/evidence",
-			artifactDir: "/tmp/positron/artifacts",
+			evidenceDir: '/tmp/positron/evidence',
+			artifactDir: '/tmp/positron/artifacts',
 		},
 		...overrides,
 	};
@@ -158,8 +152,8 @@ function validMinimalManifest(
 // ---------------------------------------------------------------------------
 // 1. EvidenceLog Validation (validateEvidenceLog)
 // ---------------------------------------------------------------------------
-describe("validateEvidenceLog", () => {
-	it("accepts a valid minimal evidence log", () => {
+describe('validateEvidenceLog', () => {
+	it('accepts a valid minimal evidence log', () => {
 		// Arrange
 		const log = validMinimalLog();
 
@@ -170,19 +164,19 @@ describe("validateEvidenceLog", () => {
 		expect(errors).toEqual([]);
 	});
 
-	it("rejects evidence log with empty runId", () => {
+	it('rejects evidence log with empty runId', () => {
 		// Arrange
-		const log = validMinimalLog({ runId: "" });
+		const log = validMinimalLog({ runId: '' });
 
 		// Act
 		const errors = validateEvidenceLog(log);
 
 		// Assert
 		expect(errors.length).toBeGreaterThanOrEqual(1);
-		expect(errors).toContain("runId must be non-empty");
+		expect(errors).toContain('runId must be non-empty');
 	});
 
-	it("rejects evidence log with issueNumber <= 0", () => {
+	it('rejects evidence log with issueNumber <= 0', () => {
 		// Arrange
 		const log = validMinimalLog({ issueNumber: 0 });
 
@@ -191,15 +185,15 @@ describe("validateEvidenceLog", () => {
 
 		// Assert
 		expect(errors.length).toBeGreaterThanOrEqual(1);
-		expect(errors).toContain("issueNumber must be > 0");
+		expect(errors).toContain('issueNumber must be > 0');
 	});
 
-	it("rejects evidence log with negative durationMs", () => {
+	it('rejects evidence log with negative durationMs', () => {
 		// Arrange
 		const log = validMinimalLog({
 			timing: {
-				startedAt: "2026-06-10T10:00:00Z",
-				completedAt: "2026-06-10T10:30:00Z",
+				startedAt: '2026-06-10T10:00:00Z',
+				completedAt: '2026-06-10T10:30:00Z',
 				durationMs: -1,
 			},
 		});
@@ -209,10 +203,10 @@ describe("validateEvidenceLog", () => {
 
 		// Assert
 		expect(errors.length).toBeGreaterThanOrEqual(1);
-		expect(errors).toContain("timing.durationMs must be >= 0");
+		expect(errors).toContain('timing.durationMs must be >= 0');
 	});
 
-	it("rejects evidence log with empty gates array", () => {
+	it('rejects evidence log with empty gates array', () => {
 		// Arrange
 		const log = validMinimalLog({ gates: [] });
 
@@ -221,16 +215,16 @@ describe("validateEvidenceLog", () => {
 
 		// Assert
 		expect(errors.length).toBeGreaterThanOrEqual(1);
-		expect(errors).toContain("gates array must not be empty");
+		expect(errors).toContain('gates array must not be empty');
 	});
 
-	it("rejects gate claiming pass with empty evidence object", () => {
+	it('rejects gate claiming pass with empty evidence object', () => {
 		// Arrange
 		const log = validMinimalLog({
 			gates: [
 				{
-					name: "test_run",
-					status: "pass",
+					name: 'test_run',
+					status: 'pass',
 					evidence: {},
 				},
 			],
@@ -241,27 +235,25 @@ describe("validateEvidenceLog", () => {
 
 		// Assert
 		expect(errors.length).toBeGreaterThanOrEqual(1);
-		expect(errors).toContain(
-			'Gate "test_run" claims \'pass\' but has no evidence',
-		);
+		expect(errors).toContain('Gate "test_run" claims \'pass\' but has no evidence');
 	});
 
-	it("rejects evidence log claiming merge.merged=true when gates have failures", () => {
+	it('rejects evidence log claiming merge.merged=true when gates have failures', () => {
 		// Arrange
 		const log = validMinimalLog({
 			gates: [
 				{
-					name: "test_run",
-					status: "fail",
+					name: 'test_run',
+					status: 'fail',
 					evidence: { passed: 5, total: 10 },
 				},
 			],
 			merge: {
 				prNumber: 1,
-				prUrl: "https://github.com/test/test/pull/1",
+				prUrl: 'https://github.com/test/test/pull/1',
 				mergeable: false,
 				merged: true,
-				blockers: ["test_run failed"],
+				blockers: ['test_run failed'],
 			},
 		});
 
@@ -275,7 +267,7 @@ describe("validateEvidenceLog", () => {
 		);
 	});
 
-	it("rejects evidence log with humanApproval.required=true and approved=false", () => {
+	it('rejects evidence log with humanApproval.required=true and approved=false', () => {
 		// Arrange
 		const log = validMinimalLog({
 			humanApproval: {
@@ -289,16 +281,16 @@ describe("validateEvidenceLog", () => {
 
 		// Assert
 		expect(errors.length).toBeGreaterThanOrEqual(1);
-		expect(errors).toContain("human approval is required but not approved");
+		expect(errors).toContain('human approval is required but not approved');
 	});
 
-	it("accepts evidence log with partial gate status", () => {
+	it('accepts evidence log with partial gate status', () => {
 		// Arrange
 		const log = validMinimalLog({
 			gates: [
 				{
-					name: "test_run",
-					status: "partial",
+					name: 'test_run',
+					status: 'partial',
 					evidence: { passed: 8, total: 10, skipped: 2 },
 				},
 			],
@@ -311,23 +303,23 @@ describe("validateEvidenceLog", () => {
 		expect(errors).toEqual([]);
 	});
 
-	it("accepts evidence log with all gates pass", () => {
+	it('accepts evidence log with all gates pass', () => {
 		// Arrange
 		const log = validMinimalLog({
 			gates: [
 				{
-					name: "test_run",
-					status: "pass",
+					name: 'test_run',
+					status: 'pass',
 					evidence: { passed: 10, total: 10 },
 				},
 				{
-					name: "ci_status",
-					status: "pass",
-					evidence: { buildUrl: "https://ci.example.com/build/1" },
+					name: 'ci_status',
+					status: 'pass',
+					evidence: { buildUrl: 'https://ci.example.com/build/1' },
 				},
 				{
-					name: "security_scan",
-					status: "pass",
+					name: 'security_scan',
+					status: 'pass',
 					evidence: { vulnerabilities: 0 },
 				},
 			],
@@ -344,8 +336,8 @@ describe("validateEvidenceLog", () => {
 // ---------------------------------------------------------------------------
 // 2. Evidence Integrity
 // ---------------------------------------------------------------------------
-describe("Evidence Integrity", () => {
-	it("rejects evidence log where artifacts array has missing sha256", () => {
+describe('Evidence Integrity', () => {
+	it('rejects evidence log where artifacts array has missing sha256', () => {
 		// Arrange — current validateEvidenceLog does NOT validate artifact sha256 fields.
 		// This test documents the expected contract: artifacts MUST carry sha256 hashes
 		// for integrity verification.  The validator currently accepts such input;
@@ -353,10 +345,10 @@ describe("Evidence Integrity", () => {
 		const log = validMinimalLog({
 			artifacts: [
 				{
-					kind: "test-report",
-					path: "reports/test.xml",
+					kind: 'test-report',
+					path: 'reports/test.xml',
 					// NOTE: sha256 is MISSING per the interface contract
-					sha256: "",
+					sha256: '',
 					sizeBytes: 1024,
 				},
 			],
@@ -370,13 +362,13 @@ describe("Evidence Integrity", () => {
 		expect(errors).toEqual([]);
 	});
 
-	it("rejects evidence claiming green status without test evidence", () => {
+	it('rejects evidence claiming green status without test evidence', () => {
 		// Arrange — a test_run gate claiming "pass" with no evidence is rejected
 		const log = validMinimalLog({
 			gates: [
 				{
-					name: "test_run",
-					status: "pass",
+					name: 'test_run',
+					status: 'pass',
 					evidence: {},
 				},
 			],
@@ -387,17 +379,15 @@ describe("Evidence Integrity", () => {
 
 		// Assert
 		expect(errors.length).toBeGreaterThanOrEqual(1);
-		expect(errors).toContain(
-			'Gate "test_run" claims \'pass\' but has no evidence',
-		);
+		expect(errors).toContain('Gate "test_run" claims \'pass\' but has no evidence');
 	});
 });
 
 // ---------------------------------------------------------------------------
 // 3. Context Manifest Validation (validateContextManifest)
 // ---------------------------------------------------------------------------
-describe("validateContextManifest", () => {
-	it("accepts a valid minimal context manifest", () => {
+describe('validateContextManifest', () => {
+	it('accepts a valid minimal context manifest', () => {
 		// Arrange
 		const manifest = validMinimalManifest();
 
@@ -408,24 +398,24 @@ describe("validateContextManifest", () => {
 		expect(errors).toEqual([]);
 	});
 
-	it("rejects manifest without manifestVersion field", () => {
+	it('rejects manifest without manifestVersion field', () => {
 		// Arrange
-		const manifest = validMinimalManifest({ manifestVersion: "" });
+		const manifest = validMinimalManifest({ manifestVersion: '' });
 
 		// Act
 		const errors = validateContextManifest(manifest);
 
 		// Assert
 		expect(errors.length).toBeGreaterThanOrEqual(1);
-		expect(errors).toContain("manifestVersion must be non-empty");
+		expect(errors).toContain('manifestVersion must be non-empty');
 	});
 
-	it("rejects manifest with empty run.id", () => {
+	it('rejects manifest with empty run.id', () => {
 		// Arrange
 		const manifest = validMinimalManifest({
 			run: {
-				id: "",
-				phase: "implement",
+				id: '',
+				phase: 'implement',
 				autonomyLevel: 2,
 				attempt: 1,
 				maxAttempts: 3,
@@ -437,18 +427,18 @@ describe("validateContextManifest", () => {
 
 		// Assert
 		expect(errors.length).toBeGreaterThanOrEqual(1);
-		expect(errors).toContain("run.id must be non-empty");
+		expect(errors).toContain('run.id must be non-empty');
 	});
 
-	it("rejects manifest with issue.number <= 0", () => {
+	it('rejects manifest with issue.number <= 0', () => {
 		// Arrange
 		const manifest = validMinimalManifest({
 			issue: {
 				number: 0,
-				title: "Fix login timeout",
-				body: "The login page times out after 30 seconds.",
-				labels: ["bug"],
-				url: "https://github.com/test/test/issues/42",
+				title: 'Fix login timeout',
+				body: 'The login page times out after 30 seconds.',
+				labels: ['bug'],
+				url: 'https://github.com/test/test/issues/42',
 			},
 		});
 
@@ -457,20 +447,20 @@ describe("validateContextManifest", () => {
 
 		// Assert
 		expect(errors.length).toBeGreaterThanOrEqual(1);
-		expect(errors).toContain("issue.number must be > 0");
+		expect(errors).toContain('issue.number must be > 0');
 	});
 
-	it("rejects manifest without repository.owner", () => {
+	it('rejects manifest without repository.owner', () => {
 		// Arrange
 		const manifest = validMinimalManifest({
 			repository: {
-				owner: "",
-				name: "test-repo",
-				defaultBranch: "main",
-				remoteUrl: "https://github.com/test-owner/test-repo.git",
-				language: "typescript",
-				packageManager: "npm",
-				runtime: "node >= 22",
+				owner: '',
+				name: 'test-repo',
+				defaultBranch: 'main',
+				remoteUrl: 'https://github.com/test-owner/test-repo.git',
+				language: 'typescript',
+				packageManager: 'npm',
+				runtime: 'node >= 22',
 			},
 		});
 
@@ -479,17 +469,17 @@ describe("validateContextManifest", () => {
 
 		// Assert
 		expect(errors.length).toBeGreaterThanOrEqual(1);
-		expect(errors).toContain("repository.owner must be non-empty");
+		expect(errors).toContain('repository.owner must be non-empty');
 	});
 
-	it("rejects manifest without workspace.path", () => {
+	it('rejects manifest without workspace.path', () => {
 		// Arrange
 		const manifest = validMinimalManifest({
 			workspace: {
-				path: "",
-				branch: "positron/issue-42-test",
-				baseCommit: "abc123def456",
-				isolation: "worktree",
+				path: '',
+				branch: 'positron/issue-42-test',
+				baseCommit: 'abc123def456',
+				isolation: 'worktree',
 			},
 		});
 
@@ -498,18 +488,18 @@ describe("validateContextManifest", () => {
 
 		// Assert
 		expect(errors.length).toBeGreaterThanOrEqual(1);
-		expect(errors).toContain("workspace.path must be non-empty");
+		expect(errors).toContain('workspace.path must be non-empty');
 	});
 
-	it("rejects manifest with secret-like pattern in title", () => {
+	it('rejects manifest with secret-like pattern in title', () => {
 		// Arrange — ghp_ token pattern in the issue title triggers secret detector
 		const manifest = validMinimalManifest({
 			issue: {
 				number: 42,
-				title: "Use token ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx for auth",
-				body: "The login page times out after 30 seconds.",
-				labels: ["bug"],
-				url: "https://github.com/test/test/issues/42",
+				title: 'Use token ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx for auth',
+				body: 'The login page times out after 30 seconds.',
+				labels: ['bug'],
+				url: 'https://github.com/test/test/issues/42',
 			},
 		});
 
@@ -518,21 +508,19 @@ describe("validateContextManifest", () => {
 
 		// Assert — secret pattern detection fires
 		expect(errors.length).toBeGreaterThanOrEqual(1);
-		const secretErrors = errors.filter((e) =>
-			e.startsWith("Secret pattern detected"),
-		);
+		const secretErrors = errors.filter((e) => e.startsWith('Secret pattern detected'));
 		expect(secretErrors.length).toBeGreaterThanOrEqual(1);
 	});
 
-	it("rejects manifest with secret-like pattern in body", () => {
+	it('rejects manifest with secret-like pattern in body', () => {
 		// Arrange — OpenAI sk- pattern in the issue body
 		const manifest = validMinimalManifest({
 			issue: {
 				number: 42,
-				title: "Fix login timeout",
-				body: "Use API key sk-abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrs for the service.",
-				labels: ["bug"],
-				url: "https://github.com/test/test/issues/42",
+				title: 'Fix login timeout',
+				body: 'Use API key sk-abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrs for the service.',
+				labels: ['bug'],
+				url: 'https://github.com/test/test/issues/42',
 			},
 		});
 
@@ -541,28 +529,26 @@ describe("validateContextManifest", () => {
 
 		// Assert
 		expect(errors.length).toBeGreaterThanOrEqual(1);
-		const secretErrors = errors.filter((e) =>
-			e.startsWith("Secret pattern detected"),
-		);
+		const secretErrors = errors.filter((e) => e.startsWith('Secret pattern detected'));
 		expect(secretErrors.length).toBeGreaterThanOrEqual(1);
 	});
 
-	it("rejects manifest without generatedBy", () => {
+	it('rejects manifest without generatedBy', () => {
 		// Arrange
-		const manifest = validMinimalManifest({ generatedBy: "" });
+		const manifest = validMinimalManifest({ generatedBy: '' });
 
 		// Act
 		const errors = validateContextManifest(manifest);
 
 		// Assert
 		expect(errors.length).toBeGreaterThanOrEqual(1);
-		expect(errors).toContain("generatedBy must be non-empty");
+		expect(errors).toContain('generatedBy must be non-empty');
 	});
 
-	it("rejects manifest with invalid ISO8601 generatedAt", () => {
+	it('rejects manifest with invalid ISO8601 generatedAt', () => {
 		// Arrange
 		const manifest = validMinimalManifest({
-			generatedAt: "not-an-iso-date",
+			generatedAt: 'not-an-iso-date',
 		});
 
 		// Act
@@ -570,10 +556,10 @@ describe("validateContextManifest", () => {
 
 		// Assert
 		expect(errors.length).toBeGreaterThanOrEqual(1);
-		expect(errors).toContain("generatedAt must be a valid ISO8601 string");
+		expect(errors).toContain('generatedAt must be a valid ISO8601 string');
 	});
 
-	it("rejects manifest with empty evidenceRequirements", () => {
+	it('rejects manifest with empty evidenceRequirements', () => {
 		// Arrange — all false means testReport is false → error
 		const manifest = validMinimalManifest({
 			evidenceRequirements: {
@@ -592,10 +578,10 @@ describe("validateContextManifest", () => {
 
 		// Assert
 		expect(errors.length).toBeGreaterThanOrEqual(1);
-		expect(errors).toContain("evidenceRequirements.testReport must be true");
+		expect(errors).toContain('evidenceRequirements.testReport must be true');
 	});
 
-	it("rejects manifest without testReport evidence requirement", () => {
+	it('rejects manifest without testReport evidence requirement', () => {
 		// Arrange — testReport: false triggers rejection
 		const manifest = validMinimalManifest({
 			evidenceRequirements: {
@@ -614,15 +600,15 @@ describe("validateContextManifest", () => {
 
 		// Assert
 		expect(errors.length).toBeGreaterThanOrEqual(1);
-		expect(errors).toContain("evidenceRequirements.testReport must be true");
+		expect(errors).toContain('evidenceRequirements.testReport must be true');
 	});
 });
 
 // ---------------------------------------------------------------------------
 // 4. Context Freshness / Ownership
 // ---------------------------------------------------------------------------
-describe("Context Freshness / Ownership", () => {
-	it("accepts manifest with valid context fields", () => {
+describe('Context Freshness / Ownership', () => {
+	it('accepts manifest with valid context fields', () => {
 		// Arrange
 		const manifest = validMinimalManifest();
 
@@ -633,15 +619,15 @@ describe("Context Freshness / Ownership", () => {
 		expect(errors).toEqual([]);
 	});
 
-	it("Hot context must have explicit freshness marker", () => {
+	it('Hot context must have explicit freshness marker', () => {
 		// Arrange — recentChanges entries must contain ':' or '@' or be >= 15 chars
 		const manifest = validMinimalManifest({
 			context: {
-				affectedModules: ["packages/shared/src/evidence-types.ts"],
-				existingTests: ["packages/shared/src/__tests__/types.test.ts"],
+				affectedModules: ['packages/shared/src/evidence-types.ts'],
+				existingTests: ['packages/shared/src/__tests__/types.test.ts'],
 				typeDefinitions: [],
 				configurationFiles: [],
-				recentChanges: ["short"],
+				recentChanges: ['short'],
 			},
 		});
 
@@ -656,15 +642,15 @@ describe("Context Freshness / Ownership", () => {
 		);
 	});
 
-	it("accepts manifest with freshness markers in recentChanges", () => {
+	it('accepts manifest with freshness markers in recentChanges', () => {
 		// Arrange — valid marker with ':' separator
 		const manifest = validMinimalManifest({
 			context: {
-				affectedModules: ["packages/shared/src/evidence-types.ts"],
-				existingTests: ["packages/shared/src/__tests__/types.test.ts"],
+				affectedModules: ['packages/shared/src/evidence-types.ts'],
+				existingTests: ['packages/shared/src/__tests__/types.test.ts'],
 				typeDefinitions: [],
 				configurationFiles: [],
-				recentChanges: ["evidence-types.ts:abc123def456"],
+				recentChanges: ['evidence-types.ts:abc123def456'],
 			},
 		});
 
@@ -675,15 +661,15 @@ describe("Context Freshness / Ownership", () => {
 		expect(errors).toEqual([]);
 	});
 
-	it("accepts manifest with timestamp marker in recentChanges", () => {
+	it('accepts manifest with timestamp marker in recentChanges', () => {
 		// Arrange — valid marker with '@' separator
 		const manifest = validMinimalManifest({
 			context: {
-				affectedModules: ["packages/shared/src/evidence-types.ts"],
-				existingTests: ["packages/shared/src/__tests__/types.test.ts"],
+				affectedModules: ['packages/shared/src/evidence-types.ts'],
+				existingTests: ['packages/shared/src/__tests__/types.test.ts'],
 				typeDefinitions: [],
 				configurationFiles: [],
-				recentChanges: ["evidence-types.ts@2026-06-10"],
+				recentChanges: ['evidence-types.ts@2026-06-10'],
 			},
 		});
 

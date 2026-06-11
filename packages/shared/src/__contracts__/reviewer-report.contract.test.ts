@@ -19,13 +19,13 @@
  * SECURITY: No real secrets. All values are fakes in test scope only.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect } from 'vitest';
 import {
 	validateReviewReport,
 	validateVerificationContract,
 	isSecretPattern,
-} from "@positron/shared";
-import type { ReviewReport, VerificationContract } from "@positron/shared";
+} from '@positron/shared';
+import type { ReviewReport, VerificationContract } from '@positron/shared';
 
 // ---------------------------------------------------------------------------
 // Helpers — minimal valid building blocks
@@ -33,74 +33,69 @@ import type { ReviewReport, VerificationContract } from "@positron/shared";
 
 function validPassReport(overrides?: Partial<ReviewReport>): ReviewReport {
 	return {
-		verdict: "pass",
+		verdict: 'pass',
 		blockingFindings: [],
 		nonBlockingFindings: [],
 		checklistResults: {
-			issueFulfilment: "pass",
-			specAlignment: "pass",
+			issueFulfilment: 'pass',
+			specAlignment: 'pass',
 		},
-		evidenceChecked: ["test_report", "diff_summary"],
+		evidenceChecked: ['test_report', 'diff_summary'],
 		missingEvidence: [],
-		riskLevel: "low",
+		riskLevel: 'low',
 		humanApprovalRequired: false,
-		summary: "All checks pass",
+		summary: 'All checks pass',
 		recommendations: [],
-		reviewedAt: "2026-06-10T10:30:00Z",
-		reviewedBy: "review-agent v1.0",
+		reviewedAt: '2026-06-10T10:30:00Z',
+		reviewedBy: 'review-agent v1.0',
 		...overrides,
 	};
 }
 
 function validFailReport(overrides?: Partial<ReviewReport>): ReviewReport {
 	return {
-		verdict: "fail",
+		verdict: 'fail',
 		blockingFindings: [
 			{
-				id: "REV-B001",
-				severity: "blocking",
-				category: "implementationQuality",
-				description: "Critical logic error in auth module",
-				recommendation: "Fix the authentication flow",
+				id: 'REV-B001',
+				severity: 'blocking',
+				category: 'implementationQuality',
+				description: 'Critical logic error in auth module',
+				recommendation: 'Fix the authentication flow',
 			},
 		],
 		nonBlockingFindings: [],
 		checklistResults: {
-			issueFulfilment: "fail",
-			implementationQuality: "fail",
+			issueFulfilment: 'fail',
+			implementationQuality: 'fail',
 		},
-		evidenceChecked: ["test_report", "diff_summary"],
+		evidenceChecked: ['test_report', 'diff_summary'],
 		missingEvidence: [],
-		riskLevel: "critical",
+		riskLevel: 'critical',
 		humanApprovalRequired: true,
-		summary: "Critical issues found",
-		recommendations: ["Fix all blocking findings"],
-		reviewedAt: "2026-06-10T10:30:00Z",
-		reviewedBy: "review-agent v1.0",
+		summary: 'Critical issues found',
+		recommendations: ['Fix all blocking findings'],
+		reviewedAt: '2026-06-10T10:30:00Z',
+		reviewedBy: 'review-agent v1.0',
 		...overrides,
 	};
 }
 
-function validContract(
-	overrides?: Partial<VerificationContract>,
-): VerificationContract {
+function validContract(overrides?: Partial<VerificationContract>): VerificationContract {
 	return {
-		contractVersion: "1.0.0",
-		scope: "issue-42-fix-login-timeout",
-		sourceOfTruth: "github",
-		requiredGates: ["ci_status", "security_scan", "test_run"],
+		contractVersion: '1.0.0',
+		scope: 'issue-42-fix-login-timeout',
+		sourceOfTruth: 'github',
+		requiredGates: ['ci_status', 'security_scan', 'test_run'],
 		forbiddenClaims: [],
-		forbiddenOutcomes: ["test_regression", "secret_leakage"],
-		acceptanceCriteria: [
-			"Login completes within 5 seconds",
-			"Error message displayed on timeout",
-		],
+		forbiddenOutcomes: ['test_regression', 'secret_leakage'],
+		acceptanceCriteria: ['Login completes within 5 seconds', 'Error message displayed on timeout'],
 		testStrategy: {
 			unitRequired: true,
 			contractRequired: true,
-			frameworks: ["vitest"],
+			frameworks: ['vitest'],
 		},
-		mergePolicy: "no_merge_without_evidence",
+		mergePolicy: 'no_merge_without_evidence',
 		evidenceRequirements: {
 			testReport: true,
 			diffSummary: true,
@@ -113,8 +108,8 @@ function validContract(
 // ---------------------------------------------------------------------------
 // 1. ReviewReport Validation (validateReviewReport)
 // ---------------------------------------------------------------------------
-describe("validateReviewReport", () => {
-	it("accepts a valid pass verdict report", () => {
+describe('validateReviewReport', () => {
+	it('accepts a valid pass verdict report', () => {
 		// Arrange
 		const report = validPassReport();
 
@@ -125,16 +120,16 @@ describe("validateReviewReport", () => {
 		expect(errors).toEqual([]);
 	});
 
-	it("rejects pass verdict when blockingFindings is non-empty", () => {
+	it('rejects pass verdict when blockingFindings is non-empty', () => {
 		// Arrange
 		const report = validPassReport({
 			blockingFindings: [
 				{
-					id: "REV-B001",
-					severity: "blocking",
-					category: "implementationQuality",
-					description: "Broken authentication",
-					recommendation: "Fix auth",
+					id: 'REV-B001',
+					severity: 'blocking',
+					category: 'implementationQuality',
+					description: 'Broken authentication',
+					recommendation: 'Fix auth',
 				},
 			],
 		});
@@ -149,7 +144,7 @@ describe("validateReviewReport", () => {
 		);
 	});
 
-	it("rejects pass verdict when evidenceChecked is empty", () => {
+	it('rejects pass verdict when evidenceChecked is empty', () => {
 		// Arrange
 		const report = validPassReport({ evidenceChecked: [] });
 
@@ -158,15 +153,13 @@ describe("validateReviewReport", () => {
 
 		// Assert
 		expect(errors.length).toBeGreaterThanOrEqual(1);
-		expect(errors).toContain(
-			'Reviewer cannot give "pass" verdict when evidenceChecked is empty',
-		);
+		expect(errors).toContain('Reviewer cannot give "pass" verdict when evidenceChecked is empty');
 	});
 
-	it("rejects pass verdict when missingEvidence is non-empty", () => {
+	it('rejects pass verdict when missingEvidence is non-empty', () => {
 		// Arrange
 		const report = validPassReport({
-			missingEvidence: ["security_scan"],
+			missingEvidence: ['security_scan'],
 		});
 
 		// Act
@@ -179,11 +172,11 @@ describe("validateReviewReport", () => {
 		);
 	});
 
-	it("reports verdict fail when riskLevel is critical and verdict is fail — accepts", () => {
+	it('reports verdict fail when riskLevel is critical and verdict is fail — accepts', () => {
 		// Arrange — fail verdict with critical riskLevel is valid
 		const report = validFailReport({
-			verdict: "fail",
-			riskLevel: "critical",
+			verdict: 'fail',
+			riskLevel: 'critical',
 			humanApprovalRequired: true,
 		});
 
@@ -194,11 +187,11 @@ describe("validateReviewReport", () => {
 		expect(errors).toEqual([]);
 	});
 
-	it("rejects fail verdict without humanApprovalRequired set to true", () => {
+	it('rejects fail verdict without humanApprovalRequired set to true', () => {
 		// Arrange
 		const report = validFailReport({
-			verdict: "fail",
-			riskLevel: "critical",
+			verdict: 'fail',
+			riskLevel: 'critical',
 			humanApprovalRequired: false,
 		});
 
@@ -207,21 +200,19 @@ describe("validateReviewReport", () => {
 
 		// Assert
 		expect(errors.length).toBeGreaterThanOrEqual(1);
-		expect(errors).toContain(
-			'When verdict is "fail", humanApprovalRequired must be true',
-		);
+		expect(errors).toContain('When verdict is "fail", humanApprovalRequired must be true');
 	});
 
-	it("rejects when blocking findings have non-blocking severity", () => {
+	it('rejects when blocking findings have non-blocking severity', () => {
 		// Arrange — blockingFindings entry with severity "warning" instead of "blocking"
 		const report = validPassReport({
 			blockingFindings: [
 				{
-					id: "REV-W001",
-					severity: "warning",
-					category: "implementationQuality",
-					description: "Minor style issue",
-					recommendation: "Fix formatting",
+					id: 'REV-W001',
+					severity: 'warning',
+					category: 'implementationQuality',
+					description: 'Minor style issue',
+					recommendation: 'Fix formatting',
 				},
 			],
 		});
@@ -236,20 +227,20 @@ describe("validateReviewReport", () => {
 		);
 	});
 
-	it("accepts changes_requested verdict with blocking findings", () => {
+	it('accepts changes_requested verdict with blocking findings', () => {
 		// Arrange — changes_requested can have blocking findings without contradiction
 		const report = validPassReport({
-			verdict: "changes_requested",
+			verdict: 'changes_requested',
 			blockingFindings: [
 				{
-					id: "REV-B001",
-					severity: "blocking",
-					category: "implementationQuality",
-					description: "Must fix this before merge",
-					recommendation: "Fix it",
+					id: 'REV-B001',
+					severity: 'blocking',
+					category: 'implementationQuality',
+					description: 'Must fix this before merge',
+					recommendation: 'Fix it',
 				},
 			],
-			riskLevel: "high",
+			riskLevel: 'high',
 			humanApprovalRequired: true,
 		});
 
@@ -258,9 +249,7 @@ describe("validateReviewReport", () => {
 
 		// Assert — the pass-specific checks don't fire for changes_requested
 		const passErrors = errors.filter(
-			(e) =>
-				e.includes('cannot give "pass"') ||
-				e.includes('When verdict is "fail"'),
+			(e) => e.includes('cannot give "pass"') || e.includes('When verdict is "fail"'),
 		);
 		expect(passErrors).toEqual([]);
 	});
@@ -269,17 +258,17 @@ describe("validateReviewReport", () => {
 // ---------------------------------------------------------------------------
 // 2. ReviewFinding Validation
 // ---------------------------------------------------------------------------
-describe("ReviewFinding Validation", () => {
+describe('ReviewFinding Validation', () => {
 	it("blocking finding requires severity 'blocking'", () => {
 		// Arrange — a blockingFinding with non-blocking severity is rejected
 		const report = validPassReport({
 			blockingFindings: [
 				{
-					id: "REV-W001",
-					severity: "warning",
-					category: "implementationQuality",
-					description: "Should not be in blocking list",
-					recommendation: "Move to non-blocking",
+					id: 'REV-W001',
+					severity: 'warning',
+					category: 'implementationQuality',
+					description: 'Should not be in blocking list',
+					recommendation: 'Move to non-blocking',
 				},
 			],
 		});
@@ -299,11 +288,11 @@ describe("ReviewFinding Validation", () => {
 		const report = validPassReport({
 			nonBlockingFindings: [
 				{
-					id: "REV-W001",
-					severity: "warning",
-					category: "codeStyle",
-					description: "Consider using const instead of let",
-					recommendation: "Replace let with const",
+					id: 'REV-W001',
+					severity: 'warning',
+					category: 'codeStyle',
+					description: 'Consider using const instead of let',
+					recommendation: 'Replace let with const',
 				},
 			],
 		});
@@ -320,11 +309,11 @@ describe("ReviewFinding Validation", () => {
 		const report = validPassReport({
 			nonBlockingFindings: [
 				{
-					id: "REV-I001",
-					severity: "info",
-					category: "documentation",
-					description: "Add JSDoc to public methods",
-					recommendation: "Add documentation comments",
+					id: 'REV-I001',
+					severity: 'info',
+					category: 'documentation',
+					description: 'Add JSDoc to public methods',
+					recommendation: 'Add documentation comments',
 				},
 			],
 		});
@@ -336,7 +325,7 @@ describe("ReviewFinding Validation", () => {
 		expect(errors).toEqual([]);
 	});
 
-	it("finding without description is rejected", () => {
+	it('finding without description is rejected', () => {
 		// Arrange — validator doesn't check description field on findings directly,
 		// but a blocking finding with empty description in a fail verdict
 		// with missing humanApprovalRequired triggers structural checks.
@@ -345,15 +334,15 @@ describe("ReviewFinding Validation", () => {
 		const report = validFailReport({
 			blockingFindings: [
 				{
-					id: "REV-B001",
-					severity: "blocking",
-					category: "implementationQuality",
-					description: "",
-					recommendation: "Fix it",
+					id: 'REV-B001',
+					severity: 'blocking',
+					category: 'implementationQuality',
+					description: '',
+					recommendation: 'Fix it',
 				},
 			],
-			verdict: "fail",
-			riskLevel: "critical",
+			verdict: 'fail',
+			riskLevel: 'critical',
 			humanApprovalRequired: true,
 		});
 
@@ -362,9 +351,7 @@ describe("ReviewFinding Validation", () => {
 
 		// Assert — current validator does NOT reject empty description
 		// This is a known gap; the type system enforces non-empty at the TS level.
-		const descErrors = errors.filter((e) =>
-			e.toLowerCase().includes("description"),
-		);
+		const descErrors = errors.filter((e) => e.toLowerCase().includes('description'));
 		expect(descErrors).toEqual([]);
 	});
 });
@@ -372,8 +359,8 @@ describe("ReviewFinding Validation", () => {
 // ---------------------------------------------------------------------------
 // 3. Reviewer must NOT PASS without gates
 // ---------------------------------------------------------------------------
-describe("Reviewer must NOT PASS without gates", () => {
-	it("reviewer must not PASS when verification contract is missing", () => {
+describe('Reviewer must NOT PASS without gates', () => {
+	it('reviewer must not PASS when verification contract is missing', () => {
 		// Arrange — evidenceChecked empty means no verification contract was checked
 		const report = validPassReport({ evidenceChecked: [] });
 
@@ -382,15 +369,13 @@ describe("Reviewer must NOT PASS without gates", () => {
 
 		// Assert
 		expect(errors.length).toBeGreaterThanOrEqual(1);
-		expect(errors).toContain(
-			'Reviewer cannot give "pass" verdict when evidenceChecked is empty',
-		);
+		expect(errors).toContain('Reviewer cannot give "pass" verdict when evidenceChecked is empty');
 	});
 
-	it("reviewer must not PASS when tests are missing", () => {
+	it('reviewer must not PASS when tests are missing', () => {
 		// Arrange — missingEvidence includes test_report → cannot pass
 		const report = validPassReport({
-			missingEvidence: ["test_report"],
+			missingEvidence: ['test_report'],
 		});
 
 		// Act
@@ -403,10 +388,10 @@ describe("Reviewer must NOT PASS without gates", () => {
 		);
 	});
 
-	it("reviewer must not PASS when security gate is missing", () => {
+	it('reviewer must not PASS when security gate is missing', () => {
 		// Arrange — missingEvidence includes security_scan → cannot pass
 		const report = validPassReport({
-			missingEvidence: ["security_scan"],
+			missingEvidence: ['security_scan'],
 		});
 
 		// Act
@@ -419,25 +404,25 @@ describe("Reviewer must NOT PASS without gates", () => {
 		);
 	});
 
-	it("reviewer must distinguish blocking vs non-blocking findings", () => {
+	it('reviewer must distinguish blocking vs non-blocking findings', () => {
 		// Arrange — verify blocking vs non-blocking finding arrays are validated differently
 		const report = validPassReport({
 			blockingFindings: [
 				{
-					id: "REV-W001",
-					severity: "warning",
-					category: "codeStyle",
-					description: "Blocking list with warning severity",
-					recommendation: "Move to non-blocking list",
+					id: 'REV-W001',
+					severity: 'warning',
+					category: 'codeStyle',
+					description: 'Blocking list with warning severity',
+					recommendation: 'Move to non-blocking list',
 				},
 			],
 			nonBlockingFindings: [
 				{
-					id: "REV-B002",
-					severity: "blocking",
-					category: "security",
-					description: "Non-blocking list with blocking severity",
-					recommendation: "Move to blocking list",
+					id: 'REV-B002',
+					severity: 'blocking',
+					category: 'security',
+					description: 'Non-blocking list with blocking severity',
+					recommendation: 'Move to blocking list',
 				},
 			],
 		});
@@ -461,8 +446,8 @@ describe("Reviewer must NOT PASS without gates", () => {
 // ---------------------------------------------------------------------------
 // 4. Verification Contract Validation (validateVerificationContract)
 // ---------------------------------------------------------------------------
-describe("validateVerificationContract", () => {
-	it("accepts a valid verification contract", () => {
+describe('validateVerificationContract', () => {
+	it('accepts a valid verification contract', () => {
 		// Arrange
 		const contract = validContract();
 
@@ -473,19 +458,19 @@ describe("validateVerificationContract", () => {
 		expect(errors).toEqual([]);
 	});
 
-	it("rejects contract with empty scope", () => {
+	it('rejects contract with empty scope', () => {
 		// Arrange
-		const contract = validContract({ scope: "" });
+		const contract = validContract({ scope: '' });
 
 		// Act
 		const errors = validateVerificationContract(contract);
 
 		// Assert
 		expect(errors.length).toBeGreaterThanOrEqual(1);
-		expect(errors).toContain("scope must be non-empty");
+		expect(errors).toContain('scope must be non-empty');
 	});
 
-	it("rejects contract with empty requiredGates", () => {
+	it('rejects contract with empty requiredGates', () => {
 		// Arrange
 		const contract = validContract({ requiredGates: [] });
 
@@ -494,10 +479,10 @@ describe("validateVerificationContract", () => {
 
 		// Assert
 		expect(errors.length).toBeGreaterThanOrEqual(1);
-		expect(errors).toContain("requiredGates must not be empty");
+		expect(errors).toContain('requiredGates must not be empty');
 	});
 
-	it("rejects contract with empty acceptanceCriteria", () => {
+	it('rejects contract with empty acceptanceCriteria', () => {
 		// Arrange
 		const contract = validContract({ acceptanceCriteria: [] });
 
@@ -506,15 +491,15 @@ describe("validateVerificationContract", () => {
 
 		// Assert
 		expect(errors.length).toBeGreaterThanOrEqual(1);
-		expect(errors).toContain("acceptanceCriteria must not be empty");
+		expect(errors).toContain('acceptanceCriteria must not be empty');
 	});
 
-	it("rejects contract with unitRequired set to false", () => {
+	it('rejects contract with unitRequired set to false', () => {
 		// Arrange
 		const contract = validContract({
 			testStrategy: {
 				unitRequired: false,
-				frameworks: ["vitest"],
+				frameworks: ['vitest'],
 			},
 		});
 
@@ -523,10 +508,10 @@ describe("validateVerificationContract", () => {
 
 		// Assert
 		expect(errors.length).toBeGreaterThanOrEqual(1);
-		expect(errors).toContain("testStrategy.unitRequired must be true");
+		expect(errors).toContain('testStrategy.unitRequired must be true');
 	});
 
-	it("rejects contract with empty evidenceRequirements", () => {
+	it('rejects contract with empty evidenceRequirements', () => {
 		// Arrange
 		const contract = validContract({ evidenceRequirements: {} });
 
@@ -535,17 +520,17 @@ describe("validateVerificationContract", () => {
 
 		// Assert
 		expect(errors.length).toBeGreaterThanOrEqual(1);
-		expect(errors).toContain("evidenceRequirements must not be empty");
+		expect(errors).toContain('evidenceRequirements must not be empty');
 	});
 });
 
 // ---------------------------------------------------------------------------
 // 5. Secret Pattern Detection (isSecretPattern)
 // ---------------------------------------------------------------------------
-describe("isSecretPattern", () => {
-	it("detects ghp_ pattern", () => {
+describe('isSecretPattern', () => {
+	it('detects ghp_ pattern', () => {
 		// Arrange
-		const token = "ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+		const token = 'ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
 
 		// Act
 		const result = isSecretPattern(token);
@@ -554,9 +539,9 @@ describe("isSecretPattern", () => {
 		expect(result).toBe(true);
 	});
 
-	it("detects sk- pattern", () => {
+	it('detects sk- pattern', () => {
 		// Arrange
-		const token = "sk-abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrs";
+		const token = 'sk-abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrs';
 
 		// Act
 		const result = isSecretPattern(token);
@@ -565,9 +550,9 @@ describe("isSecretPattern", () => {
 		expect(result).toBe(true);
 	});
 
-	it("detects AIza pattern", () => {
+	it('detects AIza pattern', () => {
 		// Arrange — Google API key pattern (exactly 35 chars after AIza prefix)
-		const token = "AIzaSyDf09fGjT5TgH7kLmN8oPqRsTuVwXyZ012";
+		const token = 'AIzaSyDf09fGjT5TgH7kLmN8oPqRsTuVwXyZ012';
 
 		// Act
 		const result = isSecretPattern(token);
@@ -576,9 +561,9 @@ describe("isSecretPattern", () => {
 		expect(result).toBe(true);
 	});
 
-	it("detects anthropic_ pattern", () => {
+	it('detects anthropic_ pattern', () => {
 		// Arrange
-		const token = "anthropic_abcdefghijklmnopqrstuvwxyz1234567890abcdefgh";
+		const token = 'anthropic_abcdefghijklmnopqrstuvwxyz1234567890abcdefgh';
 
 		// Act
 		const result = isSecretPattern(token);
@@ -587,10 +572,10 @@ describe("isSecretPattern", () => {
 		expect(result).toBe(true);
 	});
 
-	it("detects github_pat_ pattern", () => {
+	it('detects github_pat_ pattern', () => {
 		// Arrange — Fine-grained PAT has 82 alphanumeric chars after prefix
 		const token =
-			"github_pat_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+			'github_pat_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 
 		// Act
 		const result = isSecretPattern(token);
@@ -599,9 +584,9 @@ describe("isSecretPattern", () => {
 		expect(result).toBe(true);
 	});
 
-	it("does not flag normal text", () => {
+	it('does not flag normal text', () => {
 		// Arrange
-		const text = "this is a normal string without any secret patterns";
+		const text = 'this is a normal string without any secret patterns';
 
 		// Act
 		const result = isSecretPattern(text);
@@ -610,14 +595,9 @@ describe("isSecretPattern", () => {
 		expect(result).toBe(false);
 	});
 
-	it("does not flag test fixture values without secret prefix", () => {
+	it('does not flag test fixture values without secret prefix', () => {
 		// Arrange — common test fixtures that look similar but lack the prefix
-		const values = [
-			"sk_test_abc123",
-			"project_abc123",
-			"ghp_test",
-			"token_abc123",
-		];
+		const values = ['sk_test_abc123', 'project_abc123', 'ghp_test', 'token_abc123'];
 
 		// Act & Assert
 		for (const val of values) {

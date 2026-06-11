@@ -118,9 +118,7 @@ describe('voice-settings', () => {
 				throw new Error('QuotaExceeded');
 			}),
 		});
-		expect(() =>
-			saveVoiceSettings(DEFAULT_VOICE_SETTINGS),
-		).not.toThrow();
+		expect(() => saveVoiceSettings(DEFAULT_VOICE_SETTINGS)).not.toThrow();
 	});
 
 	test('loadVoiceSettings returns deep-cloned defaults (no shared references)', () => {

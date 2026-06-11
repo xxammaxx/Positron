@@ -14,13 +14,13 @@
  *
  * Artifacts saved to: test-results/positron-ui-workflow/
  */
-import { test, expect, type Page, type BrowserContext } from "@playwright/test";
-import fs from "fs";
-import path from "path";
+import { test, expect, type Page, type BrowserContext } from '@playwright/test';
+import fs from 'fs';
+import path from 'path';
 
-const ARTIFACT_DIR = "test-results/positron-ui-workflow";
-const BACKEND_URL = "http://localhost:3000";
-const FRONTEND_URL = "http://localhost:5173";
+const ARTIFACT_DIR = 'test-results/positron-ui-workflow';
+const BACKEND_URL = 'http://localhost:3000';
+const FRONTEND_URL = 'http://localhost:5173';
 
 // Ensure artifact directory
 if (!fs.existsSync(ARTIFACT_DIR)) {
@@ -40,12 +40,10 @@ const consoleWarnings: string[] = [];
 const consoleLogs: string[] = [];
 
 // ── Single comprehensive test ──────────────────────────────────
-test.describe("UI Workflow Trace & Network Proof", () => {
-	test.describe.configure({ mode: "serial", timeout: 300_000 });
+test.describe('UI Workflow Trace & Network Proof', () => {
+	test.describe.configure({ mode: 'serial', timeout: 300_000 });
 
-	test("Full workflow: Blueprint → Demo Run → Run Detail → DONE", async ({
-		browser,
-	}) => {
+	test('Full workflow: Blueprint → Demo Run → Run Detail → DONE', async ({ browser }) => {
 		// Create a dedicated context with tracing and video enabled
 		const context: BrowserContext = await browser.newContext({
 			recordVideo: { dir: ARTIFACT_DIR, size: { width: 1280, height: 720 } },
@@ -57,22 +55,22 @@ test.describe("UI Workflow Trace & Network Proof", () => {
 		const page: Page = await context.newPage();
 
 		// ── Capture console output ──────────────────────────
-		page.on("console", (msg) => {
+		page.on('console', (msg) => {
 			const text = `[${msg.type()}] ${msg.text()}`;
-			if (msg.type() === "error") {
+			if (msg.type() === 'error') {
 				consoleErrors.push(text);
-			} else if (msg.type() === "warning") {
+			} else if (msg.type() === 'warning') {
 				consoleWarnings.push(text);
 			}
 			consoleLogs.push(text);
 		});
 
 		// ── Capture ALL API calls via response listener ─────
-		page.on("response", (response) => {
+		page.on('response', (response) => {
 			const url = response.url();
-			if (url.includes("/api/")) {
-				const apiIndex = url.indexOf("/api/");
-				const normalized = url.substring(apiIndex).split("?")[0]; // strip query params
+			if (url.includes('/api/')) {
+				const apiIndex = url.indexOf('/api/');
+				const normalized = url.substring(apiIndex).split('?')[0]; // strip query params
 				apiCalls.push({
 					method: response.request().method(),
 					url: normalized,
@@ -83,41 +81,41 @@ test.describe("UI Workflow Trace & Network Proof", () => {
 		});
 
 		// ── Step 1: Open Frontend ──────────────────────────
-		await test.step("S01: Open frontend", async () => {
-			await page.goto(FRONTEND_URL, { waitUntil: "domcontentloaded", timeout: 30_000 });
-			await expect(page.getByRole("main")).toBeVisible({ timeout: 10_000 });
+		await test.step('S01: Open frontend', async () => {
+			await page.goto(FRONTEND_URL, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+			await expect(page.getByRole('main')).toBeVisible({ timeout: 10_000 });
 			await page.screenshot({ path: `${ARTIFACT_DIR}/01-ui-opened.png`, fullPage: true });
 		});
 
 		// ── Step 2: Verify backend health is visible ───────
-		await test.step("S02: Backend connected indicator", async () => {
-			const healthDot = page.locator("header .rounded-full").first();
+		await test.step('S02: Backend connected indicator', async () => {
+			const healthDot = page.locator('header .rounded-full').first();
 			await expect(healthDot).toBeVisible({ timeout: 10_000 });
 			await page.screenshot({ path: `${ARTIFACT_DIR}/02-health-verified.png`, fullPage: true });
 		});
 
 		// ── Step 3: Load Demo Blueprint ────────────────────
-		await test.step("S03: Load demo blueprint", async () => {
-			await expect(page.getByText("Demo Blueprint")).toBeVisible({ timeout: 10_000 });
+		await test.step('S03: Load demo blueprint', async () => {
+			await expect(page.getByText('Demo Blueprint')).toBeVisible({ timeout: 10_000 });
 
-			await page.getByLabel("Repository (owner/repo)").fill("test-owner/test-repo");
-			await page.getByLabel("Issue number").fill("1");
+			await page.getByLabel('Repository (owner/repo)').fill('test-owner/test-repo');
+			await page.getByLabel('Issue number').fill('1');
 
-			const generateBtn = page.getByRole("button", { name: /Generate Blueprint/i });
+			const generateBtn = page.getByRole('button', { name: /Generate Blueprint/i });
 			await expect(generateBtn).toBeVisible({ timeout: 10_000 });
 			await generateBtn.click();
 
 			// Wait for textarea to be filled
 			await expect
-				.poll(() => page.locator("textarea").inputValue(), { timeout: 15_000 })
+				.poll(() => page.locator('textarea').inputValue(), { timeout: 15_000 })
 				.toMatch(/.{50,}/s);
 
 			await page.screenshot({ path: `${ARTIFACT_DIR}/03-blueprint-loaded.png`, fullPage: true });
 		});
 
 		// ── Step 4: Start Demo Run ─────────────────────────
-		await test.step("S04: Start demo run", async () => {
-			const startBtn = page.getByRole("button", { name: /Start Demo Run/i });
+		await test.step('S04: Start demo run', async () => {
+			const startBtn = page.getByRole('button', { name: /Start Demo Run/i });
 			await expect(startBtn).toBeVisible({ timeout: 10_000 });
 			await startBtn.click();
 
@@ -131,8 +129,8 @@ test.describe("UI Workflow Trace & Network Proof", () => {
 		});
 
 		// ── Step 5: Get run ID from API ──────────────────
-		let runId = "";
-		await test.step("S05: Get run ID from API", async () => {
+		let runId = '';
+		await test.step('S05: Get run ID from API', async () => {
 			// Poll backend via Playwright's built-in HTTP client (more reliable than Node fetch)
 			for (let i = 0; i < 20; i++) {
 				try {
@@ -142,16 +140,18 @@ test.describe("UI Workflow Trace & Network Proof", () => {
 						runId = data.runs[0].id;
 						break;
 					}
-				} catch { /* retry */ }
+				} catch {
+					/* retry */
+				}
 				await page.waitForTimeout(3000);
 			}
-			expect(runId, "Run must be created in backend after demo run start").toBeTruthy();
+			expect(runId, 'Run must be created in backend after demo run start').toBeTruthy();
 		});
 
 		// ── Step 6: Navigate to run detail directly ───────
-		await test.step("S06: Open run detail via URL", async () => {
+		await test.step('S06: Open run detail via URL', async () => {
 			await page.goto(`${FRONTEND_URL}/runs/${runId}`, {
-				waitUntil: "domcontentloaded",
+				waitUntil: 'domcontentloaded',
 				timeout: 15_000,
 			});
 			await page.waitForTimeout(4000);
@@ -160,48 +160,52 @@ test.describe("UI Workflow Trace & Network Proof", () => {
 		});
 
 		// ── Step 7: Verify run detail content ─────────────
-		await test.step("S07: Verify run detail page loaded", async () => {
+		await test.step('S07: Verify run detail page loaded', async () => {
 			// Check for run ID or phase display
-			const phaseText = page.locator("text=Phase").first();
+			const phaseText = page.locator('text=Phase').first();
 			const hasPhase = await phaseText.isVisible({ timeout: 5000 }).catch(() => false);
 			// The page should render something about the run
-			await expect(page.locator("main")).toBeVisible({ timeout: 5000 });
+			await expect(page.locator('main')).toBeVisible({ timeout: 5000 });
 			await page.screenshot({ path: `${ARTIFACT_DIR}/06-run-detail-content.png`, fullPage: true });
 		});
 
 		// ── Step 8: Navigate to runs page ─────────────────
-		await test.step("S08: Navigate to runs page", async () => {
-			await page.goto(`${FRONTEND_URL}/runs`, { waitUntil: "domcontentloaded", timeout: 15_000 });
+		await test.step('S08: Navigate to runs page', async () => {
+			await page.goto(`${FRONTEND_URL}/runs`, { waitUntil: 'domcontentloaded', timeout: 15_000 });
 			await page.waitForTimeout(2000);
 			await page.screenshot({ path: `${ARTIFACT_DIR}/07-runs-page.png`, fullPage: true });
 
 			// Verify runs table is visible
-			await expect(page.locator("table, [role='table'], .runs-list").first()).toBeVisible({ timeout: 10_000 });
+			await expect(page.locator("table, [role='table'], .runs-list").first()).toBeVisible({
+				timeout: 10_000,
+			});
 		});
 
 		// ── Step 9: Poll for run status (accept any terminal or active state) ──
-		await test.step("S09: Poll for run status", async () => {
-			let status = "unknown";
+		await test.step('S09: Poll for run status', async () => {
+			let status = 'unknown';
 			for (let i = 0; i < 6; i++) {
 				try {
 					const response = await page.request.get(`${BACKEND_URL}/api/runs/${runId}`);
 					if (response.ok) {
 						const data = await response.json();
-						status = data.phase || data.status || "active";
+						status = data.phase || data.status || 'active';
 						// Accept ANY non-QUEUED state — the pipeline may be running or complete
-						if (status !== "QUEUED") break;
+						if (status !== 'QUEUED') break;
 					}
-				} catch { /* retry */ }
+				} catch {
+					/* retry */
+				}
 				await page.waitForTimeout(4000);
 			}
 			// At minimum, the run should have moved beyond QUEUED
-			expect(status, "Run should have progressed beyond QUEUED phase").not.toBe("QUEUED");
+			expect(status, 'Run should have progressed beyond QUEUED phase').not.toBe('QUEUED');
 		});
 
 		// ── Step 10: Refresh run detail page ──────────────
-		await test.step("S10: Refresh run detail page", async () => {
+		await test.step('S10: Refresh run detail page', async () => {
 			await page.goto(`${FRONTEND_URL}/runs/${runId}`, {
-				waitUntil: "domcontentloaded",
+				waitUntil: 'domcontentloaded',
 				timeout: 15_000,
 			});
 			await page.waitForTimeout(3000);
@@ -209,9 +213,9 @@ test.describe("UI Workflow Trace & Network Proof", () => {
 		});
 
 		// ── Step 11: Evidence page ────────────────────────
-		await test.step("S11: Evidence page", async () => {
+		await test.step('S11: Evidence page', async () => {
 			await page.goto(`${FRONTEND_URL}/evidence`, {
-				waitUntil: "domcontentloaded",
+				waitUntil: 'domcontentloaded',
 				timeout: 15_000,
 			});
 			await page.waitForTimeout(2000);
@@ -219,34 +223,36 @@ test.describe("UI Workflow Trace & Network Proof", () => {
 		});
 
 		// ── Step 12: System Health ────────────────────────
-		await test.step("S12: System health", async () => {
-			await page.goto(FRONTEND_URL, { waitUntil: "domcontentloaded", timeout: 15_000 });
+		await test.step('S12: System health', async () => {
+			await page.goto(FRONTEND_URL, { waitUntil: 'domcontentloaded', timeout: 15_000 });
 			await page.waitForTimeout(2000);
 			await page.screenshot({ path: `${ARTIFACT_DIR}/10-system-health.png`, fullPage: true });
 		});
 
 		// ── Step 13: Save all artifacts ───────────────────
-		await test.step("S13: Save all artifacts", async () => {
+		await test.step('S13: Save all artifacts', async () => {
 			// Fetch final run data
-			let finalPhase = "unknown";
+			let finalPhase = 'unknown';
 			try {
 				const response = await page.request.get(`${BACKEND_URL}/api/runs/${runId}`);
 				if (response.ok) {
 					const data = await response.json();
-					finalPhase = data.phase || data.status || "unknown";
+					finalPhase = data.phase || data.status || 'unknown';
 				}
-			} catch { /* ignore */ }
+			} catch {
+				/* ignore */
+			}
 
 			// Stop tracing
 			const tracePath = `${ARTIFACT_DIR}/trace.zip`;
 			await context.tracing.stop({ path: tracePath });
 
 			// Save network log
-			const hasHealth = apiCalls.some((c) => c.url === "/api/health");
-			const hasRuns = apiCalls.some((c) => c.method === "GET" && c.url === "/api/runs");
-			const hasDemoRun = apiCalls.some((c) => c.method === "POST" && c.url === "/api/demo-runs");
+			const hasHealth = apiCalls.some((c) => c.url === '/api/health');
+			const hasRuns = apiCalls.some((c) => c.method === 'GET' && c.url === '/api/runs');
+			const hasDemoRun = apiCalls.some((c) => c.method === 'POST' && c.url === '/api/demo-runs');
 			const hasRunDetail = apiCalls.some(
-				(c) => c.method === "GET" && c.url.startsWith("/api/runs/") && !c.url.endsWith("/runs"),
+				(c) => c.method === 'GET' && c.url.startsWith('/api/runs/') && !c.url.endsWith('/runs'),
 			);
 
 			const networkLog = {
@@ -261,41 +267,49 @@ test.describe("UI Workflow Trace & Network Proof", () => {
 			// Save console log
 			fs.writeFileSync(
 				`${ARTIFACT_DIR}/console-log.json`,
-				JSON.stringify({
-					timestamp: new Date().toISOString(),
-					totalErrors: consoleErrors.length,
-					totalWarnings: consoleWarnings.length,
-					errors: consoleErrors,
-					warnings: consoleWarnings.slice(0, 50),
-					logs: consoleLogs.slice(0, 100),
-				}, null, 2),
+				JSON.stringify(
+					{
+						timestamp: new Date().toISOString(),
+						totalErrors: consoleErrors.length,
+						totalWarnings: consoleWarnings.length,
+						errors: consoleErrors,
+						warnings: consoleWarnings.slice(0, 50),
+						logs: consoleLogs.slice(0, 100),
+					},
+					null,
+					2,
+				),
 			);
 
 			// Save manifest
 			fs.writeFileSync(
 				`${ARTIFACT_DIR}/manifest.json`,
-				JSON.stringify({
-					timestamp: new Date().toISOString(),
-					backendUrl: BACKEND_URL,
-					frontendUrl: FRONTEND_URL,
-					mode: "demo",
-					runId,
-					finalStatus: finalPhase,
-					artifacts: {
-						"trace.zip": fs.existsSync(tracePath),
-						"video.webm": false, // video finalized after context close
-						"network-log.json": true,
-						"console-log.json": true,
-						"manifest.json": true,
+				JSON.stringify(
+					{
+						timestamp: new Date().toISOString(),
+						backendUrl: BACKEND_URL,
+						frontendUrl: FRONTEND_URL,
+						mode: 'demo',
+						runId,
+						finalStatus: finalPhase,
+						artifacts: {
+							'trace.zip': fs.existsSync(tracePath),
+							'video.webm': false, // video finalized after context close
+							'network-log.json': true,
+							'console-log.json': true,
+							'manifest.json': true,
+						},
+						network: {
+							totalCalls: apiCalls.length,
+							hasHealth,
+							hasRuns,
+							hasDemoRun,
+							hasRunDetail,
+						},
 					},
-					network: {
-						totalCalls: apiCalls.length,
-						hasHealth,
-						hasRuns,
-						hasDemoRun,
-						hasRunDetail,
-					},
-				}, null, 2),
+					null,
+					2,
+				),
 			);
 		});
 
