@@ -3,10 +3,7 @@
 	"version": "0.1.0",
 	"private": true,
 	"description": "Evidence-Gated GitHub Issue Execution System",
-	"workspaces": [
-		"apps/*",
-		"packages/*"
-	],
+	"workspaces": ["apps/*", "packages/*"],
 	"scripts": {
 		"build": "tsc -b packages/shared packages/sandbox packages/github-adapter packages/run-state packages/speckit-adapter packages/opencode-adapter apps/server apps/worker",
 		"build:watch": "tsc --build --watch",
@@ -51,7 +48,10 @@
 		"format": "biome format --write .",
 		"format:check": "biome format .",
 		"clean": "find . -name dist -not -path '*/node_modules/*' -exec rm -rf {} +",
-		"typecheck": "tsc -b --dry"
+		"typecheck": "tsc -b --dry",
+		"dev:demo": "concurrently \"npm run dev:server\" \"npm run dev:web\"",
+		"doctor": "node scripts/doctor.mjs",
+		"verify": "npm test && npm run test:contracts && npm run typecheck && npm run build && npm run coverage:safety"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.60.0",

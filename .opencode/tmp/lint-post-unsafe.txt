@@ -1,0 +1,3925 @@
+﻿node.exe : .\scripts\verify-issues.mjs:60:11 lint/suspicious/noAssignInExpressions 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+In Zeile:1 Zeichen:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (.\scripts\verif...ÔöüÔöüÔöüÔöüÔöü:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+  ├ù The assignment should not be in an expression.
+  
+    58 Ôöé   const criteria = [];
+    59 Ôöé   let match;
+  > 60 Ôöé   while ((match = checkboxRegex.exec(body)) !== null) {
+       Ôöé           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    61 Ôöé     criteria.push({
+    62 Ôöé       checked: match[1] === 'x',
+  
+  i The use of assignments in expressions is confusing.
+    Expressions are often considered as side-effect free.
+  
+
+.\scripts\verify-issues.mjs:81:9 lint/complexity/noForEach ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Prefer for...of instead of forEach.
+  
+    79 Ôöé           .map((l) => l.trim())
+    80 Ôöé           .filter((l) => l.startsWith('-') || l.startsWith('*') || /^\d+\./.test(l));
+  > 81 Ôöé         lines.forEach((l) =>
+       Ôöé         ^^^^^^^^^^^^^^^^^^^^
+  > 82 Ôöé           criteria.push({ checked: false, text: l.replace(/^[-*\d]+\.?\s*/, '').trim() })
+  > 83 Ôöé         );
+       Ôöé         ^
+    84 Ôöé       }
+    85 Ôöé     }
+  
+  i forEach may lead to performance issues when working with large arrays. When combined with functions like filter or 
+map, this causes multiple iterations over the same type.
+  
+
+.\apps\server\src\__tests__\observability\instrumentation.test.ts:51:65 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    50 Ôöé /** Simulate a run creation via POST /api/repos/:id/runs */
+  > 51 Ôöé async function createTestRun(): Promise<{ status: number; body: any }> {
+       Ôöé                                                                 ^^^
+    52 Ôöé 	return new Promise((resolve, reject) => {
+    53 Ôöé 		const data = JSON.stringify({ issueNumber: 42, autonomyLevel: 2 });
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\apps\server\src\__tests__\observability\instrumentation.test.ts:206:60 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    204 Ôöé describe("Metrics Regression (QA-011)", () => {
+    205 Ôöé 	it("/health endpoint unchanged", async () => {
+  > 206 Ôöé 		const result = await new Promise<{ status: number; body: any }>(
+        Ôöé 		                                                         ^^^
+    207 Ôöé 			(resolve, reject) => {
+    208 Ôöé 				http
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\apps\server\src\__tests__\observability\instrumentation.test.ts:51:16 lint/correctness/noUnusedVariables 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This function is unused.
+  
+    50 Ôöé /** Simulate a run creation via POST /api/repos/:id/runs */
+  > 51 Ôöé async function createTestRun(): Promise<{ status: number; body: any }> {
+       Ôöé                ^^^^^^^^^^^^^
+    52 Ôöé 	return new Promise((resolve, reject) => {
+    53 Ôöé 		const data = JSON.stringify({ issueNumber: 42, autonomyLevel: 2 });
+  
+  i Unused variables usually are result of incomplete refactoring, typos and other source of bugs.
+  
+
+.\apps\server\src\__tests__\observability\queue.test.ts:45:37 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    44 Ôöé 	it("help texts contain no secrets", () => {
+  > 45 Ôöé 		const helps = [(queueJobsTotal as any).help, (queueRedisUp as any).help];
+       Ôöé 		                                  ^^^
+    46 Ôöé 		for (const h of helps) {
+    47 Ôöé 			expect(h).not.toMatch(/ghp_/);
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\apps\server\src\__tests__\observability\queue.test.ts:45:65 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    44 Ôöé 	it("help texts contain no secrets", () => {
+  > 45 Ôöé 		const helps = [(queueJobsTotal as any).help, (queueRedisUp as any).help];
+       Ôöé 		                                                              ^^^
+    46 Ôöé 		for (const h of helps) {
+    47 Ôöé 			expect(h).not.toMatch(/ghp_/);
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\scripts\queue-backlog-drill.mjs:56:31 lint/suspicious/noAssignInExpressions 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù The assignment should not be in an expression.
+  
+    54 Ôöé 		const req = http.request(options, (res) => {
+    55 Ôöé 			let data = "";
+  > 56 Ôöé 			res.on("data", (chunk) => (data += chunk));
+       Ôöé 			                           ^^^^^^^^^^^^^
+    57 Ôöé 			res.on("end", () => resolve({ status: res.statusCode, body: data }));
+    58 Ôöé 		});
+  
+  i The use of assignments in expressions is confusing.
+    Expressions are often considered as side-effect free.
+  
+
+.\scripts\queue-backlog-drill.mjs:235:18 lint/correctness/noUnusedVariables 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This variable is unused.
+  
+    233 Ôöé 	let drillWaiting = 0;
+    234 Ôöé 	try {
+  > 235 Ôöé 		const { Queue: Q2 } = await import("bullmq");
+        Ôöé 		               ^^
+    236 Ôöé 		const checkQueue = new Queue(DRILL_QUEUE, {
+    237 Ôöé 			connection: { url: REDIS_URL, connectTimeout: 5000 },
+  
+  i Unused variables usually are result of incomplete refactoring, typos and other source of bugs.
+  
+
+.\scripts\observability-validate.mjs:30:10 lint/correctness/noUnusedVariables 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This function is unused.
+  
+    28 Ôöé const _BOLD = "\x1b[1m";
+    29 Ôöé 
+  > 30 Ôöé function check(success, _label) {
+       Ôöé          ^^^^^
+    31 Ôöé 	if (success) {
+    32 Ôöé 	} else {
+  
+  i Unused variables usually are result of incomplete refactoring, typos and other source of bugs.
+  
+
+.\apps\server\src\cli.ts:73:28 lint/style/noNonNullAssertion 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Forbidden non-null assertion.
+  
+    71 Ôöé         if (val) {
+    72 Ôöé           args.autonomyLevel = Number.parseInt(val, 10);
+  > 73 Ôöé           if (Number.isNaN(args.autonomyLevel!) || args.autonomyLevel! < 0 || args.autonomyLevel! > 2) {
+       Ôöé                            ^^^^^^^^^^^^^^^^^^^
+    74 Ôöé             return { kind: 'error', message: '--autonomyLevel muss 0, 1 oder 2 sein' };
+    75 Ôöé           }
+  
+
+.\apps\server\src\cli.ts:73:52 lint/style/noNonNullAssertion 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Forbidden non-null assertion.
+  
+    71 Ôöé         if (val) {
+    72 Ôöé           args.autonomyLevel = Number.parseInt(val, 10);
+  > 73 Ôöé           if (Number.isNaN(args.autonomyLevel!) || args.autonomyLevel! < 0 || args.autonomyLevel! > 2) {
+       Ôöé                                                    ^^^^^^^^^^^^^^^^^^^
+    74 Ôöé             return { kind: 'error', message: '--autonomyLevel muss 0, 1 oder 2 sein' };
+    75 Ôöé           }
+  
+
+.\apps\server\src\cli.ts:73:79 lint/style/noNonNullAssertion 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Forbidden non-null assertion.
+  
+    71 Ôöé         if (val) {
+    72 Ôöé           args.autonomyLevel = Number.parseInt(val, 10);
+  > 73 Ôöé           if (Number.isNaN(args.autonomyLevel!) || args.autonomyLevel! < 0 || args.autonomyLevel! > 2) {
+       Ôöé                                                                               ^^^^^^^^^^^^^^^^^^^
+    74 Ôöé             return { kind: 'error', message: '--autonomyLevel muss 0, 1 oder 2 sein' };
+    75 Ôöé           }
+  
+
+.\scripts\observability-drill.mjs:39:31 lint/suspicious/noAssignInExpressions 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù The assignment should not be in an expression.
+  
+    37 Ôöé 		const req = http.request(options, (res) => {
+    38 Ôöé 			let data = "";
+  > 39 Ôöé 			res.on("data", (chunk) => (data += chunk));
+       Ôöé 			                           ^^^^^^^^^^^^^
+    40 Ôöé 			res.on("end", () => {
+    41 Ôöé 				try {
+  
+  i The use of assignments in expressions is confusing.
+    Expressions are often considered as side-effect free.
+  
+
+.\scripts\observability-drill.mjs:88:10 lint/correctness/noUnusedVariables 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This function is unused.
+  
+    86 Ôöé }
+    87 Ôöé 
+  > 88 Ôöé function formatValue(val) {
+       Ôöé          ^^^^^^^^^^^
+    89 Ôöé 	if (val === null) return "N/A";
+    90 Ôöé 	if (typeof val === "number") return val.toFixed(2);
+  
+  i Unused variables usually are result of incomplete refactoring, typos and other source of bugs.
+  
+
+.\apps\server\src\handlers\cancel-run.ts:10:58 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+     9 Ôöé // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  > 10 Ôöé export function createCancelHandler(deps: Record<string, any>) {
+       Ôöé                                                          ^^^
+    11 Ôöé   return async (req: Request, res: Response): Promise<void> => {
+    12 Ôöé     const { id } = req.params;
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\scripts\chaos-drill.mjs:59:31 lint/suspicious/noAssignInExpressions 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù The assignment should not be in an expression.
+  
+    57 Ôöé 		const req = http.request(options, (res) => {
+    58 Ôöé 			let data = "";
+  > 59 Ôöé 			res.on("data", (chunk) => (data += chunk));
+       Ôöé 			                           ^^^^^^^^^^^^^
+    60 Ôöé 			res.on("end", () => {
+    61 Ôöé 				try {
+  
+  i The use of assignments in expressions is confusing.
+    Expressions are often considered as side-effect free.
+  
+
+.\scripts\chaos-drill.mjs:256:11 lint/correctness/noUnusedVariables 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This variable is unused.
+  
+    254 Ôöé 		const res = await httpRequest("GET", `${MOCK_URL}/health`);
+    255 Ôöé 		if (res.status !== 200) throw new Error("Mock health not available");
+  > 256 Ôöé 		const { totalAlerts, criticalAlerts, warningAlerts, resolvedAlerts } =
+        Ôöé 		        ^^^^^^^^^^^
+    257 Ôöé 			res.body;
+    258 Ôöé 	});
+  
+  i Unused variables usually are result of incomplete refactoring, typos and other source of bugs.
+  
+
+.\scripts\chaos-drill.mjs:256:24 lint/correctness/noUnusedVariables 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This variable is unused.
+  
+    254 Ôöé 		const res = await httpRequest("GET", `${MOCK_URL}/health`);
+    255 Ôöé 		if (res.status !== 200) throw new Error("Mock health not available");
+  > 256 Ôöé 		const { totalAlerts, criticalAlerts, warningAlerts, resolvedAlerts } =
+        Ôöé 		                     ^^^^^^^^^^^^^^
+    257 Ôöé 			res.body;
+    258 Ôöé 	});
+  
+  i Unused variables usually are result of incomplete refactoring, typos and other source of bugs.
+  
+
+.\scripts\chaos-drill.mjs:256:40 lint/correctness/noUnusedVariables 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This variable is unused.
+  
+    254 Ôöé 		const res = await httpRequest("GET", `${MOCK_URL}/health`);
+    255 Ôöé 		if (res.status !== 200) throw new Error("Mock health not available");
+  > 256 Ôöé 		const { totalAlerts, criticalAlerts, warningAlerts, resolvedAlerts } =
+        Ôöé 		                                     ^^^^^^^^^^^^^
+    257 Ôöé 			res.body;
+    258 Ôöé 	});
+  
+  i Unused variables usually are result of incomplete refactoring, typos and other source of bugs.
+  
+
+.\scripts\chaos-drill.mjs:256:55 lint/correctness/noUnusedVariables 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This variable is unused.
+  
+    254 Ôöé 		const res = await httpRequest("GET", `${MOCK_URL}/health`);
+    255 Ôöé 		if (res.status !== 200) throw new Error("Mock health not available");
+  > 256 Ôöé 		const { totalAlerts, criticalAlerts, warningAlerts, resolvedAlerts } =
+        Ôöé 		                                                    ^^^^^^^^^^^^^^
+    257 Ôöé 			res.body;
+    258 Ôöé 	});
+  
+  i Unused variables usually are result of incomplete refactoring, typos and other source of bugs.
+  
+
+.\apps\web\src\__tests__\PhasePipeline.test.tsx:46:13 lint/correctness/noUnusedVariables 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This variable is unused.
+  
+    45 Ôöé   test('shows error/recovery sections when there are error phases', () => {
+  > 46 Ôöé     const { container } = render(<PhasePipeline failedPhases={['FAILED']} />);
+       Ôöé             ^^^^^^^^^
+    47 Ôöé     const recoverySection = screen.queryByText(/State \/ Recovery Phases/i);
+    48 Ôöé     expect(recoverySection).toBeDefined();
+  
+  i Unused variables usually are result of incomplete refactoring, typos and other source of bugs.
+  
+
+.\apps\web\src\__tests__\VoiceControls.test.tsx:50:4 lint/complexity/noForEach 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Prefer for...of instead of forEach.
+  
+    48 Ôöé 		}),
+    49 Ôöé 		clear: vi.fn(() => {
+  > 50 Ôöé 			Object.keys(store).forEach((k) => delete store[k]);
+       Ôöé 			^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    51 Ôöé 		}),
+    52 Ôöé 	});
+  
+  i forEach may lead to performance issues when working with large arrays. When combined with functions like filter or 
+map, this causes multiple iterations over the same type.
+  
+
+.\apps\web\src\__tests__\VoiceControls.test.tsx:58:2 lint/complexity/noForEach 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Prefer for...of instead of forEach.
+  
+    56 Ôöé 	mockSpeak.mockClear();
+    57 Ôöé 	mockCancel.mockClear();
+  > 58 Ôöé 	Object.keys(store).forEach((k) => delete store[k]);
+       Ôöé 	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    59 Ôöé 	setupStorage();
+    60 Ôöé 	setupSpeech(true);
+  
+  i forEach may lead to performance issues when working with large arrays. When combined with functions like filter or 
+map, this causes multiple iterations over the same type.
+  
+
+.\apps\web\src\__tests__\voice-smoke.test.tsx:62:4 lint/complexity/noForEach 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Prefer for...of instead of forEach.
+  
+    60 Ôöé 		}),
+    61 Ôöé 		clear: vi.fn(() => {
+  > 62 Ôöé 			Object.keys(store).forEach((k) => delete store[k]);
+       Ôöé 			^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    63 Ôöé 		}),
+    64 Ôöé 	});
+  
+  i forEach may lead to performance issues when working with large arrays. When combined with functions like filter or 
+map, this causes multiple iterations over the same type.
+  
+
+.\apps\web\src\__tests__\voice-smoke.test.tsx:83:2 lint/complexity/noForEach 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Prefer for...of instead of forEach.
+  
+    81 Ôöé 	mockSpeak.mockClear();
+    82 Ôöé 	mockCancel.mockClear();
+  > 83 Ôöé 	Object.keys(store).forEach((k) => delete store[k]);
+       Ôöé 	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    84 Ôöé 	setupStorage();
+    85 Ôöé 	setupSpeech(true);
+  
+  i forEach may lead to performance issues when working with large arrays. When combined with functions like filter or 
+map, this causes multiple iterations over the same type.
+  
+
+.\apps\web\src\components\ArtifactPanel.tsx:87:11 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    85 Ôöé         <h3 className="text-sm font-medium text-slate-300">Artefakte</h3>
+    86 Ôöé         {artifact && (
+  > 87 Ôöé           <button
+       Ôöé           ^^^^^^^
+  > 88 Ôöé             onClick={handleDownload}
+  > 89 Ôöé             className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+  > 90 Ôöé           >
+       Ôöé           ^
+    91 Ôöé             Ô¼ç Download
+    92 Ôöé           </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\ArtifactPanel.tsx:99:11 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+     97 Ôöé       <div className="flex gap-1 mb-3">
+     98 Ôöé         {TABS.map(tab => (
+   > 99 Ôöé           <button
+        Ôöé           ^^^^^^^
+  > 100 Ôöé             key={tab.kind}
+         ...
+  > 106 Ôöé             }`}
+  > 107 Ôöé           >
+        Ôöé           ^
+    108 Ôöé             {tab.label}
+    109 Ôöé           </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\ArtifactPanel.tsx:123:11 lint/security/noDangerouslySetInnerHtml 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Avoid passing content using the dangerouslySetInnerHTML prop.
+  
+    121 Ôöé         <pre
+    122 Ôöé           className="text-xs text-slate-300 whitespace-pre-wrap overflow-x-auto max-h-[300px] 
+overflow-y-auto bg-slate-900 rounded-lg p-3"
+  > 123 Ôöé           dangerouslySetInnerHTML={{ __html: renderContent() }}
+        Ôöé           ^^^^^^^^^^^^^^^^^^^^^^^
+    124 Ôöé         />
+    125 Ôöé       ) : (
+  
+  ! Setting content using code can expose users to cross-site scripting (XSS) attacks
+  
+
+.\apps\web\src\components\GateControls.tsx:84:15 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    82 Ôöé           {!showApproveConfirm && !showReviseForm && (
+    83 Ôöé             <div className="flex gap-2">
+  > 84 Ôöé               <button
+       Ôöé               ^^^^^^^
+  > 85 Ôöé                 onClick={() => setShowApproveConfirm(true)}
+  > 86 Ôöé                 className="btn-success flex-1 text-sm"
+  > 87 Ôöé               >
+       Ôöé               ^
+    88 Ôöé                 Ô£ô Genehmigen
+    89 Ôöé               </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\GateControls.tsx:90:15 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    88 Ôöé                 Ô£ô Genehmigen
+    89 Ôöé               </button>
+  > 90 Ôöé               <button
+       Ôöé               ^^^^^^^
+  > 91 Ôöé                 onClick={() => setShowReviseForm(true)}
+  > 92 Ôöé                 className="btn-secondary flex-1 text-sm"
+  > 93 Ôöé               >
+       Ôöé               ^
+    94 Ôöé                 Ôå║ ├£berarbeitung
+    95 Ôöé               </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\GateControls.tsx:106:17 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    104 Ôöé               </p>
+    105 Ôöé               <div className="flex gap-2">
+  > 106 Ôöé                 <button
+        Ôöé                 ^^^^^^^
+  > 107 Ôöé                   onClick={() => setShowApproveConfirm(false)}
+  > 108 Ôöé                   className="btn-secondary flex-1 text-xs"
+  > 109 Ôöé                   disabled={loading}
+  > 110 Ôöé                 >
+        Ôöé                 ^
+    111 Ôöé                   Abbrechen
+    112 Ôöé                 </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\GateControls.tsx:113:17 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    111 Ôöé                   Abbrechen
+    112 Ôöé                 </button>
+  > 113 Ôöé                 <button
+        Ôöé                 ^^^^^^^
+  > 114 Ôöé                   onClick={handleApprove}
+  > 115 Ôöé                   className="btn-success flex-1 text-xs"
+  > 116 Ôöé                   disabled={loading}
+  > 117 Ôöé                 >
+        Ôöé                 ^
+    118 Ôöé                   {loading ? 'Wird gesendet...' : 'Ja, genehmigen'}
+    119 Ôöé                 </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\GateControls.tsx:136:17 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    134 Ôöé               />
+    135 Ôöé               <div className="flex gap-2">
+  > 136 Ôöé                 <button
+        Ôöé                 ^^^^^^^
+  > 137 Ôöé                   onClick={() => {
+         ...
+  > 142 Ôöé                   disabled={loading}
+  > 143 Ôöé                 >
+        Ôöé                 ^
+    144 Ôöé                   Abbrechen
+    145 Ôöé                 </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\GateControls.tsx:146:17 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    144 Ôöé                   Abbrechen
+    145 Ôöé                 </button>
+  > 146 Ôöé                 <button
+        Ôöé                 ^^^^^^^
+  > 147 Ôöé                   onClick={handleRevise}
+  > 148 Ôöé                   className="btn-danger flex-1 text-xs"
+  > 149 Ôöé                   disabled={loading || reviseReason.trim().length < 20}
+  > 150 Ôöé                 >
+        Ôöé                 ^
+    151 Ôöé                   {loading ? 'Wird gesendet...' : '├£berarbeitung anfordern'}
+    152 Ôöé                 </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\HealthIndicator.tsx:15:5 lint/style/useConst 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù This let declares a variable that is only assigned once.
+  
+    13 Ôöé   useEffect(() => {
+    14 Ôöé     let cancelled = false;
+  > 15 Ôöé     let interval: ReturnType<typeof setInterval>;
+       Ôöé     ^^^
+    16 Ôöé 
+    17 Ôöé     async function check(): Promise<void> {
+  
+  i 'interval' is only assigned here.
+  
+    37 Ôöé     check();
+  > 38 Ôöé     interval = setInterval(check, 30_000);
+       Ôöé     ^^^^^^^^
+    39 Ôöé 
+    40 Ôöé     return () => {
+  
+
+.\apps\web\src\components\LogViewer.tsx:56:3 lint/correctness/useExhaustiveDependencies 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This hook specifies more dependencies than necessary: filteredEvents.length
+  
+    55 Ôöé   // Auto-scroll logic
+  > 56 Ôöé   useEffect(() => {
+       Ôöé   ^^^^^^^^^
+    57 Ôöé     if (autoScroll && scrollRef.current) {
+    58 Ôöé       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  
+  i This dependency can be removed from the list.
+  
+    58 Ôöé       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    59 Ôöé     }
+  > 60 Ôöé   }, [filteredEvents.length, autoScroll]);
+       Ôöé       ^^^^^^^^^^^^^^^^^^^^^
+    61 Ôöé 
+    62 Ôöé   function handleScroll(): void {
+  
+
+.\apps\web\src\components\LogViewer.tsx:75:13 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    73 Ôöé         <div className="flex gap-1">
+    74 Ôöé           {(['ALL', 'INFO', 'WARN', 'ERROR', 'DEBUG'] as const).map(l => (
+  > 75 Ôöé             <button
+       Ôöé             ^^^^^^^
+  > 76 Ôöé               key={l}
+        ...
+  > 82 Ôöé               }`}
+  > 83 Ôöé             >
+       Ôöé             ^
+    84 Ôöé               {l}
+    85 Ôöé             </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\LogViewer.tsx:159:9 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    157 Ôöé       {/* New events indicator */}
+    158 Ôöé       {!autoScroll && events.length > 0 && (
+  > 159 Ôöé         <button
+        Ôöé         ^^^^^^^
+  > 160 Ôöé           onClick={() => {
+         ...
+  > 167 Ôöé           className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-blue-600 text-white text-xs 
+rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+  > 168 Ôöé         >
+        Ôöé         ^
+    169 Ôöé           Ôåô Neu ({events.length})
+    170 Ôöé         </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\PhasePipeline.tsx:42:5 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    41 Ôöé   return (
+  > 42 Ôöé     <button
+       Ôöé     ^^^^^^^
+  > 43 Ôöé       onClick={() => onClick?.(phase)}
+        ...
+  > 53 Ôöé       aria-current={status === 'current' ? 'step' : undefined}
+  > 54 Ôöé     >
+       Ôöé     ^
+    55 Ôöé       <span className="text-xs font-mono font-bold leading-none">{short}</span>
+    56 Ôöé       <span className="text-[10px] font-medium mt-0.5 leading-none opacity-70">{status}</span>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\Dashboard.tsx:321:11 lint/a11y/useKeyWithClickEvents 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Enforce to have the onClick mouse event with the onKeyUp, the onKeyDown, or the onKeyPress keyboard event.
+  
+    319 Ôöé       {isNewRunModalOpen && (
+    320 Ôöé         <div className="fixed inset-0 z-50 flex items-center justify-center">
+  > 321 Ôöé           <div
+        Ôöé           ^^^^
+  > 322 Ôöé             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+  > 323 Ôöé             onClick={() => setIsNewRunModalOpen(false)}
+  > 324 Ôöé           />
+        Ôöé           ^^
+    325 Ôöé           <div className="relative bg-slate-800 rounded-2xl border border-slate-700 p-6 w-full max-w-md 
+mx-4 shadow-2xl">
+    326 Ôöé             <div className="flex items-center justify-between mb-4">
+  
+  i Actions triggered using mouse events should have corresponding keyboard events to account for keyboard-only 
+navigation.
+  
+
+.\apps\web\src\components\Dashboard.tsx:338:17 lint/a11y/noLabelWithoutControl 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù A form label must be associated with an input.
+  
+    336 Ôöé             <div className="space-y-4">
+    337 Ôöé               <div>
+  > 338 Ôöé                 <label className="block text-sm text-slate-300 mb-1">
+        Ôöé                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 339 Ôöé                   Repository
+  > 340 Ôöé                 </label>
+        Ôöé                 ^^^^^^^^
+    341 Ôöé                 <input
+    342 Ôöé                   type="text"
+  
+  i Consider adding a `for` or `htmlFor` attribute to the label element or moving the input element to inside the 
+label element.
+  
+
+.\apps\web\src\components\Dashboard.tsx:351:17 lint/a11y/noLabelWithoutControl 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù A form label must be associated with an input.
+  
+    350 Ôöé               <div>
+  > 351 Ôöé                 <label className="block text-sm text-slate-300 mb-1">
+        Ôöé                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 352 Ôöé                   Issue-Nummer
+  > 353 Ôöé                 </label>
+        Ôöé                 ^^^^^^^^
+    354 Ôöé                 <input
+    355 Ôöé                   type="number"
+  
+  i Consider adding a `for` or `htmlFor` attribute to the label element or moving the input element to inside the 
+label element.
+  
+
+.\apps\web\src\components\Dashboard.tsx:365:17 lint/a11y/noLabelWithoutControl 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù A form label must be associated with an input.
+  
+    364 Ôöé               <div>
+  > 365 Ôöé                 <label className="block text-sm text-slate-300 mb-2">
+        Ôöé                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 366 Ôöé                   Autonomie-Level
+  > 367 Ôöé                 </label>
+        Ôöé                 ^^^^^^^^
+    368 Ôöé                 <div className="flex gap-3">
+    369 Ôöé                   {[
+  
+  i Consider adding a `for` or `htmlFor` attribute to the label element or moving the input element to inside the 
+label element.
+  
+
+.\apps\web\src\components\Dashboard.tsx:128:9 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    126 Ôöé           </p>
+    127 Ôöé         </div>
+  > 128 Ôöé         <button
+        Ôöé         ^^^^^^^
+  > 129 Ôöé           onClick={() => setIsNewRunModalOpen(true)}
+  > 130 Ôöé           className="btn-primary"
+  > 131 Ôöé         >
+        Ôöé         ^
+    132 Ôöé           + New Run
+    133 Ôöé         </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\Dashboard.tsx:140:11 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    138 Ôöé         <div className="mb-4 p-3 bg-red-900/50 border border-red-700 rounded-lg text-red-200 text-sm">
+    139 Ôöé           {error}
+  > 140 Ôöé           <button
+        Ôöé           ^^^^^^^
+  > 141 Ôöé             onClick={() => setError(null)}
+  > 142 Ôöé             className="ml-2 text-red-300 hover:text-red-100"
+  > 143 Ôöé           >
+        Ôöé           ^
+    144 Ôöé             Ô£ò
+    145 Ôöé           </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\Dashboard.tsx:223:13 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    221 Ôöé           </p>
+    222 Ôöé           {runs.length === 0 && (
+  > 223 Ôöé             <button
+        Ôöé             ^^^^^^^
+  > 224 Ôöé               onClick={() => setIsNewRunModalOpen(true)}
+  > 225 Ôöé               className="btn-primary mt-4"
+  > 226 Ôöé             >
+        Ôöé             ^
+    227 Ôöé               Ersten Run erstellen
+    228 Ôöé             </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\Dashboard.tsx:262:25 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    260 Ôöé                     >
+    261 Ôöé                       <td className="px-4 py-3 font-mono text-xs text-blue-400">
+  > 262 Ôöé                         <button
+        Ôöé                         ^^^^^^^
+  > 263 Ôöé                           onClick={() => navigate(`/runs/${run.id}`)}
+  > 264 Ôöé                           className="hover:underline"
+  > 265 Ôöé                         >
+        Ôöé                         ^
+    266 Ôöé                           {run.id.slice(0, 8)}
+    267 Ôöé                         </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\Dashboard.tsx:302:25 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    300 Ôöé                       </td>
+    301 Ôöé                       <td className="px-4 py-3 text-right">
+  > 302 Ôöé                         <button
+        Ôöé                         ^^^^^^^
+  > 303 Ôöé                           onClick={() => navigate(`/runs/${run.id}`)}
+  > 304 Ôöé                           className="btn-secondary text-xs py-1 px-3"
+  > 305 Ôöé                         >
+        Ôöé                         ^
+    306 Ôöé                           Details
+    307 Ôöé                         </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\Dashboard.tsx:328:15 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    326 Ôöé             <div className="flex items-center justify-between mb-4">
+    327 Ôöé               <h2 className="text-lg font-bold text-white">Neuen Run starten</h2>
+  > 328 Ôöé               <button
+        Ôöé               ^^^^^^^
+  > 329 Ôöé                 onClick={() => setIsNewRunModalOpen(false)}
+  > 330 Ôöé                 className="text-slate-400 hover:text-white text-xl"
+  > 331 Ôöé               >
+        Ôöé               ^
+    332 Ôöé                 Ô£ò
+    333 Ôöé               </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\Dashboard.tsx:396:15 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    394 Ôöé               </div>
+    395 Ôöé 
+  > 396 Ôöé               <button
+        Ôöé               ^^^^^^^
+  > 397 Ôöé                 onClick={handleStartRun}
+  > 398 Ôöé                 disabled={!selectedRepo || !issueNumber || startingRun}
+  > 399 Ôöé                 className="btn-primary w-full"
+  > 400 Ôöé               >
+        Ôöé               ^
+    401 Ôöé                 {startingRun ? (
+    402 Ôöé                   <span className="flex items-center justify-center gap-2">
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\Repositories.tsx:204:11 lint/a11y/useKeyWithClickEvents 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Enforce to have the onClick mouse event with the onKeyUp, the onKeyDown, or the onKeyPress keyboard event.
+  
+    202 Ôöé       {isAddModalOpen && (
+    203 Ôöé         <div className="fixed inset-0 z-50 flex items-center justify-center">
+  > 204 Ôöé           <div
+        Ôöé           ^^^^
+  > 205 Ôöé             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+  > 206 Ôöé             onClick={() => setIsAddModalOpen(false)}
+  > 207 Ôöé           />
+        Ôöé           ^^
+    208 Ôöé           <div className="relative bg-slate-800 rounded-2xl border border-slate-700 p-6 w-full max-w-md 
+mx-4 shadow-2xl">
+    209 Ôöé             <div className="flex items-center justify-between mb-4">
+  
+  i Actions triggered using mouse events should have corresponding keyboard events to account for keyboard-only 
+navigation.
+  
+
+.\apps\web\src\components\Repositories.tsx:223:17 lint/a11y/noLabelWithoutControl 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù A form label must be associated with an input.
+  
+    221 Ôöé             <div className="space-y-4">
+    222 Ôöé               <div>
+  > 223 Ôöé                 <label className="block text-sm text-slate-300 mb-1">
+        Ôöé                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 224 Ôöé                   Owner
+  > 225 Ôöé                 </label>
+        Ôöé                 ^^^^^^^^
+    226 Ôöé                 <input
+    227 Ôöé                   type="text"
+  
+  i Consider adding a `for` or `htmlFor` attribute to the label element or moving the input element to inside the 
+label element.
+  
+
+.\apps\web\src\components\Repositories.tsx:235:17 lint/a11y/noLabelWithoutControl 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù A form label must be associated with an input.
+  
+    233 Ôöé               </div>
+    234 Ôöé               <div>
+  > 235 Ôöé                 <label className="block text-sm text-slate-300 mb-1">
+        Ôöé                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 236 Ôöé                   Repository-Name
+  > 237 Ôöé                 </label>
+        Ôöé                 ^^^^^^^^
+    238 Ôöé                 <input
+    239 Ôöé                   type="text"
+  
+  i Consider adding a `for` or `htmlFor` attribute to the label element or moving the input element to inside the 
+label element.
+  
+
+.\apps\web\src\components\Repositories.tsx:91:9 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    89 Ôöé       <div className="flex items-center justify-between mb-6">
+    90 Ôöé         <h1 className="text-2xl font-bold text-white">­ƒôü Repositories</h1>
+  > 91 Ôöé         <button
+       Ôöé         ^^^^^^^
+  > 92 Ôöé           onClick={() => setIsAddModalOpen(true)}
+  > 93 Ôöé           className="btn-primary"
+  > 94 Ôöé         >
+       Ôöé         ^
+    95 Ôöé           + Add Repository
+    96 Ôöé         </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\Repositories.tsx:103:11 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    101 Ôöé         <div className="mb-4 p-3 bg-red-900/50 border border-red-700 rounded-lg text-red-200 text-sm">
+    102 Ôöé           {error}
+  > 103 Ôöé           <button
+        Ôöé           ^^^^^^^
+  > 104 Ôöé             onClick={() => setError(null)}
+  > 105 Ôöé             className="ml-2 text-red-300 hover:text-red-100"
+  > 106 Ôöé           >
+        Ôöé           ^
+    107 Ôöé             Ô£ò
+    108 Ôöé           </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\Repositories.tsx:124:11 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    122 Ôöé             Keine Repositories registriert
+    123 Ôöé           </p>
+  > 124 Ôöé           <button
+        Ôöé           ^^^^^^^
+  > 125 Ôöé             onClick={() => setIsAddModalOpen(true)}
+  > 126 Ôöé             className="btn-primary"
+  > 127 Ôöé           >
+        Ôöé           ^
+    128 Ôöé             Repository hinzuf├╝gen
+    129 Ôöé           </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\Repositories.tsx:147:19 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    145 Ôöé                     </p>
+    146 Ôöé                   </div>
+  > 147 Ôöé                   <button
+        Ôöé                   ^^^^^^^
+  > 148 Ôöé                     onClick={() => handleLoadIssues(repo.id)}
+  > 149 Ôöé                     disabled={loadingIssues.has(repo.id)}
+  > 150 Ôöé                     className="btn-secondary text-xs"
+  > 151 Ôöé                   >
+        Ôöé                   ^
+    152 Ôöé                     {loadingIssues.has(repo.id)
+    153 Ôöé                       ? 'Lade...'
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\Repositories.tsx:177:27 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    175 Ôöé                             {issue.title}
+    176 Ôöé                           </span>
+  > 177 Ôöé                           <button
+        Ôöé                           ^^^^^^^
+  > 178 Ôöé                             onClick={() =>
+  > 179 Ôöé                               handleStartRun(repo.id, issue.number)
+  > 180 Ôöé                             }
+  > 181 Ôöé                             className="text-xs text-blue-400 hover:text-blue-300"
+  > 182 Ôöé                           >
+        Ôöé                           ^
+    183 Ôöé                             ÔûÂ Run starten
+    184 Ôöé                           </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\Repositories.tsx:213:15 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    211 Ôöé                 Repository hinzuf├╝gen
+    212 Ôöé               </h2>
+  > 213 Ôöé               <button
+        Ôöé               ^^^^^^^
+  > 214 Ôöé                 onClick={() => setIsAddModalOpen(false)}
+  > 215 Ôöé                 className="text-slate-400 hover:text-white text-xl"
+  > 216 Ôöé               >
+        Ôöé               ^
+    217 Ôöé                 Ô£ò
+    218 Ôöé               </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\Repositories.tsx:246:15 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    244 Ôöé                 />
+    245 Ôöé               </div>
+  > 246 Ôöé               <button
+        Ôöé               ^^^^^^^
+  > 247 Ôöé                 onClick={handleAddRepo}
+  > 248 Ôöé                 disabled={!newOwner || !newName || adding}
+  > 249 Ôöé                 className="btn-primary w-full"
+  > 250 Ôöé               >
+        Ôöé               ^
+    251 Ôöé                 {adding
+    252 Ôöé                   ? 'Wird hinzugef├╝gt...'
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\ThemeToggle.tsx:20:9 lint/a11y/noSvgWithoutTitle 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Alternative text title element cannot be empty
+  
+    18 Ôöé       {isDark ? (
+    19 Ôöé         /* Sun icon for switching to light mode */
+  > 20 Ôöé         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" 
+strokeLinecap="round" strokeLinejoin="round">
+       Ôöé         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    21 Ôöé           <circle cx="12" cy="12" r="5" />
+    22 Ôöé           <line x1="12" y1="1" x2="12" y2="3" />
+  
+  i For accessibility purposes, SVGs should have an alternative text, provided via title element. If the svg element 
+has role="img", you should add the aria-label or aria-labelledby attribute.
+  
+
+.\apps\web\src\components\ThemeToggle.tsx:33:9 lint/a11y/noSvgWithoutTitle 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Alternative text title element cannot be empty
+  
+    31 Ôöé       ) : (
+    32 Ôöé         /* Moon icon for switching to dark mode */
+  > 33 Ôöé         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" 
+strokeLinecap="round" strokeLinejoin="round">
+       Ôöé         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    34 Ôöé           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    35 Ôöé         </svg>
+  
+  i For accessibility purposes, SVGs should have an alternative text, provided via title element. If the svg element 
+has role="img", you should add the aria-label or aria-labelledby attribute.
+  
+
+.\apps\web\src\components\ThemeToggle.tsx:9:5 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+     8 Ôöé   return (
+   > 9 Ôöé     <button
+       Ôöé     ^^^^^^^
+  > 10 Ôöé       onClick={toggleTheme}
+        ...
+  > 16 Ôöé       title={isDark ? 'Light Mode' : 'Dark Mode'}
+  > 17 Ôöé     >
+       Ôöé     ^
+    18 Ôöé       {isDark ? (
+    19 Ôöé         /* Sun icon for switching to light mode */
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\RunDetail.tsx:235:15 lint/a11y/noSvgWithoutTitle 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Alternative text title element cannot be empty
+  
+    233 Ôöé             {/* Copy Run ID */}
+    234 Ôöé             <button onClick={handleCopyRunId} className="btn-ghost text-xs py-1 px-2" title="Copy Run ID">
+  > 235 Ôöé               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        Ôöé               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    236 Ôöé                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+    237 Ôöé                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+  
+  i For accessibility purposes, SVGs should have an alternative text, provided via title element. If the svg element 
+has role="img", you should add the aria-label or aria-labelledby attribute.
+  
+
+.\apps\web\src\components\RunDetail.tsx:283:17 lint/a11y/noSvgWithoutTitle 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Alternative text title element cannot be empty
+  
+    281 Ôöé             <div className="card">
+    282 Ôöé               <h3 className="text-sm font-medium text-slate-300 mb-3 flex items-center gap-2">
+  > 283 Ôöé                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-400">
+        Ôöé                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    284 Ôöé                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    285 Ôöé                   <polyline points="14 2 14 8 20 8" />
+  
+  i For accessibility purposes, SVGs should have an alternative text, provided via title element. If the svg element 
+has role="img", you should add the aria-label or aria-labelledby attribute.
+  
+
+.\apps\web\src\components\RunDetail.tsx:313:17 lint/a11y/noSvgWithoutTitle 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Alternative text title element cannot be empty
+  
+    311 Ôöé                 className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 
+transition-colors"
+    312 Ôöé               >
+  > 313 Ôöé                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 
+8" /></svg>
+        Ôöé                 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    314 Ôöé                 Open Evidence
+    315 Ôöé               </Link>
+  
+  i For accessibility purposes, SVGs should have an alternative text, provided via title element. If the svg element 
+has role="img", you should add the aria-label or aria-labelledby attribute.
+  
+
+.\apps\web\src\components\RunDetail.tsx:322:17 lint/a11y/noSvgWithoutTitle 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Alternative text title element cannot be empty
+  
+    320 Ôöé                 className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 
+transition-colors"
+    321 Ôöé               >
+  > 322 Ôöé                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" 
+/><line x1="10" y1="14" x2="21" y2="3" /></svg>
+        Ôöé                 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    323 Ôöé                 Open Issue #{run.issueNumber}
+    324 Ôöé               </a>
+  
+  i For accessibility purposes, SVGs should have an alternative text, provided via title element. If the svg element 
+has role="img", you should add the aria-label or aria-labelledby attribute.
+  
+
+.\apps\web\src\components\RunDetail.tsx:117:11 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    115 Ôöé         <div className="mb-4 p-3 bg-red-900/50 border border-red-700 rounded-lg text-red-200 text-sm flex 
+items-center justify-between">
+    116 Ôöé           <span>{cancelError ?? run.lastError ?? errorBanner}</span>
+  > 117 Ôöé           <button
+        Ôöé           ^^^^^^^
+  > 118 Ôöé             onClick={() => { setErrorBanner(null); setCancelError(null); }}
+  > 119 Ôöé             className="text-red-300 hover:text-red-100 ml-2"
+  > 120 Ôöé           >
+        Ôöé           ^
+    121 Ôöé             Ô£ò
+    122 Ôöé           </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\RunDetail.tsx:207:19 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    205 Ôöé             {isRunning && (
+    206 Ôöé               !showCancelConfirm ? (
+  > 207 Ôöé                   <button
+        Ôöé                   ^^^^^^^
+  > 208 Ôöé                     onClick={() => setShowCancelConfirm(true)}
+  > 209 Ôöé                     className="btn-danger text-xs py-1 px-3"
+  > 210 Ôöé                   >
+        Ôöé                   ^
+    211 Ôöé                     Cancel Run
+    212 Ôöé                   </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\RunDetail.tsx:215:21 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    213 Ôöé                 ) : (
+    214 Ôöé                   <div className="flex items-center gap-2">
+  > 215 Ôöé                     <button
+        Ôöé                     ^^^^^^^
+  > 216 Ôöé                       onClick={() => setShowCancelConfirm(false)}
+  > 217 Ôöé                       className="btn-secondary text-xs py-1 px-3"
+  > 218 Ôöé                       disabled={cancelling}
+  > 219 Ôöé                     >
+        Ôöé                     ^
+    220 Ôöé                       Keep
+    221 Ôöé                     </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\RunDetail.tsx:222:21 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    220 Ôöé                       Keep
+    221 Ôöé                     </button>
+  > 222 Ôöé                     <button
+        Ôöé                     ^^^^^^^
+  > 223 Ôöé                       onClick={handleCancel}
+  > 224 Ôöé                       className="btn-danger text-xs py-1 px-3"
+  > 225 Ôöé                       disabled={cancelling}
+  > 226 Ôöé                     >
+        Ôöé                     ^
+    227 Ôöé                       {cancelling ? 'Cancelling...' : 'Confirm Cancel'}
+    228 Ôöé                     </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\RunDetail.tsx:234:13 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    233 Ôöé             {/* Copy Run ID */}
+  > 234 Ôöé             <button onClick={handleCopyRunId} className="btn-ghost text-xs py-1 px-2" title="Copy Run ID">
+        Ôöé             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    235 Ôöé               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    236 Ôöé                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\VoiceStatusIndicator.tsx:41:5 lint/a11y/noSvgWithoutTitle 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Alternative text title element cannot be empty
+  
+    39 Ôöé 				aria-label="Voice output not supported"
+    40 Ôöé 			>
+  > 41 Ôöé 				<svg
+       Ôöé 				^^^^
+  > 42 Ôöé 					width="14"
+        ...
+  > 48 Ôöé 					className="opacity-50"
+  > 49 Ôöé 				>
+       Ôöé 				^
+    50 Ôöé 					<path d="M11 5L6 9H2v6h4l5 4V5z" />
+    51 Ôöé 					<line x1="23" y1="9" x2="17" y2="15" />
+  
+  i For accessibility purposes, SVGs should have an alternative text, provided via title element. If the svg element 
+has role="img", you should add the aria-label or aria-labelledby attribute.
+  
+
+.\apps\web\src\components\VoiceStatusIndicator.tsx:74:4 lint/a11y/noSvgWithoutTitle 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Alternative text title element cannot be empty
+  
+    72 Ôöé 			aria-label={`Voice output ${enabled ? 'enabled' : 'disabled'}. Click to toggle.`}
+    73 Ôöé 		>
+  > 74 Ôöé 			<svg
+       Ôöé 			^^^^
+  > 75 Ôöé 				width="14"
+        ...
+  > 80 Ôöé 				strokeWidth="2"
+  > 81 Ôöé 			>
+       Ôöé 			^
+    82 Ôöé 				<path d="M11 5L6 9H2v6h4l5 4V5z" />
+    83 Ôöé 				<path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+  
+  i For accessibility purposes, SVGs should have an alternative text, provided via title element. If the svg element 
+has role="img", you should add the aria-label or aria-labelledby attribute.
+  
+
+.\apps\web\src\components\VoiceStatusIndicator.tsx:60:3 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    59 Ôöé 	return (
+  > 60 Ôöé 		<button
+       Ôöé 		^^^^^^^
+  > 61 Ôöé 			onClick={handleToggle}
+        ...
+  > 72 Ôöé 			aria-label={`Voice output ${enabled ? 'enabled' : 'disabled'}. Click to toggle.`}
+  > 73 Ôöé 		>
+       Ôöé 		^
+    74 Ôöé 			<svg
+    75 Ôöé 				width="14"
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\admin\AdminPage.tsx:102:13 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    100 Ôöé           />
+    101 Ôöé           {authStatus === 'valid' ? (
+  > 102 Ôöé             <button onClick={handleDisconnect} className="btn-ghost text-sm whitespace-nowrap">
+        Ôöé             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    103 Ôöé               Disconnect
+    104 Ôöé             </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\admin\AdminPage.tsx:106:13 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    104 Ôöé             </button>
+    105 Ôöé           ) : (
+  > 106 Ôöé             <button
+        Ôöé             ^^^^^^^
+  > 107 Ôöé               onClick={handleConnect}
+  > 108 Ôöé               disabled={!tokenInput.trim() || authStatus === 'connecting'}
+  > 109 Ôöé               className="btn-primary text-sm whitespace-nowrap"
+  > 110 Ôöé             >
+        Ôöé             ^
+    111 Ôöé               {authStatus === 'connecting' ? 'Connecting...' : 'Connect'}
+    112 Ôöé             </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\admin\AdminPage.tsx:172:17 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    170 Ôöé               <h3 className="text-sm font-semibold mb-3">Bulk Operations</h3>
+    171 Ôöé               <div className="flex flex-wrap gap-3">
+  > 172 Ôöé                 <button onClick={() => bulkAction('cancel', 'Cancel All')} className="btn-danger text-sm">
+        Ôöé                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    173 Ôöé                   Cancel All Active/Blocked
+    174 Ôöé                 </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\admin\AdminPage.tsx:175:17 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    173 Ôöé                   Cancel All Active/Blocked
+    174 Ôöé                 </button>
+  > 175 Ôöé                 <button onClick={() => bulkAction('retry', 'Retry Failed')} className="btn-secondary 
+text-sm">
+        Ôöé                 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    176 Ôöé                   Retry All Failed
+    177 Ôöé                 </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\admin\AdminPage.tsx:178:17 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    176 Ôöé                   Retry All Failed
+    177 Ôöé                 </button>
+  > 178 Ôöé                 <button onClick={() => bulkAction('cleanup', 'Cleanup')} className="btn-ghost text-sm">
+        Ôöé                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    179 Ôöé                   Cleanup Old Events (7d) + VACUUM
+    180 Ôöé                 </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\server\src\index.ts:676:6 lint/suspicious/noImplicitAnyLet 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù This variable implicitly has the any type.
+  
+    674 Ôöé ): Promise<RunState> {
+    675 Ôöé 	const current = run;
+  > 676 Ôöé 	let result;
+        Ôöé 	    ^^^^^^
+    677 Ôöé 
+    678 Ôöé 	switch (current.phase) {
+  
+  i Variable declarations without type annotation and initialization implicitly have the any type. Declare a type or 
+initialize the variable with some value.
+  
+
+.\apps\server\src\index.ts:2713:40 lint/style/noNonNullAssertion 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Forbidden non-null assertion.
+  
+    2711 Ôöé 			}
+    2712 Ôöé 			const [, owner, repo, issueNumberStr] = match;
+  > 2713 Ôöé 			const issueNumber = Number.parseInt(issueNumberStr!, 10);
+         Ôöé 			                                    ^^^^^^^^^^^^^^^
+    2714 Ôöé 
+    2715 Ôöé 			// Find or create repository
+  
+
+.\apps\server\src\index.ts:2737:26 lint/style/noNonNullAssertion 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Forbidden non-null assertion.
+  
+    2735 Ôöé 			// Create run and attempt to enqueue to BullMQ (inline fallback if Redis unavailable)
+    2736 Ôöé 			const { autonomyLevel } = req.body as { autonomyLevel?: number };
+  > 2737 Ôöé 			const run = createRun(repo!, issueNumber, autonomyLevel ?? 2);
+         Ôöé 			                      ^^^^^
+    2738 Ôöé 			saveRunToDb(run);
+    2739 Ôöé 
+  
+
+.\apps\web\src\components\dashboard\DashboardPage.tsx:47:11 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    45 Ôöé         <div className="flex items-center gap-3">
+    46 Ôöé           <VoiceStatusIndicator />
+  > 47 Ôöé           <button onClick={() => setIsNewRunModalOpen(true)} className="btn-primary">
+       Ôöé           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    48 Ôöé             + New Run
+    49 Ôöé           </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\dashboard\BlueprintPanel.tsx:130:126 lint/a11y/useSemanticElements 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù The elements with the following roles can be changed to the following elements:
+    <output>
+  
+  
+    129 Ôöé       {runId && (
+  > 130 Ôöé         <div className="mt-3 bg-sky-500/10 border border-sky-800 rounded-lg p-3 text-xs text-sky-400 
+font-['IBM_Plex_Sans']" role="status">
+        Ôöé                                                                                                            
+                  ^^^^^^^^^^^^^
+    131 Ôöé           Ô£à Demo run started: <code className="font-['IBM_Plex_Mono']">{runId}</code> ÔÇö redirecting to 
+run detail...
+    132 Ôöé         </div>
+  
+  i For examples and more information, see WAI-ARIA Roles
+  
+
+.\apps\web\src\components\dashboard\BlueprintPanel.tsx:95:9 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+     93 Ôöé           aria-label="Issue number"
+     94 Ôöé         />
+   > 95 Ôöé         <button
+        Ôöé         ^^^^^^^
+   > 96 Ôöé           onClick={generateBlueprint}
+   > 97 Ôöé           disabled={isFetching || isLoading}
+   > 98 Ôöé           className="btn-secondary text-sm whitespace-nowrap"
+   > 99 Ôöé         >
+        Ôöé         ^
+    100 Ôöé           {isFetching ? 'Fetching...' : 'Generate Blueprint'}
+    101 Ôöé         </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\dashboard\BlueprintPanel.tsx:136:9 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    135 Ôöé       <div className="flex items-center gap-3 mt-4">
+  > 136 Ôöé         <button
+        Ôöé         ^^^^^^^
+  > 137 Ôöé           onClick={startDemoRun}
+  > 138 Ôöé           disabled={isLoading}
+  > 139 Ôöé           className="btn-primary text-sm"
+  > 140 Ôöé           aria-label="Start Demo Run"
+  > 141 Ôöé         >
+        Ôöé         ^
+    142 Ôöé           {isLoading ? 'Starting...' : 'Start Demo Run'}
+    143 Ôöé         </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\packages\shared\src\secret-manager.ts:195:12 lint/style/noNonNullAssertion 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Forbidden non-null assertion.
+  
+    193 Ôöé       if (fs.existsSync(candidate)) return candidate;
+    194 Ôöé     }
+  > 195 Ôöé     return candidates[0]!;
+        Ôöé            ^^^^^^^^^^^^^^
+    196 Ôöé   }
+    197 Ôöé }
+  
+
+.\apps\web\src\components\VoiceControls.tsx:154:7 lint/a11y/noSvgWithoutTitle 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Alternative text title element cannot be empty
+  
+    152 Ôöé 				<div>
+    153 Ôöé 					<h3 className="text-sm font-medium text-slate-800 dark:text-slate-300 flex items-center gap-2 
+font-['Space_Grotesk']">
+  > 154 Ôöé 						<svg
+        Ôöé 						^^^^
+  > 155 Ôöé 							width="16"
+         ...
+  > 161 Ôöé 							className="text-purple-400"
+  > 162 Ôöé 						>
+        Ôöé 						^
+    163 Ôöé 							<path d="M11 5L6 9H2v6h4l5 4V5z" />
+    164 Ôöé 							<path
+  
+  i For accessibility purposes, SVGs should have an alternative text, provided via title element. If the svg element 
+has role="img", you should add the aria-label or aria-labelledby attribute.
+  
+
+.\apps\web\src\components\VoiceControls.tsx:288:6 lint/a11y/noLabelWithoutControl 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù A form label must be associated with an input.
+  
+    286 Ôöé 				{/* Event Type Checkboxes */}
+    287 Ôöé 				<div className="pt-3 border-t border-slate-200 dark:border-slate-800">
+  > 288 Ôöé 					<label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-2">
+        Ôöé 					^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 289 Ôöé 						Speak these events:
+  > 290 Ôöé 					</label>
+        Ôöé 					^^^^^^^^
+    291 Ôöé 					<div className="space-y-1.5">
+    292 Ôöé 						{Object.entries(EVENT_LABELS).map(([type, label]) => (
+  
+  i Consider adding a `for` or `htmlFor` attribute to the label element or moving the input element to inside the 
+label element.
+  
+
+.\apps\web\src\components\VoiceControls.tsx:30:3 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    28 Ôöé }) {
+    29 Ôöé 	return (
+  > 30 Ôöé 		<button
+       Ôöé 		^^^^^^^
+  > 31 Ôöé 			onClick={() => onChange(!enabled)}
+        ...
+  > 37 Ôöé 			}`}
+  > 38 Ôöé 		>
+       Ôöé 		^
+    39 Ôöé 			<span
+    40 Ôöé 				className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transform ring-0 
+transition duration-200 ${
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\VoiceControls.tsx:276:6 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    274 Ôöé 				{/* Test Voice Button */}
+    275 Ôöé 				<div>
+  > 276 Ôöé 					<button
+        Ôöé 					^^^^^^^
+  > 277 Ôöé 						onClick={handleTestVoice}
+  > 278 Ôöé 						disabled={testStatus === 'speaking'}
+  > 279 Ôöé 						className="btn-secondary text-xs py-1.5 px-3"
+  > 280 Ôöé 						aria-label="Test voice output"
+  > 281 Ôöé 					>
+        Ôöé 					^
+    282 Ôöé 						{testStatus === 'speaking' ? 'SpeakingÔÇª' : 'Test Voice'}
+    283 Ôöé 					</button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\dashboard\RecentActivity.tsx:28:23 lint/suspicious/noArrayIndexKey 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Avoid using the index of an array as key property in an element.
+  
+    26 Ôöé         <div className="space-y-3">
+    27 Ôöé           {Array.from({ length: 4 }).map((_, i) => (
+  > 28 Ôöé             <div key={i} className="flex gap-3">
+       Ôöé                       ^
+    29 Ôöé               <div className="skeleton h-8 w-8 rounded-full" />
+    30 Ôöé               <div className="flex-1 space-y-1">
+  
+  i This is the source of the key value.
+  
+    25 Ôöé         <div className="skeleton h-5 w-28 mb-3 rounded" />
+    26 Ôöé         <div className="space-y-3">
+  > 27 Ôöé           {Array.from({ length: 4 }).map((_, i) => (
+       Ôöé                                              ^
+    28 Ôöé             <div key={i} className="flex gap-3">
+    29 Ôöé               <div className="skeleton h-8 w-8 rounded-full" />
+  
+  i The order of the items may change, and this also affects performances and component state.
+  
+  i Check the React documentation. 
+  
+
+.\apps\web\src\components\dashboard\StatusSummary.tsx:17:21 lint/suspicious/noArrayIndexKey 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Avoid using the index of an array as key property in an element.
+  
+    15 Ôöé       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    16 Ôöé         {Array.from({ length: 4 }).map((_, i) => (
+  > 17 Ôöé           <div key={i} className="card animate-pulse">
+       Ôöé                     ^
+    18 Ôöé             <div className="skeleton h-3 w-20 mb-2 rounded" />
+    19 Ôöé             <div className="skeleton h-8 w-12 rounded" />
+  
+  i This is the source of the key value.
+  
+    14 Ôöé     return (
+    15 Ôöé       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+  > 16 Ôöé         {Array.from({ length: 4 }).map((_, i) => (
+       Ôöé                                            ^
+    17 Ôöé           <div key={i} className="card animate-pulse">
+    18 Ôöé             <div className="skeleton h-3 w-20 mb-2 rounded" />
+  
+  i The order of the items may change, and this also affects performances and component state.
+  
+  i Check the React documentation. 
+  
+
+.\apps\web\src\components\dashboard\SystemHealth.tsx:55:9 lint/a11y/noSvgWithoutTitle 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Alternative text title element cannot be empty
+  
+    53 Ôöé     <div className="card">
+    54 Ôöé       <h3 className="text-sm font-medium text-slate-300 mb-3 flex items-center gap-2">
+  > 55 Ôöé         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" 
+strokeLinecap="round" strokeLinejoin="round" className="text-slate-500">
+       Ôöé         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    56 Ôöé           <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+    57 Ôöé         </svg>
+  
+  i For accessibility purposes, SVGs should have an alternative text, provided via title element. If the svg element 
+has role="img", you should add the aria-label or aria-labelledby attribute.
+  
+
+.\apps\web\src\components\evidence\EvidencePage.tsx:163:58 lint/suspicious/noAssignInExpressions 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù The assignment should not be in an expression.
+  
+    161 Ôöé           title="No Evidence Yet"
+    162 Ôöé           description="Evidence artifacts are generated when agent runs execute."
+  > 163 Ôöé           action={{ label: 'Start a Run', onClick: () => window.location.href = '/' }}
+        Ôöé                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    164 Ôöé         />
+    165 Ôöé       )}
+  
+  i The use of assignments in expressions is confusing.
+    Expressions are often considered as side-effect free.
+  
+
+.\apps\web\src\components\evidence\EvidencePage.tsx:234:23 lint/a11y/useKeyWithClickEvents 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Enforce to have the onClick mouse event with the onKeyUp, the onKeyDown, or the onKeyPress keyboard event.
+  
+    232 Ôöé                   {filtered.map(item => (
+    233 Ôöé                     <React.Fragment key={item.id}>
+  > 234 Ôöé                       <tr
+        Ôöé                       ^^^
+  > 235 Ôöé                         onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}
+  > 236 Ôöé                         className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors 
+cursor-pointer"
+  > 237 Ôöé                       >
+        Ôöé                       ^
+    238 Ôöé                         <td className="px-4 py-2.5">
+    239 Ôöé                           <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded border 
+${KIND_COLORS[item.kind] ?? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-300 
+dark:border-slate-700'}`}>
+  
+  i Actions triggered using mouse events should have corresponding keyboard events to account for keyboard-only 
+navigation.
+  
+
+.\apps\web\src\components\layout\TopBar.tsx:21:13 lint/a11y/noSvgWithoutTitle 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Alternative text title element cannot be empty
+  
+    19 Ôöé             aria-label="Toggle sidebar"
+    20 Ôöé           >
+  > 21 Ôöé             <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+       Ôöé             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    22 Ôöé               <path
+    23 Ôöé                 fillRule="evenodd"
+  
+  i For accessibility purposes, SVGs should have an alternative text, provided via title element. If the svg element 
+has role="img", you should add the aria-label or aria-labelledby attribute.
+  
+
+.\apps\web\src\components\layout\TopBar.tsx:16:11 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    14 Ôöé       <div className="flex items-center gap-3">
+    15 Ôöé         {onToggleSidebar && (
+  > 16 Ôöé           <button
+       Ôöé           ^^^^^^^
+  > 17 Ôöé             onClick={onToggleSidebar}
+  > 18 Ôöé             className="btn-ghost p-1.5 lg:hidden"
+  > 19 Ôöé             aria-label="Toggle sidebar"
+  > 20 Ôöé           >
+       Ôöé           ^
+    21 Ôöé             <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+    22 Ôöé               <path
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\runs\RunsPage.tsx:88:5 lint/complexity/noForEach 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Prefer for...of instead of forEach.
+  
+    86 Ôöé   const statusCounts = useMemo(() => {
+    87 Ôöé     const counts: Record<string, number> = { active: 0, done: 0, failed: 0, blocked: 0, cancelled: 0 };
+  > 88 Ôöé     runs.forEach(r => { counts[r.status] = (counts[r.status] ?? 0) + 1; });
+       Ôöé     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    89 Ôöé     return counts;
+    90 Ôöé   }, [runs]);
+  
+  i forEach may lead to performance issues when working with large arrays. When combined with functions like filter or 
+map, this causes multiple iterations over the same type.
+  
+
+.\apps\web\src\components\runs\RunsPage.tsx:208:19 lint/a11y/useKeyWithClickEvents 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Enforce to have the onClick mouse event with the onKeyUp, the onKeyDown, or the onKeyPress keyboard event.
+  
+    206 Ôöé               <tbody className="divide-y divide-slate-200/50 dark:divide-slate-800/50">
+    207 Ôöé                 {filtered.map(run => (
+  > 208 Ôöé                   <tr
+        Ôöé                   ^^^
+  > 209 Ôöé                     key={run.id}
+  > 210 Ôöé                     onClick={() => window.location.href = `/runs/${run.id}`}
+  > 211 Ôöé                     className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors 
+cursor-pointer"
+  > 212 Ôöé                   >
+        Ôöé                   ^
+    213 Ôöé                     <td className="px-4 py-2.5">
+    214 Ôöé                       <span className="text-xs font-mono text-slate-600 dark:text-slate-400">
+  
+  i Actions triggered using mouse events should have corresponding keyboard events to account for keyboard-only 
+navigation.
+  
+
+.\apps\web\src\components\runs\RunsPage.tsx:210:36 lint/suspicious/noAssignInExpressions 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù The assignment should not be in an expression.
+  
+    208 Ôöé                   <tr
+    209 Ôöé                     key={run.id}
+  > 210 Ôöé                     onClick={() => window.location.href = `/runs/${run.id}`}
+        Ôöé                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    211 Ôöé                     className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors 
+cursor-pointer"
+    212 Ôöé                   >
+  
+  i The use of assignments in expressions is confusing.
+    Expressions are often considered as side-effect free.
+  
+
+.\apps\web\src\components\runs\RunsPage.tsx:99:23 lint/suspicious/noArrayIndexKey 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Avoid using the index of an array as key property in an element.
+  
+     97 Ôöé         <div className="space-y-2">
+     98 Ôöé           {Array.from({ length: 8 }).map((_, i) => (
+   > 99 Ôöé             <div key={i} className="skeleton h-10 w-full rounded" />
+        Ôöé                       ^
+    100 Ôöé           ))}
+    101 Ôöé         </div>
+  
+  i This is the source of the key value.
+  
+     96 Ôöé         <div className="skeleton h-4 w-56 mb-6" />
+     97 Ôöé         <div className="space-y-2">
+   > 98 Ôöé           {Array.from({ length: 8 }).map((_, i) => (
+        Ôöé                                              ^
+     99 Ôöé             <div key={i} className="skeleton h-10 w-full rounded" />
+    100 Ôöé           ))}
+  
+  i The order of the items may change, and this also affects performances and component state.
+  
+  i Check the React documentation. 
+  
+
+.\apps\web\src\components\runs\RunsPage.tsx:112:11 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    110 Ôöé         <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mt-4">
+    111 Ôöé           <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+  > 112 Ôöé           <button onClick={fetchRuns} className="text-xs mt-2 text-red-600 dark:text-red-400 
+hover:underline">
+        Ôöé           
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    113 Ôöé             Retry
+    114 Ôöé           </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\dashboard\NewRunModal.tsx:40:7 lint/a11y/useKeyWithClickEvents 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Enforce to have the onClick mouse event with the onKeyUp, the onKeyDown, or the onKeyPress keyboard event.
+  
+    38 Ôöé   return (
+    39 Ôöé     <div className="fixed inset-0 z-50 flex items-center justify-center">
+  > 40 Ôöé       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+       Ôöé       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    41 Ôöé       <div className="relative bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 
+dark:border-slate-800 w-full max-w-lg mx-4 p-6">
+    42 Ôöé         <div className="flex items-center justify-between mb-4">
+  
+  i Actions triggered using mouse events should have corresponding keyboard events to account for keyboard-only 
+navigation.
+  
+
+.\apps\web\src\components\dashboard\NewRunModal.tsx:60:13 lint/a11y/noLabelWithoutControl 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù A form label must be associated with an input.
+  
+    58 Ôöé         <div className="space-y-3">
+    59 Ôöé           <div>
+  > 60 Ôöé             <label className="text-xs font-medium text-slate-600 dark:text-slate-400 block mb-1">
+       Ôöé             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 61 Ôöé               Issue URL
+  > 62 Ôöé             </label>
+       Ôöé             ^^^^^^^^
+    63 Ôöé             <input
+    64 Ôöé               type="text"
+  
+  i Consider adding a `for` or `htmlFor` attribute to the label element or moving the input element to inside the 
+label element.
+  
+
+.\apps\web\src\components\dashboard\NewRunModal.tsx:46:11 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    44 Ôöé             New Run
+    45 Ôöé           </h2>
+  > 46 Ôöé           <button
+       Ôöé           ^^^^^^^
+  > 47 Ôöé             onClick={onClose}
+  > 48 Ôöé             className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+  > 49 Ôöé           >
+       Ôöé           ^
+    50 Ôöé             Ô£ò
+    51 Ôöé           </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\dashboard\NewRunModal.tsx:79:13 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    78 Ôöé           <div className="flex items-center justify-end gap-3 pt-2">
+  > 79 Ôöé             <button onClick={onClose} className="btn-secondary text-sm">
+       Ôöé             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    80 Ôöé               Cancel
+    81 Ôöé             </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\dashboard\NewRunModal.tsx:82:13 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    80 Ôöé               Cancel
+    81 Ôöé             </button>
+  > 82 Ôöé             <button
+       Ôöé             ^^^^^^^
+  > 83 Ôöé               onClick={handleCreate}
+  > 84 Ôöé               disabled={creating || !issueUrl.trim()}
+  > 85 Ôöé               className="btn-primary text-sm disabled:opacity-50"
+  > 86 Ôöé             >
+       Ôöé             ^
+    87 Ôöé               {creating ? 'Creating...' : 'Start Run'}
+    88 Ôöé             </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\shared\EmptyState.tsx:29:11 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    27 Ôöé       <div className="flex items-center justify-center gap-3">
+    28 Ôöé         {action && (
+  > 29 Ôöé           <button onClick={action.onClick} className="btn-primary">
+       Ôöé           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    30 Ôöé             {action.label}
+    31 Ôöé           </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\shared\EmptyState.tsx:34:11 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    32 Ôöé         )}
+    33 Ôöé         {secondaryAction && (
+  > 34 Ôöé           <button onClick={secondaryAction.onClick} className="btn-secondary">
+       Ôöé           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    35 Ôöé             {secondaryAction.label}
+    36 Ôöé           </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\shared\ErrorBanner.tsx:28:13 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    26 Ôöé         <div className="flex items-center gap-2">
+    27 Ôöé           {onRetry && (
+  > 28 Ôöé             <button
+       Ôöé             ^^^^^^^
+  > 29 Ôöé               onClick={onRetry}
+  > 30 Ôöé               className="text-xs px-3 py-1.5 rounded bg-red-500/20 hover:bg-red-500/30 text-red-700 
+dark:text-red-300 transition-colors"
+  > 31 Ôöé             >
+       Ôöé             ^
+    32 Ôöé               Retry
+    33 Ôöé             </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\shared\ErrorBanner.tsx:36:13 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    34 Ôöé           )}
+    35 Ôöé           {onDismiss && (
+  > 36 Ôöé             <button
+       Ôöé             ^^^^^^^
+  > 37 Ôöé               onClick={onDismiss}
+  > 38 Ôöé               className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+  > 39 Ôöé             >
+       Ôöé             ^
+    40 Ôöé               Ô£ò
+    41 Ôöé             </button>
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\components\shared\LoadingSkeleton.tsx:16:21 lint/suspicious/noArrayIndexKey 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Avoid using the index of an array as key property in an element.
+  
+    14 Ôöé       <div className="space-y-2">
+    15 Ôöé         {Array.from({ length: rows }).map((_, i) => (
+  > 16 Ôöé           <div key={i} className="flex gap-4 animate-pulse">
+       Ôöé                     ^
+    17 Ôöé             <div className="skeleton h-4 w-24 rounded" />
+    18 Ôöé             <div className="skeleton h-4 w-16 rounded" />
+  
+  i This is the source of the key value.
+  
+    13 Ôöé     return (
+    14 Ôöé       <div className="space-y-2">
+  > 15 Ôöé         {Array.from({ length: rows }).map((_, i) => (
+       Ôöé                                               ^
+    16 Ôöé           <div key={i} className="flex gap-4 animate-pulse">
+    17 Ôöé             <div className="skeleton h-4 w-24 rounded" />
+  
+  i The order of the items may change, and this also affects performances and component state.
+  
+  i Check the React documentation. 
+  
+
+.\apps\web\src\components\shared\LoadingSkeleton.tsx:48:16 lint/suspicious/noArrayIndexKey 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Avoid using the index of an array as key property in an element.
+  
+    46 Ôöé       {Array.from({ length: rows }).map((_, i) => (
+    47 Ôöé         <div
+  > 48 Ôöé           key={i}
+       Ôöé                ^
+    49 Ôöé           className="skeleton h-3 rounded"
+    50 Ôöé           style={{ width: `${Math.max(40, 100 - i * 12)}%` }}
+  
+  i This is the source of the key value.
+  
+    44 Ôöé   return (
+    45 Ôöé     <div className="space-y-2 animate-pulse">
+  > 46 Ôöé       {Array.from({ length: rows }).map((_, i) => (
+       Ôöé                                             ^
+    47 Ôöé         <div
+    48 Ôöé           key={i}
+  
+  i The order of the items may change, and this also affects performances and component state.
+  
+  i Check the React documentation. 
+  
+
+.\apps\web\src\components\layout\Sidebar.tsx:22:7 lint/a11y/noSvgWithoutTitle 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Alternative text title element cannot be empty
+  
+    20 Ôöé     end: true,
+    21 Ôöé     icon: (
+  > 22 Ôöé       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" 
+strokeLinecap="round" strokeLinejoin="round">
+       Ôöé       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    23 Ôöé         <rect x="3" y="3" width="7" height="7" rx="1" />
+    24 Ôöé         <rect x="14" y="3" width="7" height="7" rx="1" />
+  
+  i For accessibility purposes, SVGs should have an alternative text, provided via title element. If the svg element 
+has role="img", you should add the aria-label or aria-labelledby attribute.
+  
+
+.\apps\web\src\components\layout\Sidebar.tsx:34:7 lint/a11y/noSvgWithoutTitle 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Alternative text title element cannot be empty
+  
+    32 Ôöé     label: 'Runs',
+    33 Ôöé     icon: (
+  > 34 Ôöé       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" 
+strokeLinecap="round" strokeLinejoin="round">
+       Ôöé       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    35 Ôöé         <polyline points="9 18 15 12 9 6" />
+    36 Ôöé       </svg>
+  
+  i For accessibility purposes, SVGs should have an alternative text, provided via title element. If the svg element 
+has role="img", you should add the aria-label or aria-labelledby attribute.
+  
+
+.\apps\web\src\components\layout\Sidebar.tsx:43:7 lint/a11y/noSvgWithoutTitle 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Alternative text title element cannot be empty
+  
+    41 Ôöé     label: 'Evidence',
+    42 Ôöé     icon: (
+  > 43 Ôöé       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" 
+strokeLinecap="round" strokeLinejoin="round">
+       Ôöé       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    44 Ôöé         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    45 Ôöé         <polyline points="14 2 14 8 20 8" />
+  
+  i For accessibility purposes, SVGs should have an alternative text, provided via title element. If the svg element 
+has role="img", you should add the aria-label or aria-labelledby attribute.
+  
+
+.\apps\web\src\components\layout\Sidebar.tsx:56:7 lint/a11y/noSvgWithoutTitle 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Alternative text title element cannot be empty
+  
+    54 Ôöé     label: 'Repositories',
+    55 Ôöé     icon: (
+  > 56 Ôöé       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" 
+strokeLinecap="round" strokeLinejoin="round">
+       Ôöé       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    57 Ôöé         <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+    58 Ôöé       </svg>
+  
+  i For accessibility purposes, SVGs should have an alternative text, provided via title element. If the svg element 
+has role="img", you should add the aria-label or aria-labelledby attribute.
+  
+
+.\apps\web\src\components\layout\Sidebar.tsx:65:7 lint/a11y/noSvgWithoutTitle 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Alternative text title element cannot be empty
+  
+    63 Ôöé     label: 'Settings',
+    64 Ôöé     icon: (
+  > 65 Ôöé       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" 
+strokeLinecap="round" strokeLinejoin="round">
+       Ôöé       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    66 Ôöé         <circle cx="12" cy="12" r="3" />
+    67 Ôöé         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 
+0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 
+1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 
+0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 
+0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 
+1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+  
+  i For accessibility purposes, SVGs should have an alternative text, provided via title element. If the svg element 
+has role="img", you should add the aria-label or aria-labelledby attribute.
+  
+
+.\apps\web\src\components\layout\Sidebar.tsx:75:7 lint/a11y/noSvgWithoutTitle 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Alternative text title element cannot be empty
+  
+    73 Ôöé     label: 'Admin',
+    74 Ôöé     icon: (
+  > 75 Ôöé       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" 
+strokeLinecap="round" strokeLinejoin="round">
+       Ôöé       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    76 Ôöé         <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+    77 Ôöé         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 
+0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 
+1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 
+0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 
+0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 
+1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+  
+  i For accessibility purposes, SVGs should have an alternative text, provided via title element. If the svg element 
+has role="img", you should add the aria-label or aria-labelledby attribute.
+  
+
+.\apps\web\src\components\layout\Sidebar.tsx:105:11 lint/a11y/noSvgWithoutTitle 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Alternative text title element cannot be empty
+  
+    103 Ôöé           aria-label="Close sidebar"
+    104 Ôöé         >
+  > 105 Ôöé           <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+        Ôöé           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    106 Ôöé             <path
+    107 Ôöé               fillRule="evenodd"
+  
+  i For accessibility purposes, SVGs should have an alternative text, provided via title element. If the svg element 
+has role="img", you should add the aria-label or aria-labelledby attribute.
+  
+
+.\apps\web\src\components\layout\Sidebar.tsx:145:9 lint/a11y/useKeyWithClickEvents 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Enforce to have the onClick mouse event with the onKeyUp, the onKeyDown, or the onKeyPress keyboard event.
+  
+    143 Ôöé       {/* Mobile overlay + backdrop */}
+    144 Ôöé       {open && (
+  > 145 Ôöé         <div
+        Ôöé         ^^^^
+  > 146 Ôöé           className="fixed inset-0 z-40 lg:hidden"
+  > 147 Ôöé           onClick={onClose}
+  > 148 Ôöé         >
+        Ôöé         ^
+    149 Ôöé           {/* Backdrop */}
+    150 Ôöé           <div className="absolute inset-0 bg-black/40" />
+  
+  i Actions triggered using mouse events should have corresponding keyboard events to account for keyboard-only 
+navigation.
+  
+
+.\apps\web\src\components\layout\Sidebar.tsx:152:11 lint/a11y/useKeyWithClickEvents 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Enforce to have the onClick mouse event with the onKeyUp, the onKeyDown, or the onKeyPress keyboard event.
+  
+    150 Ôöé           <div className="absolute inset-0 bg-black/40" />
+    151 Ôöé           {/* Sidebar panel */}
+  > 152 Ôöé           <div
+        Ôöé           ^^^^
+  > 153 Ôöé             className="absolute left-0 top-0 bottom-0"
+  > 154 Ôöé             onClick={e => e.stopPropagation()}
+  > 155 Ôöé           >
+        Ôöé           ^
+    156 Ôöé             {sidebarContent}
+    157 Ôöé           </div>
+  
+  i Actions triggered using mouse events should have corresponding keyboard events to account for keyboard-only 
+navigation.
+  
+
+.\apps\web\src\components\layout\Sidebar.tsx:100:9 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+     98 Ôöé       {/* Mobile close button */}
+     99 Ôöé       <div className="lg:hidden flex items-center justify-end px-3 pt-3 pb-1">
+  > 100 Ôöé         <button
+        Ôöé         ^^^^^^^
+  > 101 Ôöé           onClick={onClose}
+  > 102 Ôöé           className="btn-ghost p-1 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+  > 103 Ôöé           aria-label="Close sidebar"
+  > 104 Ôöé         >
+        Ôöé         ^
+    105 Ôöé           <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+    106 Ôöé             <path
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\hooks\useSSE.ts:142:9 parse ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔ
+öüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Expected a statement but instead found '}'.
+  
+    140 Ôöé           const _data = JSON.parse(e.data) as { action: string };
+    141 Ôöé           if (process.env.NODE_ENV !== 'production')┬À
+  > 142 Ôöé         } catch {
+        Ôöé         ^
+    143 Ôöé           // ignore
+    144 Ôöé         }
+  
+  i Expected a statement here.
+  
+    140 Ôöé           const _data = JSON.parse(e.data) as { action: string };
+    141 Ôöé           if (process.env.NODE_ENV !== 'production')┬À
+  > 142 Ôöé         } catch {
+        Ôöé         ^
+    143 Ôöé           // ignore
+    144 Ôöé         }
+  
+
+.\apps\web\src\hooks\useSSE.ts:198:9 parse ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔ
+öüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Expected a statement but instead found '}'.
+  
+    196 Ôöé           }));
+    197 Ôöé           if (process.env.NODE_ENV !== 'production')┬À
+  > 198 Ôöé         } catch {
+        Ôöé         ^
+    199 Ôöé           // ignore
+    200 Ôöé         }
+  
+  i Expected a statement here.
+  
+    196 Ôöé           }));
+    197 Ôöé           if (process.env.NODE_ENV !== 'production')┬À
+  > 198 Ôöé         } catch {
+        Ôöé         ^
+    199 Ôöé           // ignore
+    200 Ôöé         }
+  
+
+.\apps\web\src\hooks\useSSE.ts:245:7 lint/complexity/noForEach 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Prefer for...of instead of forEach.
+  
+    243 Ôöé     return () => {
+    244 Ôöé       if (reconnectTimer) clearTimeout(reconnectTimer);
+  > 245 Ôöé       cleanupHandlers.forEach(fn => fn());
+        Ôöé       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    246 Ôöé       if (currentEventSource) {
+    247 Ôöé         currentEventSource.close();
+  
+  i forEach may lead to performance issues when working with large arrays. When combined with functions like filter or 
+map, this causes multiple iterations over the same type.
+  
+
+.\apps\web\src\hooks\useSSE.ts:32:6 lint/correctness/noUnusedVariables 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This type alias is unused.
+  
+    30 Ôöé ] as const;
+    31 Ôöé 
+  > 32 Ôöé type SSEEventType = (typeof EVENT_TYPES)[number];
+       Ôöé      ^^^^^^^^^^^^
+    33 Ôöé 
+    34 Ôöé interface SSEState {
+  
+  i Unused variables usually are result of incomplete refactoring, typos and other source of bugs.
+  
+
+.\apps\web\src\components\settings\SettingsPage.tsx:153:15 lint/a11y/noSvgWithoutTitle 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Alternative text title element cannot be empty
+  
+    151 Ôöé           <div className="card">
+    152 Ôöé             <h3 className="text-sm font-medium text-slate-800 dark:text-slate-300 mb-1 flex items-center 
+gap-2 text-['Space_Grotesk']">
+  > 153 Ôöé               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+strokeWidth="2" className="text-amber-400"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Ôöé               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    154 Ôöé               Safety Gates
+    155 Ôöé             </h3>
+  
+  i For accessibility purposes, SVGs should have an alternative text, provided via title element. If the svg element 
+has role="img", you should add the aria-label or aria-labelledby attribute.
+  
+
+.\apps\web\src\components\settings\SettingsPage.tsx:198:13 lint/a11y/noSvgWithoutTitle 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Alternative text title element cannot be empty
+  
+    196 Ôöé         <div className="card">
+    197 Ôöé           <h3 className="text-sm font-medium text-slate-800 dark:text-slate-300 mb-1 flex items-center 
+gap-2 font-['Space_Grotesk']">
+  > 198 Ôöé             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+strokeWidth="2" className="text-sky-400"><rect x="2" y="2" width="20" height="8" rx="2" ry="2" /><rect x="2" y="14" 
+width="20" height="8" rx="2" ry="2" /><line x1="6" y1="6" x2="6.01" y2="6" /><line x1="6" y1="18" x2="6.01" y2="18" 
+/></svg>
+        Ôöé             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    199 Ôöé             MCP Servers
+    200 Ôöé           </h3>
+  
+  i For accessibility purposes, SVGs should have an alternative text, provided via title element. If the svg element 
+has role="img", you should add the aria-label or aria-labelledby attribute.
+  
+
+.\apps\web\src\components\settings\SettingsPage.tsx:273:13 lint/a11y/noSvgWithoutTitle 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Alternative text title element cannot be empty
+  
+    271 Ôöé         <div className="card">
+    272 Ôöé           <h3 className="text-sm font-medium text-slate-800 dark:text-slate-300 mb-1 flex items-center 
+gap-2 font-['Space_Grotesk']">
+  > 273 Ôöé             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+strokeWidth="2" className="text-amber-400"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 
+1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
+        Ôöé             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    274 Ôöé             Test Modes
+    275 Ôöé           </h3>
+  
+  i For accessibility purposes, SVGs should have an alternative text, provided via title element. If the svg element 
+has role="img", you should add the aria-label or aria-labelledby attribute.
+  
+
+.\apps\web\src\components\settings\SettingsPage.tsx:27:5 lint/a11y/useButtonType 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Provide an explicit type prop for the button element.
+  
+    25 Ôöé function ToggleSwitch({ enabled, onChange, label }: { enabled: boolean; onChange: (v: boolean) => void; 
+label: string }) {
+    26 Ôöé   return (
+  > 27 Ôöé     <button
+       Ôöé     ^^^^^^^
+  > 28 Ôöé       onClick={() => onChange(!enabled)}
+        ...
+  > 34 Ôöé       }`}
+  > 35 Ôöé     >
+       Ôöé     ^
+    36 Ôöé       <span className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transform 
+ring-0 transition duration-200 ${
+    37 Ôöé         enabled ? 'translate-x-4' : 'translate-x-0'
+  
+  i The default type of a button is submit, which causes the submission of a form when placed inside a `form` element. 
+This is likely not the behaviour that you want inside a React application.
+  
+  i Allowed button types are: submit, button or reset
+  
+
+.\apps\web\src\voice\__tests__\voice-settings.test.ts:23:4 lint/complexity/noForEach 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Prefer for...of instead of forEach.
+  
+    21 Ôöé 		}),
+    22 Ôöé 		clear: vi.fn(() => {
+  > 23 Ôöé 			Object.keys(store).forEach((k) => delete store[k]);
+       Ôöé 			^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    24 Ôöé 		}),
+    25 Ôöé 		length: 0,
+  
+  i forEach may lead to performance issues when working with large arrays. When combined with functions like filter or 
+map, this causes multiple iterations over the same type.
+  
+
+.\apps\web\src\voice\__tests__\voice-settings.test.ts:28:2 lint/complexity/noForEach 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Prefer for...of instead of forEach.
+  
+    26 Ôöé 		key: vi.fn(() => null),
+    27 Ôöé 	});
+  > 28 Ôöé 	Object.keys(store).forEach((k) => delete store[k]);
+       Ôöé 	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    29 Ôöé });
+    30 Ôöé 
+  
+  i forEach may lead to performance issues when working with large arrays. When combined with functions like filter or 
+map, this causes multiple iterations over the same type.
+  
+
+.\apps\worker\src\index.ts:87:20 lint/correctness/noUnusedVariables 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This variable is unused.
+  
+    85 Ôöé   PIPELINE_QUEUE,
+    86 Ôöé   async (job: Job<PipelineJobData, PipelineJobResult>) => {
+  > 87 Ôöé     const { runId, repoId, issueNumber, autonomyLevel } = job.data;
+       Ôöé                    ^^^^^^
+    88 Ôöé 
+    89 Ôöé     // Load run from DB
+  
+  i Unused variables usually are result of incomplete refactoring, typos and other source of bugs.
+  
+
+.\apps\worker\src\pipeline-runner.ts:303:7 lint/suspicious/noImplicitAnyLet 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù This variable implicitly has the any type.
+  
+    301 Ôöé ): Promise<RunState> {
+    302 Ôöé   const current = run;
+  > 303 Ôöé   let result;
+        Ôöé       ^^^^^^
+    304 Ôöé 
+    305 Ôöé   switch (current.phase) {
+  
+  i Variable declarations without type annotation and initialization implicitly have the any type. Declare a type or 
+initialize the variable with some value.
+  
+
+.\apps\worker\src\pipeline-runner.ts:82:10 lint/correctness/noUnusedVariables 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This function is unused.
+  
+    80 Ôöé }
+    81 Ôöé 
+  > 82 Ôöé function loadRunFromDb(runId: string, deps: PipelineDeps): RunState | null {
+       Ôöé          ^^^^^^^^^^^^^
+    83 Ôöé   try {
+    84 Ôöé     const row = getDb(deps).prepare('SELECT * FROM runs WHERE id = ?').get(runId) as Record<string, 
+unknown> | undefined;
+  
+  i Unused variables usually are result of incomplete refactoring, typos and other source of bugs.
+  
+
+.\packages\github-adapter\src\fake-adapter.ts:123:37 lint/style/noNonNullAssertion 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Forbidden non-null assertion.
+  
+    121 Ôöé       .filter(pr => pr.head.ref === options.head && pr.state === 'open');
+    122 Ôöé 
+  > 123 Ôöé     if (existing.length > 0) return existing[0]!;
+        Ôöé                                     ^^^^^^^^^^^^
+    124 Ôöé 
+    125 Ôöé     const pr: GitHubPullRequest = {
+  
+
+.\packages\github-adapter\src\fake-adapter.ts:180:28 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    178 Ôöé     if (!pr) return { merged: false, message: 'PR not found' };
+    179 Ôöé     if (pr.state !== 'open') return { merged: false, message: `PR is ${pr.state}` };
+  > 180 Ôöé     pr.state = 'merged' as any;
+        Ôöé                            ^^^
+    181 Ôöé     return { merged: true, sha: 'fake-merge-sha' };
+    182 Ôöé   }
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\github-adapter\src\real-adapter.ts:244:20 lint/style/noNonNullAssertion 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Forbidden non-null assertion.
+  
+    243 Ôöé       if (existing.data.length > 0) {
+  > 244 Ôöé         const pr = existing.data[0]!;
+        Ôöé                    ^^^^^^^^^^^^^^^^^
+    245 Ôöé         return {
+    246 Ôöé           id: pr.id, number: pr.number,
+  
+
+.\packages\sandbox\src\test-runner.ts:28:36 lint/correctness/noUnusedVariables 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! This variable is unused.
+  
+    26 Ôöé  */
+    27 Ôöé async function runDetectedCommandsImpl(options: RunOptions): Promise<TestReport> {
+  > 28 Ôöé   const { workspacePath, commands, mode } = options;
+       Ôöé                                    ^^^^
+    29 Ôöé   const results: TestCommandExecutionResult[] = [];
+    30 Ôöé   let passed = 0;
+  
+  i Unused variables usually are result of incomplete refactoring, typos and other source of bugs.
+  
+
+.\packages\sandbox\src\real-adapter.ts:40:5 lint/style/useConst 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù This let declares a variable that is only assigned once.
+  
+    38 Ôöé     let isNewClone = false;
+    39 Ôöé     let isNewBranch = false;
+  > 40 Ôöé     let headSha: string | undefined;
+       Ôöé     ^^^
+    41 Ôöé 
+    42 Ôöé     if (!fs.existsSync(workspacePath)) {
+  
+  i 'headSha' is only assigned here.
+  
+    74 Ôöé       timeout: 10_000,
+    75 Ôöé     });
+  > 76 Ôöé     headSha = shaResult.stdout.trim();
+       Ôöé     ^^^^^^^
+    77 Ôöé 
+    78 Ôöé     return {
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:13:66 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    11 Ôöé vi.mock('@positron/sandbox', () => {
+    12 Ôöé   return {
+  > 13 Ôöé     runCommand: vi.fn(async (cmd: string, args: string[], _opts: any) => {
+       Ôöé                                                                  ^^^
+    14 Ôöé       if (args[0] === '--version') {
+    15 Ôöé         return { exitCode: 0, stdout: '1.15.5\n', stderr: '', durationMs: 10, command: 'opencode --version' 
+};
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:96:32 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    94 Ôöé     ].join('\n');
+    95 Ôöé 
+  > 96 Ôöé     const result = (adapter as any).extractTextFromOutput(output);
+       Ôöé                                ^^^
+    97 Ôöé     expect(result).toContain('## Specification');
+    98 Ôöé     expect(result).toContain('## Plan');
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:109:32 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    107 Ôöé     ].join('\n');
+    108 Ôöé 
+  > 109 Ôöé     const result = (adapter as any).extractTextFromOutput(output);
+        Ôöé                                ^^^
+    110 Ôöé     expect(result).toBeUndefined();
+    111 Ôöé   });
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:115:24 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    113 Ôöé   test('extractTextFromOutput handles empty output', () => {
+    114 Ôöé     const adapter = new RealOpenCodeAdapter(tmpEvidence);
+  > 115 Ôöé     expect((adapter as any).extractTextFromOutput('')).toBeUndefined();
+        Ôöé                        ^^^
+    116 Ôöé     expect((adapter as any).extractTextFromOutput('{}')).toBeUndefined();
+    117 Ôöé   });
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:116:24 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    114 Ôöé     const adapter = new RealOpenCodeAdapter(tmpEvidence);
+    115 Ôöé     expect((adapter as any).extractTextFromOutput('')).toBeUndefined();
+  > 116 Ôöé     expect((adapter as any).extractTextFromOutput('{}')).toBeUndefined();
+        Ôöé                        ^^^
+    117 Ôöé   });
+    118 Ôöé 
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:123:32 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    122 Ôöé     // Access private saveEvidence via any cast for testing
+  > 123 Ôöé     const result = (adapter as any).saveEvidence('test-command', 'stdout content', 'stderr content');
+        Ôöé                                ^^^
+    124 Ôöé 
+    125 Ôöé     expect(result.stdoutPath).toBeTruthy();
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:141:32 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    139 Ôöé   test('saveEvidence handles empty output gracefully', async () => {
+    140 Ôöé     const adapter = new RealOpenCodeAdapter(tmpEvidence);
+  > 141 Ôöé     const result = (adapter as any).saveEvidence('empty-command', '', '');
+        Ôöé                                ^^^
+    142 Ôöé 
+    143 Ôöé     // No stdout or stderr means no files written
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:150:28 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    148 Ôöé   test('saveEvidence uses command-specific subdirectories', async () => {
+    149 Ôöé     const adapter = new RealOpenCodeAdapter(tmpEvidence);
+  > 150 Ôöé     const r1 = (adapter as any).saveEvidence('specify', 'out1', 'err1');
+        Ôöé                            ^^^
+    151 Ôöé     const r2 = (adapter as any).saveEvidence('implement', 'out2', 'err2');
+    152 Ôöé 
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:151:28 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    149 Ôöé     const adapter = new RealOpenCodeAdapter(tmpEvidence);
+    150 Ôöé     const r1 = (adapter as any).saveEvidence('specify', 'out1', 'err1');
+  > 151 Ôöé     const r2 = (adapter as any).saveEvidence('implement', 'out2', 'err2');
+        Ôöé                            ^^^
+    152 Ôöé 
+    153 Ôöé     // Different commands should use different directories
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:187:10 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    185 Ôöé       exitCode: 1, stdout: '', stderr: 'CLI not found', durationMs: 5,
+    186 Ôöé       command: 'opencode --version',
+  > 187 Ôöé     } as any);
+        Ôöé          ^^^
+    188 Ôöé     const health = await adapter.healthCheck(tmpWorkspace);
+    189 Ôöé     expect(health.available).toBe(false);
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:198:10 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    196 Ôöé       exitCode: 0, stdout: '', stderr: '', durationMs: 5,
+    197 Ôöé       command: 'opencode --version',
+  > 198 Ôöé     } as any);
+        Ôöé          ^^^
+    199 Ôöé     const health = await adapter.healthCheck(tmpWorkspace);
+    200 Ôöé     expect(health.available).toBe(true);
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:209:10 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    207 Ôöé       exitCode: 0, stdout: '   \n  \t', stderr: '', durationMs: 5,
+    208 Ôöé       command: 'opencode --version',
+  > 209 Ôöé     } as any);
+        Ôöé          ^^^
+    210 Ôöé     const health = await adapter.healthCheck(tmpWorkspace);
+    211 Ôöé     expect(health.available).toBe(true);
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:222:24 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    220 Ôöé   test('maps known phases correctly', () => {
+    221 Ôöé     const adapter = new RealOpenCodeAdapter('/tmp/evidence');
+  > 222 Ôöé     expect((adapter as any).mapPhase('specify')).toBe('specify');
+        Ôöé                        ^^^
+    223 Ôöé     expect((adapter as any).mapPhase('implement')).toBe('implement');
+    224 Ôöé     expect((adapter as any).mapPhase('plan')).toBe('plan');
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:223:24 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    221 Ôöé     const adapter = new RealOpenCodeAdapter('/tmp/evidence');
+    222 Ôöé     expect((adapter as any).mapPhase('specify')).toBe('specify');
+  > 223 Ôöé     expect((adapter as any).mapPhase('implement')).toBe('implement');
+        Ôöé                        ^^^
+    224 Ôöé     expect((adapter as any).mapPhase('plan')).toBe('plan');
+    225 Ôöé   });
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:224:24 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    222 Ôöé     expect((adapter as any).mapPhase('specify')).toBe('specify');
+    223 Ôöé     expect((adapter as any).mapPhase('implement')).toBe('implement');
+  > 224 Ôöé     expect((adapter as any).mapPhase('plan')).toBe('plan');
+        Ôöé                        ^^^
+    225 Ôöé   });
+    226 Ôöé 
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:229:24 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    227 Ôöé   test('falls back to implement for unknown phase', () => {
+    228 Ôöé     const adapter = new RealOpenCodeAdapter('/tmp/evidence');
+  > 229 Ôöé     expect((adapter as any).mapPhase('unknown-phase')).toBe('implement');
+        Ôöé                        ^^^
+    230 Ôöé   });
+    231 Ôöé 
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:234:24 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    232 Ôöé   test('falls back to implement for empty phase', () => {
+    233 Ôöé     const adapter = new RealOpenCodeAdapter('/tmp/evidence');
+  > 234 Ôöé     expect((adapter as any).mapPhase('')).toBe('implement');
+        Ôöé                        ^^^
+    235 Ôöé   });
+    236 Ôöé });
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:249:44 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    247 Ôöé       fs.writeFileSync(conflictPath, 'block');
+    248 Ôöé       const adapterWithBadDir = new RealOpenCodeAdapter(conflictPath);
+  > 249 Ôöé       const result = (adapterWithBadDir as any).saveEvidence('test', 'out', 'err');
+        Ôöé                                            ^^^
+    250 Ôöé       expect(result).toEqual({});
+    251 Ôöé     } finally {
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:281:12 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    279 Ôöé         exitCode: 0, stdout: '1.15.5\n', stderr: '', durationMs: 5,
+    280 Ôöé         command: 'opencode --version',
+  > 281 Ôöé       } as any)
+        Ôöé            ^^^
+    282 Ôöé       .mockResolvedValueOnce({
+    283 Ôöé         exitCode: 0,
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:288:12 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    286 Ôöé         durationMs: 50,
+    287 Ôöé         command: 'opencode run --command spec-driven-development --format json "specify"',
+  > 288 Ôöé       } as any);
+        Ôöé            ^^^
+    289 Ôöé 
+    290 Ôöé     const result = await adapter.runSlashCommand('spec-driven-development', {
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:307:10 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    305 Ôöé       exitCode: 1, stdout: '', stderr: 'CLI not found', durationMs: 5,
+    306 Ôöé       command: 'opencode --version',
+  > 307 Ôöé     } as any);
+        Ôöé          ^^^
+    308 Ôöé 
+    309 Ôöé     const result = await adapter.runSlashCommand('any-command', {
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:335:12 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    333 Ôöé         exitCode: 0, stdout: '1.15.5\n', stderr: '', durationMs: 5,
+    334 Ôöé         command: 'opencode --version',
+  > 335 Ôöé       } as any)
+        Ôöé            ^^^
+    336 Ôöé       .mockRejectedValueOnce(new Error('Process crashed'));
+    337 Ôöé 
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:355:12 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    353 Ôöé         exitCode: 0, stdout: '1.15.5\n', stderr: '', durationMs: 5,
+    354 Ôöé         command: 'opencode --version',
+  > 355 Ôöé       } as any)
+        Ôöé            ^^^
+    356 Ôöé       .mockResolvedValueOnce({
+    357 Ôöé         exitCode: 0,
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:362:12 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    360 Ôöé         durationMs: 50,
+    361 Ôöé         command: 'opencode run ...',
+  > 362 Ôöé       } as any);
+        Ôöé            ^^^
+    363 Ôöé 
+    364 Ôöé     const result = await adapter.runSlashCommand('spec-driven-development', {
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:382:12 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    380 Ôöé         exitCode: 0, stdout: '1.15.5\n', stderr: '', durationMs: 5,
+    381 Ôöé         command: 'opencode --version',
+  > 382 Ôöé       } as any)
+        Ôöé            ^^^
+    383 Ôöé       .mockResolvedValueOnce({
+    384 Ôöé         exitCode: 0,
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:389:12 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    387 Ôöé         durationMs: 50,
+    388 Ôöé         command: 'opencode run ...',
+  > 389 Ôöé       } as any);
+        Ôöé            ^^^
+    390 Ôöé 
+    391 Ôöé     const result = await adapter.runSlashCommand('spec-driven-development', {
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:408:12 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    406 Ôöé         exitCode: 0, stdout: '1.15.5\n', stderr: '', durationMs: 5,
+    407 Ôöé         command: 'opencode --version',
+  > 408 Ôöé       } as any)
+        Ôöé            ^^^
+    409 Ôöé       .mockResolvedValueOnce({
+    410 Ôöé         exitCode: 0,
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:415:12 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    413 Ôöé         durationMs: 50,
+    414 Ôöé         command: 'opencode run ...',
+  > 415 Ôöé       } as any);
+        Ôöé            ^^^
+    416 Ôöé 
+    417 Ôöé     const result = await adapter.runSlashCommand('spec-driven-development', {
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:438:10 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    436 Ôöé       durationMs: 5,
+    437 Ôöé       command: 'opencode --version',
+  > 438 Ôöé     } as any);
+        Ôöé          ^^^
+    439 Ôöé 
+    440 Ôöé     // healthCheck will return available:true with version "unknown" (empty stdout)
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:448:10 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    446 Ôöé       durationMs: 50,
+    447 Ôöé       command: 'opencode run ...',
+  > 448 Ôöé     } as any);
+        Ôöé          ^^^
+    449 Ôöé 
+    450 Ôöé     const result = await adapter.runSlashCommand('spec-driven-development', {
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:467:12 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    465 Ôöé         exitCode: 0, stdout: '1.15.5\n', stderr: '', durationMs: 5,
+    466 Ôöé         command: 'opencode --version',
+  > 467 Ôöé       } as any)
+        Ôöé            ^^^
+    468 Ôöé       .mockResolvedValueOnce({
+    469 Ôöé         exitCode: 0,
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:474:12 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    472 Ôöé         durationMs: 50,
+    473 Ôöé         command: 'opencode run ...',
+  > 474 Ôöé       } as any);
+        Ôöé            ^^^
+    475 Ôöé 
+    476 Ôöé     // Not providing issueNumber at all
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:477:18 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    476 Ôöé     // Not providing issueNumber at all
+  > 477 Ôöé     const input: any = {
+        Ôöé                  ^^^
+    478 Ôöé       runId: 'test-run',
+    479 Ôöé       workspacePath: tmpWorkspace,
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:493:12 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    491 Ôöé         exitCode: 0, stdout: '1.15.5\n', stderr: '', durationMs: 5,
+    492 Ôöé         command: 'opencode --version',
+  > 493 Ôöé       } as any)
+        Ôöé            ^^^
+    494 Ôöé       .mockResolvedValueOnce({
+    495 Ôöé         exitCode: 0,
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:500:12 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    498 Ôöé         durationMs: 50,
+    499 Ôöé         command: 'opencode run ...',
+  > 500 Ôöé       } as any);
+        Ôöé            ^^^
+    501 Ôöé 
+    502 Ôöé     const result = await adapter.runSlashCommand('spec-driven-development', {
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:517:25 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    515 Ôöé     const adapter = new RealOpenCodeAdapter(tmpEvidence);
+    516 Ôöé     // Mock healthCheck to return unavailable without a reason
+  > 517 Ôöé     vi.spyOn(adapter as any, 'healthCheck').mockResolvedValueOnce({ available: false });
+        Ôöé                         ^^^
+    518 Ôöé     const result = await adapter.runSlashCommand('any-command', {
+    519 Ôöé       runId: 'test-run',
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:535:12 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    533 Ôöé         exitCode: 0, stdout: '1.15.5\n', stderr: '', durationMs: 5,
+    534 Ôöé         command: 'opencode --version',
+  > 535 Ôöé       } as any)
+        Ôöé            ^^^
+    536 Ôöé       .mockResolvedValueOnce({
+    537 Ôöé         exitCode: 0,
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:542:12 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    540 Ôöé         durationMs: 50,
+    541 Ôöé         command: 'opencode run ...',
+  > 542 Ôöé       } as any);
+        Ôöé            ^^^
+    543 Ôöé 
+    544 Ôöé     // Not providing phaseName ÔÇö should use commandName as fallback
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:549:10 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    547 Ôöé       workspacePath: tmpWorkspace,
+    548 Ôöé       issueTitle: 'Test',
+  > 549 Ôöé     } as any);
+        Ôöé          ^^^
+    550 Ôöé     expect(result.status).toBe('success');
+    551 Ôöé   });
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:559:12 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    557 Ôöé         exitCode: 0, stdout: '1.15.5\n', stderr: '', durationMs: 5,
+    558 Ôöé         command: 'opencode --version',
+  > 559 Ôöé       } as any)
+        Ôöé            ^^^
+    560 Ôöé       .mockResolvedValueOnce({
+    561 Ôöé         exitCode: 1,
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\opencode-adapter\src\__tests__\real-adapter.test.ts:566:12 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    564 Ôöé         durationMs: 50,
+    565 Ôöé         command: 'opencode run ...',
+  > 566 Ôöé       } as any);
+        Ôöé            ^^^
+    567 Ôöé 
+    568 Ôöé     const result = await adapter.runSlashCommand('spec-driven-development', {
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.property.test.ts:387:13 lint/style/noNonNullAssertion 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Forbidden non-null assertion.
+  
+    385 Ôöé 					expect(result.ok).toBe(false);
+    386 Ôöé 					expect(result.run.lastError).toBeDefined();
+  > 387 Ôöé 					expect(result.run.lastError!).toContain("Invalid transition");
+        Ôöé 					       ^^^^^^^^^^^^^^^^^^^^^
+    388 Ôöé 					expect(result.run.lastError!).toContain(from);
+    389 Ôöé 					expect(result.run.lastError!).toContain(to);
+  
+
+.\packages\run-state\src\__tests__\state-machine.property.test.ts:388:13 lint/style/noNonNullAssertion 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Forbidden non-null assertion.
+  
+    386 Ôöé 					expect(result.run.lastError).toBeDefined();
+    387 Ôöé 					expect(result.run.lastError!).toContain("Invalid transition");
+  > 388 Ôöé 					expect(result.run.lastError!).toContain(from);
+        Ôöé 					       ^^^^^^^^^^^^^^^^^^^^^
+    389 Ôöé 					expect(result.run.lastError!).toContain(to);
+    390 Ôöé 				},
+  
+
+.\packages\run-state\src\__tests__\state-machine.property.test.ts:389:13 lint/style/noNonNullAssertion 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Forbidden non-null assertion.
+  
+    387 Ôöé 					expect(result.run.lastError!).toContain("Invalid transition");
+    388 Ôöé 					expect(result.run.lastError!).toContain(from);
+  > 389 Ôöé 					expect(result.run.lastError!).toContain(to);
+        Ôöé 					       ^^^^^^^^^^^^^^^^^^^^^
+    390 Ôöé 				},
+    391 Ôöé 			),
+  
+
+.\packages\run-state\src\__tests__\state-machine.property.test.ts:582:22 lint/style/noNonNullAssertion 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Forbidden non-null assertion.
+  
+    580 Ôöé 					const result = markFailed(run, kind, reason);
+    581 Ôöé 					expect(result.run.finishedAt).toBeDefined();
+  > 582 Ôöé 					expect(new Date(result.run.finishedAt!).getTime()).toBeGreaterThan(0);
+        Ôöé 					                ^^^^^^^^^^^^^^^^^^^^^^
+    583 Ôöé 					expect(result.run.lastError).toBe(reason);
+    584 Ôöé 				},
+  
+
+.\packages\run-state\src\__tests__\state-machine.test.ts:419:39 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    417 Ôöé   test("returns false for unknown from-phase", () => {
+    418 Ôöé     // TypeScript enforces Phase type, but runtime must handle invalid values
+  > 419 Ôöé     expect(canTransition("INVALID" as any, "DONE")).toBe(false);
+        Ôöé                                       ^^^
+    420 Ôöé   });
+    421 Ôöé 
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.test.ts:423:32 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    422 Ôöé   test("returns false for unknown from-phase (empty string)", () => {
+  > 423 Ôöé     expect(canTransition("" as any, "QUEUED")).toBe(false);
+        Ôöé                                ^^^
+    424 Ôöé   });
+    425 Ôöé });
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.test.ts:441:59 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    439 Ôöé   test("resumes with only INFO events", () => {
+    440 Ôöé     const makeEvent = (phase: string, level: string, msg: string): RunEventData => ({
+  > 441 Ôöé       id: `evt-${phase}`, runId: "run-1", phase: phase as any, level: level as any,
+        Ôöé                                                           ^^^
+    442 Ôöé       message: msg, payload: null, createdAt: new Date().toISOString(),
+    443 Ôöé     });
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.test.ts:441:80 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    439 Ôöé   test("resumes with only INFO events", () => {
+    440 Ôöé     const makeEvent = (phase: string, level: string, msg: string): RunEventData => ({
+  > 441 Ôöé       id: `evt-${phase}`, runId: "run-1", phase: phase as any, level: level as any,
+        Ôöé                                                                                ^^^
+    442 Ôöé       message: msg, payload: null, createdAt: new Date().toISOString(),
+    443 Ôöé     });
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.test.ts:454:59 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    452 Ôöé   test("resumes with GATE events (covers GATE branch of ||)", () => {
+    453 Ôöé     const makeEvent = (phase: string, level: string, msg: string): RunEventData => ({
+  > 454 Ôöé       id: `evt-${phase}`, runId: "run-1", phase: phase as any, level: level as any,
+        Ôöé                                                           ^^^
+    455 Ôöé       message: msg, payload: null, createdAt: new Date().toISOString(),
+    456 Ôöé     });
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.test.ts:454:80 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    452 Ôöé   test("resumes with GATE events (covers GATE branch of ||)", () => {
+    453 Ôöé     const makeEvent = (phase: string, level: string, msg: string): RunEventData => ({
+  > 454 Ôöé       id: `evt-${phase}`, runId: "run-1", phase: phase as any, level: level as any,
+        Ôöé                                                                                ^^^
+    455 Ôöé       message: msg, payload: null, createdAt: new Date().toISOString(),
+    456 Ôöé     });
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.test.ts:466:59 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    464 Ôöé   test("ignores WARN events (does not advance phase)", () => {
+    465 Ôöé     const makeEvent = (phase: string, level: string, msg: string): RunEventData => ({
+  > 466 Ôöé       id: `evt-${phase}`, runId: "run-1", phase: phase as any, level: level as any,
+        Ôöé                                                           ^^^
+    467 Ôöé       message: msg, payload: null, createdAt: new Date().toISOString(),
+    468 Ôöé     });
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.test.ts:466:80 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    464 Ôöé   test("ignores WARN events (does not advance phase)", () => {
+    465 Ôöé     const makeEvent = (phase: string, level: string, msg: string): RunEventData => ({
+  > 466 Ôöé       id: `evt-${phase}`, runId: "run-1", phase: phase as any, level: level as any,
+        Ôöé                                                                                ^^^
+    467 Ôöé       message: msg, payload: null, createdAt: new Date().toISOString(),
+    468 Ôöé     });
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.test.ts:478:59 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    476 Ôöé   test("ignores ERROR events (does not advance phase)", () => {
+    477 Ôöé     const makeEvent = (phase: string, level: string, msg: string): RunEventData => ({
+  > 478 Ôöé       id: `evt-${phase}`, runId: "run-1", phase: phase as any, level: level as any,
+        Ôöé                                                           ^^^
+    479 Ôöé       message: msg, payload: null, createdAt: new Date().toISOString(),
+    480 Ôöé     });
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.test.ts:478:80 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    476 Ôöé   test("ignores ERROR events (does not advance phase)", () => {
+    477 Ôöé     const makeEvent = (phase: string, level: string, msg: string): RunEventData => ({
+  > 478 Ôöé       id: `evt-${phase}`, runId: "run-1", phase: phase as any, level: level as any,
+        Ôöé                                                                                ^^^
+    479 Ôöé       message: msg, payload: null, createdAt: new Date().toISOString(),
+    480 Ôöé     });
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.test.ts:490:59 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    488 Ôöé   test("mixes INFO and GATE events with WARN/ERROR", () => {
+    489 Ôöé     const makeEvent = (phase: string, level: string, msg: string): RunEventData => ({
+  > 490 Ôöé       id: `evt-${phase}`, runId: "run-1", phase: phase as any, level: level as any,
+        Ôöé                                                           ^^^
+    491 Ôöé       message: msg, payload: null, createdAt: new Date().toISOString(),
+    492 Ôöé     });
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.test.ts:490:80 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    488 Ôöé   test("mixes INFO and GATE events with WARN/ERROR", () => {
+    489 Ôöé     const makeEvent = (phase: string, level: string, msg: string): RunEventData => ({
+  > 490 Ôöé       id: `evt-${phase}`, runId: "run-1", phase: phase as any, level: level as any,
+        Ôöé                                                                                ^^^
+    491 Ôöé       message: msg, payload: null, createdAt: new Date().toISOString(),
+    492 Ôöé     });
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.test.ts:506:63 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    504 Ôöé   test("preserves runId and repoId through resume", () => {
+    505 Ôöé     const makeEvent = (phase: string, level: string, msg: string): RunEventData => ({
+  > 506 Ôöé       id: `evt-${phase}`, runId: "my-run-id", phase: phase as any, level: level as any,
+        Ôöé                                                               ^^^
+    507 Ôöé       message: msg, payload: null, createdAt: new Date().toISOString(),
+    508 Ôöé     });
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.test.ts:506:84 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    504 Ôöé   test("preserves runId and repoId through resume", () => {
+    505 Ôöé     const makeEvent = (phase: string, level: string, msg: string): RunEventData => ({
+  > 506 Ôöé       id: `evt-${phase}`, runId: "my-run-id", phase: phase as any, level: level as any,
+        Ôöé                                                                                    ^^^
+    507 Ôöé       message: msg, payload: null, createdAt: new Date().toISOString(),
+    508 Ôöé     });
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.test.ts:520:59 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    518 Ôöé   test("resumeFromEvents with HUMAN level does not advance", () => {
+    519 Ôöé     const makeEvent = (phase: string, level: string, msg: string): RunEventData => ({
+  > 520 Ôöé       id: `evt-${phase}`, runId: "run-1", phase: phase as any, level: level as any,
+        Ôöé                                                           ^^^
+    521 Ôöé       message: msg, payload: null, createdAt: new Date().toISOString(),
+    522 Ôöé     });
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.test.ts:520:80 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    518 Ôöé   test("resumeFromEvents with HUMAN level does not advance", () => {
+    519 Ôöé     const makeEvent = (phase: string, level: string, msg: string): RunEventData => ({
+  > 520 Ôöé       id: `evt-${phase}`, runId: "run-1", phase: phase as any, level: level as any,
+        Ôöé                                                                                ^^^
+    521 Ôöé       message: msg, payload: null, createdAt: new Date().toISOString(),
+    522 Ôöé     });
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.contract.test.ts:182:43 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    180 Ôöé 	it("returns false for unknown phase", () => {
+    181 Ôöé 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+  > 182 Ôöé 		expect(canTransition("UNKNOWN_PHASE" as any, "QUEUED")).toBe(false);
+        Ôöé 		                                        ^^^
+    183 Ôöé 	});
+    184 Ôöé 
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.contract.test.ts:190:34 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    188 Ôöé 			for (const to of targets) {
+    189 Ôöé 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+  > 190 Ôöé 				expect(canTransition(from as any, to as any)).toBe(true);
+        Ôöé 				                             ^^^
+    191 Ôöé 			}
+    192 Ôöé 		}
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.contract.test.ts:190:45 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    188 Ôöé 			for (const to of targets) {
+    189 Ôöé 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+  > 190 Ôöé 				expect(canTransition(from as any, to as any)).toBe(true);
+        Ôöé 				                                        ^^^
+    191 Ôöé 			}
+    192 Ôöé 		}
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.contract.test.ts:302:46 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    300 Ôöé 		let run = makeRun();
+    301 Ôöé 		for (const step of chain) {
+  > 302 Ôöé 			const result = transition(run, step.to as any, `step: ${step.to}`);
+        Ôöé 			                                          ^^^
+    303 Ôöé 			expect(result.ok).toBe(true);
+    304 Ôöé 			run = result.run;
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.contract.test.ts:351:19 lint/style/noNonNullAssertion 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Forbidden non-null assertion.
+  
+    349 Ôöé 		const result = markFailed(run, "FAILED", "reason");
+    350 Ôöé 		expect(result.run.finishedAt).toBeDefined();
+  > 351 Ôöé 		expect(new Date(result.run.finishedAt!).getTime()).toBeGreaterThan(0);
+        Ôöé 		                ^^^^^^^^^^^^^^^^^^^^^^
+    352 Ôöé 	});
+    353 Ôöé 
+  
+
+.\packages\run-state\src\__tests__\state-machine.contract.test.ts:410:42 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    409 Ôöé 		for (const phase of nonRetryable) {
+  > 410 Ôöé 			const run = makeRun({ phase: phase as any });
+        Ôöé 			                                      ^^^
+    411 Ôöé 			const result = retry(run);
+    412 Ôöé 
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.contract.test.ts:468:36 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    466 Ôöé 		];
+    467 Ôöé 		for (const phase of terminal) {
+  > 468 Ôöé 			expect(isTerminalPhase(phase as any)).toBe(true);
+        Ôöé 			                                ^^^
+    469 Ôöé 		}
+    470 Ôöé 	});
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.contract.test.ts:475:36 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    473 Ôöé 		const active = ["QUEUED", "CLAIMED", "IMPLEMENT", "TEST", "MERGE"];
+    474 Ôöé 		for (const phase of active) {
+  > 475 Ôöé 			expect(isTerminalPhase(phase as any)).toBe(false);
+        Ôöé 			                                ^^^
+    476 Ôöé 		}
+    477 Ôöé 	});
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.contract.test.ts:483:36 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    481 Ôöé 			const isTerminal = targets.length === 0;
+    482 Ôöé 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+  > 483 Ôöé 			expect(isTerminalPhase(phase as any)).toBe(isTerminal);
+        Ôöé 			                                ^^^
+    484 Ôöé 		}
+    485 Ôöé 	});
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.contract.test.ts:500:35 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    498 Ôöé 		];
+    499 Ôöé 		for (const phase of failures) {
+  > 500 Ôöé 			expect(isFailurePhase(phase as any)).toBe(true);
+        Ôöé 			                               ^^^
+    501 Ôöé 		}
+    502 Ôöé 	});
+Checked 205 files in 579ms. No fixes applied.
+Found 111 errors.
+Found 110 warnings.
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.contract.test.ts:514:35 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    512 Ôöé 		];
+    513 Ôöé 		for (const phase of nonFailures) {
+  > 514 Ôöé 			expect(isFailurePhase(phase as any)).toBe(false);
+        Ôöé 			                               ^^^
+    515 Ôöé 		}
+    516 Ôöé 	});
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.contract.test.ts:519:43 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    518 Ôöé 	it("returns false for blocked/approval phases", () => {
+  > 519 Ôöé 		expect(isFailurePhase("BLOCKED_PUSH" as any)).toBe(false);
+        Ôöé 		                                        ^^^
+    520 Ôöé 		expect(isFailurePhase("BLOCKED_MERGE" as any)).toBe(false);
+    521 Ôöé 		expect(isFailurePhase("GATE_APPROVE" as any)).toBe(false);
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.contract.test.ts:520:44 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    518 Ôöé 	it("returns false for blocked/approval phases", () => {
+    519 Ôöé 		expect(isFailurePhase("BLOCKED_PUSH" as any)).toBe(false);
+  > 520 Ôöé 		expect(isFailurePhase("BLOCKED_MERGE" as any)).toBe(false);
+        Ôöé 		                                         ^^^
+    521 Ôöé 		expect(isFailurePhase("GATE_APPROVE" as any)).toBe(false);
+    522 Ôöé 		expect(isFailurePhase("GATE_REVISE" as any)).toBe(false);
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.contract.test.ts:521:43 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    519 Ôöé 		expect(isFailurePhase("BLOCKED_PUSH" as any)).toBe(false);
+    520 Ôöé 		expect(isFailurePhase("BLOCKED_MERGE" as any)).toBe(false);
+  > 521 Ôöé 		expect(isFailurePhase("GATE_APPROVE" as any)).toBe(false);
+        Ôöé 		                                        ^^^
+    522 Ôöé 		expect(isFailurePhase("GATE_REVISE" as any)).toBe(false);
+    523 Ôöé 	});
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\run-state\src\__tests__\state-machine.contract.test.ts:522:42 lint/suspicious/noExplicitAny 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Unexpected any. Specify a different type.
+  
+    520 Ôöé 		expect(isFailurePhase("BLOCKED_MERGE" as any)).toBe(false);
+    521 Ôöé 		expect(isFailurePhase("GATE_APPROVE" as any)).toBe(false);
+  > 522 Ôöé 		expect(isFailurePhase("GATE_REVISE" as any)).toBe(false);
+        Ôöé 		                                       ^^^
+    523 Ôöé 	});
+    524 Ôöé });
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+.\packages\sandbox\src\__tests__\paths.test.ts:59:16 lint/style/noNonNullAssertion 
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ! Forbidden non-null assertion.
+  
+    57 Ôöé 		const longTitle = "a".repeat(100);
+    58 Ôöé 		const branch = createPositronBranchName(42, longTitle);
+  > 59 Ôöé 		const slug = branch.split("issue-42-")[1]!;
+       Ôöé 		             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    60 Ôöé 		expect(slug.length).toBeLessThanOrEqual(50);
+    61 Ôöé 	});
+  
+
+lint ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+ÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔö
+üÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöüÔöü
+
+  ├ù Some errors were emitted while running checks.
+  
+

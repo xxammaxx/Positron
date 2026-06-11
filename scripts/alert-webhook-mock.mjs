@@ -25,11 +25,11 @@
  * No secrets. No external calls. No real webhooks.
  */
 
-import http from "node:http";
+import http from 'node:http';
 
 // ── Configuration ──────────────────────────────────────────────────────────
-const PORT = parseInt(process.env.PORT ?? "5001", 10);
-const HOST = process.env.HOST ?? "0.0.0.0";
+const PORT = Number.parseInt(process.env.PORT ?? '5001', 10);
+const HOST = process.env.HOST ?? '0.0.0.0';
 const startedAt = new Date().toISOString();
 
 // ── In-Memory Alert Store ─────────────────────────────────────────────────
@@ -48,16 +48,16 @@ let resolvedCount = 0;
 function readBody(req) {
 	return new Promise((resolve, reject) => {
 		const chunks = [];
-		req.on("data", (chunk) => chunks.push(chunk));
-		req.on("end", () => {
+		req.on('data', (chunk) => chunks.push(chunk));
+		req.on('end', () => {
 			try {
-				const raw = Buffer.concat(chunks).toString("utf-8");
+				const raw = Buffer.concat(chunks).toString('utf-8');
 				resolve(raw ? JSON.parse(raw) : null);
 			} catch (err) {
 				reject(err);
 			}
 		});
-		req.on("error", reject);
+		req.on('error', reject);
 	});
 }
 
@@ -65,18 +65,17 @@ function readBody(req) {
 function sendJson(res, statusCode, data) {
 	const body = JSON.stringify(data, null, 2);
 	res.writeHead(statusCode, {
-		"Content-Type": "application/json",
-		"Access-Control-Allow-Origin": "*",
+		'Content-Type': 'application/json',
+		'Access-Control-Allow-Origin': '*',
 	});
-	res.end(body + "\n");
+	res.end(`${body}\n`);
 }
 
 /** Structured log with timestamp */
-function log(level, message, details = "") {
-	const ts = new Date().toISOString();
-	const prefix = level === "ERROR" ? "❌" : level === "WARN" ? "⚠️" : "📨";
-	const detailsStr = details ? ` — ${details}` : "";
-	console.log(`[${ts}] ${prefix} [${level}] ${message}${detailsStr}`);
+function log(level, _message, details = '') {
+	const _ts = new Date().toISOString();
+	const _prefix = level === 'ERROR' ? '❌' : level === 'WARN' ? '⚠️' : '📨';
+	const _detailsStr = details ? ` — ${details}` : '';
 }
 
 /**
@@ -92,24 +91,24 @@ function extractAlertInfo(payload, route) {
 	const summaries = payload.alerts.map((a) => {
 		const labels = a.labels ?? {};
 		const annotations = a.annotations ?? {};
-		const alertname = labels.alertname ?? "unknown";
-		const status = a.status ?? "unknown"; // "firing" or "resolved"
+		const alertname = labels.alertname ?? 'unknown';
+		const status = a.status ?? 'unknown'; // "firing" or "resolved"
 		return {
 			alertname,
 			severity: labels.severity ?? route,
 			status,
-			summary: annotations.summary ?? "",
-			runbook_url: annotations.runbook_url ?? "",
-			startsAt: a.startsAt ?? "",
-			endsAt: a.endsAt ?? "",
+			summary: annotations.summary ?? '',
+			runbook_url: annotations.runbook_url ?? '',
+			startsAt: a.startsAt ?? '',
+			endsAt: a.endsAt ?? '',
 		};
 	});
 
 	return {
 		alertCount: summaries.length,
 		summaries,
-		groupKey: payload.groupKey ?? "",
-		status: payload.status ?? "",
+		groupKey: payload.groupKey ?? '',
+		status: payload.status ?? '',
 	};
 }
 
@@ -119,21 +118,21 @@ const server = http.createServer(async (req, res) => {
 	const { method, url } = req;
 
 	// ── CORS preflight ────────────────────────────────────────────────────
-	if (method === "OPTIONS") {
+	if (method === 'OPTIONS') {
 		res.writeHead(204, {
-			"Access-Control-Allow-Origin": "*",
-			"Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-			"Access-Control-Allow-Headers": "Content-Type",
+			'Access-Control-Allow-Origin': '*',
+			'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+			'Access-Control-Allow-Headers': 'Content-Type',
 		});
 		res.end();
 		return;
 	}
 
 	// ── Health check ──────────────────────────────────────────────────────
-	if (method === "GET" && url === "/health") {
+	if (method === 'GET' && url === '/health') {
 		sendJson(res, 200, {
-			status: "ok",
-			service: "positron-alert-webhook-mock",
+			status: 'ok',
+			service: 'positron-alert-webhook-mock',
 			uptime: `${Math.round((Date.now() - new Date(startedAt).getTime()) / 1000)}s`,
 			totalAlerts: alertStore.length,
 			criticalAlerts: criticalCount,
@@ -145,7 +144,7 @@ const server = http.createServer(async (req, res) => {
 	}
 
 	// ── List all alerts ───────────────────────────────────────────────────
-	if (method === "GET" && url === "/alerts") {
+	if (method === 'GET' && url === '/alerts') {
 		sendJson(res, 200, {
 			total: alertStore.length,
 			criticalCount,
@@ -157,8 +156,8 @@ const server = http.createServer(async (req, res) => {
 	}
 
 	// ── List critical alerts ──────────────────────────────────────────────
-	if (method === "GET" && url === "/alerts/critical") {
-		const critical = alertStore.filter((a) => a.severity === "critical");
+	if (method === 'GET' && url === '/alerts/critical') {
+		const critical = alertStore.filter((a) => a.severity === 'critical');
 		sendJson(res, 200, {
 			count: critical.length,
 			alerts: critical.slice(0, 100),
@@ -167,8 +166,8 @@ const server = http.createServer(async (req, res) => {
 	}
 
 	// ── List warning alerts ───────────────────────────────────────────────
-	if (method === "GET" && url === "/alerts/warning") {
-		const warnings = alertStore.filter((a) => a.severity === "warning");
+	if (method === 'GET' && url === '/alerts/warning') {
+		const warnings = alertStore.filter((a) => a.severity === 'warning');
 		sendJson(res, 200, {
 			count: warnings.length,
 			alerts: warnings.slice(0, 100),
@@ -177,17 +176,17 @@ const server = http.createServer(async (req, res) => {
 	}
 
 	// ── Receive CRITICAL alert webhook ────────────────────────────────────
-	if (method === "POST" && url === "/alertmanager/critical") {
+	if (method === 'POST' && url === '/alertmanager/critical') {
 		try {
 			const payload = await readBody(req);
-			const info = extractAlertInfo(payload, "critical");
+			const info = extractAlertInfo(payload, 'critical');
 
 			for (const alert of info.summaries) {
-				const isResolved = alert.status === "resolved";
+				const isResolved = alert.status === 'resolved';
 				alertStore.unshift({
 					timestamp: new Date().toISOString(),
-					route: "critical",
-					severity: "critical",
+					route: 'critical',
+					severity: 'critical',
 					data: alert,
 				});
 				if (isResolved) resolvedCount++;
@@ -195,37 +194,37 @@ const server = http.createServer(async (req, res) => {
 			}
 
 			log(
-				"INFO",
+				'INFO',
 				`Critical webhook received: ${info.alertCount} alert(s)`,
-				info.summaries.map((a) => `${a.alertname}[${a.status}]`).join(", "),
+				info.summaries.map((a) => `${a.alertname}[${a.status}]`).join(', '),
 			);
 
 			sendJson(res, 200, {
 				received: true,
-				route: "critical",
+				route: 'critical',
 				alertCount: info.alertCount,
 				status: info.status,
 				alerts: info.summaries,
 			});
 		} catch (err) {
-			log("ERROR", "Failed to parse critical webhook", err.message);
-			sendJson(res, 400, { error: "Invalid json body", detail: err.message });
+			log('ERROR', 'Failed to parse critical webhook', err.message);
+			sendJson(res, 400, { error: 'Invalid json body', detail: err.message });
 		}
 		return;
 	}
 
 	// ── Receive WARNING alert webhook ─────────────────────────────────────
-	if (method === "POST" && url === "/alertmanager/warning") {
+	if (method === 'POST' && url === '/alertmanager/warning') {
 		try {
 			const payload = await readBody(req);
-			const info = extractAlertInfo(payload, "warning");
+			const info = extractAlertInfo(payload, 'warning');
 
 			for (const alert of info.summaries) {
-				const isResolved = alert.status === "resolved";
+				const isResolved = alert.status === 'resolved';
 				alertStore.unshift({
 					timestamp: new Date().toISOString(),
-					route: "warning",
-					severity: "warning",
+					route: 'warning',
+					severity: 'warning',
 					data: alert,
 				});
 				if (isResolved) resolvedCount++;
@@ -233,63 +232,45 @@ const server = http.createServer(async (req, res) => {
 			}
 
 			log(
-				"INFO",
+				'INFO',
 				`Warning webhook received: ${info.alertCount} alert(s)`,
-				info.summaries.map((a) => `${a.alertname}[${a.status}]`).join(", "),
+				info.summaries.map((a) => `${a.alertname}[${a.status}]`).join(', '),
 			);
 
 			sendJson(res, 200, {
 				received: true,
-				route: "warning",
+				route: 'warning',
 				alertCount: info.alertCount,
 				status: info.status,
 				alerts: info.summaries,
 			});
 		} catch (err) {
-			log("ERROR", "Failed to parse warning webhook", err.message);
-			sendJson(res, 400, { error: "Invalid json body", detail: err.message });
+			log('ERROR', 'Failed to parse warning webhook', err.message);
+			sendJson(res, 400, { error: 'Invalid json body', detail: err.message });
 		}
 		return;
 	}
 
 	// ── 404 ────────────────────────────────────────────────────────────────
-	sendJson(res, 404, { error: "Not found", path: url });
+	sendJson(res, 404, { error: 'Not found', path: url });
 });
 
 // ── Start ──────────────────────────────────────────────────────────────────
 
-server.listen(PORT, HOST, () => {
-	console.log("=".repeat(55));
-	console.log(" Positron Alert Webhook Receiver Mock (QA-017)");
-	console.log("=".repeat(55));
-	console.log(` Listening: http://${HOST}:${PORT}`);
-	console.log(` Health:    http://localhost:${PORT}/health`);
-	console.log(` Alerts:   http://localhost:${PORT}/alerts`);
-	console.log(` Critical: POST http://localhost:${PORT}/alertmanager/critical`);
-	console.log(` Warning:  POST http://localhost:${PORT}/alertmanager/warning`);
-	console.log("");
-	console.log(" No secrets. No external calls. No real webhooks.");
-	console.log(" Press Ctrl+C to stop.");
-	console.log("=".repeat(55));
-});
+server.listen(PORT, HOST, () => {});
 
 // ── Graceful Shutdown ──────────────────────────────────────────────────────
 function shutdown(signal) {
-	log(
-		"INFO",
-		`${signal} received — shutting down`,
-		`total alerts: ${alertStore.length}`,
-	);
+	log('INFO', `${signal} received — shutting down`, `total alerts: ${alertStore.length}`);
 	server.close(() => {
-		console.log(`[${new Date().toISOString()}] ✅ Server stopped. Exit code 0`);
 		process.exit(0);
 	});
 	// Force close after 5s
 	setTimeout(() => {
-		console.error("Force shutdown after timeout");
+		console.error('Force shutdown after timeout');
 		process.exit(0);
 	}, 5000);
 }
 
-process.on("SIGTERM", () => shutdown("SIGTERM"));
-process.on("SIGINT", () => shutdown("SIGINT"));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));

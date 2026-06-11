@@ -217,18 +217,12 @@ describe('mapEventToSpeech', () => {
 	});
 
 	test('merge_blocked mentions kill-switch', () => {
-		const text = mapEventToSpeech(
-			makeEvent({ phase: 'BLOCKED_MERGE' }),
-			'merge_blocked',
-		);
+		const text = mapEventToSpeech(makeEvent({ phase: 'BLOCKED_MERGE' }), 'merge_blocked');
 		expect(text).toBe('Merge blocked by kill-switch');
 	});
 
 	test('human_action', () => {
-		const text = mapEventToSpeech(
-			makeEvent({ phase: 'GATE_APPROVE' }),
-			'human_action',
-		);
+		const text = mapEventToSpeech(makeEvent({ phase: 'GATE_APPROVE' }), 'human_action');
 		expect(text).toBe('Human action required');
 	});
 
@@ -281,11 +275,9 @@ describe('eventToSpeechText', () => {
 
 	test('truncates very long messages', () => {
 		const longMessage = 'x'.repeat(500);
-		const text = eventToSpeechText(
-			makeEvent({ phase: 'FAILED_BLOCKED', message: longMessage }),
-		);
+		const text = eventToSpeechText(makeEvent({ phase: 'FAILED_BLOCKED', message: longMessage }));
 		expect(text).not.toBeNull();
-		expect(text!.length).toBeLessThanOrEqual(200);
+		expect(text?.length).toBeLessThanOrEqual(200);
 	});
 });
 
@@ -415,8 +407,8 @@ describe('getLastSpoken', () => {
 		speakEvent(makeEvent({ phase: 'DONE' }));
 		const last = getLastSpoken();
 		expect(last).not.toBeNull();
-		expect(last!.text).toBe('Run completed successfully');
-		expect(typeof last!.timestamp).toBe('number');
+		expect(last?.text).toBe('Run completed successfully');
+		expect(typeof last?.timestamp).toBe('number');
 	});
 
 	test('returns null when voice is disabled', () => {

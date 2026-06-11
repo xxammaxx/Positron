@@ -4,7 +4,10 @@
 const MAX_SPEECH_LENGTH = 200;
 
 // Reihenfolge wichtig: spezifische Patterns zuerst (überschreiben generische)
-const REDACTION_RULES: Array<{ pattern: RegExp; replacement: string | ((substring: string, ...args: string[]) => string) }> = [
+const REDACTION_RULES: Array<{
+	pattern: RegExp;
+	replacement: string | ((substring: string, ...args: string[]) => string);
+}> = [
 	// === Specific Token Patterns (must run before generic key=value rules) ===
 
 	// GitHub Personal Access Token (ghp_*, github_pat_*)
@@ -25,16 +28,25 @@ const REDACTION_RULES: Array<{ pattern: RegExp; replacement: string | ((substrin
 	{ pattern: /\bnpm_[a-zA-Z0-9]{36,}\b/g, replacement: '[TOKEN]' },
 
 	// JWT Tokens (eyJ... Struktur)
-	{ pattern: /\beyJ[a-zA-Z0-9_-]{20,}\.[a-zA-Z0-9_-]{20,}\.[a-zA-Z0-9_-]{20,}\b/g, replacement: '[TOKEN]' },
+	{
+		pattern: /\beyJ[a-zA-Z0-9_-]{20,}\.[a-zA-Z0-9_-]{20,}\.[a-zA-Z0-9_-]{20,}\b/g,
+		replacement: '[TOKEN]',
+	},
 
 	// Bearer Tokens (Authorization headers)
 	{ pattern: /\b[Bb]earer\s+[a-zA-Z0-9._\-+/=]{20,}/g, replacement: 'Bearer [TOKEN]' },
 
 	// PEM Certificate/Key Blocks
-	{ pattern: /-----BEGIN [A-Z ]+-----[a-zA-Z0-9+/=\n\r]+-----END [A-Z ]+-----/g, replacement: '[CERTIFICATE]' },
+	{
+		pattern: /-----BEGIN [A-Z ]+-----[a-zA-Z0-9+/=\n\r]+-----END [A-Z ]+-----/g,
+		replacement: '[CERTIFICATE]',
+	},
 
 	// Generic service tokens with recognizable prefixes
-	{ pattern: /\b(?:s3cr3t|secret|token|auth|credential)[_-]?[a-zA-Z0-9]{16,}\b/gi, replacement: '[SECRET]' },
+	{
+		pattern: /\b(?:s3cr3t|secret|token|auth|credential)[_-]?[a-zA-Z0-9]{16,}\b/gi,
+		replacement: '[SECRET]',
+	},
 
 	// .env / Umgebungsvariablen mit sensitiven Werten
 	{
@@ -48,10 +60,17 @@ const REDACTION_RULES: Array<{ pattern: RegExp; replacement: string | ((substrin
 	{ pattern: /\/home\/[a-zA-Z0-9_-]+\/\.ssh\/[a-zA-Z0-9_./-]+/g, replacement: '[PATH]' },
 	{ pattern: /\/Users\/[a-zA-Z0-9_-]+\/\.ssh\/[a-zA-Z0-9_./-]+/g, replacement: '[PATH]' },
 	{ pattern: /\/root\/\.ssh\/[a-zA-Z0-9_./-]+/g, replacement: '[PATH]' },
-	{ pattern: /\/etc\/[a-zA-Z0-9_./-]*(?:shadow|passwd|ssl|certs)[a-zA-Z0-9_./-]*/g, replacement: '[PATH]' },
+	{
+		pattern: /\/etc\/[a-zA-Z0-9_./-]*(?:shadow|passwd|ssl|certs)[a-zA-Z0-9_./-]*/g,
+		replacement: '[PATH]',
+	},
 
 	// Private Dateipfade (configs, keys, tokens)
-	{ pattern: /(?:~|\/home\/\w+|\/Users\/\w+)\/\.(?:config|ssh|gnupg|aws|azure|docker|kube)[a-zA-Z0-9_./-]*/g, replacement: '[PATH]' },
+	{
+		pattern:
+			/(?:~|\/home\/\w+|\/Users\/\w+)\/\.(?:config|ssh|gnupg|aws|azure|docker|kube)[a-zA-Z0-9_./-]*/g,
+		replacement: '[PATH]',
+	},
 
 	// === Content-Based Patterns (generic, must run AFTER specific patterns) ===
 
@@ -60,7 +79,8 @@ const REDACTION_RULES: Array<{ pattern: RegExp; replacement: string | ((substrin
 
 	// Passwörter und Secrets in Key-Value-Paaren
 	{
-		pattern: /\b(?:password|passwd|secret|token|key|api[_-]?key)\s*[:=]\s*['"]?([^\s'"]{4,})['"]?/gi,
+		pattern:
+			/\b(?:password|passwd|secret|token|key|api[_-]?key)\s*[:=]\s*['"]?([^\s'"]{4,})['"]?/gi,
 		replacement: (_: string, secret: string) => {
 			// Prüfe, ob der gefundene Wert bereits durch eine vorherige Regel ersetzt wurde
 			if (/\[(?:TOKEN|API_KEY|SECRET|EMAIL|PATH|CERTIFICATE)\]/.test(secret)) return _;
@@ -69,7 +89,10 @@ const REDACTION_RULES: Array<{ pattern: RegExp; replacement: string | ((substrin
 	},
 
 	// Docker/Container Credentials (auth tokens, registry passwords)
-	{ pattern: /\b(?:docker|registry)[-_]?(?:password|token)\s*[:=]\s*\S+/gi, replacement: '[SECRET]' },
+	{
+		pattern: /\b(?:docker|registry)[-_]?(?:password|token)\s*[:=]\s*\S+/gi,
+		replacement: '[SECRET]',
+	},
 
 	// Base64-encoded Secrets (lange Base64-Strings)
 	{ pattern: /\b[A-Za-z0-9+/]{40,}={0,2}\b/g, replacement: '[SECRET]' },
@@ -93,7 +116,7 @@ export function redactForSpeech(text: string): string {
  */
 export function truncateForSpeech(text: string, maxLen = MAX_SPEECH_LENGTH): string {
 	if (text.length <= maxLen) return text;
-	return text.slice(0, maxLen - 1) + '…';
+	return `${text.slice(0, maxLen - 1)}…`;
 }
 
 /**

@@ -1,11 +1,17 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import type React from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
 	loadVoiceSettings,
 	saveVoiceSettings,
 	toggleVoiceEnabled,
 	type VoiceEventType,
 } from '../voice/voice-settings.js';
-import { isSpeechSupported, getAvailableVoices, speakTest, getLastSpoken } from '../voice/voice-output.js';
+import {
+	isSpeechSupported,
+	getAvailableVoices,
+	speakTest,
+	getLastSpoken,
+} from '../voice/voice-output.js';
 
 const EVENT_LABELS: Record<VoiceEventType, string> = {
 	run_started: 'Run started',
@@ -92,7 +98,7 @@ export default function VoiceControls(): React.ReactElement {
 			const last = getLastSpoken();
 			if (last) {
 				setLastSpokenState({
-					text: last.text.length > 60 ? last.text.slice(0, 57) + '…' : last.text,
+					text: last.text.length > 60 ? `${last.text.slice(0, 57)}…` : last.text,
 					time: new Date(last.timestamp).toLocaleTimeString(),
 				});
 			}
@@ -105,14 +111,11 @@ export default function VoiceControls(): React.ReactElement {
 		setEnabled(next);
 	}, []);
 
-	const handleVoiceChange = useCallback(
-		(uri: string) => {
-			setSelectedVoiceURI(uri);
-			const settings = loadVoiceSettings();
-			saveVoiceSettings({ ...settings, selectedVoiceURI: uri });
-		},
-		[],
-	);
+	const handleVoiceChange = useCallback((uri: string) => {
+		setSelectedVoiceURI(uri);
+		const settings = loadVoiceSettings();
+		saveVoiceSettings({ ...settings, selectedVoiceURI: uri });
+	}, []);
 
 	const handleRateChange = useCallback((value: number) => {
 		setRate(value);
@@ -191,8 +194,8 @@ export default function VoiceControls(): React.ReactElement {
 			{!supported && (
 				<div className="mb-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
 					<p className="text-xs text-amber-700 dark:text-amber-400">
-						Your browser does not support the Web Speech API. Voice output requires a modern
-						browser (Chrome, Firefox, Edge, or Safari 15+).
+						Your browser does not support the Web Speech API. Voice output requires a modern browser
+						(Chrome, Firefox, Edge, or Safari 15+).
 					</p>
 				</div>
 			)}
@@ -238,7 +241,7 @@ export default function VoiceControls(): React.ReactElement {
 						max="2.0"
 						step="0.1"
 						value={rate}
-						onChange={(e) => handleRateChange(parseFloat(e.target.value))}
+						onChange={(e) => handleRateChange(Number.parseFloat(e.target.value))}
 						className="w-full accent-purple-500"
 						aria-label="Speech rate"
 					/>
@@ -264,7 +267,7 @@ export default function VoiceControls(): React.ReactElement {
 						max="1"
 						step="0.05"
 						value={volume}
-						onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+						onChange={(e) => handleVolumeChange(Number.parseFloat(e.target.value))}
 						className="w-full accent-purple-500"
 						aria-label="Speech volume"
 					/>
@@ -320,8 +323,8 @@ export default function VoiceControls(): React.ReactElement {
 
 			{/* Privacy Notice */}
 			<p className="text-[10px] text-slate-400 dark:text-slate-600 mt-4 pt-3 border-t border-slate-200 dark:border-slate-800">
-				Voice output is local browser TTS. No audio is sent to external services. No data leaves your
-				browser.
+				Voice output is local browser TTS. No audio is sent to external services. No data leaves
+				your browser.
 			</p>
 		</div>
 	);
