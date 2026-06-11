@@ -240,9 +240,11 @@ describe('RealOpenCodeAdapter mapPhase', () => {
 // ---------------------------------------------------------------------------
 describe('RealOpenCodeAdapter saveEvidence edge cases', () => {
   test('returns empty object when mkdir fails (catch path)', () => {
-    const adapter = new RealOpenCodeAdapter('/tmp/evidence');
+    // Use os.tmpdir() for cross-platform path
+    const tmpDir = os.tmpdir();
+    const adapter = new RealOpenCodeAdapter(path.join(tmpDir, 'evidence'));
     // Create a file where the directory should be to cause mkdirSync to fail
-    const conflictPath = path.join('/tmp', 'evidence-conflict-test');
+    const conflictPath = path.join(tmpDir, 'evidence-conflict-test');
     try {
       fs.writeFileSync(conflictPath, 'block');
       const adapterWithBadDir = new RealOpenCodeAdapter(conflictPath);

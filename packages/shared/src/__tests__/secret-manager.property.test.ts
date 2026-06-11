@@ -210,9 +210,9 @@ describe("FileSecretProvider parseEnvFile() properties", () => {
 					cleanupTempFile(tmpFile);
 				}
 			}),
-			{ numRuns: 1000 },
+			{ numRuns: 200 },  // reduced from 1000 to avoid timeout with file I/O
 		);
-	});
+	}, 15000);
 
 	// Property 3: Werte mit = bleiben korrekt erhalten
 	it("values containing = are preserved", () => {
