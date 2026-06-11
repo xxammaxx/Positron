@@ -49,7 +49,7 @@
 		"format:check": "biome format .",
 		"clean": "find . -name dist -not -path '*/node_modules/*' -exec rm -rf {} +",
 		"typecheck": "tsc -b --dry",
-		"dev:demo": "concurrently \"npm run dev:server\" \"npm run dev:web\"",
+		"dev:demo": "cross-env POSITRON_GITHUB_MODE=fake POSITRON_SPECKIT_MODE=fake POSITRON_OPENCODE_MODE=fake concurrently \"npm run dev:server\" \"npm run dev:web\"",
 		"doctor": "node scripts/doctor.mjs",
 		"verify": "npm test && npm run test:contracts && npm run typecheck && npm run build && npm run coverage:safety"
 	},
