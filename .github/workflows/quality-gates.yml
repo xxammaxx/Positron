@@ -227,39 +227,8 @@ jobs:
             test-results/**
           if-no-files-found: warn
 
-  # ── NEW: Evidence Gates (blocking) ─────────────────────────────────
-  # Validates new evidence types, context manifest, reviewer report
-  # contract enforcement, and secret pattern detection.
-  # These are contract tests scoped to evidence infrastructure.
-  evidence-gates:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build (shared types required)
-        run: npm run build
-
-      - name: Run Evidence Contract Tests
-        run: npx vitest run --config vitest.contracts.config.ts packages/shared/src/__contracts__/evidence-log.contract.test.ts packages/shared/src/__contracts__/reviewer-report.contract.test.ts
-
-      - name: Run Context Manifest Tests
-        run: npx vitest run packages/shared/src/__tests__/context-manifest.test.ts
-
-      - name: Upload Evidence Gate Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: evidence-gate-report
-          path: |
-            test-results/**
-          if-no-files-found: warn
+  # ── REMOVED: evidence-gates (redundant with contract-tests + unit-tests) ──
+  # Evidence contract tests (evidence-log, reviewer-report) are covered by
+  # the contract-tests job via npm run test:contracts.
+  # Context manifest tests are covered by the unit-tests job via npm test.
+  # Consolidation avoids ~5 min of redundant CI minutes per run.
