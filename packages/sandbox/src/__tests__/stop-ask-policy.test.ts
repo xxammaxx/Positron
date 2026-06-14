@@ -247,26 +247,20 @@ describe('Stop/Ask Policy — Category C (Allowed with Audit)', () => {
 
 describe('Stop/Ask Policy — Flags and Edge Cases', () => {
 	it('externalMutation flag triggers ASK_HUMAN', () => {
-		const result = evaluateStopAsk(
-			req({ action: 'update remote config', externalMutation: true }),
-		);
+		const result = evaluateStopAsk(req({ action: 'update remote config', externalMutation: true }));
 		assertDecision(result, 'ASK_HUMAN', 'HIGH');
 		expect(result.category).toBe('A');
 		expect(result.humanApprovalRequired).toBe(true);
 	});
 
 	it('outsideWorkspace flag triggers DENY', () => {
-		const result = evaluateStopAsk(
-			req({ action: 'read file', outsideWorkspace: true }),
-		);
+		const result = evaluateStopAsk(req({ action: 'read file', outsideWorkspace: true }));
 		assertDecision(result, 'DENY', 'HIGH');
 		expect(result.category).toBe('A');
 	});
 
 	it('destructive flag triggers ASK_HUMAN even for unknown action', () => {
-		const result = evaluateStopAsk(
-			req({ action: 'some unknown operation', destructive: true }),
-		);
+		const result = evaluateStopAsk(req({ action: 'some unknown operation', destructive: true }));
 		assertDecision(result, 'ASK_HUMAN', 'HIGH');
 		expect(result.category).toBe('A');
 		expect(result.reason).toMatch(/unclassified/i);
@@ -280,27 +274,21 @@ describe('Stop/Ask Policy — Flags and Edge Cases', () => {
 	});
 
 	it('PRODUCTION repo risk requires review for any action', () => {
-		const result = evaluateStopAsk(
-			req({ action: 'read config', repoRisk: 'PRODUCTION' }),
-		);
+		const result = evaluateStopAsk(req({ action: 'read config', repoRisk: 'PRODUCTION' }));
 		expect(result.category).toBe('B');
 		expect(result.decision).not.toBe('ALLOW');
 		expect(result.humanApprovalRequired).toBe(true);
 	});
 
 	it('CRITICAL repo risk requires review for any action', () => {
-		const result = evaluateStopAsk(
-			req({ action: 'read config', repoRisk: 'CRITICAL' }),
-		);
+		const result = evaluateStopAsk(req({ action: 'read config', repoRisk: 'CRITICAL' }));
 		expect(result.category).toBe('B');
 		expect(result.decision).not.toBe('ALLOW');
 		expect(result.humanApprovalRequired).toBe(true);
 	});
 
 	it('TEST repo risk allows harmless actions', () => {
-		const result = evaluateStopAsk(
-			req({ action: 'read config', repoRisk: 'TEST' }),
-		);
+		const result = evaluateStopAsk(req({ action: 'read config', repoRisk: 'TEST' }));
 		assertDecision(result, 'ALLOW', 'LOW');
 	});
 
@@ -311,12 +299,7 @@ describe('Stop/Ask Policy — Flags and Edge Cases', () => {
 	});
 
 	it('every result has a non-empty reason', () => {
-		const actions = [
-			'harmless read',
-			'rm -rf /tmp',
-			'git push --force',
-			'npm install express',
-		];
+		const actions = ['harmless read', 'rm -rf /tmp', 'git push --force', 'npm install express'];
 		for (const action of actions) {
 			const result = evaluateStopAsk(req({ action }));
 			expect(result.reason.length).toBeGreaterThan(0);
@@ -475,9 +458,7 @@ describe('Stop/Ask Policy — Verification Contract Compliance', () => {
 	});
 
 	it('outside workspace cleanup is never ALLOW', () => {
-		const result = evaluateStopAsk(
-			req({ action: 'cleanup', outsideWorkspace: true }),
-		);
+		const result = evaluateStopAsk(req({ action: 'cleanup', outsideWorkspace: true }));
 		expect(result.decision).not.toBe('ALLOW');
 	});
 
