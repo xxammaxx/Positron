@@ -260,6 +260,22 @@ describe('SecretManager', () => {
 			spy.mockRestore();
 		}
 	});
+
+	test('resolveDefaultEnvPath returns first existing candidate (covers CI Linux path)', () => {
+		// On CI, no .env exists; the return-candidate branch (line 195) is uncovered
+		// unless we mock existsSync to return true for at least one candidate.
+		const spy = vi.spyOn(fs, 'existsSync').mockImplementation((p: fs.PathLike) => {
+			return String(p).endsWith('.env');
+		});
+		try {
+			const sm = new SecretManager();
+			const names = sm.getProviderNames();
+			expect(names).toHaveLength(3);
+			expect(names[2]).toBe('file');
+		} finally {
+			spy.mockRestore();
+		}
+	});
 });
 
 // ---------------------------------------------------------------------------
