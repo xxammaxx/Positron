@@ -1,0 +1,34 @@
+name: QA or evidence issue
+description: Track a test gate, proof gap, or evidence-quality problem.
+title: "qa: "
+labels:
+  - qa
+body:
+  - type: textarea
+    id: gate
+    attributes:
+      label: Gate or claim under review
+      description: Identify the exact test, workflow, document, or release claim.
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: Current evidence
+      description: Link existing results and state their limitations.
+    validations:
+      required: true
+  - type: textarea
+    id: required
+    attributes:
+      label: Required proof
+      description: Define commands, artifacts, and pass/fail criteria.
+    validations:
+      required: true
+  - type: textarea
+    id: hygiene
+    attributes:
+      label: Artifact hygiene
+      description: List files that may be committed and generated files that must remain local.
+    validations:
+      required: true

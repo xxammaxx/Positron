@@ -11,6 +11,7 @@
 		"build": "tsc -b packages/shared packages/sandbox packages/github-adapter packages/run-state packages/speckit-adapter packages/opencode-adapter apps/server apps/worker",
 		"build:watch": "tsc --build --watch",
 		"dev": "concurrently \"npm run dev:server\" \"npm run dev:web\"",
+		"dev:demo": "cross-env VITEST=true GITHUB_TOKEN= POSITRON_GITHUB_MODE=fake POSITRON_SPECKIT_MODE=fake POSITRON_OPENCODE_MODE=fake POSITRON_DISABLE_QUEUE=true POSITRON_REPO_OWNER=demo-owner POSITRON_REPO_NAME=demo-repo POSITRON_REPO_DEFAULT_BRANCH=main POSITRON_WORKSPACE_ROOT= POSITRON_DB_PATH=.local-artifacts/demo/positron.db POSITRON_ENABLE_PUSH=false POSITRON_ENABLE_MERGE=false POSITRON_MERGE_DRY_RUN=true POSITRON_ENABLE_FIX_LOOP=false POSITRON_MERGE_KILL_SWITCH=true concurrently \"npm run dev:server\" \"npm run dev:web\"",
 		"dev:server": "npm run build && node apps/server/dist/index.js",
 		"dev:web": "vite apps/web",
 		"coverage": "vitest run --coverage",

@@ -19,6 +19,7 @@ reports/
 .playwright-mcp/
 visual-*.png
 dashboard-*.png
+!docs/assets/screenshots/dashboard-overview.png
 console-*.txt
 network-*.txt
 dashboard-*.md
