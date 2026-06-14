@@ -13,17 +13,17 @@
  */
 export function loadRepositoryConfig(env) {
     const e = env ?? process.env;
-    const owner = e['POSITRON_REPO_OWNER'] ?? '';
-    const repo = e['POSITRON_REPO_NAME'] ?? '';
+    const owner = e.POSITRON_REPO_OWNER ?? '';
+    const repo = e.POSITRON_REPO_NAME ?? '';
     if (!owner || !repo) {
         return null;
     }
     const config = {
         owner,
         repo,
-        defaultBranch: e['POSITRON_REPO_DEFAULT_BRANCH'] ?? 'main',
+        defaultBranch: e.POSITRON_REPO_DEFAULT_BRANCH ?? 'main',
     };
-    const remoteUrl = e['POSITRON_REPO_REMOTE_URL'];
+    const remoteUrl = e.POSITRON_REPO_REMOTE_URL;
     if (remoteUrl) {
         config.remoteUrl = remoteUrl;
     }
@@ -38,10 +38,10 @@ export function loadPositronRuntimeConfig(env) {
     if (!repository)
         return null;
     return {
-        githubMode: e['GITHUB_MODE'] ?? 'fake',
-        githubTokenPresent: !!e['GITHUB_TOKEN'],
+        githubMode: e.GITHUB_MODE ?? 'fake',
+        githubTokenPresent: !!e.GITHUB_TOKEN,
         repository,
-        workspaceRoot: e['POSITRON_WORKSPACE_ROOT'],
+        workspaceRoot: e.POSITRON_WORKSPACE_ROOT,
     };
 }
 /**

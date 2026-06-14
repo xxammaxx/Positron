@@ -30,39 +30,75 @@
 
 ## Quickstart
 
-### Docker (Production — Full Stack)
+### 🎮 Demo Mode (No GitHub Token Required)
+
+Start Positron in demo mode — fake adapters, safety defaults ON, no real GitHub access:
 
 ```bash
-cp .env.example apps/server/.env
-# Edit apps/server/.env: set GITHUB_TOKEN, real modes
-docker compose up --build
-# → http://localhost:5173 (nginx reverse proxy)
-```
-
-### Local Development
-
-```bash
-cp .env.example apps/server/.env
 npm install
-# Terminal 1: Server
-npm run dev:server
-# Terminal 2: Web frontend
-npm run dev:web
-# → http://localhost:5173
-# Note: Without Redis, the worker queue falls back to inline execution.
+npm run doctor         # Check system health (optional)
+npm run dev:demo       # Start server + frontend
 ```
 
-### Local Development (with Redis + Worker)
+Open your browser:
+
+| URL | Description |
+|-----|-------------|
+| http://localhost:5173 | Frontend (React Dashboard) |
+| http://localhost:3000 | Backend API |
+| http://localhost:3000/api/health | Health Check |
+
+**Demo Mode defaults:**
+- `POSITRON_GITHUB_MODE=fake` — no real GitHub API calls
+- `POSITRON_ENABLE_PUSH=false` — no git pushes
+- `POSITRON_ENABLE_MERGE=false` — no merges
+- `POSITRON_MERGE_KILL_SWITCH=true` — merge kill-switch active
+- `POSITRON_ENABLE_FIX_LOOP=false` — no autonomous fix loops
+
+### 🔧 Real / Supervised Mode (GitHub Token Required)
+
+For production use with actual GitHub integration:
 
 ```bash
-# Terminal 1: Redis
-docker compose up redis -d
-# Terminal 2: Worker
-cd apps/worker && npm run dev
-# Terminal 3: Server
-npm run dev:server
-# Terminal 4: Web
-npm run dev:web
+cp .env.example .env
+# Edit .env: set GITHUB_TOKEN, POSITRON_REPO_OWNER, POSITRON_REPO_NAME
+# Set POSITRON_GITHUB_MODE=real for real GitHub API
+npm run doctor         # Verify configuration
+npm run dev            # Start with safety defaults
+```
+
+**⚠️ Important Safety Notes:**
+- Push, merge, and fix-loop are **OFF by default**
+- Enable only after explicit human approval
+- Kill-switch `POSITRON_MERGE_KILL_SWITCH=true` prevents accidental merges
+- Never run in real mode against production repos without dry-run first
+
+### 🐳 Docker (Full Stack)
+
+```bash
+cp .env.example .env
+# Edit .env: set GITHUB_TOKEN and mode flags
+docker compose up --build
+# → http://localhost:5173
+```
+
+Stop with:
+```bash
+docker compose down
+```
+
+### 🏥 System Health
+
+```bash
+npm run doctor     # Check Node, ports, Redis, Git, Safety defaults
+npm run verify     # Run all tests, contracts, typecheck, build, safety coverage
+```
+
+### 🔬 Verify Everything
+
+```bash
+npm run verify
+# Runs: npm test → test:contracts → typecheck → build → coverage:safety
 ```
 
 ### CLI
@@ -73,6 +109,18 @@ npm run dev:web
 ./positron stats            # Admin statistics
 ./positron cancel <run-id>  # Cancel a run
 ```
+
+### 🛟 Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| Port 3000/5173 occupied | Kill existing processes: `npx kill-port 3000 5173` |
+| Redis not running | Worker falls back to inline (dev-mode only). Start Redis: `docker compose up redis -d` |
+| GitHub Token missing | Demo mode works without token. For real mode: set `GITHUB_TOKEN` in `.env` |
+| `SQLITE_BUSY: database is locked` | Kill stale server processes; delete `.positron/runs/positron.db` |
+| Vite/Frontend won't start | Clear cache: `rm -rf apps/web/node_modules/.vite` |
+| Backend health check fails | Check logs; ensure `npm run build` completed successfully |
+| CI fails locally (Biome) | Run `npm run format` then `npm run lint` |
 
 ---
 

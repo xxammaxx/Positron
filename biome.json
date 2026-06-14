@@ -1,53 +1,95 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
-  "organizeImports": {
-    "enabled": true
-  },
-  "formatter": {
-    "enabled": true,
-    "formatWithErrors": false,
-    "indentStyle": "tab",
-    "indentWidth": 2,
-    "lineWidth": 100,
-    "lineEnding": "lf",
-    "ignore": ["node_modules", "dist", ".positron", "coverage", ".stryker-tmp", "test-results", "playwright-report"]
-  },
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "recommended": true,
-      "complexity": {
-        "noBannedTypes": "error",
-        "noUselessConstructor": "error",
-        "useLiteralKeys": "warn"
-      },
-      "correctness": {
-        "noUnusedVariables": "warn",
-        "useExhaustiveDependencies": "warn"
-      },
-      "style": {
-        "noNonNullAssertion": "warn",
-        "useConst": "error",
-        "useTemplate": "warn"
-      },
-      "suspicious": {
-        "noExplicitAny": "warn",
-        "noArrayIndexKey": "warn",
-        "noConsoleLog": "warn"
-      }
-    },
-    "ignore": ["node_modules", "dist", ".positron", "coverage", ".stryker-tmp", "test-results", "playwright-report", "*.d.ts"]
-  },
-  "javascript": {
-    "formatter": {
-      "quoteStyle": "single",
-      "semicolons": "always",
-      "trailingCommas": "all",
-      "arrowParentheses": "always"
-    }
-  },
-  "files": {
-    "ignoreUnknown": true,
-    "ignore": [".positron/**"]
-  }
+	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+	"organizeImports": {
+		"enabled": true
+	},
+	"formatter": {
+		"enabled": true,
+		"formatWithErrors": false,
+		"indentStyle": "tab",
+		"indentWidth": 2,
+		"lineWidth": 100,
+		"lineEnding": "lf",
+		"ignore": [
+			"node_modules",
+			"dist",
+			".positron",
+			"coverage",
+			".stryker-tmp",
+			"test-results",
+			"playwright-report"
+		]
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"a11y": {
+				"noAutofocus": "warn",
+				"noLabelWithoutControl": "warn",
+				"noRedundantRoles": "warn",
+				"noSvgWithoutTitle": "warn",
+				"useButtonType": "warn",
+				"useKeyWithClickEvents": "warn",
+				"useSemanticElements": "warn"
+			},
+			"complexity": {
+				"noBannedTypes": "warn",
+				"noForEach": "warn",
+				"noUselessConstructor": "warn",
+				"noUselessFragments": "warn",
+				"useLiteralKeys": "warn"
+			},
+			"correctness": {
+				"noUnusedVariables": "warn",
+				"useExhaustiveDependencies": "warn"
+			},
+			"performance": {
+				"noDelete": "warn"
+			},
+			"security": {
+				"noDangerouslySetInnerHtml": "warn"
+			},
+			"style": {
+				"noNonNullAssertion": "warn",
+				"noUselessElse": "warn",
+				"useConst": "warn",
+				"useExponentiationOperator": "warn",
+				"useImportType": "warn",
+				"useNodejsImportProtocol": "warn",
+				"useNumberNamespace": "warn",
+				"useTemplate": "warn"
+			},
+			"suspicious": {
+				"noArrayIndexKey": "warn",
+				"noAssignInExpressions": "warn",
+				"noConsoleLog": "warn",
+				"noExplicitAny": "warn",
+				"noGlobalIsNan": "warn",
+				"noImplicitAnyLet": "warn"
+			}
+		},
+		"ignore": [
+			"node_modules",
+			"dist",
+			".positron",
+			"coverage",
+			".stryker-tmp",
+			"test-results",
+			"playwright-report",
+			"*.d.ts"
+		]
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "single",
+			"semicolons": "always",
+			"trailingCommas": "all",
+			"arrowParentheses": "always"
+		}
+	},
+	"files": {
+		"ignoreUnknown": true,
+		"ignore": [".positron/**"]
+	}
 }

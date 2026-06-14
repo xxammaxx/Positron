@@ -36,6 +36,9 @@ docs/diagnostics/positron-reality-check/
 # Stryker mutation testing temporary files
 .stryker-tmp/
 
+# OpenCode temporary files
+.opencode/tmp/
+
 # Generated JS/DTS/Map files (build artifacts in source directories)
 *.js.map
 *.d.ts.map

@@ -323,12 +323,22 @@ describe('SSE / RunEvent Regression', () => {
 		speakEvent(makeEvent({ phase: 'DONE' }));
 		const last = getLastSpoken();
 		expect(last).not.toBeNull();
-		expect(last!.text).toBe('Run completed successfully');
-		expect(typeof last!.timestamp).toBe('number');
+		expect(last?.text).toBe('Run completed successfully');
+		expect(typeof last?.timestamp).toBe('number');
 	});
 
 	test('all speakable phases trigger speech, silent phases do not', () => {
-		const speakable: Phase[] = ['QUEUED', 'DONE', 'FAILED', 'FAILED_TRANSIENT', 'FAILED_BLOCKED', 'BLOCKED_MERGE', 'BLOCKED_PUSH', 'GATE_APPROVE', 'GATE_REVISE'];
+		const speakable: Phase[] = [
+			'QUEUED',
+			'DONE',
+			'FAILED',
+			'FAILED_TRANSIENT',
+			'FAILED_BLOCKED',
+			'BLOCKED_MERGE',
+			'BLOCKED_PUSH',
+			'GATE_APPROVE',
+			'GATE_REVISE',
+		];
 		let callCount = 0;
 		for (const phase of speakable) {
 			resetVoiceState();

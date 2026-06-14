@@ -3,9 +3,9 @@ import crypto from 'node:crypto';
 /** Lädt die Live-E2E-Konfiguration aus Umgebungsvariablen */
 export function loadLiveGitHubE2EConfig(env) {
     const e = env ?? process.env;
-    const token = e['GITHUB_TOKEN'] ?? '';
-    const owner = e['POSITRON_REPO_OWNER'] ?? '';
-    const repo = e['POSITRON_REPO_NAME'] ?? '';
+    const token = e.GITHUB_TOKEN ?? '';
+    const owner = e.POSITRON_REPO_OWNER ?? '';
+    const repo = e.POSITRON_REPO_NAME ?? '';
     if (!token || !owner || !repo) {
         return null;
     }
@@ -13,18 +13,18 @@ export function loadLiveGitHubE2EConfig(env) {
         token,
         owner,
         repo,
-        allowWrite: e['POSITRON_LIVE_TEST_ALLOW_WRITE'] === 'true',
+        allowWrite: e.POSITRON_LIVE_TEST_ALLOW_WRITE === 'true',
     };
 }
 /** Prüft ob Live-GitHub-E2E-Tests übersprungen werden sollen */
 export function shouldSkipLiveGitHubE2E(env) {
     const e = env ?? process.env;
-    return e['POSITRON_ENABLE_LIVE_GITHUB_TESTS'] !== 'true';
+    return e.POSITRON_ENABLE_LIVE_GITHUB_TESTS !== 'true';
 }
 /** Prüft ob schreibende Live-E2E-Tests übersprungen werden sollen */
 export function shouldSkipLiveGitHubWriteE2E(env) {
     const e = env ?? process.env;
-    return e['POSITRON_LIVE_TEST_ALLOW_WRITE'] !== 'true';
+    return e.POSITRON_LIVE_TEST_ALLOW_WRITE !== 'true';
 }
 /** Generiert eine eindeutige Run-ID für Live-E2E-Tests */
 export function generateLiveRunId() {
