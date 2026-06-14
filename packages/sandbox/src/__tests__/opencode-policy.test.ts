@@ -14,7 +14,7 @@ import {
 const originalEnv = { ...process.env };
 
 beforeEach(() => {
-	process.env.POSITRON_OPENCODE_MODE = undefined;
+	Reflect.deleteProperty(process.env, 'POSITRON_OPENCODE_MODE');
 });
 
 afterEach(() => {
@@ -33,6 +33,11 @@ describe('validateOpenCodeCommand', () => {
 	test('throws when POSITRON_OPENCODE_MODE is explicitly fake', () => {
 		process.env.POSITRON_OPENCODE_MODE = 'fake';
 		expect(() => validateOpenCodeCommand('opencode')).toThrow(OpenCodeCommandPolicyError);
+	});
+
+	test('throws when POSITRON_OPENCODE_MODE has an unexpected value', () => {
+		process.env.POSITRON_OPENCODE_MODE = 'unexpected';
+		expect(() => validateOpenCodeCommand('opencode run')).toThrow(OpenCodeCommandPolicyError);
 	});
 
 	test('throws for blocked command', () => {

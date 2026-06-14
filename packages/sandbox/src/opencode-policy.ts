@@ -31,7 +31,7 @@ export const ALLOWED_SLASH_COMMANDS = [
 export function validateOpenCodeCommand(command: string): void {
 	const mode = process.env.POSITRON_OPENCODE_MODE ?? 'fake';
 
-	if (mode === 'fake') {
+	if (mode !== 'real') {
 		throw new OpenCodeCommandPolicyError(
 			'OpenCode is in fake mode — no real commands allowed. ' +
 				'Set POSITRON_OPENCODE_MODE=real to enable real OpenCode execution.',

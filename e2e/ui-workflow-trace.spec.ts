@@ -38,6 +38,7 @@ const apiCalls: ApiCall[] = [];
 const consoleErrors: string[] = [];
 const consoleWarnings: string[] = [];
 const consoleLogs: string[] = [];
+test.use({ trace: 'off', video: 'off' });
 
 // ── Single comprehensive test ──────────────────────────────────
 test.describe('UI Workflow Trace & Network Proof', () => {

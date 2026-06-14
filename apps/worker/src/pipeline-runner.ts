@@ -212,14 +212,14 @@ function buildEvidence(run: RunState): EvidenceItem[] {
 // ---------------------------------------------------------------------------
 
 async function safeSync(
-	_syncService: GitHubStatusSyncService,
-	operation: () => Promise<GitHubStatusSyncResult>,
+	syncService: GitHubStatusSyncService,
+	operation: (service: GitHubStatusSyncService) => Promise<GitHubStatusSyncResult>,
 	runId: string,
 	context: Phase,
 	deps: PipelineDeps,
 ): Promise<GitHubStatusSyncResult | null> {
 	try {
-		const result = await operation();
+		const result = await operation(syncService);
 		if (result.status === 'failed') {
 			storeEvent(
 				{
@@ -387,7 +387,7 @@ async function executePhase(run: RunState, deps: PipelineDeps): Promise<RunState
 				};
 				await safeSync(
 					deps.syncService,
-					() => deps.syncService?.syncRunAccepted(syncInput),
+					(service) => service.syncRunAccepted(syncInput),
 					current.id,
 					'CLAIMED',
 					deps,
@@ -773,8 +773,8 @@ async function executePhase(run: RunState, deps: PipelineDeps): Promise<RunState
 						if (report.status === 'blocked') {
 							await safeSync(
 								deps.syncService,
-								() =>
-									deps.syncService?.syncBlocked({
+								(service) =>
+									service.syncBlocked({
 										...syncInput,
 										error: { type: 'blocked', message: report.summary },
 									}),
@@ -785,7 +785,7 @@ async function executePhase(run: RunState, deps: PipelineDeps): Promise<RunState
 						} else if (report.status === 'failed') {
 							await safeSync(
 								deps.syncService,
-								() => deps.syncService?.syncTestReport(syncInput),
+								(service) => service.syncTestReport(syncInput),
 								current.id,
 								'TEST',
 								deps,
@@ -793,7 +793,7 @@ async function executePhase(run: RunState, deps: PipelineDeps): Promise<RunState
 						} else {
 							await safeSync(
 								deps.syncService,
-								() => deps.syncService?.syncTestReport(syncInput),
+								(service) => service.syncTestReport(syncInput),
 								current.id,
 								'TEST',
 								deps,
@@ -911,7 +911,7 @@ async function executePhase(run: RunState, deps: PipelineDeps): Promise<RunState
 					};
 					await safeSync(
 						deps.syncService,
-						() => deps.syncService?.syncPrCreated(syncInput),
+						(service) => service.syncPrCreated(syncInput),
 						current.id,
 						'PR_CREATE',
 						deps,
@@ -1164,7 +1164,7 @@ async function executePhase(run: RunState, deps: PipelineDeps): Promise<RunState
 						};
 						await safeSync(
 							deps.syncService,
-							() => deps.syncService?.syncMerged(syncInput),
+							(service) => service.syncMerged(syncInput),
 							current.id,
 							'MERGE',
 							deps,
@@ -1403,7 +1403,7 @@ export async function runPipeline(run: RunState, deps: PipelineDeps): Promise<Ru
 				if (next.phase === 'DONE') {
 					await safeSync(
 						deps.syncService,
-						() => deps.syncService?.syncDone(syncInput),
+						(service) => service.syncDone(syncInput),
 						next.id,
 						'DONE',
 						deps,
@@ -1411,8 +1411,8 @@ export async function runPipeline(run: RunState, deps: PipelineDeps): Promise<Ru
 				} else if (next.phase === 'FAILED_BLOCKED') {
 					await safeSync(
 						deps.syncService,
-						() =>
-							deps.syncService?.syncBlocked({
+						(service) =>
+							service.syncBlocked({
 								...syncInput,
 								error: { type: 'blocked', message: 'Run blocked: max steps or policy violation' },
 							}),
@@ -1423,8 +1423,8 @@ export async function runPipeline(run: RunState, deps: PipelineDeps): Promise<Ru
 				} else if (next.phase.startsWith('FAILED')) {
 					await safeSync(
 						deps.syncService,
-						() =>
-							deps.syncService?.syncFailed({
+						(service) =>
+							service.syncFailed({
 								...syncInput,
 								error: { type: 'failed', message: `Run failed in phase ${next.phase}` },
 							}),
@@ -1456,7 +1456,7 @@ export async function runPipeline(run: RunState, deps: PipelineDeps): Promise<Ru
 		};
 		await safeSync(
 			deps.syncService,
-			() => deps.syncService?.syncBlocked(syncInput),
+			(service) => service.syncBlocked(syncInput),
 			result.run.id,
 			'FAILED_BLOCKED',
 			deps,

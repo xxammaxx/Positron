@@ -11,7 +11,7 @@ describe('EnvSecretProvider', () => {
     test('reads existing env var', () => {
         process.env.TEST_SECRET_1 = 'env-value-1';
         expect(provider.getSecret('TEST_SECRET_1')).toBe('env-value-1');
-        process.env.TEST_SECRET_1 = undefined;
+        Reflect.deleteProperty(process.env, 'TEST_SECRET_1');
     });
     test('returns null for missing env var', () => {
         expect(provider.getSecret('UNDEFINED_SECRET_12345')).toBeNull();
@@ -19,7 +19,7 @@ describe('EnvSecretProvider', () => {
     test('handles empty string env var', () => {
         process.env.EMPTY_SECRET = '';
         expect(provider.getSecret('EMPTY_SECRET')).toBe('');
-        process.env.EMPTY_SECRET = undefined;
+        Reflect.deleteProperty(process.env, 'EMPTY_SECRET');
     });
     test('has correct provider name', () => {
         expect(provider.name).toBe('env');
@@ -120,7 +120,8 @@ describe('SecretManager', () => {
     });
     afterEach(() => {
         fs.rmSync(tmpDir, { recursive: true, force: true });
-        process.env.SM_TEST_VAR = undefined;
+        Reflect.deleteProperty(process.env, 'SM_TEST_VAR');
+        Reflect.deleteProperty(process.env, 'SM_FALLBACK');
     });
     test('resolves from first provider that has value', () => {
         process.env.SM_TEST_VAR = 'from-env';
@@ -133,7 +134,7 @@ describe('SecretManager', () => {
         expect(sm.getSecret('SM_TEST_VAR')).toBe('from-env');
     });
     test('falls back to second provider when first returns null', () => {
-        process.env.SM_FALLBACK = undefined;
+        Reflect.deleteProperty(process.env, 'SM_FALLBACK');
         const envFile = path.join(tmpDir, '.env');
         fs.writeFileSync(envFile, 'SM_FALLBACK=from-file\n');
         const sm = new SecretManager({
@@ -153,7 +154,7 @@ describe('SecretManager', () => {
             providers: [new EnvSecretProvider()],
         });
         expect(sm.mask('MASK_TEST')).toBe('MASK_TEST=***-redacted-***');
-        process.env.MASK_TEST = undefined;
+        Reflect.deleteProperty(process.env, 'MASK_TEST');
     });
     test('mask returns not-set for missing secrets', () => {
         const sm = new SecretManager({
@@ -176,7 +177,7 @@ describe('SecretManager', () => {
         });
         expect(sm.hasSecret('HAS_SECRET_TEST')).toBe(true);
         expect(sm.hasSecret('NONEXISTENT')).toBe(false);
-        process.env.HAS_SECRET_TEST = undefined;
+        Reflect.deleteProperty(process.env, 'HAS_SECRET_TEST');
     });
     test('getProviderNames returns configured providers', () => {
         const sm = new SecretManager({
@@ -193,7 +194,7 @@ describe('SecretManager', () => {
         });
         // Empty string from env should count as "not found", fall through to file
         expect(sm.getSecret('EMPTY_RESOLVE')).toBe('from-file');
-        process.env.EMPTY_RESOLVE = undefined;
+        Reflect.deleteProperty(process.env, 'EMPTY_RESOLVE');
     });
     test('default constructor creates SecretManager without error', () => {
         // Exercises resolveDefaultEnvPath() — NoCoverage target

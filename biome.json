@@ -90,6 +90,6 @@
 	},
 	"files": {
 		"ignoreUnknown": true,
-		"ignore": [".positron/**"]
+		"ignore": [".positron/**", "docs/release/ui-workflow-proof/**", "docs/release/video-demo/**"]
 	}
 }

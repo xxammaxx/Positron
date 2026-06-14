@@ -195,7 +195,7 @@ describe('FileSecretProvider parseEnvFile() properties', () => {
 					cleanupTempFile(tmpFile);
 				}
 			}),
-			{ numRuns: 200 },  // reduced from 1000 to avoid timeout with file I/O
+			{ numRuns: 200 }, // reduced from 1000 to avoid timeout with file I/O
 		);
 	}, 15000);
 
@@ -253,6 +253,7 @@ describe('FileSecretProvider parseEnvFile() properties', () => {
 	it('invalid lines without = are ignored', () => {
 		fc.assert(
 			fc.property(invalidLineArb, validKeyArb, (invalid, validKey) => {
+				fc.pre(invalid !== validKey);
 				const tmpFile = createTempEnvFile([invalid, `${validKey}=present`]);
 				try {
 					const provider = new FileSecretProvider(tmpFile);
@@ -315,7 +316,11 @@ describe('FileSecretProvider parseEnvFile() properties', () => {
 				const tmpFile = createTempEnvFile(lines);
 				try {
 					const provider = new FileSecretProvider(tmpFile);
-					const rawSecond = lines[1]?.split('=').slice(1).join('=');
+					const secondLine = lines[1];
+					if (secondLine === undefined) {
+						throw new Error('duplicateKeyArb must generate exactly two lines');
+					}
+					const rawSecond = secondLine.split('=').slice(1).join('=');
 					// Apply same quote-stripping as the parser
 					let expected = rawSecond;
 					if (

@@ -144,7 +144,7 @@ async function detectCommands(repoPath: string): Promise<TestCommandDetectionRes
 		});
 	}
 
-	const framework = commands.length > 0 ? commands[0]?.kind : null;
+	const framework = commands[0]?.kind ?? null;
 
 	return {
 		commands,

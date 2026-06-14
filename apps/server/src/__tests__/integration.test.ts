@@ -18,7 +18,7 @@ beforeAll(async () => {
 });
 
 afterAll(() => {
-	process.env.POSITRON_ADMIN_TOKEN = undefined;
+	Reflect.deleteProperty(process.env, 'POSITRON_ADMIN_TOKEN');
 	server.close();
 });
 

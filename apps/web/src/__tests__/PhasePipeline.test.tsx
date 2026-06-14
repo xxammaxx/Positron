@@ -15,11 +15,12 @@ describe('PhasePipeline', () => {
 		expect(screen.getByText(/28-Phase Pipeline/i)).toBeDefined();
 	});
 
-	test('shows all 28 phases as phase nodes', () => {
-		const { container } = render(<PhasePipeline />);
-		// All 18 main phases should be rendered as list items
-		const items = container.querySelectorAll('[role="listitem"]');
-		expect(items.length).toBeGreaterThanOrEqual(18);
+	test('shows all main phases as semantic list items', () => {
+		render(<PhasePipeline />);
+		const terminalMainIndex = ALL_PHASES.indexOf('DONE');
+		const mainPhaseCount = terminalMainIndex >= 0 ? terminalMainIndex + 1 : ALL_PHASES.length;
+
+		expect(screen.getAllByRole('listitem')).toHaveLength(mainPhaseCount);
 	});
 
 	test('displays current phase with aria-current=step', () => {
@@ -45,7 +46,7 @@ describe('PhasePipeline', () => {
 	});
 
 	test('shows error/recovery sections when there are error phases', () => {
-		const { container } = render(<PhasePipeline failedPhases={['FAILED']} />);
+		render(<PhasePipeline failedPhases={['FAILED']} />);
 		const recoverySection = screen.queryByText(/State \/ Recovery Phases/i);
 		expect(recoverySection).toBeDefined();
 	});
