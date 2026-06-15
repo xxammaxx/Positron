@@ -11,6 +11,7 @@ import type {
 	ApiError,
 	ToolGatewayStatus,
 	ToolGatewayTool,
+	HumanQuestion,
 } from './types.jsx';
 import type { Phase, RunStatus } from './types.jsx';
 import { parsePhase } from '@positron/shared';
@@ -414,5 +415,74 @@ export const api = {
 	/** Get registered tool metadata (read-only, no handlers) */
 	getToolGatewayTools(): Promise<{ tools: ToolGatewayTool[]; total: number }> {
 		return request<{ tools: ToolGatewayTool[]; total: number }>('/tool-gateway/tools');
+	},
+
+	// ── Oversight / Human Question Queue (Issue #229 PR 7) ──────────
+
+	/** List human oversight questions (optional filter by status or runId) */
+	getOversightQuestions(params?: {
+		status?: string;
+		runId?: string;
+	}): Promise<{ questions: HumanQuestion[]; total: number }> {
+		const query = new URLSearchParams();
+		if (params?.status) query.set('status', params.status);
+		if (params?.runId) query.set('runId', params.runId);
+		const qs = query.toString();
+		return request<{ questions: HumanQuestion[]; total: number }>(
+			`/oversight/questions${qs ? `?${qs}` : ''}`,
+		);
+	},
+
+	/** Get a single oversight question by ID */
+	getOversightQuestion(id: string): Promise<HumanQuestion> {
+		return request<HumanQuestion>(`/oversight/questions/${id}`);
+	},
+
+	/** Answer a human question with a decision */
+	answerOversightQuestion(
+		id: string,
+		body: {
+			decision: string;
+			answerText?: string;
+			requireDryRun?: boolean;
+			requireBackup?: boolean;
+			requireReview?: boolean;
+		},
+	): Promise<HumanQuestion> {
+		return request<HumanQuestion>(`/oversight/questions/${id}/answer`, {
+			method: 'POST',
+			body: JSON.stringify(body),
+		});
+	},
+
+	/** Pause a run via oversight (stores decision only) */
+	pauseOversightRun(id: string): Promise<{ ok: boolean; questionId: string; decision: string }> {
+		return request<{ ok: boolean; questionId: string; decision: string }>(
+			`/oversight/questions/${id}/pause-run`,
+			{ method: 'POST' },
+		);
+	},
+
+	/** Abort a run via oversight (stores decision only) */
+	abortOversightRun(id: string): Promise<{ ok: boolean; questionId: string; decision: string }> {
+		return request<{ ok: boolean; questionId: string; decision: string }>(
+			`/oversight/questions/${id}/abort-run`,
+			{ method: 'POST' },
+		);
+	},
+
+	/** Get oversight attention summary */
+	getOversightAttention(): Promise<{
+		openQuestions: number;
+		criticalQuestions: number;
+		highRiskQuestions: number;
+		runsWaitingForHuman: number;
+	}> {
+		return request<{
+			openQuestions: number;
+			criticalQuestions: number;
+			highRiskQuestions: number;
+			runsWaitingForHuman: number;
+		}>('/oversight/attention');
 	},
 };

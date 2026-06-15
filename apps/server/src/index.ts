@@ -119,6 +119,23 @@ import {
 import { createCancelHandler } from './handlers/cancel-run.js';
 import { createDemoLiveRunHandler } from './demo/live-run-handler.js';
 import {
+	createHumanQuestion,
+	listHumanQuestions,
+	getHumanQuestion,
+	answerHumanQuestion,
+	cancelHumanQuestion,
+	expireHumanQuestion,
+	getOversightAttention,
+	sweepExpiredQuestions,
+} from './oversight/human-question-store.js';
+import {
+	validateHumanQuestion,
+	validateHumanQuestionAnswer,
+	buildHumanOversightEvidence,
+	redactHumanAnswerText,
+	createHumanQuestionId,
+} from '@positron/shared';
+import {
 	renderMetrics,
 	serverUptimeSeconds,
 	activeRuns,
@@ -3957,6 +3974,232 @@ export function createApp(options: ServerOptions = {}) {
 		}));
 
 		res.json({ tools, total: tools.length });
+	});
+
+	// ── Oversight UI / Human Question Queue (Issue #229 PR 7) ──────────────
+	// Read-only and decision-storing endpoints. No execution of tools,
+	// no OpenCode/MCP/Spec Kit runtime, no install, no push/merge.
+
+	// GET /api/oversight/questions — List questions (optional filter)
+	app.get('/api/oversight/questions', (req, res) => {
+		const statusParam = typeof req.query.status === 'string' ? req.query.status : undefined;
+		const runIdParam = typeof req.query.runId === 'string' ? req.query.runId : undefined;
+
+		const filter: { status?: unknown; runId?: string } = {};
+		if (statusParam) filter.status = statusParam;
+		if (runIdParam) filter.runId = runIdParam;
+
+		const all = listHumanQuestions(filter as { status?: never; runId?: string });
+		// Redact answer texts before sending to client
+		const safe = all.map((q) => ({
+			...q,
+			answerText: q.answerText ? redactHumanAnswerText(q.answerText) : undefined,
+		}));
+
+		res.json({ questions: safe, total: safe.length });
+	});
+
+	// GET /api/oversight/questions/:id — Get question details
+	app.get('/api/oversight/questions/:id', (req, res) => {
+		const q = getHumanQuestion(req.params.id);
+		if (!q) {
+			res.status(404).json({ error: 'Question not found' });
+			return;
+		}
+
+		// Redact answer text
+		const safe = {
+			...q,
+			answerText: q.answerText ? redactHumanAnswerText(q.answerText) : undefined,
+		};
+
+		res.json(safe);
+	});
+
+	// POST /api/oversight/questions/:id/answer — Submit decision
+	// Accepts ALLOW, DENY, ASK_MORE, REQUIRE_DRY_RUN, REQUIRE_BACKUP, REQUIRE_REVIEW, PAUSE_RUN, ABORT_RUN
+	// DENY is submitted via this endpoint with { decision: "DENY" }
+	app.post('/api/oversight/questions/:id/answer', (req, res) => {
+		const q = getHumanQuestion(req.params.id);
+		if (!q) {
+			res.status(404).json({ error: 'Question not found' });
+			return;
+		}
+
+		const input = req.body as {
+			decision?: string;
+			answerText?: string;
+			requireDryRun?: boolean;
+			requireBackup?: boolean;
+			requireReview?: boolean;
+		};
+
+		if (!input.decision) {
+			res.status(400).json({ error: 'decision is required' });
+			return;
+		}
+
+		// Validate
+		const answerReq = {
+			decision: input.decision,
+			answerText: input.answerText,
+			requireDryRun: input.requireDryRun ?? false,
+			requireBackup: input.requireBackup ?? false,
+			requireReview: input.requireReview ?? false,
+		};
+
+		const validation = validateHumanQuestionAnswer(q, answerReq as Parameters<typeof validateHumanQuestionAnswer>[1]);
+		if (!validation.valid) {
+			res.status(400).json({ error: 'Invalid answer', details: validation.errors });
+			return;
+		}
+
+		// Redact answer text before storing
+		const safeInput = {
+			...answerReq,
+			answerText: answerReq.answerText ? redactHumanAnswerText(answerReq.answerText) : undefined,
+		};
+
+		try {
+			const updated = answerHumanQuestion(req.params.id, safeInput as Parameters<typeof answerHumanQuestion>[1]);
+
+			// Build evidence record
+			const evidence = buildHumanOversightEvidence(
+				updated.decision === 'DENY' ? 'human-question-denied' : 'human-question-answered',
+				updated,
+			);
+
+			// Broadcast oversight event via SSE
+			broadcastSSE(updated.runId ?? 'oversight', 'human-question-answered', {
+				questionId: updated.id,
+				decision: updated.decision,
+				status: updated.status,
+				timestamp: evidence.timestamp,
+			});
+
+			// Log evidence
+			storeEvent({
+				id: createRunId(),
+				runId: updated.runId ?? 'oversight',
+				phase: 'IMPLEMENT',
+				level: 'HUMAN',
+				message: `Human decision: ${updated.decision} for question "${updated.title}"`,
+				payload: evidence as unknown as Record<string, unknown>,
+				createdAt: new Date().toISOString(),
+			});
+
+			const safe = {
+				...updated,
+				answerText: updated.answerText ? redactHumanAnswerText(updated.answerText!) : undefined,
+			};
+
+			res.json(safe);
+		} catch (err) {
+			res.status(400).json({ error: String(err) });
+		}
+	});
+
+	// POST /api/oversight/questions/:id/pause-run — Store pause decision
+	// Does NOT execute tool or runtime — only records the decision
+	app.post('/api/oversight/questions/:id/pause-run', (req, res) => {
+		const q = getHumanQuestion(req.params.id);
+		if (!q) {
+			res.status(404).json({ error: 'Question not found' });
+			return;
+		}
+
+		try {
+			const answerReq = {
+				decision: 'PAUSE_RUN' as const,
+			};
+
+			const validation = validateHumanQuestionAnswer(q, answerReq);
+			if (!validation.valid) {
+				res.status(400).json({ error: 'Cannot pause this question', details: validation.errors });
+				return;
+			}
+
+			const updated = answerHumanQuestion(req.params.id, answerReq);
+
+			// Build evidence — no runtime action
+			const evidence = buildHumanOversightEvidence('run-paused-by-human', updated);
+
+			broadcastSSE(updated.runId ?? 'oversight', 'run-paused-by-human', {
+				questionId: updated.id,
+				runId: updated.runId,
+				timestamp: evidence.timestamp,
+			});
+
+			storeEvent({
+				id: createRunId(),
+				runId: updated.runId ?? 'oversight',
+				phase: 'IMPLEMENT',
+				level: 'HUMAN',
+				message: `Run paused by human: "${updated.title}"`,
+				payload: evidence as unknown as Record<string, unknown>,
+				createdAt: new Date().toISOString(),
+			});
+
+			res.json({ ok: true, questionId: updated.id, decision: 'PAUSE_RUN', note: 'Decision stored. No runtime action executed.' });
+		} catch (err) {
+			res.status(400).json({ error: String(err) });
+		}
+	});
+
+	// POST /api/oversight/questions/:id/abort-run — Store abort decision
+	// Does NOT execute tool or runtime — only records the decision
+	app.post('/api/oversight/questions/:id/abort-run', (req, res) => {
+		const q = getHumanQuestion(req.params.id);
+		if (!q) {
+			res.status(404).json({ error: 'Question not found' });
+			return;
+		}
+
+		try {
+			const answerReq = {
+				decision: 'ABORT_RUN' as const,
+			};
+
+			const validation = validateHumanQuestionAnswer(q, answerReq);
+			if (!validation.valid) {
+				res.status(400).json({ error: 'Cannot abort this question', details: validation.errors });
+				return;
+			}
+
+			const updated = answerHumanQuestion(req.params.id, answerReq);
+
+			// Build evidence — no runtime action
+			const evidence = buildHumanOversightEvidence('run-aborted-by-human', updated);
+
+			broadcastSSE(updated.runId ?? 'oversight', 'run-aborted-by-human', {
+				questionId: updated.id,
+				runId: updated.runId,
+				timestamp: evidence.timestamp,
+			});
+
+			storeEvent({
+				id: createRunId(),
+				runId: updated.runId ?? 'oversight',
+				phase: 'IMPLEMENT',
+				level: 'HUMAN',
+				message: `Run aborted by human: "${updated.title}"`,
+				payload: evidence as unknown as Record<string, unknown>,
+				createdAt: new Date().toISOString(),
+			});
+
+			res.json({ ok: true, questionId: updated.id, decision: 'ABORT_RUN', note: 'Decision stored. No runtime action executed.' });
+		} catch (err) {
+			res.status(400).json({ error: String(err) });
+		}
+	});
+
+	// GET /api/oversight/attention — Dashboard attention summary
+	app.get('/api/oversight/attention', (_req, res) => {
+		// Sweep expired questions first
+		sweepExpiredQuestions();
+
+		const attention = getOversightAttention();
+		res.json(attention);
 	});
 
 	// Run Control (Issue #30)

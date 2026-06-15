@@ -188,3 +188,30 @@ export interface ToolGatewayTool {
 	/** Whether this tool requires Spec Kit sync before use (Issue #229) */
 	requiresSpecKitSync?: boolean;
 }
+
+// ── Human Oversight Types (Issue #229 PR 7) ──────────────────────────
+
+export interface HumanQuestion {
+	id: string;
+	runId?: string;
+	issueNumber?: number;
+	type: string;
+	status: string;
+	title: string;
+	question: string;
+	riskLevel: string;
+	requestedBy: string;
+	relatedMcpServerId?: string;
+	relatedToolName?: string;
+	proposedAction?: string;
+	target?: string;
+	evidenceRefs: string[];
+	allowedDecisions: string[];
+	defaultDecision: string;
+	createdAt: string;
+	expiresAt?: string;
+	answeredAt?: string;
+	answerText?: string;
+	decision?: string;
+	blockedReasons: string[];
+}

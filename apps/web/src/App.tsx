@@ -8,6 +8,7 @@ import Repositories from './components/Repositories.jsx';
 import RunDetail from './components/RunDetail.jsx';
 import SettingsPage from './components/settings/SettingsPage.jsx';
 import AdminPage from './components/admin/AdminPage.jsx';
+import OversightPage from './pages/OversightPage.jsx';
 import NotFound from './components/NotFound.jsx';
 
 export default function App(): React.ReactElement {
@@ -21,6 +22,7 @@ export default function App(): React.ReactElement {
         <Route path="/repos" element={<Repositories />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/oversight" element={<OversightPage />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
