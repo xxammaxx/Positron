@@ -14,6 +14,7 @@ export * from './speckit-types.js';
 export * from './speckit-errors.js';
 export * from './opencode-types.js';
 export * from './opencode-errors.js';
+export * from './opencode-model-profile.js';
 export * from './live-e2e.js';
 export * from './queue/types.js';
 export * from './secret-manager.js';
