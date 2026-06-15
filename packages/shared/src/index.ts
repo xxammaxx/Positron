@@ -22,4 +22,5 @@ export * from './opencode-provider-detection.js';
 export * from './live-e2e.js';
 export * from './queue/types.js';
 export * from './human-oversight.js';
+export * from './approval-gates.js';
 export * from './secret-manager.js';
