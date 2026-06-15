@@ -15,6 +15,7 @@ export * from './opencode-types.js';
 export * from './opencode-errors.js';
 export * from './opencode-model-profile.js';
 export * from './speckit-sync-profile.js';
+export * from './mcp-warmup-profile.js';
 export * from './live-e2e.js';
 export * from './queue/types.js';
 export * from './secret-manager.js';
