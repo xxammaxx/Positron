@@ -339,3 +339,60 @@ PR 3 implements pure Spec Kit Sync types, Re-Sync rules, and readiness policy:
 | `isSpecKitModeSafe(mode)` | Safety check for Spec Kit mode |
 | `isSpecKitVersionPinned(ref)` | Version pinning check |
 | `redactProviderProfileForEvidence(profile)` | Evidence-safe redaction |
+
+---
+
+## PR 6 — OpenCode Provider Detection + Safe Install/Sync Foundation (June 2026)
+
+**Implementation:** `packages/shared/src/opencode-provider-detection.ts`
+**Tests:** `packages/shared/src/__tests__/opencode-provider-detection.test.ts` (130 tests)
+
+PR 6 implements OpenCode provider detection and safe install request foundation:
+
+- **No runtime** — No OpenCode coding run, no automatic install, no download, no MCP/SpecKit runtime.
+- **Detection** — Provider detection types for binary path discovery, version/help checks (read-only).
+- **Safe install request** — Structured data model for install commands. Requires Human Approval always. sudo forbidden. auto-run forbidden.
+- **Install validation** — Rejects unsafe install requests (sudo, auto-run, non-allowlisted URLs, no OPENCODE_INSTALL_DIR).
+- **Readiness policy** — Demo runs require: OpenCode found + model profile + Spec Kit synced + MCP warm-up pass. Real runs additionally require Human Approval.
+- **Evidence redaction** — Removes absolute binary paths, private install directories, and secrets from evidence output.
+
+### Key Types
+
+| Type | Description |
+|------|-------------|
+| `OpenCodeDetectionStatus` | `"unknown"` \| `"not_found"` \| `"found"` \| `"version_checked"` \| `"help_checked"` \| `"blocked"` \| `"error"` |
+| `OpenCodeInstallStatus` | `"not_requested"` \| `"approval_required"` \| `"approved"` \| `"blocked"` \| `"installed"` \| `"failed"` |
+| `OpenCodeProviderRuntimeStatus` | 11 states from `"not_ready"` through `"ready_for_real"` |
+| `OpenCodeBinaryDetection` | Detection result with path, version, help status |
+| `OpenCodeInstallRequest` | Safe install request data model with literal safety types |
+| `OpenCodeProviderDetectionEvidence` | Full evidence with detection, install, and runtime status |
+| `RedactedOpenCodeProviderDetectionEvidence` | Redacted evidence for safe logging/display |
+
+### Key Functions
+
+| Function | Purpose |
+|----------|---------|
+| `buildOpenCodeInstallRequest(options?)` | Build safe install request (DATA ONLY, no execution) |
+| `validateOpenCodeInstallRequest(value)` | Validate install request for safety (sudo, auto-run, URL checks) |
+| `validateOpenCodeBinaryDetection(value)` | Validate detection result structure |
+| `determineOpenCodeProviderRuntimeStatus(input)` | Determine runtime status from gates |
+| `canOpenCodeProviderDemoRun(input)` | Gate: is demo run allowed? |
+| `canOpenCodeProviderRealRun(input)` | Gate: is real run allowed? (requires Human Approval) |
+| `getOpenCodeProviderBlockedReasons(input)` | Collect human-readable blocking reasons |
+| `createNotFoundDetection()` | Create "not found" detection result |
+| `createFoundDetection(path, version?, help?)` | Create "found" detection result |
+| `createErrorDetection(message)` | Create "error" detection result |
+| `createBlockedDetection(reason)` | Create "blocked" detection result |
+| `createOpenCodeProviderDetectionEvidence(input)` | Create evidence from detection + gates |
+| `redactOpenCodeProviderDetectionEvidence(evidence)` | Redact evidence for safe output |
+| `validateOpenCodeProviderDetectionEvidence(value)` | Validate evidence structure and redaction |
+
+### Safety Constraints
+
+- Install URL allowlisted: only `https://opencode.ai/install`
+- `OPENCODE_INSTALL_DIR` enforced in command preview
+- `sudo` rejected in both validation and command content check
+- `autoRunAllowed` must always be `false`
+- `requiresHumanApproval` must always be `true`
+- No API keys, tokens, or secrets in any type or evidence
+- Redaction excludes private binary paths and normalizes install directories
