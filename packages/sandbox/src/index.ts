@@ -18,5 +18,20 @@ export { ALLOWED_SPECKIT_COMMANDS, BLOCKED_SPECKIT_COMMANDS, isAllowedSpecKitCom
 export { ALLOWED_OPENCODE_COMMANDS, BLOCKED_OPENCODE_COMMANDS, ALLOWED_SLASH_COMMANDS, validateOpenCodeCommand, OpenCodeCommandPolicyError } from './opencode-policy.js';
 export { ALLOWED_BRANCH_PATTERN, PROTECTED_BRANCHES, BLOCKED_PUSH_FLAGS, guardBranch, generateCommitMessage, evaluatePushPolicy, isValidPositronBranch } from './commit-policy.js';
 export type { CommitContext, BranchGuardResult, PushPolicyResult } from './commit-policy.js';
+export {
+	evaluateStopAsk,
+	getAllDecisionOutcomes,
+	requiresHumanApproval,
+} from './stop-ask-policy.js';
+export type {
+	StopAskDecision,
+	StopAskRiskLevel,
+	StopAskActionCategory,
+	RepoRisk,
+	StopAskRequest,
+	StopAskResult,
+} from './stop-ask-policy.js';
+export { gateApproveAction } from './gate-approve.js';
+export type { GateApproveInput, GateApproveResult, GateEvent } from './gate-approve.js';
 export { applyDogfoodFixtureChange, hasFixtureChanges } from './dogfood-fixture.js';
 export type { FixtureChangeInput, FixtureChangeResult } from './dogfood-fixture.js';
