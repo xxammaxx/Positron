@@ -133,6 +133,26 @@ export interface ToolGatewayStatus {
 	enforcePathBoundaries: boolean;
 	enforceEgress: boolean;
 	redactSecrets: boolean;
+	/** MCP server status summaries (Issue #229) — read-only, empty by default */
+	mcpServers?: Array<{
+		name: string;
+		category: string;
+		required: boolean;
+		warmupStatus: string;
+		toolsCount: number;
+		connected: boolean;
+		lastWarmupAt: string | null;
+	}>;
+	/** Provider status summary (Issue #229) — read-only, defaults show not installed */
+	providerStatus?: {
+		opencodeInstalled: boolean;
+		opencodeVersion: string | null;
+		activeModelProfileId: string | null;
+		activeModelRef: string | null;
+		modelWarmupStatus: string;
+		specKitSynced: boolean;
+		readyForRealRuns: boolean;
+	};
 }
 
 export interface ToolGatewayTool {
@@ -155,4 +175,16 @@ export interface ToolGatewayTool {
 	};
 	inputSchema: Record<string, unknown>;
 	outputSchema: Record<string, unknown>;
+	/** MCP server name if tool originates from an MCP server (Issue #229) */
+	mcpServerName?: string;
+	/** Warm-up status for this tool (Issue #229) */
+	warmupStatus?: string;
+	/** Provider status for this tool (Issue #229) */
+	providerStatus?: string;
+	/** Whether this tool requires MCP warm-up before use (Issue #229) */
+	requiresMcpWarmup?: boolean;
+	/** Whether this tool requires model warm-up before use (Issue #229) */
+	requiresModelWarmup?: boolean;
+	/** Whether this tool requires Spec Kit sync before use (Issue #229) */
+	requiresSpecKitSync?: boolean;
 }

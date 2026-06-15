@@ -157,6 +157,86 @@ export const PHASE_LABELS: Record<Phase, string> = {
   CLEANUP: 'Bereinigung',
 };
 
+// ── Tool Gateway Metadata Extension (Issue #229) ────────────────────────
+// Read-only metadata types for MCP, provider, model, and Spec Kit planning.
+// No handler references, no secrets, no runtime execution functions.
+
+/** Classification category for tools registered in the Tool Gateway */
+export type ToolCategory =
+  | 'provider'
+  | 'filesystem'
+  | 'git'
+  | 'github'
+  | 'browser'
+  | 'shell'
+  | 'spec'
+  | 'storage'
+  | 'security'
+  | 'testing'
+  | 'oversight'
+  | 'blueprint'
+  | 'unknown';
+
+/** All valid tool categories as a const array for runtime validation */
+export const ALL_TOOL_CATEGORIES: readonly ToolCategory[] = [
+  'provider',
+  'filesystem',
+  'git',
+  'github',
+  'browser',
+  'shell',
+  'spec',
+  'storage',
+  'security',
+  'testing',
+  'oversight',
+  'blueprint',
+  'unknown',
+] as const;
+
+/** Warm-up status for MCP servers and model profiles */
+export type WarmupStatus =
+  | 'not_required'
+  | 'unknown'
+  | 'pending'
+  | 'pass'
+  | 'partial'
+  | 'fail'
+  | 'blocked';
+
+/** Provider installation/configuration status */
+export type ProviderStatus =
+  | 'not_provider'
+  | 'missing'
+  | 'installed'
+  | 'configured'
+  | 'warmup_required'
+  | 'ready_for_demo'
+  | 'ready_for_real'
+  | 'blocked';
+
+/** MCP server status summary for the Tool Gateway status response */
+export interface McpServerStatus {
+  name: string;
+  category: ToolCategory;
+  required: boolean;
+  warmupStatus: WarmupStatus;
+  toolsCount: number;
+  connected: boolean;
+  lastWarmupAt: string | null;
+}
+
+/** Provider status summary for the Tool Gateway status response */
+export interface ProviderGatewayStatus {
+  opencodeInstalled: boolean;
+  opencodeVersion: string | null;
+  activeModelProfileId: string | null;
+  activeModelRef: string | null;
+  modelWarmupStatus: WarmupStatus;
+  specKitSynced: boolean;
+  readyForRealRuns: boolean;
+}
+
 /** Safe JSON.parse — gibt null statt Fehler bei ungültigem JSON */
 export function safeJsonParse(s: string | null): Record<string, unknown> | null {
   if (!s) return null;

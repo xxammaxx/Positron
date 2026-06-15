@@ -26,6 +26,27 @@ const AUTONOMY_LABELS: Record<number, string> = {
 	4: 'L4 Auto-PR',
 };
 
+const WARMUP_COLORS: Record<string, string> = {
+	pass: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+	partial: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
+	fail: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+	blocked: 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300',
+	pending: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+	unknown: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
+	not_required: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400',
+};
+
+const PROVIDER_COLORS: Record<string, string> = {
+	not_provider: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400',
+	missing: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+	installed: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+	configured: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
+	warmup_required: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
+	ready_for_demo: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+	ready_for_real: 'bg-green-200 text-green-900 dark:bg-green-800/40 dark:text-green-200',
+	blocked: 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300',
+};
+
 // ── Component ────────────────────────────────────────────────────────
 
 export default function ToolGatewayPanel(): React.ReactElement {
@@ -62,8 +83,8 @@ export default function ToolGatewayPanel(): React.ReactElement {
 		return (
 			<div className="card animate-pulse">
 				<div className="skeleton h-5 w-48 mb-4 rounded" />
-				<div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-					{[1, 2, 3, 4].map((i) => (
+				<div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 mb-4">
+					{[1, 2, 3, 4, 5, 6].map((i) => (
 						<div key={i} className="card">
 							<div className="skeleton h-3 w-20 mb-2 rounded" />
 							<div className="skeleton h-6 w-16 rounded" />
@@ -109,7 +130,7 @@ export default function ToolGatewayPanel(): React.ReactElement {
 					)}
 				</div>
 
-				<div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+				<div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 mb-4">
 					{/* Gateway Status */}
 					<div
 						className={`card !border-l-4 ${gatewayActive ? 'border-l-green-400' : 'border-l-amber-400'}`}
@@ -166,6 +187,40 @@ export default function ToolGatewayPanel(): React.ReactElement {
 						</p>
 						<p className="text-xs text-slate-400 mt-0.5">
 							{status?.sealed ? 'Registry sealed' : 'Registry open'}
+						</p>
+					</div>
+
+					{/* ── MCP Status (Issue #229) ────────────────────────────── */}
+					<div className="card !border-l-4 border-l-purple-400">
+						<p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+							MCP Servers
+						</p>
+						<p className="text-lg font-bold mt-1 text-purple-600 dark:text-purple-400">
+							{status?.mcpServers?.length ?? 0}
+						</p>
+						<p className="text-xs text-slate-400 mt-0.5">
+							{status?.mcpServers && status.mcpServers.length > 0
+								? `${status.mcpServers.filter((s) => s.connected).length} connected`
+								: 'No MCP servers connected'}
+						</p>
+					</div>
+
+					{/* ── Provider Status (Issue #229) ───────────────────────── */}
+					<div
+						className={`card !border-l-4 ${status?.providerStatus?.opencodeInstalled ? 'border-l-blue-400' : 'border-l-slate-400'}`}
+					>
+						<p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+							OpenCode Provider
+						</p>
+						<p
+							className={`text-lg font-bold mt-1 ${status?.providerStatus?.opencodeInstalled ? 'text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400'}`}
+						>
+							{status?.providerStatus?.opencodeInstalled
+								? status.providerStatus.opencodeVersion ?? 'Installed'
+								: 'Not Detected'}
+						</p>
+						<p className="text-xs text-slate-400 mt-0.5">
+							{status?.providerStatus?.specKitSynced ? 'Spec Kit synced' : 'Spec Kit not synced'}
 						</p>
 					</div>
 				</div>
@@ -235,6 +290,12 @@ export default function ToolGatewayPanel(): React.ReactElement {
 									<th className="px-4 py-2 font-medium text-slate-600 dark:text-slate-400">
 										Egress
 									</th>
+									<th className="px-4 py-2 font-medium text-slate-600 dark:text-slate-400">
+										MCP Server
+									</th>
+									<th className="px-4 py-2 font-medium text-slate-600 dark:text-slate-400">
+										Warm-up
+									</th>
 								</tr>
 							</thead>
 							<tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -273,6 +334,26 @@ export default function ToolGatewayPanel(): React.ReactElement {
 											{tool.egressPolicy.allowedHosts.length > 0
 												? tool.egressPolicy.allowedHosts.join(', ')
 												: 'none'}
+										</td>
+										<td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">
+											{tool.mcpServerName ? (
+												<span className="text-xs px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
+													{tool.mcpServerName}
+												</span>
+											) : (
+												<span className="text-xs text-slate-400">—</span>
+											)}
+										</td>
+										<td className="px-4 py-2.5">
+											{tool.warmupStatus ? (
+												<span
+													className={`text-xs px-2 py-0.5 rounded font-medium ${WARMUP_COLORS[tool.warmupStatus] ?? 'bg-slate-100 text-slate-600'}`}
+												>
+													{tool.warmupStatus}
+												</span>
+											) : (
+												<span className="text-xs text-slate-400">—</span>
+											)}
 										</td>
 									</tr>
 								))}

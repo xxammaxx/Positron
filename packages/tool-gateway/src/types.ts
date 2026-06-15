@@ -1,7 +1,7 @@
 // MCP-Compatible Internal Tool Gateway — Core Types
 // Issue #219
 
-import type { Phase, AutonomyLevel } from '@positron/shared';
+import type { Phase, AutonomyLevel, ToolCategory, WarmupStatus, ProviderStatus } from '@positron/shared';
 
 /**
  * Risk level for a tool. Determines what security gates apply.
@@ -74,6 +74,20 @@ export interface ToolDefinition {
 	egressPolicy: EgressPolicy;
 	/** Evidence configuration */
 	evidenceRequirements: EvidenceConfig;
+	/** Classification category (Issue #229) */
+	category?: ToolCategory;
+	/** MCP server name if tool originates from an MCP server (Issue #229) */
+	mcpServerName?: string;
+	/** Warm-up status for this tool's MCP server (Issue #229) */
+	warmupStatus?: WarmupStatus;
+	/** Provider status for this tool's backing provider (Issue #229) */
+	providerStatus?: ProviderStatus;
+	/** Whether this tool requires MCP warm-up before use (Issue #229) */
+	requiresMcpWarmup?: boolean;
+	/** Whether this tool requires model warm-up before use (Issue #229) */
+	requiresModelWarmup?: boolean;
+	/** Whether this tool requires Spec Kit sync before use (Issue #229) */
+	requiresSpecKitSync?: boolean;
 }
 
 /**

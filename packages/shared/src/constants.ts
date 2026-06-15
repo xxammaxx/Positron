@@ -1,6 +1,6 @@
 // Positron — Konstanten
 
-import type { Phase, PositronLabel } from './types.js';
+import type { Phase, PositronLabel, ToolCategory, WarmupStatus, ProviderStatus } from './types.js';
 
 /** Alle vordefinierten Positron-Label */
 export const POSITRON_LABELS: readonly PositronLabel[] = [
@@ -77,3 +77,45 @@ export const AUTONOMY_LEVELS = {
   SEMI: 1 as const,
   MANUAL: 2 as const,
 } as const;
+
+// ── Tool Gateway Metadata Labels (Issue #229) ──────────────────────────
+
+/** Display labels for tool categories */
+export const TOOL_CATEGORY_LABELS: Record<ToolCategory, string> = {
+  provider: 'Provider',
+  filesystem: 'Filesystem',
+  git: 'Git',
+  github: 'GitHub',
+  browser: 'Browser',
+  shell: 'Shell',
+  spec: 'Spec Kit',
+  storage: 'Storage',
+  security: 'Security',
+  testing: 'Testing',
+  oversight: 'Oversight',
+  blueprint: 'Blueprint',
+  unknown: 'Unknown',
+};
+
+/** Display labels for warm-up status */
+export const WARMUP_STATUS_LABELS: Record<WarmupStatus, string> = {
+  not_required: 'Not Required',
+  unknown: 'Unknown',
+  pending: 'Pending',
+  pass: 'Pass',
+  partial: 'Partial',
+  fail: 'Fail',
+  blocked: 'Blocked',
+};
+
+/** Display labels for provider status */
+export const PROVIDER_STATUS_LABELS: Record<ProviderStatus, string> = {
+  not_provider: 'N/A',
+  missing: 'Missing',
+  installed: 'Installed',
+  configured: 'Configured',
+  warmup_required: 'Warm-up Required',
+  ready_for_demo: 'Ready (Demo)',
+  ready_for_real: 'Ready (Real)',
+  blocked: 'Blocked',
+};

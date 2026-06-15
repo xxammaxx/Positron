@@ -11,6 +11,7 @@ import {
 	parseRunStatus,
 	safeJsonParse,
 	ALL_PHASES,
+	ALL_TOOL_CATEGORIES,
 } from "../types.js";
 
 // ---------------------------------------------------------------------------
@@ -156,5 +157,35 @@ describe("safeJsonParse", () => {
 
 	test("returns null for malformed JSON", () => {
 		expect(safeJsonParse('{"broken":')).toBeNull();
+	});
+});
+
+// ---------------------------------------------------------------------------
+// ToolCategory & ALL_TOOL_CATEGORIES (Issue #229)
+// ---------------------------------------------------------------------------
+describe("ALL_TOOL_CATEGORIES", () => {
+	test("contains exactly 13 categories", () => {
+		expect(ALL_TOOL_CATEGORIES).toHaveLength(13);
+	});
+
+	test("includes all expected categories", () => {
+		expect(ALL_TOOL_CATEGORIES).toContain('provider');
+		expect(ALL_TOOL_CATEGORIES).toContain('filesystem');
+		expect(ALL_TOOL_CATEGORIES).toContain('git');
+		expect(ALL_TOOL_CATEGORIES).toContain('github');
+		expect(ALL_TOOL_CATEGORIES).toContain('browser');
+		expect(ALL_TOOL_CATEGORIES).toContain('shell');
+		expect(ALL_TOOL_CATEGORIES).toContain('spec');
+		expect(ALL_TOOL_CATEGORIES).toContain('storage');
+		expect(ALL_TOOL_CATEGORIES).toContain('security');
+		expect(ALL_TOOL_CATEGORIES).toContain('testing');
+		expect(ALL_TOOL_CATEGORIES).toContain('oversight');
+		expect(ALL_TOOL_CATEGORIES).toContain('blueprint');
+		expect(ALL_TOOL_CATEGORIES).toContain('unknown');
+	});
+
+	test('contains no duplicate categories', () => {
+		const unique = new Set(ALL_TOOL_CATEGORIES);
+		expect(unique.size).toBe(ALL_TOOL_CATEGORIES.length);
 	});
 });

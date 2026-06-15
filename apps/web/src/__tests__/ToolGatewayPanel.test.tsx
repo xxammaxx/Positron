@@ -14,6 +14,16 @@ vi.mock('../api.js', () => {
 		enforcePathBoundaries: true,
 		enforceEgress: true,
 		redactSecrets: true,
+		mcpServers: [],
+		providerStatus: {
+			opencodeInstalled: false,
+			opencodeVersion: null,
+			activeModelProfileId: null,
+			activeModelRef: null,
+			modelWarmupStatus: 'unknown',
+			specKitSynced: false,
+			readyForRealRuns: false,
+		},
 	};
 
 	const mockTools = {
@@ -31,6 +41,12 @@ vi.mock('../api.js', () => {
 				evidenceRequirements: { logArguments: true, logOutput: false, requireArtifact: false },
 				inputSchema: {},
 				outputSchema: {},
+				mcpServerName: null,
+				warmupStatus: 'not_required',
+				providerStatus: 'not_provider',
+				requiresMcpWarmup: false,
+				requiresModelWarmup: false,
+				requiresSpecKitSync: false,
 			},
 			{
 				id: 'tests.run_selected',
@@ -45,6 +61,12 @@ vi.mock('../api.js', () => {
 				evidenceRequirements: { logArguments: true, logOutput: true, requireArtifact: true },
 				inputSchema: {},
 				outputSchema: {},
+				mcpServerName: null,
+				warmupStatus: 'unknown',
+				providerStatus: 'not_provider',
+				requiresMcpWarmup: false,
+				requiresModelWarmup: false,
+				requiresSpecKitSync: false,
 			},
 		],
 		total: 2,
@@ -172,6 +194,80 @@ describe('ToolGatewayPanel', () => {
 		render(<ToolGatewayPanel />);
 
 		await waitFor(() => {
+			expect(screen.getByText(/Tool execution is not available from the dashboard/i)).toBeDefined();
+		});
+	});
+
+	// ── Issue #229: MCP / Provider metadata tests ─────────────────────
+
+	test('renders MCP Servers card with zero count', async () => {
+		render(<ToolGatewayPanel />);
+
+		await waitFor(() => {
+			expect(screen.getByText('MCP Servers')).toBeDefined();
+			expect(screen.getByText('0')).toBeDefined();
+			expect(screen.getByText('No MCP servers connected')).toBeDefined();
+		});
+	});
+
+	test('renders OpenCode Provider card as not detected', async () => {
+		render(<ToolGatewayPanel />);
+
+		await waitFor(() => {
+			expect(screen.getByText('OpenCode Provider')).toBeDefined();
+			expect(screen.getByText('Not Detected')).toBeDefined();
+			expect(screen.getByText('Spec Kit not synced')).toBeDefined();
+		});
+	});
+
+	test('renders MCP Server column in tools table', async () => {
+		render(<ToolGatewayPanel />);
+
+		await waitFor(() => {
+			expect(screen.getByText('MCP Server')).toBeDefined();
+		});
+	});
+
+	test('renders Warm-up column in tools table', async () => {
+		render(<ToolGatewayPanel />);
+
+		await waitFor(() => {
+			expect(screen.getByText('Warm-up')).toBeDefined();
+		});
+	});
+
+	test('does not contain execute button', async () => {
+		render(<ToolGatewayPanel />);
+
+		await waitFor(() => {
+			expect(screen.getByText('Tool Gateway')).toBeDefined();
+		});
+
+		// No execute/run buttons anywhere
+		expect(screen.queryByText(/execute/i)).toBeNull();
+		expect(screen.queryByText(/trigger/i)).toBeNull();
+		const buttons = screen.queryAllByRole('button');
+		// The only "button" could be the refresh mechanism — but no Run/Execute
+		const runButtons = buttons.filter(
+			(b) => b.textContent && /run|execute|start/i.test(b.textContent),
+		);
+		expect(runButtons.length).toBe(0);
+	});
+
+	test('shows gateway disabled and MCP exposure disabled', async () => {
+		render(<ToolGatewayPanel />);
+
+		await waitFor(() => {
+			const disabledElements = screen.getAllByText('Disabled');
+			expect(disabledElements.length).toBeGreaterThanOrEqual(2);
+		});
+	});
+
+	test('shows monitoring-only note', async () => {
+		render(<ToolGatewayPanel />);
+
+		await waitFor(() => {
+			expect(screen.getByText(/read-only metadata/i)).toBeDefined();
 			expect(screen.getByText(/Tool execution is not available from the dashboard/i)).toBeDefined();
 		});
 	});

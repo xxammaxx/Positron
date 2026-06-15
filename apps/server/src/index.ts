@@ -3911,6 +3911,17 @@ export function createApp(options: ServerOptions = {}) {
 			enforcePathBoundaries: config.enforcePathBoundaries,
 			enforceEgress: config.enforceEgress,
 			redactSecrets: config.redactSecrets,
+			// ── MCP/Provider metadata (Issue #229) — read-only empty defaults ──
+			mcpServers: [],
+			providerStatus: {
+				opencodeInstalled: false,
+				opencodeVersion: null,
+				activeModelProfileId: null,
+				activeModelRef: null,
+				modelWarmupStatus: 'unknown',
+				specKitSynced: false,
+				readyForRealRuns: false,
+			},
 		});
 	});
 
@@ -3918,7 +3929,7 @@ export function createApp(options: ServerOptions = {}) {
 	app.get('/api/tool-gateway/tools', (_req, res) => {
 		const tools = toolRegistry.list().map((def: ToolDefinition) => ({
 			id: def.id,
-			category: def.id.split('.')[0] ?? 'unknown',
+			category: def.category ?? (def.id.split('.')[0] ?? 'unknown'),
 			title: def.title,
 			description: def.description,
 			riskLevel: def.riskLevel,
@@ -3936,6 +3947,13 @@ export function createApp(options: ServerOptions = {}) {
 			},
 			inputSchema: def.inputSchema,
 			outputSchema: def.outputSchema,
+			// ── MCP/Provider metadata extension (Issue #229) — read-only ──
+			mcpServerName: def.mcpServerName ?? null,
+			warmupStatus: def.warmupStatus ?? 'unknown',
+			providerStatus: def.providerStatus ?? 'not_provider',
+			requiresMcpWarmup: def.requiresMcpWarmup ?? false,
+			requiresModelWarmup: def.requiresModelWarmup ?? false,
+			requiresSpecKitSync: def.requiresSpecKitSync ?? false,
 		}));
 
 		res.json({ tools, total: tools.length });

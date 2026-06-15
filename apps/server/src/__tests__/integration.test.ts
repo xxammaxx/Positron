@@ -285,4 +285,106 @@ describe('GET /api/tool-gateway/tools', () => {
 		const evidenceTool = body.tools.find((t) => t.id === 'evidence.append');
 		expect(evidenceTool?.riskLevel).toBe('write');
 	});
+
+	// ── Issue #229: MCP / Provider metadata extension tests ──────────
+
+	test('tools include new metadata fields (Issue #229)', async () => {
+		const res = await get('/api/tool-gateway/tools');
+		const body = (await res.json()) as {
+			tools: Array<Record<string, unknown>>;
+		};
+
+		for (const tool of body.tools) {
+			expect(tool).toHaveProperty('mcpServerName');
+			expect(tool).toHaveProperty('warmupStatus');
+			expect(tool).toHaveProperty('providerStatus');
+			expect(tool).toHaveProperty('requiresMcpWarmup');
+			expect(tool).toHaveProperty('requiresModelWarmup');
+			expect(tool).toHaveProperty('requiresSpecKitSync');
+		}
+	});
+
+	test('status includes mcpServers and providerStatus (Issue #229)', async () => {
+		const res = await get('/api/tool-gateway/status');
+		const body = (await res.json()) as Record<string, unknown>;
+		expect(body).toHaveProperty('mcpServers');
+		expect(body).toHaveProperty('providerStatus');
+		expect(Array.isArray(body.mcpServers)).toBe(true);
+		expect(body.providerStatus).toBeDefined();
+		if (body.providerStatus && typeof body.providerStatus === 'object') {
+			const ps = body.providerStatus as Record<string, unknown>;
+			expect(ps).toHaveProperty('opencodeInstalled');
+			expect(ps.opencodeInstalled).toBe(false);
+			expect(ps).toHaveProperty('readyForRealRuns');
+			expect(ps.readyForRealRuns).toBe(false);
+		}
+	});
+
+	test('warmupStatus default is "unknown" for tools', async () => {
+		const res = await get('/api/tool-gateway/tools');
+		const body = (await res.json()) as {
+			tools: Array<{ warmupStatus: string }>;
+		};
+
+		for (const tool of body.tools) {
+			expect(tool.warmupStatus).toBe('unknown');
+		}
+	});
+
+	test('providerStatus default is "not_provider" for tools', async () => {
+		const res = await get('/api/tool-gateway/tools');
+		const body = (await res.json()) as {
+			tools: Array<{ providerStatus: string }>;
+		};
+
+		for (const tool of body.tools) {
+			expect(tool.providerStatus).toBe('not_provider');
+		}
+	});
+
+	test('requires* fields default to false for tools', async () => {
+		const res = await get('/api/tool-gateway/tools');
+		const body = (await res.json()) as {
+			tools: Array<{ requiresMcpWarmup: boolean; requiresModelWarmup: boolean; requiresSpecKitSync: boolean }>;
+		};
+
+		for (const tool of body.tools) {
+			expect(tool.requiresMcpWarmup).toBe(false);
+			expect(tool.requiresModelWarmup).toBe(false);
+			expect(tool.requiresSpecKitSync).toBe(false);
+		}
+	});
+
+	// ── Regression tests (Issue #229 safety gates) ────────────────────
+
+	test('no POST /api/tool-gateway/execute endpoint exists', async () => {
+		const res = await post('/api/tool-gateway/execute', { toolId: 'repo.read_file', arguments: {} });
+		expect(res.status).toBe(404);
+	});
+
+	test('no POST /api/tool-gateway/tools/:id/run endpoint exists', async () => {
+		const res = await post('/api/tool-gateway/tools/repo.read_file/run', {});
+		expect(res.status).toBe(404);
+	});
+
+	test('response does not serialize handlers or functions', async () => {
+		const res = await get('/api/tool-gateway/tools');
+		const bodyStr = JSON.stringify(await res.json());
+
+		// No function serialization
+		expect(bodyStr).not.toContain('=>');
+		expect(bodyStr).not.toContain('function');
+		expect(bodyStr).not.toContain('[native code]');
+	});
+
+	test('response does not expose secrets', async () => {
+		const res = await get('/api/tool-gateway/tools');
+		const bodyStr = JSON.stringify(await res.json());
+
+		expect(bodyStr).not.toMatch(/ghp_[a-zA-Z0-9]{36}/);
+		expect(bodyStr).not.toMatch(/sk-[a-zA-Z0-9]{32,}/);
+		expect(bodyStr).not.toMatch(/github_pat_/);
+		expect(bodyStr).not.toMatch(/AIza/);
+		expect(bodyStr).not.toMatch(/anthropic_/);
+	});
 });
