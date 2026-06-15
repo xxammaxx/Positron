@@ -12,6 +12,9 @@ import type {
 	ToolGatewayStatus,
 	ToolGatewayTool,
 	HumanQuestion,
+	BlueprintValidationResponse,
+	BlueprintImportResponse,
+	BlueprintRunPlanResponse,
 } from './types.jsx';
 import type { Phase, RunStatus } from './types.jsx';
 import { parsePhase } from '@positron/shared';
@@ -484,5 +487,36 @@ export const api = {
 			highRiskQuestions: number;
 			runsWaitingForHuman: number;
 		}>('/oversight/attention');
+	},
+
+	// ── Blueprint Launcher (Issue #229 PR 9) ───────────────────────
+
+	/** Validate a blueprint markdown without storing */
+	validateBlueprint(markdown: string, filename?: string): Promise<BlueprintValidationResponse> {
+		return request<BlueprintValidationResponse>('/blueprints/validate', {
+			method: 'POST',
+			body: JSON.stringify({ markdown, filename }),
+		});
+	},
+
+	/** Import and store a validated blueprint (in-memory only, no runtime) */
+	importBlueprint(markdown: string, filename?: string): Promise<BlueprintImportResponse> {
+		return request<BlueprintImportResponse>('/blueprints/import', {
+			method: 'POST',
+			body: JSON.stringify({ markdown, filename }),
+		});
+	},
+
+	/** Get an imported blueprint summary */
+	getBlueprint(id: string): Promise<BlueprintValidationResponse> {
+		return request<BlueprintValidationResponse>(`/blueprints/${id}`);
+	},
+
+	/** Create a run-plan draft from an imported blueprint */
+	createBlueprintRunPlan(blueprintId: string, issueNumber?: number): Promise<BlueprintRunPlanResponse> {
+		return request<BlueprintRunPlanResponse>(`/blueprints/${blueprintId}/create-run-plan`, {
+			method: 'POST',
+			body: JSON.stringify({ issueNumber }),
+		});
 	},
 };

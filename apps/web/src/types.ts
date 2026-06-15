@@ -215,3 +215,63 @@ export interface HumanQuestion {
 	decision?: string;
 	blockedReasons: string[];
 }
+
+// ── Blueprint Launcher Types (Issue #229 PR 9) ──────────────────────
+
+export interface BlueprintValidationResponse {
+	blueprint: {
+		blueprintId: string;
+		filename?: string;
+		title?: string;
+		rawMarkdownHash?: string;
+		sectionKinds: string[];
+		createdAt?: string;
+	};
+	validation: {
+		status: string;
+		blueprintId: string;
+		warningCount: number;
+		criticalCount: number;
+		highCount: number;
+		missingRequiredSections: string[];
+		blockedReasons: string[];
+	};
+}
+
+export interface BlueprintImportResponse {
+	blueprintId: string;
+	status: string;
+	sectionCount: number;
+	warningCount: number;
+	note: string;
+}
+
+export interface BlueprintRunPlanResponse {
+	runPlan: {
+		runPlanId: string;
+		blueprintId: string;
+		status: string;
+		blockedReasons: string[];
+	};
+	gateCheck: {
+		blueprintId: string;
+		runPlanId?: string;
+		blueprintValidation: string;
+		providerProfile: string;
+		modelWarmup: string;
+		specKitSync: string;
+		mcpWarmup: string;
+		humanApproval: string;
+		toolGateway: string;
+		overall: string;
+		blockedReasons: string[];
+	};
+	humanQuestion: {
+		id: string;
+		type: string;
+		riskLevel: string;
+		defaultDecision: string;
+		note: string;
+	} | null;
+	note: string;
+}

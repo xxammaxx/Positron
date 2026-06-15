@@ -134,6 +134,17 @@ import {
 	buildHumanOversightEvidence,
 	redactHumanAnswerText,
 	createHumanQuestionId,
+	parseBlueprintMarkdown,
+	validateBlueprint,
+	createBlueprintRunPlan,
+	createBlueprintStartApprovalQuestion,
+	createBlueprintGateCheck,
+	redactBlueprintForEvidence,
+	redactBlueprintValidationForEvidence,
+	redactBlueprintRunPlanForEvidence,
+	type ParsedBlueprint,
+	type BlueprintValidationResult,
+	type BlueprintRunPlan,
 } from '@positron/shared';
 import {
 	renderMetrics,
@@ -4200,6 +4211,216 @@ export function createApp(options: ServerOptions = {}) {
 
 		const attention = getOversightAttention();
 		res.json(attention);
+	});
+
+	// ── Blueprint Launcher API (Issue #229 PR 9) ──────────────────────────
+	// Read-only endpoints for blueprint validation, import, and run-plan
+	// creation. NO tool execution. NO OpenCode/MCP/Spec Kit runtime.
+	// NO install, NO download, NO push/merge.
+	// start-run is intentionally blocked (409) until runtime is implemented.
+
+	// In-memory store for imported blueprints (non-persistent, no DB migration)
+	const importedBlueprints: Map<string, ParsedBlueprint> = new Map();
+	const importedRunPlans: Map<string, BlueprintRunPlan> = new Map();
+
+	// POST /api/blueprints/validate — Parse and validate blueprint markdown
+	app.post('/api/blueprints/validate', (req, res) => {
+		try {
+			const input = req.body as {
+				markdown?: string;
+				filename?: string;
+			};
+
+			if (!input.markdown || typeof input.markdown !== 'string') {
+				res.status(400).json({ error: 'markdown field is required' });
+				return;
+			}
+
+			const parsed = parseBlueprintMarkdown({
+				markdown: input.markdown,
+				filename: input.filename,
+				createdAt: new Date().toISOString(),
+			});
+
+			const validation = validateBlueprint(parsed);
+
+			res.json({
+				blueprint: redactBlueprintForEvidence(parsed),
+				validation: redactBlueprintValidationForEvidence(validation),
+			});
+		} catch (err) {
+			res.status(400).json({ error: 'Blueprint validation failed', details: String(err) });
+		}
+	});
+
+	// POST /api/blueprints/import — Store validated blueprint metadata only
+	app.post('/api/blueprints/import', (req, res) => {
+		try {
+			const input = req.body as {
+				markdown?: string;
+				filename?: string;
+			};
+
+			if (!input.markdown || typeof input.markdown !== 'string') {
+				res.status(400).json({ error: 'markdown field is required' });
+				return;
+			}
+
+			const parsed = parseBlueprintMarkdown({
+				markdown: input.markdown,
+				filename: input.filename,
+				createdAt: new Date().toISOString(),
+			});
+
+			const validation = validateBlueprint(parsed);
+
+			// Store the blueprint (in-memory only)
+			importedBlueprints.set(parsed.blueprintId, parsed);
+
+			// Log as event (no persistence beyond event log)
+			storeEvent({
+				id: createRunId(),
+				runId: 'blueprints',
+				phase: 'IMPLEMENT',
+				level: 'INFO',
+				message: `Blueprint imported: ${parsed.blueprintId} (status: ${validation.status})`,
+				payload: {
+					blueprintId: parsed.blueprintId,
+					status: validation.status,
+					sectionCount: parsed.sections.length,
+				},
+				createdAt: new Date().toISOString(),
+			});
+
+			res.json({
+				blueprintId: parsed.blueprintId,
+				status: validation.status,
+				sectionCount: parsed.sections.length,
+				warningCount: validation.warnings.length,
+				note: 'Blueprint stored. No execution occurred.',
+			});
+		} catch (err) {
+			res.status(400).json({ error: 'Blueprint import failed', details: String(err) });
+		}
+	});
+
+	// GET /api/blueprints/:id — Retrieve imported blueprint summary (redacted)
+	app.get('/api/blueprints/:id', (req, res) => {
+		const bp = importedBlueprints.get(req.params.id);
+		if (!bp) {
+			res.status(404).json({ error: 'Blueprint not found' });
+			return;
+		}
+
+		const validation = validateBlueprint(bp);
+
+		res.json({
+			blueprint: redactBlueprintForEvidence(bp),
+			validation: redactBlueprintValidationForEvidence(validation),
+		});
+	});
+
+	// POST /api/blueprints/:id/create-run-plan — Generate run-plan draft only
+	app.post('/api/blueprints/:id/create-run-plan', (req, res) => {
+		const bp = importedBlueprints.get(req.params.id);
+		if (!bp) {
+			res.status(404).json({ error: 'Blueprint not found' });
+			return;
+		}
+
+		try {
+			const input = req.body as {
+				issueNumber?: number;
+			};
+
+			const validation = validateBlueprint(bp);
+			const runPlan = createBlueprintRunPlan({
+				blueprint: bp,
+				validation,
+				createdAt: new Date().toISOString(),
+				issueNumber: input.issueNumber,
+			});
+
+			// Store run plan
+			importedRunPlans.set(runPlan.runPlanId, runPlan);
+
+			// Create gate check
+			const gateCheck = createBlueprintGateCheck(bp.blueprintId, runPlan.runPlanId);
+
+			// Create human approval question if required
+			let question = null;
+			if (validation.requiresHumanApproval || validation.status !== 'pass') {
+				question = createBlueprintStartApprovalQuestion({
+					blueprint: bp,
+					validation,
+					runPlan,
+					createdAt: new Date().toISOString(),
+				});
+
+				// Store the question in the oversight store
+				try {
+					createHumanQuestion(question);
+				} catch {
+					// Question might already exist — ignore duplicate
+				}
+
+				// Link the question
+				runPlan.humanQuestionId = question.id;
+				importedRunPlans.set(runPlan.runPlanId, runPlan);
+
+				broadcastSSE(runPlan.runPlanId, 'blueprint-run-plan-created', {
+					runPlanId: runPlan.runPlanId,
+					blueprintId: bp.blueprintId,
+					status: runPlan.status,
+					questionId: question.id,
+					timestamp: new Date().toISOString(),
+				});
+			}
+
+			// Log event
+			storeEvent({
+				id: createRunId(),
+				runId: runPlan.runPlanId,
+				phase: 'IMPLEMENT',
+				level: 'INFO',
+				message: `Blueprint run-plan created: ${runPlan.runPlanId} (status: ${runPlan.status})`,
+				payload: {
+					runPlanId: runPlan.runPlanId,
+					blueprintId: bp.blueprintId,
+					status: runPlan.status,
+					hasHumanQuestion: question !== null,
+				},
+				createdAt: new Date().toISOString(),
+			});
+
+			res.json({
+				runPlan: redactBlueprintRunPlanForEvidence(runPlan),
+				gateCheck,
+				humanQuestion: question
+					? {
+							id: question.id,
+							type: question.type,
+							riskLevel: question.riskLevel,
+							defaultDecision: question.defaultDecision,
+							note: 'Question stored. No runtime execution. ALLOW enables gate check only.',
+						}
+					: null,
+				note: 'Run-plan is a draft only. No execution has occurred.',
+			});
+		} catch (err) {
+			res.status(400).json({ error: 'Run-plan creation failed', details: String(err) });
+		}
+	});
+
+	// POST /api/blueprints/:id/start-run — BLOCKED STUB
+	// Intentionally returns 409 — blueprint runtime is not implemented in PR 9.
+	// This endpoint will be activated in a future PR when the gated pipeline exists.
+	app.post('/api/blueprints/:id/start-run', (_req, res) => {
+		res.status(409).json({
+			status: 'blocked',
+			reason: 'blueprint_runtime_not_implemented',
+			message: 'Blueprint start-run is intentionally not implemented in PR 9. Use POST /api/blueprints/:id/create-run-plan to generate a run-plan draft.',
+		});
 	});
 
 	// Run Control (Issue #30)
