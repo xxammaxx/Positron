@@ -8,7 +8,7 @@
 		"packages/*"
 	],
 	"scripts": {
-		"build": "tsc -b packages/shared packages/sandbox packages/github-adapter packages/run-state packages/speckit-adapter packages/opencode-adapter apps/server apps/worker",
+		"build": "tsc -b packages/shared packages/sandbox packages/github-adapter packages/run-state packages/speckit-adapter packages/opencode-adapter packages/tool-gateway apps/server apps/worker",
 		"build:watch": "tsc --build --watch",
 		"dev": "concurrently \"npm run dev:server\" \"npm run dev:web\"",
 		"dev:server": "npm run build && node apps/server/dist/index.js",
