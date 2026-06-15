@@ -33,6 +33,19 @@ docs/diagnostics/positron-reality-check/
 # Local artifacts (moved diagnostics, temp outputs)
 .local-artifacts/
 
+# Database auxiliary files (SQLite WAL/SHM)
+*.db-shm
+*.db-wal
+
+# Video and trace artifacts (not commit-worthy)
+*.webm
+*.mp4
+**/trace.zip
+
+# Network/console diagnostic logs (not commit-worthy)
+**/network-log.json
+**/console-log.json
+
 # Stryker mutation testing temporary files
 .stryker-tmp/
 
