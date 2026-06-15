@@ -297,3 +297,45 @@ interface PositronProviderProfile {
 4. **Blueprint desired model** → triggers sync check
 5. **Positron shows sync status** → visible in UI
 6. **Tool Gateway displays sync status** → read-only
+
+---
+
+## PR 3 — Spec Kit Sync Profile (June 2026)
+
+**Implementation:** `packages/shared/src/speckit-sync-profile.ts`
+**Tests:** `packages/shared/src/__tests__/speckit-sync-profile.test.ts` (141 tests)
+
+PR 3 implements pure Spec Kit Sync types, Re-Sync rules, and readiness policy:
+
+- **No runtime** — No OpenCode execution, no MCP execution, no Spec Kit install/sync/CLI execution.
+- **Spec Kit source restricted** to `github/spec-kit`.
+- **Spec Kit version + install ref required** and must be pinned.
+- **11 re-sync triggers** detected via `checkReSyncNeeded()` function comparing provider profile fingerprints.
+- **Readiness policy** gates demo and real runs on sync status, warm-up status, and human approval.
+- **Mode safety rules**: `adapter_bridge` preferred; `opencode_slash_commands` not real-run-ready without future proof.
+- **Evidence redaction** excludes absolute binary/config paths and secrets.
+
+### Key Types
+
+| Type | Description |
+|------|-------------|
+| `SpecKitInstallSource` | `"github/spec-kit"` (only) |
+| `SpecKitMode` | `"standalone_cli"` \| `"opencode_slash_commands"` \| `"adapter_bridge"` |
+| `SpecKitSyncStatus` | `"unknown"` \| `"synced"` \| `"needs_resync"` \| `"partial"` \| `"blocked"` \| `"fail"` |
+| `ProviderProfileReadiness` | `"not_ready"` \| `"ready_for_demo"` \| `"ready_for_real"` \| `"blocked"` |
+| `ReSyncReason` | 11 re-sync trigger reasons |
+| `PositronProviderProfile` | Complete provider profile with OpenCode + Spec Kit + MCP data |
+| `ProviderProfileFingerprint` | Lightweight fingerprint for re-sync comparison |
+| `RedactedPositronProviderProfile` | Redacted profile for evidence/logging |
+
+### Key Functions
+
+| Function | Purpose |
+|----------|---------|
+| `validatePositronProviderProfile()` | Full structural + security validation |
+| `checkReSyncNeeded(previous, current)` | Detect re-sync triggers by comparing fingerprints |
+| `canProviderProfileDemoRun(profile)` | Gate: is demo run allowed? |
+| `canProviderProfileRealRun(profile, humanApproved)` | Gate: is real run allowed? |
+| `isSpecKitModeSafe(mode)` | Safety check for Spec Kit mode |
+| `isSpecKitVersionPinned(ref)` | Version pinning check |
+| `redactProviderProfileForEvidence(profile)` | Evidence-safe redaction |
