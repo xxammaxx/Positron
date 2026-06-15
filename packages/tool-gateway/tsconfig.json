@@ -1,15 +1,15 @@
 {
-  "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "composite": true
-  },
-  "include": ["src/**/*"],
-  "references": [
-    { "path": "../shared" },
-    { "path": "../sandbox" },
-    { "path": "../run-state" },
-    { "path": "../github-adapter" }
-  ]
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"outDir": "./dist",
+		"rootDir": "./src",
+		"composite": true
+	},
+	"include": ["src/**/*"],
+	"references": [
+		{ "path": "../shared" },
+		{ "path": "../sandbox" },
+		{ "path": "../run-state" },
+		{ "path": "../github-adapter" }
+	]
 }
