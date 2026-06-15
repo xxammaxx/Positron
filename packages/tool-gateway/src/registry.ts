@@ -168,7 +168,10 @@ export class ToolRegistry {
 			throw new Error(`Tool ID must be a string with at least 3 characters, got: "${id}"`);
 		}
 
-		// ASCII-only check (no non-ASCII characters)
+		// ASCII-only check (no non-ASCII characters).
+		// The \x00 control character in the range is intentional — it defines
+		// the full ASCII range 0x00–0x7F for tool ID validation.
+		// biome-ignore lint/suspicious/noControlCharactersInRegex: security-required ASCII range check for tool ID validation
 		if (!/^[\x00-\x7F]+$/.test(id)) {
 			throw new Error(`Tool ID must be ASCII-only, got: "${id}"`);
 		}
