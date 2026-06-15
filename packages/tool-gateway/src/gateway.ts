@@ -26,16 +26,6 @@ function blocked(reason: BlockReason, detail?: string): ToolResult {
 }
 
 /**
- * Helper to create a successful result.
- */
-function success(output: unknown): ToolResult {
-	return {
-		success: true,
-		output,
-	};
-}
-
-/**
  * GatewayService — validates, authorizes, executes, and logs tool calls.
  *
  * Security pipeline (8 gates):
@@ -184,7 +174,7 @@ export class GatewayService {
 			}
 
 			return timedResult;
-		} catch (error) {
+		} 		catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error);
 			const durationMs = Date.now() - startTime;
 			return {
@@ -192,6 +182,7 @@ export class GatewayService {
 				output: null,
 				error: errorMessage,
 				blockedReason: BLOCK_REASONS.TOOL_EXECUTION_ERROR,
+				durationMs,
 				evidenceEventId: undefined,
 			};
 		}

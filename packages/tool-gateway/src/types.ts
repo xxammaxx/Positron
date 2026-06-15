@@ -104,6 +104,8 @@ export interface ToolResult {
 	output: unknown;
 	/** Error message if execution failed */
 	error?: string;
+	/** Execution duration in milliseconds */
+	durationMs?: number;
 	/** Evidence event ID if one was generated */
 	evidenceEventId?: string;
 	/** Reason why the call was blocked (if applicable) */
