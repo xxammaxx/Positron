@@ -427,8 +427,8 @@ describe('SQLite Infrastructure State Store Persistence', () => {
 			const list = await stores2.mcpWarmupEvidence.listLatest();
 
 			expect(list).toHaveLength(1);
-			expect(list[0].serverId).toBe('mcp-persist-test');
-			expect(list[0].evidenceId).toBe('ev-mcp-persist');
+			expect(list[0]!.serverId).toBe('mcp-persist-test');
+			expect(list[0]!.evidenceId).toBe('ev-mcp-persist');
 		});
 
 		it('returns empty array when no evidence stored', async () => {
@@ -440,12 +440,12 @@ describe('SQLite Infrastructure State Store Persistence', () => {
 		it('upsert for same server overwrites previous evidence', async () => {
 			const stores = createSqliteInfrastructureStateStores(db);
 
-			await stores.mcpWarmupEvidence.upsert(makeMcpEvidence({ serverId: 'same-server', warmupStatus: 'fail' }) as any);
-			await stores.mcpWarmupEvidence.upsert(makeMcpEvidence({ serverId: 'same-server', warmupStatus: 'pass' }) as any);
+			await stores.mcpWarmupEvidence.upsert(makeMcpEvidence({ serverId: 'same-server', status: 'fail' }) as any);
+			await stores.mcpWarmupEvidence.upsert(makeMcpEvidence({ serverId: 'same-server', status: 'pass' }) as any);
 
 			const list = await stores.mcpWarmupEvidence.listLatest();
 			expect(list).toHaveLength(1);
-			expect(list[0].warmupStatus).toBe('pass');
+			expect(list[0]!.status).toBe('pass');
 		});
 
 		it('can store evidence for multiple different servers', async () => {
