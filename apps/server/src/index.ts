@@ -151,10 +151,12 @@ import {
 	type BlueprintRunPlan,
 	type BlueprintPipelineHandoff,
 	type InfrastructureGateEvaluationInput,
-	createInMemoryInfrastructureStateStores,
 	loadInfrastructureGateEvaluationInputFromStores,
-	type InfrastructureStateStores,
 } from '@positron/shared';
+import {
+	createInfrastructureStateStoresForServer,
+	type InfrastructureStoreMode,
+} from './infrastructure/create-stores-for-server.js';
 import {
 	renderMetrics,
 	serverUptimeSeconds,
@@ -2317,12 +2319,17 @@ export function createApp(options: ServerOptions = {}) {
 	// Gateway uses default config (enabled: false, all security gates active)
 	const gatewayService = new GatewayService(toolRegistry);
 
-	// ── Infrastructure State Stores (PR 12) ──
-	// In-memory stores for provider/model/SpecKit/MCP state.
-	// These are read-only snapshots of current infrastructure state.
+	// ── Infrastructure State Stores (PR 12 + PR 13) ──
+	// PR 12: In-memory stores for provider/model/SpecKit/MCP state.
+	// PR 13: Wire SQLite-backed stores for persistence across restarts.
+	// Store mode is configurable via POSITRON_INFRASTRUCTURE_STORE env var.
+	// Default: SQLite when DB is available, memory for tests/fallback.
 	// No runtime execution — stores hold status data only.
-	// To use SQLite persistence, replace with createSqliteInfrastructureStateStores(getDb()).
-	const infraStores: InfrastructureStateStores = createInMemoryInfrastructureStateStores();
+	const infraStoresResult = createInfrastructureStateStoresForServer({
+		db: getDb(),
+	});
+	const infraStores = infraStoresResult.stores;
+	const infraStoreMode: InfrastructureStoreMode = infraStoresResult.mode;
 
 	// ── QA-011: Metrics-decorated OpenCode adapter ──
 	// Wraps the adapter to record telemetry without modifying adapter code.
@@ -4651,6 +4658,7 @@ export function createApp(options: ServerOptions = {}) {
 					gates: infraSummary.gates,
 					blockedReasons: infraSummary.blockedReasons,
 					checkedAt: infraSummary.checkedAt,
+					storeMode: infraStoreMode,
 				},
 				message,
 				note: 'Blueprint handoff evaluated against current infrastructure gate states. Runtime execution has not started.',
@@ -4726,7 +4734,9 @@ export function createApp(options: ServerOptions = {}) {
 				gates: summary.gates,
 				blockedReasons: summary.blockedReasons,
 				checkedAt: summary.checkedAt,
-				note: 'Read-only status aggregation. No runtime started. No OpenCode/MCP/SpecKit/ToolGateway execution. Missing state = missing/not_checked gates. Infrastructure state is loaded from stores (in-memory, no external dependencies).',
+				storeMode: infraStoreMode,
+				runtimeStarted: false,
+				note: `Read-only status aggregation. No runtime started. No OpenCode/MCP/SpecKit/ToolGateway execution. Missing state = missing/not_checked gates. Infrastructure state is loaded from stores (mode: ${infraStoreMode}).`,
 			});
 		} catch (err) {
 			res.status(500).json({ error: 'Failed to read infrastructure gates status', details: String(err) });
