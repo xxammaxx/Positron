@@ -87,7 +87,7 @@ export function createSqliteInfrastructureStateStores(
 
 	// ── Provider Detection Store ────────────────────────────────────────
 	const providerDetectionStore: ProviderDetectionStore = {
-		getLatest(): Promise<OpenCodeProviderDetectionEvidence | undefined> {
+		async getLatest(): Promise<OpenCodeProviderDetectionEvidence | undefined> {
 			const row = db
 				.prepare(
 					'SELECT value_json FROM infrastructure_state WHERE kind = ? AND key = ?',
@@ -106,7 +106,7 @@ export function createSqliteInfrastructureStateStores(
 			}
 		},
 
-		upsert(value: OpenCodeProviderDetectionEvidence): Promise<void> {
+		async upsert(value: OpenCodeProviderDetectionEvidence): Promise<void> {
 			// Validate before storing
 			const validation = validateProviderDetectionStoreValue(value);
 			if (!validation.valid) {
@@ -165,7 +165,7 @@ export function createSqliteInfrastructureStateStores(
 
 	// ── Model Profile Store ─────────────────────────────────────────────
 	const modelProfileStore: ModelProfileStore = {
-		getActive(): Promise<OpenCodeModelProfile | undefined> {
+		async getActive(): Promise<OpenCodeModelProfile | undefined> {
 			const row = db
 				.prepare(
 					'SELECT value_json FROM infrastructure_state WHERE kind = ? AND key = ?',
@@ -183,7 +183,7 @@ export function createSqliteInfrastructureStateStores(
 			}
 		},
 
-		setActive(value: OpenCodeModelProfile): Promise<void> {
+		async setActive(value: OpenCodeModelProfile): Promise<void> {
 			const validation = validateModelProfileStoreValue(value);
 			if (!validation.valid) {
 				throw new Error(
@@ -238,7 +238,7 @@ export function createSqliteInfrastructureStateStores(
 
 	// ── Spec Kit Sync Store ─────────────────────────────────────────────
 	const specKitSyncStore: SpecKitSyncStateStore = {
-		getActive(): Promise<PositronProviderProfile | undefined> {
+		async getActive(): Promise<PositronProviderProfile | undefined> {
 			const row = db
 				.prepare(
 					'SELECT value_json FROM infrastructure_state WHERE kind = ? AND key = ?',
@@ -256,7 +256,7 @@ export function createSqliteInfrastructureStateStores(
 			}
 		},
 
-		setActive(value: PositronProviderProfile): Promise<void> {
+		async setActive(value: PositronProviderProfile): Promise<void> {
 			const validation = validateSpecKitSyncStoreValue(value);
 			if (!validation.valid) {
 				throw new Error(
@@ -311,7 +311,7 @@ export function createSqliteInfrastructureStateStores(
 
 	// ── MCP Warm-up Evidence Store ──────────────────────────────────────
 	const mcpWarmupEvidenceStore: McpWarmupEvidenceStore = {
-		listLatest(): Promise<McpWarmupEvidence[]> {
+		async listLatest(): Promise<McpWarmupEvidence[]> {
 			const rows = db
 				.prepare(
 					'SELECT value_json FROM infrastructure_state WHERE kind = ?',
@@ -329,7 +329,7 @@ export function createSqliteInfrastructureStateStores(
 				.filter((v): v is McpWarmupEvidence => v !== null);
 		},
 
-		upsert(value: McpWarmupEvidence): Promise<void> {
+		async upsert(value: McpWarmupEvidence): Promise<void> {
 			const validation = validateMcpWarmupEvidenceStoreValue(value);
 			if (!validation.valid) {
 				throw new Error(
