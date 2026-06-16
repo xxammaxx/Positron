@@ -142,9 +142,13 @@ import {
 	redactBlueprintForEvidence,
 	redactBlueprintValidationForEvidence,
 	redactBlueprintRunPlanForEvidence,
+	evaluateBlueprintPipelineHandoff,
+	buildHandoffEvidence,
+	createRunIntent,
 	type ParsedBlueprint,
 	type BlueprintValidationResult,
 	type BlueprintRunPlan,
+	type BlueprintPipelineHandoff,
 } from '@positron/shared';
 import {
 	renderMetrics,
@@ -4217,11 +4221,12 @@ export function createApp(options: ServerOptions = {}) {
 	// Read-only endpoints for blueprint validation, import, and run-plan
 	// creation. NO tool execution. NO OpenCode/MCP/Spec Kit runtime.
 	// NO install, NO download, NO push/merge.
-	// start-run is intentionally blocked (409) until runtime is implemented.
+	// start-run creates a gated pipeline handoff — no execution occurs.
 
 	// In-memory store for imported blueprints (non-persistent, no DB migration)
 	const importedBlueprints: Map<string, ParsedBlueprint> = new Map();
 	const importedRunPlans: Map<string, BlueprintRunPlan> = new Map();
+	const pipelineHandoffs: Map<string, BlueprintPipelineHandoff> = new Map();
 
 	// POST /api/blueprints/validate — Parse and validate blueprint markdown
 	app.post('/api/blueprints/validate', (req, res) => {
@@ -4412,14 +4417,233 @@ export function createApp(options: ServerOptions = {}) {
 		}
 	});
 
-	// POST /api/blueprints/:id/start-run — BLOCKED STUB
-	// Intentionally returns 409 — blueprint runtime is not implemented in PR 9.
-	// This endpoint will be activated in a future PR when the gated pipeline exists.
-	app.post('/api/blueprints/:id/start-run', (_req, res) => {
-		res.status(409).json({
-			status: 'blocked',
-			reason: 'blueprint_runtime_not_implemented',
-			message: 'Blueprint start-run is intentionally not implemented in PR 9. Use POST /api/blueprints/:id/create-run-plan to generate a run-plan draft.',
+	// POST /api/blueprints/:id/start-run — Gated Pipeline Handoff (PR 10)
+	// This endpoint evaluates all safety gates and produces a pipeline handoff.
+	// It does NOT execute any runtime. ready_for_pipeline means only that a
+	// future executor may proceed — NOT that execution starts now.
+	// No OpenCode, MCP, Spec Kit, install, download, or tool execution occurs.
+	app.post('/api/blueprints/:id/start-run', (req, res) => {
+		const bp = importedBlueprints.get(req.params.id);
+		if (!bp) {
+			res.status(404).json({ error: 'Blueprint not found' });
+			return;
+		}
+
+		try {
+			const createdAt = new Date().toISOString();
+
+			// 1. Load or create run plan
+			let runPlan = Array.from(importedRunPlans.values()).find(
+				(rp) => rp.blueprintId === bp.blueprintId,
+			);
+
+			if (!runPlan) {
+				// Auto-create run plan if not already generated
+				const validation = validateBlueprint(bp);
+				runPlan = createBlueprintRunPlan({
+					blueprint: bp,
+					validation,
+					createdAt,
+				});
+				importedRunPlans.set(runPlan.runPlanId, runPlan);
+
+				// Auto-create human approval question if needed
+				if (validation.requiresHumanApproval || validation.status !== 'pass') {
+					const question = createBlueprintStartApprovalQuestion({
+						blueprint: bp,
+						validation,
+						runPlan,
+						createdAt,
+					});
+					try {
+						createHumanQuestion(question);
+						runPlan.humanQuestionId = question.id;
+						importedRunPlans.set(runPlan.runPlanId, runPlan);
+					} catch {
+						// Question might already exist — ignore
+					}
+				}
+			}
+
+			// 2. Re-validate blueprint
+			const validation = validateBlueprint(bp);
+
+			// 3. Check blueprint validation gate
+			const bpValidationStatus = validation.status === 'pass'
+				? 'pass' as const
+				: validation.status === 'blocked'
+					? 'blocked' as const
+					: validation.status === 'partial'
+						? 'partial' as const
+						: 'fail' as const;
+
+			const hasBlockingSecurityWarnings = validation.warnings.some(
+				(w) => w.blocked || w.severity === 'critical',
+			);
+
+			// 4. Check human approval gate
+			let hasHumanApproval = false;
+			let humanQuestionId: string | undefined = runPlan.humanQuestionId;
+
+			if (humanQuestionId) {
+				try {
+					const question = getHumanQuestion(humanQuestionId);
+					if (question) {
+						// ALLOW with answered status means approved
+						if (question.decision === 'ALLOW' && question.status === 'answered') {
+							hasHumanApproval = true;
+						}
+						if (question.decision === 'DENY' || question.status === 'denied') {
+							hasHumanApproval = false;
+						}
+					}
+				} catch {
+					// Question not in store — treat as not approved
+				}
+			}
+
+			// 5. Check infrastructure gates — currently using defaults
+			// In future PRs these will be wired to actual provider/MCP/SpecKit stores
+			// For now: all infrastructure gates = not_checked (waiting_for_gates)
+			// This is the correct behavior per the spec — we don't fabricate readiness
+			const providerProfileReady = false; // PR 10: not wired yet — needs actual provider state
+			const modelWarmupPass = false;      // PR 10: not wired yet — needs actual warm-up state
+			const specKitSyncPass = false;      // PR 10: not wired yet — needs actual sync state
+			const mcpWarmupPass = false;        // PR 10: not wired yet — needs actual MCP state
+			const toolGatewaySafe = true;       // Default: Tool Gateway is read-only and safe
+
+			// 6. Evaluate all gates via the pure evaluator function
+			const handoff = evaluateBlueprintPipelineHandoff({
+				blueprintValidationStatus: bpValidationStatus,
+				hasHumanApproval,
+				providerProfileReady,
+				modelWarmupPass,
+				specKitSyncPass,
+				mcpWarmupPass,
+				toolGatewaySafe,
+				hasBlockingSecurityWarnings,
+				createdAt,
+				blueprintId: bp.blueprintId,
+				runPlanId: runPlan.runPlanId,
+				humanQuestionId,
+				approvalGateId: runPlan.approvalGateId,
+			});
+
+			// 7. Create run intent (record only — no execution)
+			const runIntent = createRunIntent(
+				bp.blueprintId,
+				runPlan.runPlanId,
+				handoff.status,
+			);
+			handoff.runIntentId = runIntent.runIntentId;
+
+			// 8. Store handoff in memory
+			pipelineHandoffs.set(handoff.handoffId, handoff);
+
+			// 9. Build evidence (redacted)
+			const evidence = buildHandoffEvidence(handoff);
+
+			// 10. Log event
+			storeEvent({
+				id: createRunId(),
+				runId: runPlan.runPlanId,
+				phase: 'IMPLEMENT',
+				level: handoff.status === 'blocked' ? 'ERROR' : 'INFO',
+				message: `Blueprint handoff ${handoff.handoffId}: ${handoff.status}`,
+				payload: evidence as unknown as Record<string, unknown>,
+				createdAt,
+			});
+
+			// 11. Broadcast SSE
+			broadcastSSE(runPlan.runPlanId, 'blueprint-handoff-created', {
+				handoffId: handoff.handoffId,
+				blueprintId: bp.blueprintId,
+				status: handoff.status,
+				runIntentId: runIntent.runIntentId,
+				timestamp: createdAt,
+			});
+
+			// 12. Build response message based on status
+			let message: string;
+			let httpStatus: number;
+
+			switch (handoff.status) {
+				case 'blocked':
+					message = 'Blueprint handoff is blocked. See blockedReasons for details.';
+					httpStatus = 200; // 200 — handoff created but blocked
+					break;
+				case 'waiting_for_human':
+					message = 'Human approval is required before pipeline handoff can proceed.';
+					httpStatus = 200;
+					break;
+				case 'waiting_for_gates':
+					message = 'Blueprint handoff created. Waiting for infrastructure gates (provider, model, Spec Kit, MCP). Runtime execution has not started.';
+					httpStatus = 200;
+					break;
+				case 'ready_for_pipeline':
+					message = 'Blueprint handoff is ready for a future pipeline executor. Runtime execution is intentionally not implemented in this PR.';
+					httpStatus = 200;
+					break;
+				default:
+					message = 'Blueprint handoff created. Runtime execution has not started.';
+					httpStatus = 200;
+			}
+
+			res.status(httpStatus).json({
+				status: handoff.status,
+				handoff: {
+					handoffId: handoff.handoffId,
+					blueprintId: handoff.blueprintId,
+					runPlanId: handoff.runPlanId,
+					status: handoff.status,
+					gates: handoff.gates,
+					runIntentId: handoff.runIntentId,
+					humanQuestionId: handoff.humanQuestionId,
+					blockedReasons: handoff.blockedReasons,
+					createdAt: handoff.createdAt,
+				},
+				message,
+				note: 'No runtime execution occurred. This is a gated handoff only.',
+			});
+		} catch (err) {
+			res.status(400).json({ error: 'Blueprint handoff failed', details: String(err) });
+		}
+	});
+
+	// GET /api/blueprints/:id/handoff — Retrieve the latest pipeline handoff
+	app.get('/api/blueprints/:id/handoff', (req, res) => {
+		const bp = importedBlueprints.get(req.params.id);
+		if (!bp) {
+			res.status(404).json({ error: 'Blueprint not found' });
+			return;
+		}
+
+		// Find handoff for this blueprint
+		const handoff = Array.from(pipelineHandoffs.values()).find(
+			(h) => h.blueprintId === bp.blueprintId,
+		);
+
+		if (!handoff) {
+			res.status(404).json({
+				error: 'No handoff found for this blueprint',
+				note: 'Use POST /api/blueprints/:id/start-run to create a handoff',
+			});
+			return;
+		}
+
+		res.json({
+			handoff: {
+				handoffId: handoff.handoffId,
+				blueprintId: handoff.blueprintId,
+				runPlanId: handoff.runPlanId,
+				status: handoff.status,
+				gates: handoff.gates,
+				runIntentId: handoff.runIntentId,
+				humanQuestionId: handoff.humanQuestionId,
+				blockedReasons: handoff.blockedReasons,
+				createdAt: handoff.createdAt,
+			},
+			note: 'No runtime execution. This is a gated handoff record only.',
 		});
 	});
 

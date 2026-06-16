@@ -508,7 +508,7 @@ export const api = {
 	},
 
 	/** Get an imported blueprint summary */
-	getBlueprint(id: string): Promise<BlueprintValidationResponse> {
+	getImportedBlueprint(id: string): Promise<BlueprintValidationResponse> {
 		return request<BlueprintValidationResponse>(`/blueprints/${id}`);
 	},
 

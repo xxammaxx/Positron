@@ -24,4 +24,5 @@ export * from './queue/types.js';
 export * from './human-oversight.js';
 export * from './approval-gates.js';
 export * from './blueprint-launcher.js';
+export * from './blueprint-pipeline-handoff.js';
 export * from './secret-manager.js';
