@@ -151,6 +151,9 @@ import {
 	type BlueprintRunPlan,
 	type BlueprintPipelineHandoff,
 	type InfrastructureGateEvaluationInput,
+	createInMemoryInfrastructureStateStores,
+	loadInfrastructureGateEvaluationInputFromStores,
+	type InfrastructureStateStores,
 } from '@positron/shared';
 import {
 	renderMetrics,
@@ -2314,6 +2317,13 @@ export function createApp(options: ServerOptions = {}) {
 	// Gateway uses default config (enabled: false, all security gates active)
 	const gatewayService = new GatewayService(toolRegistry);
 
+	// ── Infrastructure State Stores (PR 12) ──
+	// In-memory stores for provider/model/SpecKit/MCP state.
+	// These are read-only snapshots of current infrastructure state.
+	// No runtime execution — stores hold status data only.
+	// To use SQLite persistence, replace with createSqliteInfrastructureStateStores(getDb()).
+	const infraStores: InfrastructureStateStores = createInMemoryInfrastructureStateStores();
+
 	// ── QA-011: Metrics-decorated OpenCode adapter ──
 	// Wraps the adapter to record telemetry without modifying adapter code.
 	const instrumentedOpenCodeAdapter = createInstrumentedOpenCodeAdapter(activeOpenCodeAdapter);
@@ -4424,7 +4434,7 @@ export function createApp(options: ServerOptions = {}) {
 	// It does NOT execute any runtime. ready_for_pipeline means only that a
 	// future executor may proceed — NOT that execution starts now.
 	// No OpenCode, MCP, Spec Kit, install, download, or tool execution occurs.
-	app.post('/api/blueprints/:id/start-run', (req, res) => {
+	app.post('/api/blueprints/:id/start-run', async (req, res) => {
 		const bp = importedBlueprints.get(req.params.id);
 		if (!bp) {
 			res.status(404).json({ error: 'Blueprint not found' });
@@ -4504,23 +4514,12 @@ export function createApp(options: ServerOptions = {}) {
 				}
 			}
 
-			// 5. Evaluate infrastructure gates — READ-ONLY aggregation of existing state
-			// PR 11: Bind to actual Provider/MCP/SpecKit/ToolGateway states
-			// Missing state → missing/not_checked (never fabricates pass)
-			// NO runtime execution, NO OpenCode/MCP/SpecKit start, NO install
-			const infraGateInput: InfrastructureGateEvaluationInput = {
-				// Provider detection: currently no persistent store — will be missing
-				providerDetection: undefined,
-				// Model profile: currently no persistent store — will be missing
-				modelProfile: undefined,
-				// Provider profile (SpecKit): currently no persistent store — will be missing
-				providerProfile: undefined,
-				// MCP warm-up evidence: currently no persistent store — will be missing
-				mcpEvidence: undefined,
-				mcpManifests: undefined,
-				// Approval gates: check existing store if available
-				approvalGates: undefined,
-				// Tool Gateway status: read from tool-gateway package state
+			// 5. Evaluate infrastructure gates — from persistent state stores
+			// PR 12: Read provider/model/SpecKit/MCP state from stores.
+			// Missing store data → missing/not_checked (never fabricates pass).
+			// NO runtime execution, NO OpenCode/MCP/SpecKit start, NO install.
+			const infraGateInput = await loadInfrastructureGateEvaluationInputFromStores({
+				stores: infraStores,
 				toolGatewayStatus: {
 					gatewayEnabled: false,
 					mcpExposeEnabled: false,
@@ -4536,7 +4535,7 @@ export function createApp(options: ServerOptions = {}) {
 				})),
 				humanApprovedForRealRun: hasHumanApproval,
 				checkedAt: createdAt,
-			};
+			});
 
 			const infraSummary = evaluateInfrastructureGates(infraGateInput);
 
@@ -4699,41 +4698,39 @@ export function createApp(options: ServerOptions = {}) {
 	});
 
 	// GET /api/infrastructure-gates/status — Read-only infrastructure gate aggregation
-	// PR 11: Aggregates current provider/MCP/SpecKit/ToolGateway/approval state.
-	// Returns current gate statuses. Missing state → missing/not_checked.
+	// PR 12: Aggregates current provider/MCP/SpecKit/ToolGateway/approval state
+	// from infrastructure state stores. Missing state → missing/not_checked.
 	// NEVER starts OpenCode/MCP/SpecKit runtime, NEVER installs, NEVER executes.
-	app.get('/api/infrastructure-gates/status', (_req, res) => {
-		const createdAt = new Date().toISOString();
-		const infraGateInput: InfrastructureGateEvaluationInput = {
-			providerDetection: undefined,
-			modelProfile: undefined,
-			providerProfile: undefined,
-			mcpEvidence: undefined,
-			mcpManifests: undefined,
-			approvalGates: undefined,
-			toolGatewayStatus: {
-				gatewayEnabled: false,
-				mcpExposeEnabled: false,
-				registeredTools: 0,
-				sealed: true,
-				runtimeActive: false,
-			},
-			securityWarnings: [],
-			humanApprovedForRealRun: false,
-			checkedAt: createdAt,
-		};
+	app.get('/api/infrastructure-gates/status', async (_req, res) => {
+		try {
+			const createdAt = new Date().toISOString();
+			const infraGateInput = await loadInfrastructureGateEvaluationInputFromStores({
+				stores: infraStores,
+				toolGatewayStatus: {
+					gatewayEnabled: false,
+					mcpExposeEnabled: false,
+					registeredTools: 0,
+					sealed: true,
+					runtimeActive: false,
+				},
+				securityWarnings: [],
+				checkedAt: createdAt,
+			});
 
-		const summary = evaluateInfrastructureGates(infraGateInput);
+			const summary = evaluateInfrastructureGates(infraGateInput);
 
-		res.json({
-			status: summary.overall,
-			readyForDemo: summary.readyForDemo,
-			readyForReal: summary.readyForReal,
-			gates: summary.gates,
-			blockedReasons: summary.blockedReasons,
-			checkedAt: summary.checkedAt,
-			note: 'Read-only status aggregation. No runtime started. No OpenCode/MCP/SpecKit/ToolGateway execution. Missing state = missing/not_checked gates.',
-		});
+			res.json({
+				status: summary.overall,
+				readyForDemo: summary.readyForDemo,
+				readyForReal: summary.readyForReal,
+				gates: summary.gates,
+				blockedReasons: summary.blockedReasons,
+				checkedAt: summary.checkedAt,
+				note: 'Read-only status aggregation. No runtime started. No OpenCode/MCP/SpecKit/ToolGateway execution. Missing state = missing/not_checked gates. Infrastructure state is loaded from stores (in-memory, no external dependencies).',
+			});
+		} catch (err) {
+			res.status(500).json({ error: 'Failed to read infrastructure gates status', details: String(err) });
+		}
 	});
 
 	// Run Control (Issue #30)

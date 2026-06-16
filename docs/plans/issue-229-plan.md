@@ -606,10 +606,16 @@ Documentation clarifications:
 | #234 | PR 5 — MCP Warm-up Runtime Foundation | OPEN, MERGEABLE | `positron/issue-229-pr5-mcp-warmup-runtime` |
 | #235 | PR 6 — OpenCode Provider Detection | OPEN, MERGEABLE | `positron/issue-229-pr6-opencode-provider-detection` |
 | #236 | PR 7 — Oversight Human Question Queue | OPEN, MERGEABLE | `positron/issue-229-pr7-oversight-human-queue` |
-| PR 8 | Oversight Approval Wiring (Install + MCP Gates) | **IMPLEMENTED** | `positron/issue-229-pr8-oversight-approval-gates` |
+| #237 | PR 8 — Oversight Approval Wiring | OPEN, MERGEABLE | `positron/issue-229-pr8-oversight-approval-gates` |
+| #238 | PR 9 — Blueprint Launcher Foundation | OPEN, MERGEABLE | `positron/issue-229-pr9-blueprint-launcher-foundation` |
+| #239 | PR 10 — Blueprint Gated Pipeline Handoff | OPEN, MERGEABLE | `positron/issue-229-pr10-blueprint-gated-pipeline-handoff` |
+| #240 | PR 11 — Infrastructure Gate State Aggregation | OPEN, MERGEABLE | `positron/issue-229-pr11-infrastructure-gate-state` |
+| — | **PR 12 — Infrastructure State Stores** | **THIS PR** | `positron/issue-229-pr12-infrastructure-state-stores` |
 
-### PR 8 Summary
+### PR 12 Summary
 
-PR 8 wires Oversight approvals into provider install requests and MCP warm-up gates.
-Approvals store decisions only. Approvals do not execute installs, tools, OpenCode, MCP or Spec Kit.
-Required MCP failures remain blocking regardless of human ALLOW decisions.
+PR 12 adds infrastructure state stores for persistent provider/model/SpecKit/MCP state.
+The stores are read-only bindings to infrastructure gates — missing states still block.
+No runtime execution of any kind. SQLite adapter available for optional persistence.
+Infrastructure gates now read from stores instead of hardcoded undefined.
+60 comprehensive tests validate empty/missing/stored/invalid/blocked states.

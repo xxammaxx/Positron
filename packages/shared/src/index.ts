@@ -26,4 +26,5 @@ export * from './approval-gates.js';
 export * from './blueprint-launcher.js';
 export * from './blueprint-pipeline-handoff.js';
 export * from './infrastructure-gates.js';
+export * from './infrastructure-state-store.js';
 export * from './secret-manager.js';
