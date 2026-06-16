@@ -29,6 +29,34 @@ export declare function parsePhase(value: string): Phase;
 export declare function parseRunStatus(value: string): RunStatus;
 /** Deutsche Label für jede Phase (Issue #24) */
 export declare const PHASE_LABELS: Record<Phase, string>;
+/** Classification category for tools registered in the Tool Gateway */
+export type ToolCategory = 'provider' | 'filesystem' | 'git' | 'github' | 'browser' | 'shell' | 'spec' | 'storage' | 'security' | 'testing' | 'oversight' | 'blueprint' | 'unknown';
+/** All valid tool categories as a const array for runtime validation */
+export declare const ALL_TOOL_CATEGORIES: readonly ToolCategory[];
+/** Warm-up status for MCP servers and model profiles */
+export type WarmupStatus = 'not_required' | 'unknown' | 'pending' | 'pass' | 'partial' | 'fail' | 'blocked';
+/** Provider installation/configuration status */
+export type ProviderStatus = 'not_provider' | 'missing' | 'installed' | 'configured' | 'warmup_required' | 'ready_for_demo' | 'ready_for_real' | 'blocked';
+/** MCP server status summary for the Tool Gateway status response */
+export interface McpServerStatus {
+    name: string;
+    category: ToolCategory;
+    required: boolean;
+    warmupStatus: WarmupStatus;
+    toolsCount: number;
+    connected: boolean;
+    lastWarmupAt: string | null;
+}
+/** Provider status summary for the Tool Gateway status response */
+export interface ProviderGatewayStatus {
+    opencodeInstalled: boolean;
+    opencodeVersion: string | null;
+    activeModelProfileId: string | null;
+    activeModelRef: string | null;
+    modelWarmupStatus: WarmupStatus;
+    specKitSynced: boolean;
+    readyForRealRuns: boolean;
+}
 /** Safe JSON.parse — gibt null statt Fehler bei ungültigem JSON */
 export declare function safeJsonParse(s: string | null): Record<string, unknown> | null;
 //# sourceMappingURL=types.d.ts.map

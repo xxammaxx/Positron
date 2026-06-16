@@ -10,7 +10,15 @@ export * from './opencode-errors.js';
 export * from './opencode-model-profile.js';
 export * from './speckit-sync-profile.js';
 export * from './mcp-warmup-profile.js';
+export * from './mcp-warmup-executor.js';
+export * from './opencode-provider-detection.js';
 export * from './live-e2e.js';
 export * from './queue/types.js';
+export * from './human-oversight.js';
+export * from './approval-gates.js';
+export * from './blueprint-launcher.js';
+export * from './blueprint-pipeline-handoff.js';
+export * from './infrastructure-gates.js';
+export * from './infrastructure-state-store.js';
 export * from './secret-manager.js';
 //# sourceMappingURL=index.d.ts.map

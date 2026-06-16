@@ -60,4 +60,42 @@ export const AUTONOMY_LEVELS = {
     SEMI: 1,
     MANUAL: 2,
 };
+// ── Tool Gateway Metadata Labels (Issue #229) ──────────────────────────
+/** Display labels for tool categories */
+export const TOOL_CATEGORY_LABELS = {
+    provider: 'Provider',
+    filesystem: 'Filesystem',
+    git: 'Git',
+    github: 'GitHub',
+    browser: 'Browser',
+    shell: 'Shell',
+    spec: 'Spec Kit',
+    storage: 'Storage',
+    security: 'Security',
+    testing: 'Testing',
+    oversight: 'Oversight',
+    blueprint: 'Blueprint',
+    unknown: 'Unknown',
+};
+/** Display labels for warm-up status */
+export const WARMUP_STATUS_LABELS = {
+    not_required: 'Not Required',
+    unknown: 'Unknown',
+    pending: 'Pending',
+    pass: 'Pass',
+    partial: 'Partial',
+    fail: 'Fail',
+    blocked: 'Blocked',
+};
+/** Display labels for provider status */
+export const PROVIDER_STATUS_LABELS = {
+    not_provider: 'N/A',
+    missing: 'Missing',
+    installed: 'Installed',
+    configured: 'Configured',
+    warmup_required: 'Warm-up Required',
+    ready_for_demo: 'Ready (Demo)',
+    ready_for_real: 'Ready (Real)',
+    blocked: 'Blocked',
+};
 //# sourceMappingURL=constants.js.map

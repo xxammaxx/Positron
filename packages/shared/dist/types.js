@@ -90,6 +90,22 @@ export const PHASE_LABELS = {
     RESUME_PENDING: 'Wiederaufnahme ausstehend',
     CLEANUP: 'Bereinigung',
 };
+/** All valid tool categories as a const array for runtime validation */
+export const ALL_TOOL_CATEGORIES = [
+    'provider',
+    'filesystem',
+    'git',
+    'github',
+    'browser',
+    'shell',
+    'spec',
+    'storage',
+    'security',
+    'testing',
+    'oversight',
+    'blueprint',
+    'unknown',
+];
 /** Safe JSON.parse — gibt null statt Fehler bei ungültigem JSON */
 export function safeJsonParse(s) {
     if (!s)

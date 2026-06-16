@@ -1,4 +1,4 @@
-import type { Phase, PositronLabel } from './types.js';
+import type { Phase, PositronLabel, ToolCategory, WarmupStatus, ProviderStatus } from './types.js';
 /** Alle vordefinierten Positron-Label */
 export declare const POSITRON_LABELS: readonly PositronLabel[];
 /** Prefix für alle Positron-Label */
@@ -33,4 +33,10 @@ export declare const AUTONOMY_LEVELS: {
     readonly SEMI: 1;
     readonly MANUAL: 2;
 };
+/** Display labels for tool categories */
+export declare const TOOL_CATEGORY_LABELS: Record<ToolCategory, string>;
+/** Display labels for warm-up status */
+export declare const WARMUP_STATUS_LABELS: Record<WarmupStatus, string>;
+/** Display labels for provider status */
+export declare const PROVIDER_STATUS_LABELS: Record<ProviderStatus, string>;
 //# sourceMappingURL=constants.d.ts.map
