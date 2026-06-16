@@ -91,7 +91,10 @@ describe('POST /api/blueprints/:id/start-run', () => {
     expect(data).toHaveProperty('note');
     // Should NOT have the old 409 blocked reason
     expect(data.status).not.toBe('blocked'); // not old 409 'blocked' reason
-    expect(data.note).toContain('No runtime execution');
+    // PR 11 updated the note text
+    const hasRuntimeNote = data.note.includes('No runtime execution') ||
+      data.note.includes('Runtime execution has not started');
+    expect(hasRuntimeNote).toBe(true);
   });
 
   test('returns 404 for non-existent blueprint', async () => {
@@ -175,7 +178,10 @@ describe('handoff status semantics', () => {
     // Message must NOT claim execution happened
     expect(data.message).not.toMatch(/execution (started|completed|begun)/i);
     expect(data.message).not.toMatch(/run (started|executed|launched)/i);
-    expect(data.note).toContain('No runtime execution');
+    // PR 11 updated the note text
+    const hasRuntimeNote = data.note.includes('No runtime execution') ||
+      data.note.includes('Runtime execution has not started');
+    expect(hasRuntimeNote).toBe(true);
   });
 
   test('handoff response contains no executable field data', async () => {

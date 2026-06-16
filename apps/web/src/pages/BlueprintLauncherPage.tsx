@@ -63,6 +63,16 @@ interface PipelineGateResult {
 	blockedReasons: string[];
 }
 
+interface InfrastructureGateResult {
+	kind: string;
+	status: string;
+	message: string;
+	source: string;
+	evidenceRefs: string[];
+	blockedReasons: string[];
+	checkedAt: string;
+}
+
 interface HandoffResponse {
 	status: string;
 	handoff: {
@@ -75,6 +85,14 @@ interface HandoffResponse {
 		humanQuestionId?: string;
 		blockedReasons: string[];
 		createdAt: string;
+	};
+	infrastructureGates?: {
+		overall: string;
+		readyForDemo: boolean;
+		readyForReal: boolean;
+		gates: InfrastructureGateResult[];
+		blockedReasons: string[];
+		checkedAt: string;
 	};
 	message: string;
 	note: string;
@@ -212,6 +230,7 @@ export default function BlueprintLauncherPage(): React.ReactElement {
 			fail: 'bg-red-100 text-red-800',
 			blocked: 'bg-red-200 text-red-900',
 			not_checked: 'bg-gray-100 text-gray-500',
+			missing: 'bg-gray-200 text-gray-400',
 			draft: 'bg-blue-100 text-blue-800',
 			waiting_for_human: 'bg-purple-100 text-purple-800',
 			waiting_for_gates: 'bg-orange-100 text-orange-800',
@@ -233,10 +252,13 @@ export default function BlueprintLauncherPage(): React.ReactElement {
 			blueprint_validation: 'Blueprint Validation',
 			human_approval: 'Human Approval',
 			provider_profile: 'Provider Profile',
+			provider_detection: 'Provider Detection',
+			model_profile: 'Model Profile',
 			model_warmup: 'Model Warm-up',
 			speckit_sync: 'Spec Kit Sync',
 			mcp_warmup: 'MCP Warm-up',
 			tool_gateway: 'Tool Gateway',
+			security: 'Security',
 			security_warnings: 'Security Warnings',
 		};
 		return labels[kind] ?? kind;
@@ -634,6 +656,67 @@ What can the software do now compared to the previous run?`}
 							<div className="text-xs text-gray-500">Partial</div>
 						</div>
 					</div>
+
+					{/* Infrastructure Gates (PR 11) */}
+					{handoff.infrastructureGates && handoff.infrastructureGates.gates.length > 0 && (
+						<div className="mb-4">
+							<div className="flex items-center gap-3 mb-2">
+								<h3 className="text-sm font-semibold">Infrastructure Gate States</h3>
+								{statusBadge(handoff.infrastructureGates.overall)}
+							</div>
+
+							<div className="bg-blue-50 border border-blue-200 rounded p-2 mb-3 text-xs text-blue-700">
+								Status is read-only. No runtime is started. Missing state &rarr; missing/not_checked.
+								{handoff.infrastructureGates.readyForDemo && (
+									<span className="block mt-1 text-green-700 font-medium">
+										Ready for Demo Runs
+									</span>
+								)}
+								{handoff.infrastructureGates.readyForReal && (
+									<span className="block mt-1 text-green-700 font-medium">
+										Ready for Real Runs (Human Approved)
+									</span>
+								)}
+							</div>
+
+							<div className="overflow-x-auto">
+								<table className="w-full text-sm border">
+									<thead className="bg-gray-50">
+										<tr>
+											<th className="text-left p-2 border-b font-medium">Gate</th>
+											<th className="text-left p-2 border-b font-medium">Status</th>
+											<th className="text-left p-2 border-b font-medium">Source</th>
+											<th className="text-left p-2 border-b font-medium">Message</th>
+										</tr>
+									</thead>
+									<tbody>
+										{handoff.infrastructureGates.gates.map((gate, idx) => (
+											<tr
+												key={gate.kind}
+												className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
+											>
+												<td className="p-2 border-b whitespace-nowrap">{gateKindLabel(gate.kind)}</td>
+												<td className="p-2 border-b">{statusBadge(gate.status)}</td>
+												<td className="p-2 border-b">
+													<span className="text-xs text-gray-400">{gate.source}</span>
+												</td>
+												<td className="p-2 border-b text-gray-600 text-xs">
+													{gate.message}
+													{gate.blockedReasons.length > 0 && (
+														<ul className="list-disc list-inside mt-1 text-red-500">
+															{gate.blockedReasons.map((r) => (
+																<li key={r}>{r}</li>
+															))}
+														</ul>
+													)}
+												</td>
+											</tr>
+										))}
+									</tbody>
+								</table>
+							</div>
+						</div>
+					)}
 
 					<p className="text-xs text-gray-500 mt-4">{handoff.note}</p>
 				</div>
