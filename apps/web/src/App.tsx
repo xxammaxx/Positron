@@ -10,6 +10,7 @@ import SettingsPage from './components/settings/SettingsPage.jsx';
 import AdminPage from './components/admin/AdminPage.jsx';
 import OversightPage from './pages/OversightPage.jsx';
 import BlueprintLauncherPage from './pages/BlueprintLauncherPage.jsx';
+import ProvidersPage from './pages/ProvidersPage.jsx';
 import NotFound from './components/NotFound.jsx';
 
 export default function App(): React.ReactElement {
@@ -23,6 +24,7 @@ export default function App(): React.ReactElement {
         <Route path="/repos" element={<Repositories />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/providers" element={<ProvidersPage />} />
         <Route path="/oversight" element={<OversightPage />} />
         <Route path="/blueprints" element={<BlueprintLauncherPage />} />
         <Route path="*" element={<NotFound />} />

@@ -69,6 +69,19 @@ const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
+    to: '/providers',
+    label: 'Providers',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" />
+        <circle cx="7" cy="7" r="1" fill="currentColor" />
+        <circle cx="17" cy="7" r="1" fill="currentColor" />
+        <circle cx="7" cy="17" r="1" fill="currentColor" />
+        <circle cx="17" cy="17" r="1" fill="currentColor" />
+      </svg>
+    ),
+  },
+  {
     to: '/admin',
     label: 'Admin',
     icon: (

@@ -489,6 +489,50 @@ export const api = {
 		}>('/oversight/attention');
 	},
 
+	// ── Infrastructure Gates (Issue #229 PR 13) ─────────────────────
+
+	/** Get infrastructure gates status (read-only aggregation) */
+	getInfrastructureGatesStatus(): Promise<{
+		overall: string;
+		readyForDemo: boolean;
+		readyForReal: boolean;
+		gates: Array<{
+			kind: string;
+			status: string;
+			message: string;
+			source: string;
+			evidenceRefs: string[];
+			blockedReasons: string[];
+			checkedAt: string;
+		}>;
+		blockedReasons: string[];
+		checkedAt: string;
+	}> {
+		return request('/infrastructure-gates/status');
+	},
+
+	/** Get infrastructure state status (store-backed read-only) */
+	getInfrastructureStateStatus(): Promise<{
+		status: string;
+		readyForDemo: boolean;
+		readyForReal: boolean;
+		gates: Array<{
+			kind: string;
+			status: string;
+			message: string;
+			source: string;
+			evidenceRefs: string[];
+			blockedReasons: string[];
+			checkedAt: string;
+		}>;
+		blockedReasons: string[];
+		checkedAt: string;
+		runtimeStarted: boolean;
+		note: string;
+	}> {
+		return request('/infrastructure-state/status');
+	},
+
 	// ── Blueprint Launcher (Issue #229 PR 9) ───────────────────────
 
 	/** Validate a blueprint markdown without storing */

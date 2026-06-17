@@ -1,7 +1,7 @@
 # Positron — Evidence-Gated AI Agent for Autonomous GitHub Issue Resolution
 
 [![Version](https://img.shields.io/badge/version-v0.2.0-blue.svg)](https://github.com/xxammaxx/Positron/releases)
-[![Tests](https://img.shields.io/badge/tests-107%20passing-brightgreen.svg)](https://github.com/xxammaxx/Positron/actions)
+[![Tests](https://img.shields.io/badge/tests-2108%20passing-brightgreen.svg)](https://github.com/xxammaxx/Positron/actions)
 [![E2E](https://img.shields.io/badge/e2e-17%20passing-brightgreen.svg)](https://github.com/xxammaxx/Positron/actions)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/docker-ready-2496ED?logo=docker)](https://github.com/xxammaxx/Positron)
@@ -83,6 +83,7 @@ npm run dev:web
 - **🔍 Evidence Explorer** — Browse artifacts, test results, screenshots, and logs from every pipeline phase.
 - **⚙️ Admin Panel** — Bulk cancel/retry, database statistics, workspace cleanup, system configuration.
 - **🛡️ Safety Gates** — Kill-switch (`POSITRON_MERGE_KILL_SWITCH`), rate-limiting, CSP headers, secret redaction, audit trail enforcement.
+- **🔌 Infrastructure Gates & Providers Dashboard** — 8 infrastructure gates (provider detection, model profile, model warm-up, Spec Kit sync, MCP warm-up, tool gateway, human approval, security) with read-only operator overview at `/providers`.
 - **🔔 Notifications** — Slack/Discord webhooks for run completion, failures, and state changes.
 - **🐳 Docker** — Single `docker compose up --build` deploys the full stack (redis, worker, server, web, nginx).
 - **📝 CLI** — `positron health`, `runs`, `stats`, `cancel`, `status` for operational management.
@@ -125,13 +126,12 @@ All settings via environment variables or `apps/server/.env`:
 ## Tests
 
 ```bash
-npx vitest run                  # 107 unit/integration tests
-cd apps/web && npx vitest run   # 58 frontend tests
-npx playwright test             # 17 E2E tests
+npx vitest run                  # 2108 unit/integration tests (of 2111; 3 pre-existing)
+npx playwright test             # 25 E2E tests
 ./scripts/dogfood-test.sh       # Full dogfood pipeline test
 ```
 
-All 107 tests pass. Full E2E workflow proof documented in `docs/release/ui-workflow-proof/`.
+2108/2111 unit/integration tests pass (3 pre-existing failures: Windows-specific + timeout). 140/140 contract tests pass. See `docs/status/` for full evidence index.
 
 ---
 
@@ -144,11 +144,13 @@ Positron/
 │   │   ├── src/
 │   │   │   ├── routes/        # REST API routes
 │   │   │   ├── middleware/    # Auth, rate-limit, logging
+│   │   │   ├── infrastructure/ # State stores, gate evaluation
 │   │   │   └── services/     # Pipeline orchestration
 │   │   └── __tests__/
 │   └── web/           # React/Vite/Tailwind Frontend (Port 5173)
 │       ├── src/
 │       │   ├── components/   # Dashboard, Evidence, Admin, Runs
+│       │   ├── pages/        # Oversight, BlueprintLauncher, Providers
 │       │   ├── hooks/        # SSE, API consumers
 │       │   └── __tests__/
 │       └── e2e/
@@ -161,6 +163,8 @@ Positron/
 │   └── shared/            # Types, SSE events, utilities
 ├── docs/
 │   ├── screenshots/       # Product screenshots
+│   ├── status/            # Current capabilities, limitations, evidence index
+│   ├── security/          # Stop/ask protocol, security model
 │   └── release/          # Release artifacts, proof reports
 └── docker-compose.yml
 ```
