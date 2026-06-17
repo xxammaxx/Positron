@@ -20,5 +20,6 @@ export * from './blueprint-launcher.js';
 export * from './blueprint-pipeline-handoff.js';
 export * from './infrastructure-gates.js';
 export * from './infrastructure-state-store.js';
+export * from './infrastructure-state-upsert.js';
 export * from './secret-manager.js';
 //# sourceMappingURL=index.d.ts.map

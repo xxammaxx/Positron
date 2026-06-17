@@ -157,6 +157,7 @@ import {
 	createInfrastructureStateStoresForServer,
 	type InfrastructureStoreMode,
 } from './infrastructure/create-stores-for-server.js';
+import { createInfrastructureStateRoutes } from './infrastructure/infrastructure-state-routes.js';
 import {
 	renderMetrics,
 	serverUptimeSeconds,
@@ -4742,6 +4743,18 @@ export function createApp(options: ServerOptions = {}) {
 			res.status(500).json({ error: 'Failed to read infrastructure gates status', details: String(err) });
 		}
 	});
+
+	// ── Infrastructure State Upsert API (PR 15) ──
+	// Safe UPSERT endpoints for Provider/Model/SpecKit/MCP state stores.
+	// All POST endpoints are disabled by default (require env flag).
+	// GET /api/infrastructure-state/status — Read-only status aggregation.
+	// POST /api/infrastructure-state/provider-detection
+	// POST /api/infrastructure-state/model-profile
+	// POST /api/infrastructure-state/speckit-sync
+	// POST /api/infrastructure-state/mcp-warmup-evidence
+	// NEVER starts OpenCode/MCP/SpecKit/ToolGateway runtime.
+	const infraStateRoutes = createInfrastructureStateRoutes(infraStores);
+	app.use('/api/infrastructure-state', infraStateRoutes);
 
 	// Run Control (Issue #30)
 	app.post('/api/runs/:id/control', (req, res) => {
