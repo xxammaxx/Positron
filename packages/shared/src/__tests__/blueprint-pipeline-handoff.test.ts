@@ -462,8 +462,13 @@ describe('buildHandoffEvidence', () => {
 			createdAt: '2026-01-01T00:00:00Z',
 		};
 		const evidence = buildHandoffEvidence(handoff);
-		// Paths containing / or \ should be removed
-		expect(evidence.blockedReasons).toHaveLength(0);
+		// Paths should be redacted in evidence, not silently dropped.
+		// The reason structure is preserved; only path content is replaced.
+		expect(evidence.blockedReasons).toHaveLength(2);
+		expect(evidence.blockedReasons[0]).toContain('[path-redacted]');
+		expect(evidence.blockedReasons[0]).not.toContain('/home/user/secret');
+		expect(evidence.blockedReasons[1]).toContain('[path-redacted]');
+		expect(evidence.blockedReasons[1]).not.toContain('Users\\\\admin');
 	});
 
 	it('preserves blockedReasons without paths', () => {

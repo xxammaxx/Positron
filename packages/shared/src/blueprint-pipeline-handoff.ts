@@ -455,7 +455,13 @@ export function buildHandoffEvidence(handoff: BlueprintPipelineHandoff): Bluepri
 		passCount,
 		blockCount,
 		notCheckedCount,
-		blockedReasons: handoff.blockedReasons.filter((r) => !r.includes('/') && !r.includes('\\')),
+		blockedReasons: handoff.blockedReasons.map((r) =>
+			// Redact filesystem paths instead of silently dropping the entire reason.
+			// Paths like /home/user, C:\Users, /etc/passwd are replaced with [path-redacted]
+			// to preserve the semantic meaning of the blocked reason in evidence.
+			r.replace(/\/[a-zA-Z0-9._\-/]+/g, '/[path-redacted]')
+			 .replace(/[A-Z]:\\[a-zA-Z0-9._\-\\]+/g, '[path-redacted]'),
+		),
 		createdAt: handoff.createdAt,
 	};
 }
