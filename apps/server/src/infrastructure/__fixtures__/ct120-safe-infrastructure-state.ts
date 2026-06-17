@@ -40,8 +40,9 @@ export const CT120_PROVIDER_DETECTION_EVIDENCE: OpenCodeProviderDetectionEvidenc
 	detectionStatus: 'version_checked',
 	installStatus: 'not_requested',
 	runtimeStatus: 'model_profile_required',
-	// Path redacted — /root/... → $HOME/...
-	detectedPath: '$HOME/.opencode/bin/opencode',
+	// detectedPath is ABSENT — the path was private and has been redacted.
+	// Validation rule: when redactionApplied=true, detectedPath must be absent.
+	// The path mismatch is documented in blockedReasons using $HOME placeholder.
 	version: '1.17.7',
 	helpAvailable: true,
 	redactionApplied: true,
