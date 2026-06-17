@@ -29,3 +29,5 @@ export * from './infrastructure-gates.js';
 export * from './infrastructure-state-store.js';
 export * from './infrastructure-state-upsert.js';
 export * from './secret-manager.js';
+export * from './agent-types.js';
+export * from './evidence-types.js';

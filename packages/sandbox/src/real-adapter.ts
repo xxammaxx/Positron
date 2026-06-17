@@ -19,7 +19,17 @@ import type {
  * Führt echte Git-Operationen via child_process aus.
  */
 export class RealGitWorkspaceAdapter implements GitWorkspaceAdapter {
-  /** In-process lock tracking: workspacePath → ownerRunId */
+  /** 
+   * In-process lock tracking: workspacePath → ownerRunId.
+   * 
+   * #244 Limitation: This lock is PROCESS-SCOPED only.
+   * It protects against concurrent access within a single Positron server process.
+   * It does NOT protect against multi-process or cluster deployments.
+   * 
+   * For multi-process safety, a persistent lock store (e.g., lockfile with PID,
+   * SQLite advisory lock, or Redis lock) is required.
+   * See follow-up issue: [APPROVAL REQUIRED] Add Persistent Workspace Lock Store.
+   */
   private locks = new Map<string, string>();
   /** Workspace root for boundary validation */
   private workspaceRoot: string;

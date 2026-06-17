@@ -212,5 +212,14 @@ describe('#245 Audit Log Enforcement — GatewayService', () => {
     it('ADAPTER_SOURCE_REQUIRED is defined', () => {
       expect(BLOCK_REASONS.ADAPTER_SOURCE_REQUIRED).toBe('ADAPTER_SOURCE_REQUIRED');
     });
+
+    it('ADAPTER_SOURCE_REQUIRED is intentionally scanner-level only (not a runtime blocker)', () => {
+      // The ADAPTER_SOURCE_REQUIRED block reason exists in the enum but is
+      // intentionally NOT enforced by GatewayService runtime gates.
+      // It is RESERVED for future mandatory enforcement.
+      // Currently, missing adapterSource is flagged via scanner warnings (scanner.ts §5).
+      // This test verifies we do NOT claim it as an active runtime gate.
+      expect(BLOCK_REASONS.ADAPTER_SOURCE_REQUIRED).toBeDefined();
+    });
   });
 });

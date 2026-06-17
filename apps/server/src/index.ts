@@ -39,6 +39,10 @@ import {
 	retry,
 	resumeFromEvents,
 	resolveDatabasePath,
+	tryTransitionWithGates,
+	registerGateEvaluator,
+	registerWorkspaceCleanup,
+	runCleanup,
 } from '@positron/run-state';
 import { RealSpecKitAdapter, FakeSpecKitAdapter } from '@positron/speckit-adapter';
 import { RealOpenCodeAdapter, FakeOpenCodeAdapter } from '@positron/opencode-adapter';
@@ -61,7 +65,8 @@ import type {
 	OpenCodeAdapter,
 	OpenCodeRunInput,
 } from '@positron/shared';
-import type { RunState, RunEventData } from '@positron/run-state';
+import type { RunState, RunEventData, GateEvaluator } from '@positron/run-state';
+import type { GateResult } from '@positron/shared';
 import {
 	FakeGitHubAdapter,
 	createRealGitHubAdapter,
@@ -322,8 +327,8 @@ function saveRunToDb(run: RunState): void {
     VALUES (?, ?, ?, ? || ' #' || ?, 'open', '[]', datetime('now'))
   `);
 	const upsertRun = database.prepare(`
-    INSERT INTO runs (id, repo_id, issue_number, branch, phase, status, autonomy_level, attempt, started_at, finished_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO runs (id, repo_id, issue_number, branch, phase, status, autonomy_level, attempt, started_at, finished_at, workspace_path, last_error)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       repo_id         = excluded.repo_id,
       issue_number    = excluded.issue_number,
@@ -333,7 +338,9 @@ function saveRunToDb(run: RunState): void {
       autonomy_level  = excluded.autonomy_level,
       attempt         = excluded.attempt,
       started_at      = excluded.started_at,
-      finished_at     = excluded.finished_at
+      finished_at     = excluded.finished_at,
+      workspace_path  = excluded.workspace_path,
+      last_error      = excluded.last_error
   `);
 
 	const transaction = database.transaction(() => {
@@ -356,6 +363,8 @@ function saveRunToDb(run: RunState): void {
 			run.attempt,
 			run.startedAt,
 			run.finishedAt,
+			run.workspacePath ?? null,
+			run.lastError ?? null,
 		);
 	});
 	transaction();
@@ -384,6 +393,8 @@ function loadRunFromDb(runId: string): RunState | null {
 			finishedAt: row.finished_at ? String(row.finished_at) : null,
 			lastError: row.last_error ? String(row.last_error) : null,
 			workspacePath: row.workspace_path ? String(row.workspace_path) : null,
+			evidencePath: row.evidence_path ? String(row.evidence_path) : null,
+			workspaceLocked: !!row.workspace_locked,
 		};
 	} catch (err) {
 		log.error(`loadRunFromDb failed for ${runId}`, err);
@@ -422,6 +433,8 @@ function listRunsFromDb(): RunState[] {
 			finishedAt: row.finished_at ? String(row.finished_at) : null,
 			lastError: null,
 			workspacePath: null,
+			evidencePath: null,
+			workspaceLocked: false,
 		}));
 }
 
@@ -664,6 +677,116 @@ async function safeSync(
 		});
 		return null;
 	}
+}
+
+// ---------------------------------------------------------------------------
+// Gate Evaluator Initialization (#246 hardening)
+// ---------------------------------------------------------------------------
+
+/**
+ * Registers all 6 GateType evaluators so the orchestrator can enforce
+ * runtime safety gates via tryTransitionWithGates().
+ *
+ * Fake/Dry-Run mode: evaluators pass with non-blocking warnings
+ * Real mode: evaluators enforce based on run state and environment config
+ */
+function initializeGateEvaluators(): void {
+	const isRealMode = process.env.POSITRON_ENABLE_REAL_RUN === 'true';
+
+	// pre_write: write operations require evidence path or audit sink
+	registerGateEvaluator('pre_write', async (_gate, run, _ctx) => {
+		if (!isRealMode) {
+			return { gate: 'pre_write', passed: true, blocking: false,
+				reason: 'Fake/dry-run: pre_write gate skipped', evaluatedAt: new Date().toISOString() };
+		}
+		const hasEvidence = !!(run.evidencePath ?? run.workspacePath);
+		return { gate: 'pre_write', passed: hasEvidence, blocking: true,
+			reason: hasEvidence ? 'Evidence/workspace path present' : 'No evidence or workspace path',
+			evaluatedAt: new Date().toISOString() };
+	});
+
+	// evidence_required: evidence must be collected before completing phases
+	registerGateEvaluator('evidence_required', async (_gate, run, _ctx) => {
+		if (!isRealMode) {
+			return { gate: 'evidence_required', passed: true, blocking: false,
+				reason: 'Fake/dry-run: evidence gate skipped', evaluatedAt: new Date().toISOString() };
+		}
+		const hasEvidence = !!(run.evidencePath ?? run.workspacePath);
+		return { gate: 'evidence_required', passed: hasEvidence, blocking: true,
+			reason: hasEvidence ? 'Evidence collected' : 'No evidence directory configured',
+			evaluatedAt: new Date().toISOString() };
+	});
+
+	// pre_pr: PR creation requires evidence and branch
+	registerGateEvaluator('pre_pr', async (_gate, run, _ctx) => {
+		if (!isRealMode) {
+			return { gate: 'pre_pr', passed: true, blocking: false,
+				reason: 'Fake/dry-run: pre_pr gate skipped', evaluatedAt: new Date().toISOString() };
+		}
+		const hasEvidence = !!(run.evidencePath ?? run.workspacePath);
+		const hasBranch = !!run.branch;
+		if (!hasEvidence || !hasBranch) {
+			return { gate: 'pre_pr', passed: false, blocking: true,
+				reason: `PR gate: ${!hasBranch ? 'no branch' : ''}${!hasBranch && !hasEvidence ? ', ' : ''}${!hasEvidence ? 'no evidence' : ''}`,
+				evaluatedAt: new Date().toISOString() };
+		}
+		return { gate: 'pre_pr', passed: true, blocking: false,
+			reason: 'PR gate passed', evaluatedAt: new Date().toISOString() };
+	});
+
+	// pre_merge: merge requires kill-switch clear and merge enabled
+	registerGateEvaluator('pre_merge', async (_gate, _run, _ctx) => {
+		if (!isRealMode) {
+			return { gate: 'pre_merge', passed: true, blocking: false,
+				reason: 'Fake/dry-run: pre_merge gate skipped', evaluatedAt: new Date().toISOString() };
+		}
+		const mergeKillSwitch = process.env.POSITRON_MERGE_KILL_SWITCH !== 'false';
+		const mergeAllowed = process.env.POSITRON_ENABLE_MERGE === 'true';
+		if (mergeKillSwitch) {
+			return { gate: 'pre_merge', passed: false, blocking: true,
+				reason: 'POSITRON_MERGE_KILL_SWITCH active', evaluatedAt: new Date().toISOString() };
+		}
+		if (!mergeAllowed) {
+			return { gate: 'pre_merge', passed: false, blocking: true,
+				reason: 'POSITRON_ENABLE_MERGE not set', evaluatedAt: new Date().toISOString() };
+		}
+		return { gate: 'pre_merge', passed: true, blocking: false,
+			reason: 'Merge gate passed', evaluatedAt: new Date().toISOString() };
+	});
+
+	// security: security failures cannot be overridden by human approval
+	registerGateEvaluator('security', async (_gate, run, _ctx) => {
+		if (!isRealMode) {
+			return { gate: 'security', passed: true, blocking: false,
+				reason: 'Fake/dry-run: security gate skipped', evaluatedAt: new Date().toISOString() };
+		}
+		// Real mode: check for FAILED_UNSAFE status or secret leakage evidence.
+		// Security failures are always blocking and cannot be overridden by human approval.
+		if (run.status === 'failed' && run.lastError) {
+			return { gate: 'security', passed: false, blocking: true,
+				reason: `Security gate blocked: run has failure with error: ${run.lastError.slice(0, 100)}`,
+				evaluatedAt: new Date().toISOString() };
+		}
+		if (run.phase === 'FAILED_UNSAFE') {
+			return { gate: 'security', passed: false, blocking: true,
+				reason: 'Security gate blocked: run reached FAILED_UNSAFE (unsafe state)',
+				evaluatedAt: new Date().toISOString() };
+		}
+		return { gate: 'security', passed: true, blocking: false,
+			reason: 'Security gate: no security issues detected', evaluatedAt: new Date().toISOString() };
+	});
+
+	// human_approval: real runs without explicit approval block risky steps
+	registerGateEvaluator('human_approval', async (_gate, _run, _ctx) => {
+		if (!isRealMode) {
+			return { gate: 'human_approval', passed: true, blocking: false,
+				reason: 'Fake/dry-run: human_approval skipped', evaluatedAt: new Date().toISOString() };
+		}
+		// Real mode: block auto-merge without explicit human approval
+		return { gate: 'human_approval', passed: false, blocking: true,
+			reason: 'Human approval required for merge (auto-merge disabled)',
+			evaluatedAt: new Date().toISOString() };
+	});
 }
 
 // ---------------------------------------------------------------------------
@@ -1102,7 +1225,7 @@ async function executePhase(
 		case 'VERIFY':
 			current.branch =
 				current.branch ?? generateBranchName(current.issueNumber, `run-${current.id.slice(0, 8)}`);
-			result = transition(current, 'COMMIT', 'Verified, commit ready');
+			result = await tryTransitionWithGates(current, 'COMMIT', 'Verified, commit ready');
 			break;
 		case 'COMMIT': {
 			const branch =
@@ -1153,7 +1276,7 @@ async function executePhase(
 				}
 
 				const summary = `Committed: ${commitResult.sha.slice(0, 7)}${pushResult} (${changeSummary})`;
-				result = transition(current, 'PR_CREATE', summary, 'INFO');
+				result = await tryTransitionWithGates(current, 'PR_CREATE', summary, 'INFO');
 			} catch (err) {
 				storeEvent({
 					id: createRunId(),
@@ -1257,7 +1380,7 @@ async function executePhase(
 					}
 				}
 
-				result = transition(current, 'MERGE', `PR #${pr.number} created: ${pr.htmlUrl}`, 'INFO');
+				result = await tryTransitionWithGates(current, 'MERGE', `PR #${pr.number} created: ${pr.htmlUrl}`, 'INFO');
 			} catch (err) {
 				storeEvent({
 					id: createRunId(),
@@ -1285,7 +1408,7 @@ async function executePhase(
 			// Branch
 			const branch = current.branch;
 			if (!branch) {
-				result = transition(current, 'DONE', 'Merge skipped (no branch)', 'INFO');
+				result = await tryTransitionWithGates(current, 'DONE', 'Merge skipped (no branch)', 'INFO');
 				break;
 			}
 
@@ -1304,7 +1427,7 @@ async function executePhase(
 			}
 
 			if (!pr) {
-				result = transition(current, 'DONE', 'Merge skipped (no open PR found)', 'INFO');
+				result = await tryTransitionWithGates(current, 'DONE', 'Merge skipped (no open PR found)', 'INFO');
 				break;
 			}
 
@@ -1318,7 +1441,7 @@ async function executePhase(
 					payload: { prNumber: pr.number, prState: pr.state },
 					createdAt: new Date().toISOString(),
 				});
-				result = transition(
+				result = await tryTransitionWithGates(
 					current,
 					'DONE',
 					`PR #${pr.number} ist ${pr.state} — Merge übersprungen`,
@@ -1447,7 +1570,7 @@ async function executePhase(
 					/* comment is best-effort */
 				}
 
-				result = transition(
+				result = await tryTransitionWithGates(
 					current,
 					'DONE',
 					`[DRY-RUN] ${decision}: ${allPassed ? 'All gates pass' : `${blockedGates.length} gates fail — ${blockedGates.map((g) => g.gate).join(', ')}`}`,
@@ -1460,7 +1583,7 @@ async function executePhase(
 
 			// Kill-Switch
 			if (mergeKillSwitch) {
-				result = transition(
+				result = await tryTransitionWithGates(
 					current,
 					'DONE',
 					'Merge BLOCKED: Kill-Switch (POSITRON_MERGE_KILL_SWITCH=true)',
@@ -1469,7 +1592,7 @@ async function executePhase(
 				break;
 			}
 			if (!mergeAllowed) {
-				result = transition(
+				result = await tryTransitionWithGates(
 					current,
 					'DONE',
 					'Merge skipped (POSITRON_ENABLE_MERGE not set)',
@@ -1478,7 +1601,7 @@ async function executePhase(
 				break;
 			}
 			if (current.status !== 'active') {
-				result = transition(
+				result = await tryTransitionWithGates(
 					current,
 					'DONE',
 					`Merge blocked: Run status is ${current.status}`,
@@ -1540,14 +1663,14 @@ async function executePhase(
 							createdAt: new Date().toISOString(),
 						});
 					}
-					result = transition(
+					result = await tryTransitionWithGates(
 						current,
 						'DONE',
 						`PR #${pr.number} merged: ${mergeResult.sha?.slice(0, 7)}`,
 						'INFO',
 					);
 				} else {
-					result = transition(
+					result = await tryTransitionWithGates(
 						current,
 						'DONE',
 						`PR #${pr.number} not mergeable: ${mergeResult.message ?? 'unknown'}`,
@@ -1564,7 +1687,7 @@ async function executePhase(
 					payload: null,
 					createdAt: new Date().toISOString(),
 				});
-				result = transition(current, 'DONE', `Merge failed: ${String(err).slice(0, 100)}`, 'WARN');
+				result = await tryTransitionWithGates(current, 'DONE', `Merge failed: ${String(err).slice(0, 100)}`, 'WARN');
 			}
 			break;
 		}
@@ -1618,13 +1741,26 @@ async function runFullPipeline(
 		};
 		saveRunToDb(current);
 	}
-	// Configurable max retries: env var overrides constant (Issue #31)
+  // Configurable max retries: env var overrides constant (Issue #31)
 	const envMaxRetries = process.env.POSITRON_MAX_FIX_LOOPS
 		? parseInt(process.env.POSITRON_MAX_FIX_LOOPS, 10)
 		: undefined;
 	const maxAttempts = envMaxRetries && !isNaN(envMaxRetries) ? envMaxRetries : MAX_FIX_LOOPS;
 	const fixLoopEnabled = process.env.POSITRON_ENABLE_FIX_LOOP === 'true';
 	let lastRetryTime = 0;
+
+	// #246 Hardening: Register gate evaluators before the pipeline loop.
+	// Gate evaluators are idempotent (re-registration overwrites).
+	// In fake/dry-run mode they pass non-blocking; in real mode they enforce.
+	initializeGateEvaluators();
+
+	// #244 Hardening: Register workspace cleanup via the adapter's destroyWorkspace.
+	// Only registered once per pipeline run; runCleanup() calls it on terminal phases.
+	// Adapter returns { destroyed } but WorkspaceCleanupFn expects { cleaned }.
+	registerWorkspaceCleanup(async (workspacePath: string, _runId: string) => {
+		const result = await workspace.destroyWorkspace(workspacePath);
+		return { cleaned: result.destroyed, reason: result.reason };
+	});
 
 	for (let i = 0; i < maxSteps; i++) {
 		// Check control signals before each phase (Issue #30)
@@ -1883,6 +2019,24 @@ async function runFullPipeline(
 				status: next.status,
 				branch: next.branch,
 			});
+
+			// #244 Hardening: Run workspace cleanup on terminal phase.
+			// CLEANUP is always safe — no gates required (PHASE_GATE_REQUIREMENTS has no CLEANUP entry).
+			// Uses the registered workspace adapter's destroyWorkspace.
+			if (next.workspacePath) {
+				const cleanupResult = await runCleanup(next);
+				storeEvent({
+					id: createRunId(),
+					runId: next.id,
+					phase: next.phase,
+					level: 'INFO',
+					message: cleanupResult.cleaned
+						? `Workspace cleaned: ${next.workspacePath}`
+						: `Workspace cleanup skipped: ${cleanupResult.reason ?? 'no reason'}`,
+					payload: { ...cleanupResult },
+					createdAt: new Date().toISOString(),
+				});
+			}
 			return next;
 		}
 		current = next;
@@ -1935,9 +2089,11 @@ function mapDbRows(rows: Array<Record<string, unknown>>): RunState[] {
 					attempt: Number(row.attempt ?? 0),
 					startedAt: String(row.started_at ?? new Date().toISOString()),
 					finishedAt: row.finished_at ? String(row.finished_at) : null,
-					lastError: row.last_error ? String(row.last_error) : null,
-					workspacePath: row.workspace_path ? String(row.workspace_path) : null,
-				} satisfies RunState,
+			lastError: row.last_error ? String(row.last_error) : null,
+			workspacePath: row.workspace_path ? String(row.workspace_path) : null,
+			evidencePath: row.evidence_path ? String(row.evidence_path) : null,
+			workspaceLocked: !!row.workspace_locked,
+		} satisfies RunState,
 			];
 		} catch (err) {
 			log.warn(

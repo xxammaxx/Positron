@@ -236,6 +236,8 @@ export interface PreparedWorkspace {
   owner: string;
   repo: string;
   workspacePath: string;
+  /** Phase 1 (#243): Dedicated evidence directory within the workspace. */
+  evidencePath?: string;
   branchName: string;
   baseBranch: string;
   defaultBranch: string;
@@ -284,6 +286,14 @@ export interface GitWorkspaceAdapter {
   validateWorkspacePath(workspacePath: string): Promise<void>;
   commit(workspacePath: string, message: string): Promise<{ sha: string }>;
   push(options: PushOptions): Promise<{ pushed: boolean; ref: string }>;
+  /** Phase 1 (#243): Destroy workspace directory after run completes or fails. */
+  destroyWorkspace(workspacePath: string): Promise<{ destroyed: boolean; reason?: string }>;
+  /** Phase 1 (#243): Acquire advisory lock on workspace to prevent parallel access. */
+  lockWorkspace(workspacePath: string, ownerRunId: string): Promise<{ locked: boolean; reason?: string }>;
+  /** Phase 1 (#243): Release advisory lock on workspace. */
+  unlockWorkspace(workspacePath: string, ownerRunId: string): Promise<{ unlocked: boolean; reason?: string }>;
+  /** Phase 1 (#243): Check if workspace is currently locked. */
+  isLocked(workspacePath: string): Promise<{ locked: boolean; ownerRunId?: string }>;
 }
 
 // Sync / Evidence Interfaces

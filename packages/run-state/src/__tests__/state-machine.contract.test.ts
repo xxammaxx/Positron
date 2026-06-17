@@ -45,6 +45,8 @@ function makeRun(overrides: Partial<RunState> = {}): RunState {
 		finishedAt: null,
 		lastError: null,
 		workspacePath: null,
+		evidencePath: null,
+		workspaceLocked: false,
 		...overrides,
 	};
 }

@@ -112,6 +112,8 @@ const worker = new Worker<PipelineJobData, PipelineJobResult>(
       finishedAt: row.finished_at ? String(row.finished_at) : null,
       lastError: row.last_error ? String(row.last_error) : null,
       workspacePath: row.workspace_path ? String(row.workspace_path) : null,
+      evidencePath: row.evidence_path ? String(row.evidence_path) : null,
+      workspaceLocked: !!row.workspace_locked,
     };
 
     // Build pipeline dependencies

@@ -102,6 +102,8 @@ const runStateArb: fc.Arbitrary<RunState> = fc.record({
 	finishedAt: fc.constant(null),
 	lastError: fc.constant(null),
 	workspacePath: fc.constant(null),
+	evidencePath: fc.constant(null),
+	workspaceLocked: fc.constant(false),
 });
 
 /** Arbitrary: a run in FAILED_TRANSIENT */
@@ -209,6 +211,8 @@ describe("Invariant 1: VALID_TRANSITIONS <-> canTransition/transition", () => {
 						finishedAt: null,
 						lastError: null,
 						workspacePath: null,
+						evidencePath: null,
+						workspaceLocked: false,
 					};
 					const result = transition(run, to, msg, level, payload);
 					expect(result.ok).toBe(true);
@@ -285,6 +289,8 @@ describe("Invariant 2: Terminal phases", () => {
 						finishedAt: null,
 						lastError: null,
 						workspacePath: null,
+						evidencePath: null,
+						workspaceLocked: false,
 					};
 					const result = transition(run, target, msg);
 					expect(result.ok).toBe(false);
@@ -422,6 +428,8 @@ describe("Invariant 5: Valid transition correctness", () => {
 						finishedAt: null,
 						lastError: null,
 						workspacePath: "/tmp/test",
+						evidencePath: null,
+						workspaceLocked: false,
 					};
 
 					const result = transition(run, to, msg, level);
@@ -464,6 +472,8 @@ describe("Invariant 5: Valid transition correctness", () => {
 						finishedAt: null,
 						lastError: null,
 						workspacePath: null,
+						evidencePath: null,
+						workspaceLocked: false,
 					};
 					const result = transition(run, "DONE", msg);
 					expect(result.ok).toBe(true);
@@ -651,6 +661,8 @@ describe("Invariant 8: Transition chain integrity", () => {
 						finishedAt: null,
 						lastError: null,
 						workspacePath: null,
+						evidencePath: null,
+						workspaceLocked: false,
 					};
 
 					for (const [from, to] of chain) {

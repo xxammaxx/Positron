@@ -369,12 +369,23 @@ describe('GET /api/tool-gateway/tools', () => {
 
 	test('response does not serialize handlers or functions', async () => {
 		const res = await get('/api/tool-gateway/tools');
-		const bodyStr = JSON.stringify(await res.json());
+		const body = (await res.json()) as {
+			tools: Array<Record<string, unknown>>;
+		};
+		const bodyStr = JSON.stringify(body);
 
 		// No function serialization
 		expect(bodyStr).not.toContain('=>');
 		expect(bodyStr).not.toContain('function');
 		expect(bodyStr).not.toContain('[native code]');
+
+		// No handler property in any tool object (handlers must not be serialized)
+		for (const tool of body.tools) {
+			expect(tool.handler).toBeUndefined();
+			expect(tool.execute).toBeUndefined();
+			expect(tool.executeTool).toBeUndefined();
+			expect(tool._handler).toBeUndefined();
+		}
 	});
 
 	test('response does not expose secrets', async () => {

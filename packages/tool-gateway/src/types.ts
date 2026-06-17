@@ -195,8 +195,11 @@ export const BLOCK_REASONS = {
 	AUDIT_LOG_REQUIRED: 'AUDIT_LOG_REQUIRED',
 	/**
 	 * #245: Write/destructive tool missing adapterSource attribution.
-	 * NOTE: Currently enforced via scanner warnings (not runtime blocking).
-	 * Reserved for future runtime enforcement when adapterSource becomes mandatory.
+	 * STATUS: RESERVED — NOT currently enforced as a runtime blocker.
+	 * Enforcement: scanner-level warnings only (see scanner.ts §5).
+	 * This BLOCK_REASONS key exists so that policy-aware evaluators
+	 * can reference it; it is intentionally NOT wired into GatewayService
+	 * gate enforcement. Future: activate when adapterSource becomes mandatory.
 	 */
 	ADAPTER_SOURCE_REQUIRED: 'ADAPTER_SOURCE_REQUIRED',
 	UNKNOWN: 'UNKNOWN',
