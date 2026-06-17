@@ -21,7 +21,7 @@ interface GateResult {
 }
 
 interface GatesStatus {
-	overall: string;
+	status: string;
 	readyForDemo: boolean;
 	readyForReal: boolean;
 	gates: GateResult[];
@@ -29,7 +29,13 @@ interface GatesStatus {
 	checkedAt: string;
 }
 
-interface StateStatus extends GatesStatus {
+interface StateStatus {
+	status: string;
+	readyForDemo: boolean;
+	readyForReal: boolean;
+	gates: GateResult[];
+	blockedReasons: string[];
+	checkedAt: string;
 	runtimeStarted: boolean;
 	note: string;
 }
@@ -284,8 +290,8 @@ function ReadinessBanner({ gatesStatus, stateStatus }: {
 	if (!data) return null;
 
 	const overallColor =
-		data.overall === 'pass' ? 'border-green-400 bg-green-50 dark:bg-green-950/30' :
-		data.overall === 'partial' ? 'border-amber-400 bg-amber-50 dark:bg-amber-950/30' :
+		data.status === 'pass' ? 'border-green-400 bg-green-50 dark:bg-green-950/30' :
+		data.status === 'partial' ? 'border-amber-400 bg-amber-50 dark:bg-amber-950/30' :
 		'border-rose-400 bg-rose-50 dark:bg-rose-950/30';
 
 	return (
@@ -293,7 +299,7 @@ function ReadinessBanner({ gatesStatus, stateStatus }: {
 			<div className="flex flex-wrap items-center gap-4">
 				<div className="flex items-center gap-2">
 					<span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Overall:</span>
-					<StatusBadge status={data.overall} />
+					<StatusBadge status={data.status} />
 				</div>
 				<div className="flex items-center gap-3 text-sm">
 					<span className={`flex items-center gap-1 ${data.readyForDemo ? 'text-green-700 dark:text-green-400' : 'text-slate-400'}`}>
@@ -397,8 +403,8 @@ export default function ProvidersPage(): React.ReactElement {
 					return null;
 				}),
 			]);
-			setGatesStatus(gates as GatesStatus | null);
-			setStateStatus(state as StateStatus | null);
+			setGatesStatus(gates);
+			setStateStatus(state);
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Failed to load provider status');
 		} finally {

@@ -493,7 +493,7 @@ export const api = {
 
 	/** Get infrastructure gates status (read-only aggregation) */
 	getInfrastructureGatesStatus(): Promise<{
-		overall: string;
+		status: string;
 		readyForDemo: boolean;
 		readyForReal: boolean;
 		gates: Array<{
