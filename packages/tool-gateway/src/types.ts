@@ -88,6 +88,10 @@ export interface ToolDefinition {
 	requiresModelWarmup?: boolean;
 	/** Whether this tool requires Spec Kit sync before use (Issue #229) */
 	requiresSpecKitSync?: boolean;
+	/** Phase 2 (#243): Whether this tool requires an immutable audit log entry. */
+	requiresAuditLog?: boolean;
+	/** Phase 2 (#243): Source adapter/agent type that provides this tool (e.g. "opencode", "codex"). */
+	adapterSource?: string;
 }
 
 /**
@@ -187,6 +191,14 @@ export const BLOCK_REASONS = {
 	GATEWAY_DISABLED: 'GATEWAY_DISABLED',
 	TOOL_EXECUTION_ERROR: 'TOOL_EXECUTION_ERROR',
 	SCANNER_BLOCKED: 'SCANNER_BLOCKED',
+	/** #245: Tool requires audit log but audit sink is not active. */
+	AUDIT_LOG_REQUIRED: 'AUDIT_LOG_REQUIRED',
+	/**
+	 * #245: Write/destructive tool missing adapterSource attribution.
+	 * NOTE: Currently enforced via scanner warnings (not runtime blocking).
+	 * Reserved for future runtime enforcement when adapterSource becomes mandatory.
+	 */
+	ADAPTER_SOURCE_REQUIRED: 'ADAPTER_SOURCE_REQUIRED',
 	UNKNOWN: 'UNKNOWN',
 } as const;
 

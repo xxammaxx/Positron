@@ -190,6 +190,33 @@ export function scanToolDefinition(definition: ToolDefinition): ScanResult {
 		);
 	}
 
+	// 4. #245: Validate requiresAuditLog consistency
+	if (
+		(definition.riskLevel === 'write' || definition.riskLevel === 'destructive') &&
+		!definition.requiresAuditLog
+	) {
+		warnings.push(
+			`Tool "${definition.id}" (risk: ${definition.riskLevel}) should have requiresAuditLog enabled`,
+		);
+	}
+
+	// 5. #245: Validate adapterSource attribution for risky tools
+	if (
+		(definition.riskLevel === 'write' || definition.riskLevel === 'destructive' || definition.riskLevel === 'secret_sensitive') &&
+		!definition.adapterSource
+	) {
+		warnings.push(
+			`Tool "${definition.id}" (risk: ${definition.riskLevel}) missing adapterSource — source attribution required for audit trail`,
+		);
+	}
+
+	// 6. #245: If requiresAuditLog is true, ensure evidence config is appropriate
+	if (definition.requiresAuditLog && !definition.evidenceRequirements.requireArtifact) {
+		warnings.push(
+			`Tool "${definition.id}" requires audit log but evidenceRequirements.requireArtifact is false`,
+		);
+	}
+
 	return {
 		passed: !blocked,
 		warnings,

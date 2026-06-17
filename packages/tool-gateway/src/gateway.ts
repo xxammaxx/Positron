@@ -149,6 +149,17 @@ export class GatewayService {
 				}
 			}
 
+			// Gate 9 (#245): Audit log enforcement
+			// Write/destructive tools with requiresAuditLog MUST have an active audit sink.
+			if (def.requiresAuditLog) {
+				if (!this.onEvidence) {
+					return blocked(
+						BLOCK_REASONS.AUDIT_LOG_REQUIRED,
+						`Tool "${call.toolId}" requires audit log but no evidence handler (onEvidence) is configured`,
+					);
+				}
+			}
+
 			// Execute the tool handler
 			const result = await entry.handler(call);
 

@@ -23,6 +23,9 @@ export class FakeGitWorkspaceAdapter implements GitWorkspaceAdapter {
   private fileStates = new Map<string, Map<string, string>>();
   private workspaceDirty = new Map<string, boolean>();
   private workspaceToRunId = new Map<string, string>();
+  /** Lock tracking: workspacePath → ownerRunId */
+  private locks = new Map<string, string>();
+  private destroyed = new Set<string>();
 
   async prepareWorkspace(input: PrepareWorkspaceInput): Promise<PreparedWorkspace> {
     const { repository, issueNumber, issueTitle, runId, baseBranch } = input;
@@ -144,5 +147,78 @@ export class FakeGitWorkspaceAdapter implements GitWorkspaceAdapter {
 
   async push(_options: PushOptions): Promise<{ pushed: boolean; ref: string }> {
     return { pushed: true, ref: `origin/${this._currentBranch ?? 'positron/issue-42-fake'}` };
+  }
+
+  // ── Phase 1 (#243) / #244: Workspace Lifecycle ──
+
+  async destroyWorkspace(workspacePath: string): Promise<{ destroyed: boolean; reason?: string }> {
+    // Validate workspace path
+    if (!workspacePath || workspacePath.trim() === '') {
+      return { destroyed: false, reason: 'Rejected: empty workspace path' };
+    }
+    if (workspacePath === '/' || workspacePath === '\\') {
+      return { destroyed: false, reason: 'Rejected: root path is not a valid workspace' };
+    }
+    // Idempotent: already destroyed
+    if (this.destroyed.has(workspacePath)) {
+      return { destroyed: true, reason: 'Already destroyed (idempotent)' };
+    }
+    const runId = this.workspaceToRunId.get(workspacePath);
+    if (runId) {
+      this.workspaces.delete(runId);
+      this.fileStates.delete(runId);
+      this.workspaceToRunId.delete(workspacePath);
+      this.workspaceDirty.delete(workspacePath);
+      this.locks.delete(workspacePath);
+    }
+    this.destroyed.add(workspacePath);
+    return { destroyed: true };
+  }
+
+  async lockWorkspace(
+    workspacePath: string,
+    ownerRunId: string,
+  ): Promise<{ locked: boolean; reason?: string }> {
+    if (!workspacePath || !ownerRunId) {
+      return { locked: false, reason: 'Workspace path and ownerRunId are required' };
+    }
+    const existingOwner = this.locks.get(workspacePath);
+    if (existingOwner) {
+      // Idempotent: same owner re-locking
+      if (existingOwner === ownerRunId) {
+        return { locked: true, reason: 'Already locked by same owner (idempotent)' };
+      }
+      return { locked: false, reason: `Workspace already locked by run "${existingOwner}"` };
+    }
+    this.locks.set(workspacePath, ownerRunId);
+    return { locked: true };
+  }
+
+  async unlockWorkspace(
+    workspacePath: string,
+    ownerRunId: string,
+  ): Promise<{ unlocked: boolean; reason?: string }> {
+    if (!workspacePath || !ownerRunId) {
+      return { unlocked: false, reason: 'Workspace path and ownerRunId are required' };
+    }
+    const existingOwner = this.locks.get(workspacePath);
+    if (!existingOwner) {
+      return { unlocked: true, reason: 'Not locked (idempotent)' };
+    }
+    if (existingOwner !== ownerRunId) {
+      return { unlocked: false, reason: `Cannot unlock: workspace owned by "${existingOwner}", not "${ownerRunId}"` };
+    }
+    this.locks.delete(workspacePath);
+    return { unlocked: true };
+  }
+
+  async isLocked(
+    workspacePath: string,
+  ): Promise<{ locked: boolean; ownerRunId?: string }> {
+    const owner = this.locks.get(workspacePath);
+    if (owner) {
+      return { locked: true, ownerRunId: owner };
+    }
+    return { locked: false };
   }
 }
