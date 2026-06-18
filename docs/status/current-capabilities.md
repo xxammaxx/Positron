@@ -5,6 +5,8 @@
 
 ## Status: IMPLEMENTED (Ready for Human Approval)
 
+> ⚠️ **Validation Note (2026-06-18):** Dockerfile/Compose static validation PASSED. Proxmox host 192.168.1.136 unreachable. Live `docker compose up --build` NOT executed — Docker Desktop daemon unavailable on validation host. Status: PARTIAL — static validation complete, live container smoke test pending.
+
 ## What Changed
 
 ### New Capability: Containerized Single-Service Deployment

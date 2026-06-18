@@ -7,7 +7,7 @@
 
 ## Prerequisites
 
-- Proxmox VE host at 192.168.1.135 (or adjust IP)
+- Proxmox VE host at 192.168.1.136 (or adjust IP)
 - Root/sudo SSH access
 - Human Approval for all install steps
 
@@ -16,7 +16,7 @@
 ## 1. Connect to Proxmox Host
 
 ```bash
-ssh root@192.168.1.135
+ssh root@192.168.1.136
 ```
 
 ## 2. Host Health Check

@@ -1,6 +1,8 @@
 # Proxmox / CT 120 Deployment Notes
 
-> CT 120 is the current Positron development container on Proxmox host 192.168.1.135.
+> CT 120 is the current Positron development container on Proxmox host 192.168.1.136.
+> 
+> **Note:** Host 192.168.1.136 may be temporarily unreachable; rollout validation must check reachability first.
 
 ## Option A — Direct Run in CT 120 (No Docker)
 
@@ -40,7 +42,7 @@ If running Docker inside CT 120 (an LXC container):
 
 | Setting | Value |
 |---------|-------|
-| Host | 192.168.1.135 |
+| Host | 192.168.1.136 |
 | Container ID | 120 |
 | Role | Development / demo host |
 | Docker? | Not available (LXC without nesting) |
@@ -52,10 +54,10 @@ From your local machine to CT 120:
 
 ```bash
 # Web UI
-http://192.168.1.135:3000
+http://192.168.1.136:3000
 
 # API Health
-curl http://192.168.1.135:3000/api/health
+curl http://192.168.1.136:3000/api/health
 ```
 
 ## No Proxmox Configuration Changes

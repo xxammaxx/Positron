@@ -1,7 +1,7 @@
 # Proxmox Positron Dev Container — Deployment Guide
 
 **PR:** Issue #229 PR 13  
-**Host:** 192.168.1.135 (Proxmox VE)  
+**Host:** 192.168.1.136 (Proxmox VE)  
 **Created:** 2026-06-16  
 **Status:** Documentation — Container creation pending Human Approval
 
@@ -9,7 +9,7 @@
 
 ## Overview
 
-This guide documents the setup of a dedicated `positron-dev` LXC container on the Proxmox host at `192.168.1.135`. The container provides everything needed for Positron development, testing, UI, browser evidence, OpenCode provider preparation, and Spec Kit preparation.
+This guide documents the setup of a dedicated `positron-dev` LXC container on the Proxmox host at `192.168.1.136`. The container provides everything needed for Positron development, testing, UI, browser evidence, OpenCode provider preparation, and Spec Kit preparation.
 
 **SECURITY:** No secrets committed. No runtime autonomy enabled. No tool execution without Human Approval. Container is unprivileged.
 
@@ -21,7 +21,7 @@ The following scan should be executed on the Proxmox host before container creat
 
 ```bash
 # Connect to Proxmox host (adjust user/key as needed)
-ssh root@192.168.1.135
+ssh root@192.168.1.136
 
 # System info
 hostname
@@ -45,7 +45,7 @@ pveam available --section system | grep -E "debian-12|ubuntu-24|ubuntu-22"
 pveam list local
 ```
 
-**Scan Result:** PENDING — Host 192.168.1.135 not reachable from current environment (SSH timeout). Re-run when host is accessible.
+**Scan Result:** BLOCKED — Host 192.168.1.136 not reachable from current environment (SSH timeout, 2026-06-18 validation). Re-run when host is accessible. Correct IP is 192.168.1.136 (NOT 192.168.1.135).
 
 ---
 
@@ -376,7 +376,7 @@ export POSITRON_INFRASTRUCTURE_STORE=sqlite
 
 | Item | Value |
 |---|---|
-| Host | 192.168.1.135 (Proxmox VE) |
+| Host | 192.168.1.136 (Proxmox VE) |
 | Container Name | `positron-dev` |
 | CTID | PENDING (from `pvesh get /cluster/nextid`) |
 | OS | Debian 12 (Bookworm) |

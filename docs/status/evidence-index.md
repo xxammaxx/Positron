@@ -68,7 +68,7 @@
 |----------|--------|--------------|
 | TypeScript Build | ✅ PASS | `npm run build` — `tsc -b` all packages |
 | Typecheck | ✅ PASS | `npm run typecheck` — no TS errors |
-| Docker Compose Build | ✅ PASS | `docker compose up --build` |
+| Docker Compose Build | ⚠️ PARTIAL | Dockerfile/Compose static validation passed; live `docker compose up --build` NOT executed (Docker Desktop daemon unavailable on validation host 2026-06-18) |
 
 ---
 
