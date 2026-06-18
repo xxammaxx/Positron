@@ -1,124 +1,63 @@
+# Positron — Containerized Deployment MVP
+# Single-service container: Web UI + API + SQLite in one container.
+# Safe demo defaults: no secrets, fake adapters, tool gateway sealed,
+# real run disabled, merge kill switch active.
+#
+# Quickstart:
+#   docker compose up --build
+#   → Web UI:  http://localhost:3000
+#   → API:     http://localhost:3000/api/health
+#   → Gates:   http://localhost:3000/api/infrastructure-gates/status
+#   → Gateway: http://localhost:3000/api/tool-gateway/status
+
 services:
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      server:
-        condition: service_healthy
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:5173/api/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-
-  server:
+  positron:
     build:
       context: .
-      dockerfile: apps/server/Dockerfile
+      dockerfile: Dockerfile
+    container_name: positron
     ports:
       - "3000:3000"
-    volumes:
-      - positron-data:/app/.positron
-      - ${HOME}/.opencode/bin/opencode:/usr/local/bin/opencode:ro
-      - ${HOME}/.local/share/uv/tools/specify-cli:${HOME}/.local/share/uv/tools/specify-cli:ro
-      - ${HOME}/.config/opencode:/root/.config/opencode:ro
-      - ${HOME}/.opencode:/root/.opencode
     environment:
-      - PORT=3000
-      - NODE_ENV=production
-      - PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${HOME}/.local/share/uv/tools/specify-cli/bin:${HOME}/.local/share/uv/tools/specify-cli/bin
-      - POSITRON_DB_PATH=/app/.positron/runs/positron.db
-      - POSITRON_REDIS_URL=redis://redis:6379
-      - GITHUB_TOKEN=${GITHUB_TOKEN:-ghp_fake}
-      - POSITRON_GITHUB_MODE=${POSITRON_GITHUB_MODE:-fake}
-      - POSITRON_SPECKIT_MODE=${POSITRON_SPECKIT_MODE:-fake}
-      - POSITRON_OPENCODE_MODE=${POSITRON_OPENCODE_MODE:-fake}
-      - POSITRON_REPO_OWNER=${POSITRON_REPO_OWNER:-xxammaxx}
-      - POSITRON_REPO_NAME=${POSITRON_REPO_NAME:-Positron}
-      - POSITRON_REPO_DEFAULT_BRANCH=${POSITRON_REPO_DEFAULT_BRANCH:-main}
-      - POSITRON_ENABLE_PUSH=${POSITRON_ENABLE_PUSH:-false}
-      - POSITRON_ENABLE_MERGE=${POSITRON_ENABLE_MERGE:-false}
-      - POSITRON_MERGE_DRY_RUN=${POSITRON_MERGE_DRY_RUN:-true}
+      - POSITRON_MODE=fake
+      - POSITRON_GITHUB_MODE=fake
+      - POSITRON_SPECKIT_MODE=fake
+      - POSITRON_OPENCODE_MODE=fake
+      - POSITRON_INFRASTRUCTURE_STORE=sqlite
+      - POSITRON_ENABLE_REAL_RUN=false
+      - POSITRON_ENABLE_TOOL_GATEWAY=false
+      - POSITRON_MCP_EXPOSE_ENABLED=false
       - POSITRON_MERGE_KILL_SWITCH=true
-      - POSITRON_ENABLE_FIX_LOOP=${POSITRON_ENABLE_FIX_LOOP:-false}
-      - POSITRON_WORKSPACE_ROOT=/app/workspace
-      - POSITRON_ADMIN_TOKEN=${POSITRON_ADMIN_TOKEN:-positron-admin-prod}
-      - POSITRON_CORS_ORIGIN=${POSITRON_CORS_ORIGIN:-http://localhost:5173}
-    depends_on:
-      redis:
-        condition: service_healthy
+      - POSITRON_ENABLE_AUTO_MERGE=false
+      - POSITRON_ENABLE_MERGE=false
+      - POSITRON_MERGE_DRY_RUN=true
+      - POSITRON_ENABLE_PUSH=false
+      - POSITRON_ENABLE_FIX_LOOP=false
+      - POSITRON_REPO_OWNER=positron-demo
+      - POSITRON_REPO_NAME=positron-demo
+      - POSITRON_REPO_DEFAULT_BRANCH=main
+      - POSITRON_ENABLE_INFRASTRUCTURE_STATE_UPSERT=false
+    volumes:
+      - positron-data:/app/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "const http = require('http'); http.get('http://localhost:3000/api/health', (res) => { let d=''; res.on('data', c => d+=c); res.on('end', () => { try { const j=JSON.parse(d); process.exit(j.status==='ok' ? 0 : 1); } catch { process.exit(1); } }); }).on('error', () => process.exit(1));",
+        ]
       interval: 30s
       timeout: 5s
-      retries: 3
-
-  worker:
-    build:
-      context: .
-      dockerfile: apps/worker/Dockerfile
-    volumes:
-      - positron-data:/app/.positron
-      - ${HOME}/.opencode/bin/opencode:/usr/local/bin/opencode:ro
-      - ${HOME}/.local/share/uv/tools/specify-cli:${HOME}/.local/share/uv/tools/specify-cli:ro
-      - ${HOME}/.config/opencode:/root/.config/opencode:ro
-      - ${HOME}/.opencode:/root/.opencode
-    environment:
-      - NODE_ENV=production
-      - POSITRON_DB_PATH=/app/.positron/runs/positron.db
-      - POSITRON_REDIS_URL=redis://redis:6379
-      - PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${HOME}/.local/share/uv/tools/specify-cli/bin
-      - GITHUB_TOKEN=${GITHUB_TOKEN:-ghp_fake}
-      - POSITRON_GITHUB_MODE=${POSITRON_GITHUB_MODE:-fake}
-      - POSITRON_SPECKIT_MODE=${POSITRON_SPECKIT_MODE:-fake}
-      - POSITRON_OPENCODE_MODE=${POSITRON_OPENCODE_MODE:-fake}
-      - POSITRON_REPO_OWNER=${POSITRON_REPO_OWNER:-xxammaxx}
-      - POSITRON_REPO_NAME=${POSITRON_REPO_NAME:-Positron}
-      - POSITRON_REPO_DEFAULT_BRANCH=${POSITRON_REPO_DEFAULT_BRANCH:-main}
-      - POSITRON_ENABLE_PUSH=${POSITRON_ENABLE_PUSH:-false}
-      - POSITRON_ENABLE_MERGE=${POSITRON_ENABLE_MERGE:-false}
-      - POSITRON_MERGE_DRY_RUN=${POSITRON_MERGE_DRY_RUN:-true}
-      - POSITRON_MERGE_KILL_SWITCH=true
-      - POSITRON_ENABLE_FIX_LOOP=${POSITRON_ENABLE_FIX_LOOP:-false}
-      - POSITRON_WORKSPACE_ROOT=/app/workspace
-      - POSITRON_ADMIN_TOKEN=${POSITRON_ADMIN_TOKEN:-positron-admin-prod}
-    depends_on:
-      redis:
-        condition: service_healthy
-    restart: unless-stopped
-
-  web:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
-    depends_on:
-      server:
-        condition: service_healthy
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:5173"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
+      retries: 5
+      start_period: 15s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   positron-data:
-  redis-data:
+    name: positron-data

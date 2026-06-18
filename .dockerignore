@@ -10,3 +10,12 @@ docs/release
 .coverage
 test-results
 playwright-report
+reports
+.env
+.env.local
+apps/server/.env
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.tsbuildinfo

@@ -5259,6 +5259,31 @@ export function createApp(options: ServerOptions = {}) {
 		}
 	});
 
+	// -----------------------------------------------------------------------
+	// Static Web UI serving (production/container mode)
+	// Serves the built Vite/React frontend from apps/web/dist
+	// -----------------------------------------------------------------------
+	const webDistPath =
+		process.env['POSITRON_WEB_DIST_PATH'] ??
+		path.resolve(__serverDirname, '..', '..', '..', '..', 'apps', 'web', 'dist');
+	if (fs.existsSync(webDistPath)) {
+		app.use(express.static(webDistPath, { index: false }));
+		// SPA fallback: serve index.html for any non-API route
+		app.get('*', (req, res, next) => {
+			if (req.path.startsWith('/api/') || req.path.startsWith('/metrics')) {
+				next();
+				return;
+			}
+			const indexPath = path.join(webDistPath, 'index.html');
+			if (fs.existsSync(indexPath)) {
+				res.sendFile(indexPath);
+			} else {
+				next();
+			}
+		});
+		log.info(`[Positron] Serving web UI from ${webDistPath}`);
+	}
+
 	return app;
 }
 

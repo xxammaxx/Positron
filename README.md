@@ -30,13 +30,26 @@
 
 ## Quickstart
 
-### Docker (Production — Full Stack)
+### Containerized MVP (Safe Demo Mode)
 
 ```bash
-cp .env.example apps/server/.env
-# Edit apps/server/.env: set GITHUB_TOKEN, real modes
+# One command — no secrets, no config, no real runs
 docker compose up --build
-# → http://localhost:5173 (nginx reverse proxy)
+# → Web UI:  http://localhost:3000
+# → API:     http://localhost:3000/api/health
+# → Gates:   http://localhost:3000/api/infrastructure-gates/status
+```
+
+> **Safe by default:** Tool Gateway sealed, Real Run disabled, Merge Kill Switch active. No GitHub token needed. See [Container Quickstart](docs/deployment/container-quickstart.md).
+
+### Verify
+
+```bash
+# Health check
+curl http://localhost:3000/api/health
+
+# Full smoke test
+node scripts/healthcheck.js --smoke
 ```
 
 ### Local Development
@@ -49,20 +62,6 @@ npm run dev:server
 # Terminal 2: Web frontend
 npm run dev:web
 # → http://localhost:5173
-# Note: Without Redis, the worker queue falls back to inline execution.
-```
-
-### Local Development (with Redis + Worker)
-
-```bash
-# Terminal 1: Redis
-docker compose up redis -d
-# Terminal 2: Worker
-cd apps/worker && npm run dev
-# Terminal 3: Server
-npm run dev:server
-# Terminal 4: Web
-npm run dev:web
 ```
 
 ### CLI
@@ -73,6 +72,8 @@ npm run dev:web
 ./positron stats            # Admin statistics
 ./positron cancel <run-id>  # Cancel a run
 ```
+
+For more deployment options (Proxmox CT 120, Podman, Real Mode), see [Deployment Docs](docs/deployment/).
 
 ---
 
@@ -85,7 +86,7 @@ npm run dev:web
 - **🛡️ Safety Gates** — Kill-switch (`POSITRON_MERGE_KILL_SWITCH`), rate-limiting, CSP headers, secret redaction, audit trail enforcement.
 - **🔌 Infrastructure Gates & Providers Dashboard** — 8 infrastructure gates (provider detection, model profile, model warm-up, Spec Kit sync, MCP warm-up, tool gateway, human approval, security) with read-only operator overview at `/providers`.
 - **🔔 Notifications** — Slack/Discord webhooks for run completion, failures, and state changes.
-- **🐳 Docker** — Single `docker compose up --build` deploys the full stack (redis, worker, server, web, nginx).
+- **🐳 Docker** — Single `docker compose up --build` deploys Web UI + API + SQLite in one container on port 3000. Safe demo mode — no secrets, no real runs.
 - **📝 CLI** — `positron health`, `runs`, `stats`, `cancel`, `status` for operational management.
 - **🎨 Brutalist Design** — Dark/light theme, mobile-responsive, accessible UI.
 
