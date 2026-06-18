@@ -69,7 +69,7 @@ docker compose up --build
 - TypeScript build: PASS (all projects)
 - Typecheck: PASS (tsc -b --dry)
 - Contract tests: 246/247 PASS (1 pre-existing)
-- Full test suite: 2181/2187 PASS (6 pre-existing)
+- Full test suite: 2182/2187 PASS (5 pre-existing)
 - Secret scan: CLEAN
 - DB artifact scan: CLEAN (only in .gitignored dirs)
 
