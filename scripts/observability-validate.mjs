@@ -13,19 +13,19 @@
  *   1 — Validation failed
  */
 
-import { execSync } from "node:child_process";
-import { existsSync } from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { execSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname, "..");
+const ROOT = path.resolve(__dirname, '..');
 
-const GREEN = "\x1b[32m";
-const RED = "\x1b[31m";
-const YELLOW = "\x1b[33m";
-const RESET = "\x1b[0m";
-const BOLD = "\x1b[1m";
+const GREEN = '\x1b[32m';
+const RED = '\x1b[31m';
+const YELLOW = '\x1b[33m';
+const RESET = '\x1b[0m';
+const BOLD = '\x1b[1m';
 
 function check(success, label) {
 	if (success) {
@@ -38,7 +38,7 @@ function check(success, label) {
 
 function runDocker(cmd) {
 	try {
-		execSync(cmd, { stdio: "pipe", timeout: 30000, cwd: ROOT });
+		execSync(cmd, { stdio: 'pipe', timeout: 30000, cwd: ROOT });
 		return true;
 	} catch {
 		return false;
@@ -48,16 +48,16 @@ function runDocker(cmd) {
 function runCmd(cmd, label) {
 	try {
 		const result = execSync(cmd, {
-			stdio: "pipe",
+			stdio: 'pipe',
 			timeout: 30000,
 			cwd: ROOT,
-			encoding: "utf-8",
+			encoding: 'utf-8',
 		});
 		console.log(`  ${GREEN}✅${RESET} ${label}`);
 		// Print output if it contains useful info
 		const trimmed = result.trim();
 		if (trimmed && trimmed.length < 500) {
-			const lines = trimmed.split("\n").filter((l) => l.trim());
+			const lines = trimmed.split('\n').filter((l) => l.trim());
 			for (const line of lines.slice(0, 5)) {
 				console.log(`      ${line}`);
 			}
@@ -68,7 +68,7 @@ function runCmd(cmd, label) {
 		const stderr = err.stderr?.toString()?.trim();
 		if (stderr) {
 			for (const line of stderr
-				.split("\n")
+				.split('\n')
 				.filter((l) => l.trim())
 				.slice(0, 5)) {
 				console.log(`      ${line}`);
@@ -78,17 +78,15 @@ function runCmd(cmd, label) {
 	}
 }
 
-console.log(
-	`${BOLD}Positron Observability Config Validator (QA-016)${RESET}\n`,
-);
+console.log(`${BOLD}Positron Observability Config Validator (QA-016)${RESET}\n`);
 
 let allPassed = true;
 
 // ── 1. Docker Compose Config Validation ─────────────────────────────────
 console.log(`${BOLD}[1] Docker Compose Config${RESET}`);
 allPassed &= runCmd(
-	"docker compose -f docker-compose.observability.yml config --quiet",
-	"docker-compose.observability.yml valid",
+	'docker compose -f docker-compose.observability.yml config --quiet',
+	'docker-compose.observability.yml valid',
 );
 
 // ── 2. Prometheus Config Validation (via Docker promtool) ─────────────────
@@ -102,9 +100,7 @@ const promtoolOk = runDocker(
 if (promtoolOk) {
 	console.log(`  ${GREEN}✅${RESET} prometheus.yml valid`);
 } else {
-	console.log(
-		`  ${YELLOW}⚠️${RESET} promtool check skipped (Docker unavailable or config issue)`,
-	);
+	console.log(`  ${YELLOW}⚠️${RESET} promtool check skipped (Docker unavailable or config issue)`);
 }
 
 // ── 3. Alert Rules Validation (via Docker promtool) ──────────────────────
@@ -136,9 +132,9 @@ if (amtoolOk) {
 // ── 5. YAML Syntax Check (python3 fallback) ──────────────────────────────
 console.log(`\n${BOLD}[5] YAML Syntax (python3 fallback)${RESET}`);
 const yamlFiles = [
-	"observability/prometheus/prometheus.yml",
-	"observability/prometheus/alerts.yml",
-	"observability/alertmanager/alertmanager.yml",
+	'observability/prometheus/prometheus.yml',
+	'observability/prometheus/alerts.yml',
+	'observability/alertmanager/alertmanager.yml',
 ];
 for (const f of yamlFiles) {
 	const filePath = path.join(ROOT, f);

@@ -127,7 +127,7 @@ export class ToolRegistry {
 		// Freeze all stored tool definitions to prevent post-seal mutation.
 		// A frozen definition cannot have riskLevel, approvalMode, allowedPhases,
 		// or any other security-critical property changed after sealing.
-    for (const [_id, entry] of this.tools) {
+		for (const [_id, entry] of this.tools) {
 			Object.freeze(entry.definition);
 			Object.freeze(entry.definition.inputSchema);
 			Object.freeze(entry.definition.outputSchema);

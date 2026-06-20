@@ -174,7 +174,7 @@ export class GatewayService {
 			}
 
 			return timedResult;
-		} 		catch (error) {
+		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error);
 			const durationMs = Date.now() - startTime;
 			return {

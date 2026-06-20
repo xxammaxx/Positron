@@ -112,7 +112,8 @@ describe('redactForSpeech', () => {
 	});
 
 	test('redacts Bearer token', () => {
-		const input = 'Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJqd3QifQ.signature1234567890';
+		const input =
+			'Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJqd3QifQ.signature1234567890';
 		const result = redactForSpeech(input);
 		expect(result).not.toContain('eyJhbGci');
 		expect(result).toContain('Bearer [TOKEN]');
@@ -140,7 +141,8 @@ describe('redactForSpeech', () => {
 	});
 
 	test('redacts PEM certificate blocks', () => {
-		const input = 'Cert: -----BEGIN CERTIFICATE-----\nABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\n-----END CERTIFICATE-----';
+		const input =
+			'Cert: -----BEGIN CERTIFICATE-----\nABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\n-----END CERTIFICATE-----';
 		const result = redactForSpeech(input);
 		expect(result).not.toContain('BEGIN CERTIFICATE');
 		expect(result).toContain('[CERTIFICATE]');

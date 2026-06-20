@@ -16,8 +16,7 @@ export default function VoiceStatusIndicator(): React.ReactElement {
 			setEnabled(settings.enabled);
 			const last = getLastSpoken();
 			if (last) {
-				const preview =
-					last.text.length > 40 ? last.text.slice(0, 37) + '…' : last.text;
+				const preview = last.text.length > 40 ? last.text.slice(0, 37) + '…' : last.text;
 				setLastSpokenPreview(preview);
 			}
 		}, 2000);
