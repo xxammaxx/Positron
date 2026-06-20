@@ -12,6 +12,14 @@ export type OpenCodePhase =
 	| 'checklist'
 	| 'implement';
 
+/**
+ * Execution mode distinguishing how changes were produced.
+ * - 'fixture': deterministic test agent, no external LLM — reproducible
+ * - 'dry-run': real adapter invoked but all writes/pushes/merges blocked
+ * - 'real': genuine agent execution with real effects
+ */
+export type ExecutionMode = 'fixture' | 'dry-run' | 'real';
+
 /** OpenCode Kommando-Status */
 export type OpenCodeCommandStatus = 'success' | 'failed' | 'blocked' | 'skipped';
 
@@ -53,6 +61,8 @@ export interface OpenCodeCommandResult {
 	blockedReason?: string;
 	/** Session-ID (falls OpenCode eine Session gestartet hat) */
 	sessionId?: string;
+	/** How changes were produced. Undefined = legacy adapter without mode awareness. */
+	executionMode?: ExecutionMode;
 }
 
 /** Input für OpenCode Adapter-Methoden */
