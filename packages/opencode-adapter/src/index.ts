@@ -30,3 +30,14 @@ export {
 	FAKE_OPENCODE_HEALTH_AVAILABLE,
 	FAKE_OPENCODE_HEALTH_UNAVAILABLE,
 } from './fake-adapter.js';
+export { DeterministicFixtureAgent } from './deterministic-fixture-agent.js';
+export type {
+	FixtureAgentConfig,
+	Fixture,
+	EvidenceReport,
+} from './deterministic-fixture-agent.js';
+export { OpenCodeDryRunAgent } from './dry-run-agent.js';
+export type {
+	DryRunAgentConfig,
+	ActionPlan,
+} from './dry-run-agent.js';
