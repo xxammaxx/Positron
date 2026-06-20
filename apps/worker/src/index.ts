@@ -5,8 +5,20 @@
 
 import { Queue, Worker, type Job } from 'bullmq';
 import { openDatabase } from '@positron/run-state';
-import { resolveRedisUrl, PIPELINE_QUEUE, type PipelineJobData, type PipelineJobResult, loadRepositoryConfig, normalizeRepositoryConfig, buildRemoteUrl } from '@positron/shared';
-import { FakeGitHubAdapter, createRealGitHubAdapter, GitHubStatusSyncService } from '@positron/github-adapter';
+import {
+	resolveRedisUrl,
+	PIPELINE_QUEUE,
+	type PipelineJobData,
+	type PipelineJobResult,
+	loadRepositoryConfig,
+	normalizeRepositoryConfig,
+	buildRemoteUrl,
+} from '@positron/shared';
+import {
+	FakeGitHubAdapter,
+	createRealGitHubAdapter,
+	GitHubStatusSyncService,
+} from '@positron/github-adapter';
 import { RealSpecKitAdapter, FakeSpecKitAdapter } from '@positron/speckit-adapter';
 import { RealOpenCodeAdapter, FakeOpenCodeAdapter } from '@positron/opencode-adapter';
 import { FakeGitWorkspaceAdapter, RealGitWorkspaceAdapter } from '@positron/sandbox';
@@ -35,46 +47,48 @@ const db = openDatabase(dbPath);
 // ---------------------------------------------------------------------------
 
 function resolveGitHubAdapter(): GitHubAdapter {
-  const mode = (process.env.POSITRON_GITHUB_MODE ?? process.env.GITHUB_MODE ?? 'fake') as 'fake' | 'real';
-  if (mode === 'real') {
-    console.log('[Worker] RealGitHubAdapter aktiviert');
-    return createRealGitHubAdapter();
-  }
-  return new FakeGitHubAdapter();
+	const mode = (process.env.POSITRON_GITHUB_MODE ?? process.env.GITHUB_MODE ?? 'fake') as
+		| 'fake'
+		| 'real';
+	if (mode === 'real') {
+		console.log('[Worker] RealGitHubAdapter aktiviert');
+		return createRealGitHubAdapter();
+	}
+	return new FakeGitHubAdapter();
 }
 
 function resolveWorkspaceAdapter(): GitWorkspaceAdapter {
-  if (process.env['POSITRON_WORKSPACE_ROOT']) {
-    console.log('[Worker] RealGitWorkspaceAdapter aktiviert');
-    return new RealGitWorkspaceAdapter();
-  }
-  return new FakeGitWorkspaceAdapter();
+	if (process.env['POSITRON_WORKSPACE_ROOT']) {
+		console.log('[Worker] RealGitWorkspaceAdapter aktiviert');
+		return new RealGitWorkspaceAdapter();
+	}
+	return new FakeGitWorkspaceAdapter();
 }
 
 function resolveSpeckitAdapter(): SpecKitAdapter {
-  const mode = process.env['POSITRON_SPECKIT_MODE'] ?? 'fake';
-  if (mode === 'real') {
-    console.log('[Worker] RealSpecKitAdapter aktiviert');
-    return new RealSpecKitAdapter();
-  }
-  return new FakeSpecKitAdapter();
+	const mode = process.env['POSITRON_SPECKIT_MODE'] ?? 'fake';
+	if (mode === 'real') {
+		console.log('[Worker] RealSpecKitAdapter aktiviert');
+		return new RealSpecKitAdapter();
+	}
+	return new FakeSpecKitAdapter();
 }
 
 function resolveOpencodeAdapter(): OpenCodeAdapter {
-  const mode = process.env['POSITRON_OPENCODE_MODE'] ?? 'fake';
-  if (mode === 'real') {
-    console.log('[Worker] RealOpenCodeAdapter aktiviert');
-    return new RealOpenCodeAdapter();
-  }
-  return new FakeOpenCodeAdapter();
+	const mode = process.env['POSITRON_OPENCODE_MODE'] ?? 'fake';
+	if (mode === 'real') {
+		console.log('[Worker] RealOpenCodeAdapter aktiviert');
+		return new RealOpenCodeAdapter();
+	}
+	return new FakeOpenCodeAdapter();
 }
 
 function resolveRepositoryConfig(): RepositoryConfig {
-  const loaded = loadRepositoryConfig(process.env);
-  if (!loaded) {
-    throw new Error('POSITRON_REPO_OWNER and POSITRON_REPO_NAME must be configured');
-  }
-  return normalizeRepositoryConfig(loaded);
+	const loaded = loadRepositoryConfig(process.env);
+	if (!loaded) {
+		throw new Error('POSITRON_REPO_OWNER and POSITRON_REPO_NAME must be configured');
+	}
+	return normalizeRepositoryConfig(loaded);
 }
 
 const github = resolveGitHubAdapter();
@@ -89,81 +103,87 @@ const syncService = new GitHubStatusSyncService(github);
 // ---------------------------------------------------------------------------
 
 const worker = new Worker<PipelineJobData, PipelineJobResult>(
-  PIPELINE_QUEUE,
-  async (job: Job<PipelineJobData, PipelineJobResult>) => {
-    const { runId, repoId, issueNumber, autonomyLevel } = job.data;
-    console.log(`[Worker] Processing job ${job.id}: runId=${runId}, issueNumber=${issueNumber}, autonomyLevel=${autonomyLevel}`);
+	PIPELINE_QUEUE,
+	async (job: Job<PipelineJobData, PipelineJobResult>) => {
+		const { runId, repoId, issueNumber, autonomyLevel } = job.data;
+		console.log(
+			`[Worker] Processing job ${job.id}: runId=${runId}, issueNumber=${issueNumber}, autonomyLevel=${autonomyLevel}`,
+		);
 
-    // Load run from DB
-    const row = db.prepare('SELECT * FROM runs WHERE id = ?').get(runId) as Record<string, unknown> | undefined;
-    if (!row) throw new Error(`Run ${runId} not found in database`);
+		// Load run from DB
+		const row = db.prepare('SELECT * FROM runs WHERE id = ?').get(runId) as
+			| Record<string, unknown>
+			| undefined;
+		if (!row) throw new Error(`Run ${runId} not found in database`);
 
-    const { parsePhase, parseRunStatus } = await import('@positron/shared');
-    const run: RunState = {
-      id: String(row.id ?? ''),
-      repoId: String(row.repo_id ?? ''),
-      issueNumber: Number(row.issue_number ?? issueNumber),
-      branch: row.branch ? String(row.branch) : null,
-      phase: parsePhase(String(row.phase ?? 'QUEUED')),
-      status: parseRunStatus(String(row.status ?? 'blocked')),
-      autonomyLevel: Number(row.autonomy_level ?? autonomyLevel),
-      attempt: Number(row.attempt ?? 0),
-      startedAt: String(row.started_at ?? new Date().toISOString()),
-      finishedAt: row.finished_at ? String(row.finished_at) : null,
-      lastError: row.last_error ? String(row.last_error) : null,
-      workspacePath: row.workspace_path ? String(row.workspace_path) : null,
-    };
+		const { parsePhase, parseRunStatus } = await import('@positron/shared');
+		const run: RunState = {
+			id: String(row.id ?? ''),
+			repoId: String(row.repo_id ?? ''),
+			issueNumber: Number(row.issue_number ?? issueNumber),
+			branch: row.branch ? String(row.branch) : null,
+			phase: parsePhase(String(row.phase ?? 'QUEUED')),
+			status: parseRunStatus(String(row.status ?? 'blocked')),
+			autonomyLevel: Number(row.autonomy_level ?? autonomyLevel),
+			attempt: Number(row.attempt ?? 0),
+			startedAt: String(row.started_at ?? new Date().toISOString()),
+			finishedAt: row.finished_at ? String(row.finished_at) : null,
+			lastError: row.last_error ? String(row.last_error) : null,
+			workspacePath: row.workspace_path ? String(row.workspace_path) : null,
+		};
 
-    // Build pipeline dependencies
-    const deps: PipelineDeps = {
-      db,
-      repository,
-      workspace,
-      speckit,
-      opencode,
-      github,
-      syncService,
-    };
+		// Build pipeline dependencies
+		const deps: PipelineDeps = {
+			db,
+			repository,
+			workspace,
+			speckit,
+			opencode,
+			github,
+			syncService,
+		};
 
-    // Run the pipeline
-    try {
-      const completed = await runPipeline(run, deps);
+		// Run the pipeline
+		try {
+			const completed = await runPipeline(run, deps);
 
-      console.log(`[Worker] Job ${job.id} complete: runId=${runId}, phase=${completed.phase}, status=${completed.status}`);
+			console.log(
+				`[Worker] Job ${job.id} complete: runId=${runId}, phase=${completed.phase}, status=${completed.status}`,
+			);
 
-      return {
-        status: completed.status,
-        phase: completed.phase,
-        lastError: completed.lastError ?? null,
-      };
-    } catch (err) {
-      // Pipeline threw — persist failure state to DB so the run isn't stale
-      const errMsg = err instanceof Error ? err.message : String(err);
-      console.error(`[Worker] Pipeline failed for run ${runId}: ${errMsg}`);
-      try {
-        db.prepare(`
+			return {
+				status: completed.status,
+				phase: completed.phase,
+				lastError: completed.lastError ?? null,
+			};
+		} catch (err) {
+			// Pipeline threw — persist failure state to DB so the run isn't stale
+			const errMsg = err instanceof Error ? err.message : String(err);
+			console.error(`[Worker] Pipeline failed for run ${runId}: ${errMsg}`);
+			try {
+				db.prepare(`
           UPDATE runs SET phase = ?, status = ?, last_error = ?, finished_at = ?
           WHERE id = ?
         `).run('FAILED_BLOCKED', 'blocked', errMsg, new Date().toISOString(), runId);
-      } catch (dbErr) {
-        console.error(`[Worker] Failed to save error state for run ${runId}:`, dbErr);
-      }
-      throw err; // Re-throw so BullMQ marks the job as failed
-    }
-  },
-  {
-    connection: { url: redisUrl },
-    concurrency: 2,
-    lockDuration: 600_000, // 10 min lock — long enough for full pipeline
-  },
+			} catch (dbErr) {
+				console.error(`[Worker] Failed to save error state for run ${runId}:`, dbErr);
+			}
+			throw err; // Re-throw so BullMQ marks the job as failed
+		}
+	},
+	{
+		connection: { url: redisUrl },
+		concurrency: 2,
+		lockDuration: 600_000, // 10 min lock — long enough for full pipeline
+	},
 );
 
 worker.on('completed', (job: Job<PipelineJobData, PipelineJobResult>) => {
-  console.log(`[Worker] Job ${job.id} completed successfully`);
+	console.log(`[Worker] Job ${job.id} completed successfully`);
 });
 
 worker.on('failed', (job: Job<PipelineJobData, PipelineJobResult> | undefined, err: Error) => {
-  console.error(`[Worker] Job ${job?.id ?? 'unknown'} failed:`, err?.message ?? err);
+	console.error(`[Worker] Job ${job?.id ?? 'unknown'} failed:`, err?.message ?? err);
 });
 
 // ---------------------------------------------------------------------------
@@ -171,14 +191,14 @@ worker.on('failed', (job: Job<PipelineJobData, PipelineJobResult> | undefined, e
 // ---------------------------------------------------------------------------
 
 async function shutdown(): Promise<void> {
-  console.log('[Worker] SIGTERM received, closing...');
-  try {
-    await worker.close();
-    console.log('[Worker] Worker closed');
-  } catch (err) {
-    console.error('[Worker] Error during worker close:', err);
-  }
-  process.exit(0);
+	console.log('[Worker] SIGTERM received, closing...');
+	try {
+		await worker.close();
+		console.log('[Worker] Worker closed');
+	} catch (err) {
+		console.error('[Worker] Error during worker close:', err);
+	}
+	process.exit(0);
 }
 
 process.on('SIGTERM', shutdown);

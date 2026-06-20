@@ -17,7 +17,7 @@ export const MAX_RUNS = 1000;
 
 /** SQLite PRAGMA-Einstellungen */
 export const PRAGMA_SETTINGS = {
-  journalMode: 'WAL',
-  foreignKeys: 'ON',
-  busyTimeout: DB_TIMEOUT_MS,
+	journalMode: 'WAL',
+	foreignKeys: 'ON',
+	busyTimeout: DB_TIMEOUT_MS,
 } as const;

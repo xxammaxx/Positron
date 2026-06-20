@@ -17,7 +17,10 @@ import { resolve } from 'node:path';
  * - The prompt standard MUST NOT contain Auto-Merge or force push authorizations
  */
 
-const PROMPT_STANDARD_PATH = resolve(__dirname, '../../../../docs/prompts/positron-prompt-standard.md');
+const PROMPT_STANDARD_PATH = resolve(
+	__dirname,
+	'../../../../docs/prompts/positron-prompt-standard.md',
+);
 
 /**
  * PFLICHT sections that MUST appear in every Positron agent prompt.
@@ -110,7 +113,9 @@ describe('Positron Prompt Standard (Red Tests)', () => {
 	});
 
 	it('Plan-Agent is required before Build-Agent', () => {
-		expect(content).toMatch(/Plan.*Agent.*vor.*Build.*Agent|Plan.*before.*Build|Plan\/Analysis.*mode/i);
+		expect(content).toMatch(
+			/Plan.*Agent.*vor.*Build.*Agent|Plan.*before.*Build|Plan\/Analysis.*mode/i,
+		);
 	});
 
 	// Test every mandatory section

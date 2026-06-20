@@ -25,10 +25,7 @@
 					"mappings": [],
 					"thresholds": {
 						"mode": "absolute",
-						"steps": [
-							{ "color": "green", "value": null },
-							{ "color": "red", "value": 0 }
-						]
+						"steps": [{ "color": "green", "value": null }, { "color": "red", "value": 0 }]
 					}
 				}
 			},
@@ -51,10 +48,7 @@
 					"mappings": [],
 					"thresholds": {
 						"mode": "absolute",
-						"steps": [
-							{ "color": "green", "value": null },
-							{ "color": "yellow", "value": 0 }
-						]
+						"steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 0 }]
 					}
 				}
 			},
@@ -267,9 +261,7 @@
 			"datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
 			"gridPos": { "h": 6, "w": 8, "x": 0, "y": 36 },
 			"id": 13,
-			"targets": [
-				{ "expr": "rate(positron_blocked_merges_total[10m])", "refId": "A" }
-			],
+			"targets": [{ "expr": "rate(positron_blocked_merges_total[10m])", "refId": "A" }],
 			"title": "Blocked Merges",
 			"type": "timeseries"
 		},
@@ -277,9 +269,7 @@
 			"datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
 			"gridPos": { "h": 6, "w": 8, "x": 8, "y": 36 },
 			"id": 14,
-			"targets": [
-				{ "expr": "rate(positron_blocked_pushes_total[10m])", "refId": "A" }
-			],
+			"targets": [{ "expr": "rate(positron_blocked_pushes_total[10m])", "refId": "A" }],
 			"title": "Blocked Pushes",
 			"type": "timeseries"
 		},
@@ -376,10 +366,7 @@
 					],
 					"thresholds": {
 						"mode": "absolute",
-						"steps": [
-							{ "color": "red", "value": null },
-							{ "color": "green", "value": 1 }
-						]
+						"steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }]
 					}
 				}
 			},
@@ -412,10 +399,7 @@
 					],
 					"thresholds": {
 						"mode": "absolute",
-						"steps": [
-							{ "color": "red", "value": null },
-							{ "color": "green", "value": 1 }
-						]
+						"steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }]
 					}
 				}
 			},

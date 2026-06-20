@@ -4,18 +4,18 @@ import type { Phase, PositronLabel } from './types.js';
 
 /** Alle vordefinierten Positron-Label */
 export const POSITRON_LABELS: readonly PositronLabel[] = [
-  'positron:ready',
-  'positron:running',
-  'positron:research',
-  'positron:repo-sync',
-  'positron:planning',
-  'positron:implementing',
-  'positron:testing',
-  'positron:blocked',
-  'positron:failed',
-  'positron:pr-created',
-  'positron:merged',
-  'positron:done',
+	'positron:ready',
+	'positron:running',
+	'positron:research',
+	'positron:repo-sync',
+	'positron:planning',
+	'positron:implementing',
+	'positron:testing',
+	'positron:blocked',
+	'positron:failed',
+	'positron:pr-created',
+	'positron:merged',
+	'positron:done',
 ] as const;
 
 /** Prefix für alle Positron-Label */
@@ -50,30 +50,57 @@ export const MAX_BRANCH_SLUG_LENGTH = 50;
 
 /** Reihenfolge der Phasen (für Fortschrittsberechnung) */
 export const PHASE_ORDER: readonly Phase[] = [
-  'QUEUED', 'CLAIMED', 'REPO_SYNC', 'ISSUE_CONTEXT',
-  'WEB_RESEARCH', 'SPECIFY', 'CLARIFY_OPTIONAL', 'PLAN', 'TASKS',
-  'ANALYZE', 'REVIEW', 'IMPLEMENT', 'TEST', 'VERIFY',
-  'COMMIT', 'PR_CREATE', 'MERGE', 'DONE',
-  'FAILED', 'FAILED_TRANSIENT', 'FAILED_BLOCKED', 'FAILED_UNSAFE',
-  'BLOCKED_PUSH', 'BLOCKED_MERGE',
-  'GATE_APPROVE', 'GATE_REVISE', 'RESUME_PENDING',
-  'CLEANUP',
+	'QUEUED',
+	'CLAIMED',
+	'REPO_SYNC',
+	'ISSUE_CONTEXT',
+	'WEB_RESEARCH',
+	'SPECIFY',
+	'CLARIFY_OPTIONAL',
+	'PLAN',
+	'TASKS',
+	'ANALYZE',
+	'REVIEW',
+	'IMPLEMENT',
+	'TEST',
+	'VERIFY',
+	'COMMIT',
+	'PR_CREATE',
+	'MERGE',
+	'DONE',
+	'FAILED',
+	'FAILED_TRANSIENT',
+	'FAILED_BLOCKED',
+	'FAILED_UNSAFE',
+	'BLOCKED_PUSH',
+	'BLOCKED_MERGE',
+	'GATE_APPROVE',
+	'GATE_REVISE',
+	'RESUME_PENDING',
+	'CLEANUP',
 ] as const;
 
 /** Terminale Phasen (abgeschlossen, keine weiteren Übergänge) */
 export const TERMINAL_PHASES: readonly Phase[] = [
-  'DONE', 'FAILED', 'FAILED_BLOCKED', 'FAILED_UNSAFE', 'CLEANUP',
+	'DONE',
+	'FAILED',
+	'FAILED_BLOCKED',
+	'FAILED_UNSAFE',
+	'CLEANUP',
 ] as const;
 
 /** Blockierte/wartende Phasen */
 export const BLOCKED_PHASES: readonly Phase[] = [
-  'BLOCKED_PUSH', 'BLOCKED_MERGE', 'GATE_APPROVE',
-  'GATE_REVISE', 'RESUME_PENDING',
+	'BLOCKED_PUSH',
+	'BLOCKED_MERGE',
+	'GATE_APPROVE',
+	'GATE_REVISE',
+	'RESUME_PENDING',
 ] as const;
 
 /** Autonomie-Level-Konstanten */
 export const AUTONOMY_LEVELS = {
-  FULL: 0 as const,
-  SEMI: 1 as const,
-  MANUAL: 2 as const,
+	FULL: 0 as const,
+	SEMI: 1 as const,
+	MANUAL: 2 as const,
 } as const;

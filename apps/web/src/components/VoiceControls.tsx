@@ -5,7 +5,12 @@ import {
 	toggleVoiceEnabled,
 	type VoiceEventType,
 } from '../voice/voice-settings.js';
-import { isSpeechSupported, getAvailableVoices, speakTest, getLastSpoken } from '../voice/voice-output.js';
+import {
+	isSpeechSupported,
+	getAvailableVoices,
+	speakTest,
+	getLastSpoken,
+} from '../voice/voice-output.js';
 
 const EVENT_LABELS: Record<VoiceEventType, string> = {
 	run_started: 'Run started',
@@ -105,14 +110,11 @@ export default function VoiceControls(): React.ReactElement {
 		setEnabled(next);
 	}, []);
 
-	const handleVoiceChange = useCallback(
-		(uri: string) => {
-			setSelectedVoiceURI(uri);
-			const settings = loadVoiceSettings();
-			saveVoiceSettings({ ...settings, selectedVoiceURI: uri });
-		},
-		[],
-	);
+	const handleVoiceChange = useCallback((uri: string) => {
+		setSelectedVoiceURI(uri);
+		const settings = loadVoiceSettings();
+		saveVoiceSettings({ ...settings, selectedVoiceURI: uri });
+	}, []);
 
 	const handleRateChange = useCallback((value: number) => {
 		setRate(value);
@@ -191,8 +193,8 @@ export default function VoiceControls(): React.ReactElement {
 			{!supported && (
 				<div className="mb-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
 					<p className="text-xs text-amber-700 dark:text-amber-400">
-						Your browser does not support the Web Speech API. Voice output requires a modern
-						browser (Chrome, Firefox, Edge, or Safari 15+).
+						Your browser does not support the Web Speech API. Voice output requires a modern browser
+						(Chrome, Firefox, Edge, or Safari 15+).
 					</p>
 				</div>
 			)}
@@ -320,8 +322,8 @@ export default function VoiceControls(): React.ReactElement {
 
 			{/* Privacy Notice */}
 			<p className="text-[10px] text-slate-400 dark:text-slate-600 mt-4 pt-3 border-t border-slate-200 dark:border-slate-800">
-				Voice output is local browser TTS. No audio is sent to external services. No data leaves your
-				browser.
+				Voice output is local browser TTS. No audio is sent to external services. No data leaves
+				your browser.
 			</p>
 		</div>
 	);

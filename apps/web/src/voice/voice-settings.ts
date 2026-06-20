@@ -42,34 +42,46 @@ export const DEFAULT_VOICE_SETTINGS: VoiceSettings = {
 export function loadVoiceSettings(): VoiceSettings {
 	try {
 		const raw = localStorage.getItem(STORAGE_KEY);
-		if (!raw) return { ...DEFAULT_VOICE_SETTINGS, enabledEventTypes: [...DEFAULT_VOICE_SETTINGS.enabledEventTypes] };
+		if (!raw)
+			return {
+				...DEFAULT_VOICE_SETTINGS,
+				enabledEventTypes: [...DEFAULT_VOICE_SETTINGS.enabledEventTypes],
+			};
 
 		const parsed = JSON.parse(raw) as Partial<VoiceSettings>;
 
 		// Sichere Migration bei invalid/fehlenden Feldern
 		return {
-			enabled: typeof parsed.enabled === 'boolean' ? parsed.enabled : DEFAULT_VOICE_SETTINGS.enabled,
+			enabled:
+				typeof parsed.enabled === 'boolean' ? parsed.enabled : DEFAULT_VOICE_SETTINGS.enabled,
 			selectedVoiceURI:
 				typeof parsed.selectedVoiceURI === 'string' || parsed.selectedVoiceURI === null
 					? parsed.selectedVoiceURI
 					: DEFAULT_VOICE_SETTINGS.selectedVoiceURI,
-			rate: typeof parsed.rate === 'number' && parsed.rate >= 0.5 && parsed.rate <= 2.0
-				? parsed.rate
-				: DEFAULT_VOICE_SETTINGS.rate,
-			volume: typeof parsed.volume === 'number' && parsed.volume >= 0 && parsed.volume <= 1.0
-				? parsed.volume
-				: DEFAULT_VOICE_SETTINGS.volume,
+			rate:
+				typeof parsed.rate === 'number' && parsed.rate >= 0.5 && parsed.rate <= 2.0
+					? parsed.rate
+					: DEFAULT_VOICE_SETTINGS.rate,
+			volume:
+				typeof parsed.volume === 'number' && parsed.volume >= 0 && parsed.volume <= 1.0
+					? parsed.volume
+					: DEFAULT_VOICE_SETTINGS.volume,
 			enabledEventTypes: Array.isArray(parsed.enabledEventTypes)
-				? [...parsed.enabledEventTypes.filter(
-						(t): t is VoiceEventType =>
-							typeof t === 'string' &&
-							DEFAULT_VOICE_SETTINGS.enabledEventTypes.includes(t as VoiceEventType),
-					)]
+				? [
+						...parsed.enabledEventTypes.filter(
+							(t): t is VoiceEventType =>
+								typeof t === 'string' &&
+								DEFAULT_VOICE_SETTINGS.enabledEventTypes.includes(t as VoiceEventType),
+						),
+					]
 				: [...DEFAULT_VOICE_SETTINGS.enabledEventTypes],
 		};
 	} catch {
 		// Invalid JSON → Fallback auf Defaults
-		return { ...DEFAULT_VOICE_SETTINGS, enabledEventTypes: [...DEFAULT_VOICE_SETTINGS.enabledEventTypes] };
+		return {
+			...DEFAULT_VOICE_SETTINGS,
+			enabledEventTypes: [...DEFAULT_VOICE_SETTINGS.enabledEventTypes],
+		};
 	}
 }
 

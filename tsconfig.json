@@ -1,28 +1,28 @@
 {
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "strict": true,
-    "exactOptionalPropertyTypes": false,
-    "noUncheckedIndexedAccess": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "incremental": true,
-    "composite": true
-  },
-  "references": [
-    { "path": "./packages/shared" },
-    { "path": "./packages/github-adapter" },
-    { "path": "./packages/run-state" },
-    { "path": "./packages/sandbox" },
-    { "path": "./packages/speckit-adapter" },
-    { "path": "./packages/opencode-adapter" },
-    { "path": "./packages/tool-gateway" },
-    { "path": "./apps/server" },
-    { "path": "./apps/worker" }
-  ]
+	"compilerOptions": {
+		"target": "ES2022",
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"strict": true,
+		"exactOptionalPropertyTypes": false,
+		"noUncheckedIndexedAccess": true,
+		"declaration": true,
+		"declarationMap": true,
+		"sourceMap": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"incremental": true,
+		"composite": true
+	},
+	"references": [
+		{ "path": "./packages/shared" },
+		{ "path": "./packages/github-adapter" },
+		{ "path": "./packages/run-state" },
+		{ "path": "./packages/sandbox" },
+		{ "path": "./packages/speckit-adapter" },
+		{ "path": "./packages/opencode-adapter" },
+		{ "path": "./packages/tool-gateway" },
+		{ "path": "./apps/server" },
+		{ "path": "./apps/worker" }
+	]
 }

@@ -1,33 +1,31 @@
-import { describe, expect, test, beforeAll, afterAll } from "vitest";
-import { createServer } from "../index.js";
-import type http from "node:http";
+import { describe, expect, test, beforeAll, afterAll } from 'vitest';
+import { createServer } from '../index.js';
+import type http from 'node:http';
 
 let server: http.Server;
 let baseUrl: string;
-const repository = { owner: "test-owner", repo: "test-repo" };
+const repository = { owner: 'test-owner', repo: 'test-repo' };
 // Dev default token, same as in index.ts
-const DEV_ADMIN_TOKEN = "positron-admin-dev";
+const DEV_ADMIN_TOKEN = 'positron-admin-dev';
 
 beforeAll(async () => {
 	// Set the admin token via env so SecretManager picks it up (env provider first)
-	process.env["POSITRON_ADMIN_TOKEN"] = DEV_ADMIN_TOKEN;
-	server = createServer({ repository, dbPath: ":memory:" });
-	await new Promise<void>((resolve) =>
-		server.listen(0, "127.0.0.1", () => resolve()),
-	);
+	process.env['POSITRON_ADMIN_TOKEN'] = DEV_ADMIN_TOKEN;
+	server = createServer({ repository, dbPath: ':memory:' });
+	await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', () => resolve()));
 	const addr = server.address() as { port: number };
 	baseUrl = `http://127.0.0.1:${addr.port}`;
 });
 
 afterAll(() => {
-	delete process.env["POSITRON_ADMIN_TOKEN"];
+	delete process.env['POSITRON_ADMIN_TOKEN'];
 	server.close();
 });
 
 async function post(path: string, body: unknown) {
 	return fetch(`${baseUrl}${path}`, {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify(body),
 	});
 }
@@ -38,19 +36,19 @@ async function get(path: string) {
 
 async function getWithToken(path: string, token: string) {
 	return fetch(`${baseUrl}${path}`, {
-		headers: { "X-Admin-Token": token },
+		headers: { 'X-Admin-Token': token },
 	});
 }
 
-describe("POST /api/repos/:repoId/runs", () => {
+describe('POST /api/repos/:repoId/runs', () => {
 	// QA-027: Reactivated — the POST /api/repos/:repoId/runs route has an
 	// inline fallback (runFullPipeline) that runs synchronously when
 	// BullMQ/Redis is unavailable. Tests go through this fallback path
 	// and complete in-process. ~500ms BullMQ connection timeout per test.
-	test("vollständiger Run durchläuft alle Phasen — erreicht DONE", async () => {
+	test('vollständiger Run durchläuft alle Phasen — erreicht DONE', async () => {
 		// Fake-Adapter simuliert jetzt Änderungen nach prepareWorkspace
 		// → Run erreicht COMMIT → PR_CREATE → MERGE (dry-run) → DONE
-		const res = await post("/api/repos/repo-1/runs", {
+		const res = await post('/api/repos/repo-1/runs', {
 			issueNumber: 42,
 			autonomyLevel: 2,
 		});
@@ -66,32 +64,32 @@ describe("POST /api/repos/:repoId/runs", () => {
 			events: Array<{ phase: string }>;
 			eventCount: number;
 		};
-		expect(body.run.phase).toBe("DONE");
-		expect(body.run.status).toBe("done");
-		expect(body.run.repoId).toBe("test-repo");
+		expect(body.run.phase).toBe('DONE');
+		expect(body.run.status).toBe('done');
+		expect(body.run.repoId).toBe('test-repo');
 		// Sollte deutlich mehr Events haben als vorher (da der Run komplett durchläuft)
 		expect(body.eventCount).toBeGreaterThanOrEqual(15);
 	});
 
-	test("zwei aufeinanderfolgende Runs — beide erreichen DONE", async () => {
-		const r1 = await post("/api/repos/repo-1/runs", { issueNumber: 1 });
+	test('zwei aufeinanderfolgende Runs — beide erreichen DONE', async () => {
+		const r1 = await post('/api/repos/repo-1/runs', { issueNumber: 1 });
 		const b1 = (await r1.json()) as {
 			run: { id: string; phase: string; lastError: string | null };
 		};
-		expect(b1.run.phase).toBe("DONE");
+		expect(b1.run.phase).toBe('DONE');
 
-		const r2 = await post("/api/repos/repo-2/runs", { issueNumber: 2 });
+		const r2 = await post('/api/repos/repo-2/runs', { issueNumber: 2 });
 		const b2 = (await r2.json()) as { run: { id: string; phase: string } };
-		expect(b2.run.phase).toBe("DONE");
+		expect(b2.run.phase).toBe('DONE');
 		expect(b2.run.id).not.toBe(b1.run.id);
 	});
 });
 
-describe("GET /api/runs", () => {
-	test("listet alle Runs", async () => {
-		const createRes = await post("/api/repos/repo-a/runs", { issueNumber: 1 });
+describe('GET /api/runs', () => {
+	test('listet alle Runs', async () => {
+		const createRes = await post('/api/repos/repo-a/runs', { issueNumber: 1 });
 		expect(createRes.status).toBe(200);
-		const res = await get("/api/runs");
+		const res = await get('/api/runs');
 		const body = (await res.json()) as {
 			runs: Array<unknown>;
 			total?: number;
@@ -104,18 +102,18 @@ describe("GET /api/runs", () => {
 	});
 });
 
-describe("GET /api/health", () => {
-	test("Health-Endpunkt antwortet", async () => {
-		const res = await get("/api/health");
+describe('GET /api/health', () => {
+	test('Health-Endpunkt antwortet', async () => {
+		const res = await get('/api/health');
 		const body = (await res.json()) as { status: string };
-		expect(body.status).toBe("ok");
+		expect(body.status).toBe('ok');
 	});
 });
 
-describe("Run Resume", () => {
+describe('Run Resume', () => {
 	// QA-027: Reactivated — same inline fallback as above.
-	test("Run-Details via GET /api/runs/:id", async () => {
-		const create = await post("/api/repos/repo/runs", { issueNumber: 99 });
+	test('Run-Details via GET /api/runs/:id', async () => {
+		const create = await post('/api/repos/repo/runs', { issueNumber: 99 });
 		const createBody = (await create.json()) as { run: { id: string } };
 		const res = await get(`/api/runs/${createBody.run.id}`);
 		const body = (await res.json()) as {
@@ -123,37 +121,37 @@ describe("Run Resume", () => {
 			events: Array<unknown>;
 		};
 		// Run sollte DONE sein, nicht FAILED_BLOCKED
-		expect(body.run.phase).toBe("DONE");
+		expect(body.run.phase).toBe('DONE');
 		expect(body.events.length).toBeGreaterThan(0);
 	});
 });
 
-describe("Admin Auth Middleware", () => {
-	test("GET /api/admin/stats ohne Token → 401", async () => {
-		const res = await get("/api/admin/stats");
+describe('Admin Auth Middleware', () => {
+	test('GET /api/admin/stats ohne Token → 401', async () => {
+		const res = await get('/api/admin/stats');
 		expect(res.status).toBe(401);
 		const body = (await res.json()) as { error: string };
-		expect(body.error).toContain("admin token");
+		expect(body.error).toContain('admin token');
 	});
 
-	test("GET /api/admin/stats mit falschem Token → 401", async () => {
-		const res = await getWithToken("/api/admin/stats", "wrong-token");
+	test('GET /api/admin/stats mit falschem Token → 401', async () => {
+		const res = await getWithToken('/api/admin/stats', 'wrong-token');
 		expect(res.status).toBe(401);
 		const body = (await res.json()) as { error: string };
-		expect(body.error).toContain("admin token");
+		expect(body.error).toContain('admin token');
 	});
 
-	test("GET /api/admin/stats mit gültigem Token → 200", async () => {
-		const res = await getWithToken("/api/admin/stats", DEV_ADMIN_TOKEN);
+	test('GET /api/admin/stats mit gültigem Token → 200', async () => {
+		const res = await getWithToken('/api/admin/stats', DEV_ADMIN_TOKEN);
 		expect(res.status).toBe(200);
 		const body = (await res.json()) as {
 			runs: { total: number };
 			repositories: number;
 		};
-		expect(body).toHaveProperty("runs");
-		expect(body.runs).toHaveProperty("total");
-		expect(body).toHaveProperty("repositories");
-		expect(body).toHaveProperty("events");
-		expect(body).toHaveProperty("artifacts");
+		expect(body).toHaveProperty('runs');
+		expect(body.runs).toHaveProperty('total');
+		expect(body).toHaveProperty('repositories');
+		expect(body).toHaveProperty('events');
+		expect(body).toHaveProperty('artifacts');
 	});
 });
