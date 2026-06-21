@@ -75,7 +75,7 @@ describe('repo.list_files', () => {
 	it('should list files in a subdirectory', async () => {
 		const call = makeCall({
 			toolId: 'repo.list_files',
-			arguments: { directory: 'src' },
+			arguments: { directory: 'packages' },
 		});
 
 		const result = await repoListFilesHandler(call);
