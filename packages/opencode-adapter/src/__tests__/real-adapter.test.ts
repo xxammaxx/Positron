@@ -191,7 +191,7 @@ describe('RealOpenCodeAdapter healthCheck edge cases', () => {
 	});
 
 	test('healthCheck returns unavailable when exitCode is non-zero', async () => {
-		const adapter = new RealOpenCodeAdapter('/tmp/evidence');
+		const adapter = new RealOpenCodeAdapter(path.join(os.tmpdir(), 'evidence'));
 		vi.mocked(runCommand).mockResolvedValueOnce({
 			exitCode: 1,
 			stdout: '',
@@ -205,7 +205,7 @@ describe('RealOpenCodeAdapter healthCheck edge cases', () => {
 	});
 
 	test('healthCheck returns version "unknown" when stdout is empty', async () => {
-		const adapter = new RealOpenCodeAdapter('/tmp/evidence');
+		const adapter = new RealOpenCodeAdapter(path.join(os.tmpdir(), 'evidence'));
 		vi.mocked(runCommand).mockResolvedValueOnce({
 			exitCode: 0,
 			stdout: '',
@@ -219,7 +219,7 @@ describe('RealOpenCodeAdapter healthCheck edge cases', () => {
 	});
 
 	test('healthCheck returns version "unknown" when stdout is whitespace only', async () => {
-		const adapter = new RealOpenCodeAdapter('/tmp/evidence');
+		const adapter = new RealOpenCodeAdapter(path.join(os.tmpdir(), 'evidence'));
 		vi.mocked(runCommand).mockResolvedValueOnce({
 			exitCode: 0,
 			stdout: '   \n  \t',
@@ -238,19 +238,19 @@ describe('RealOpenCodeAdapter healthCheck edge cases', () => {
 // ---------------------------------------------------------------------------
 describe('RealOpenCodeAdapter mapPhase', () => {
 	test('maps known phases correctly', () => {
-		const adapter = new RealOpenCodeAdapter('/tmp/evidence');
+		const adapter = new RealOpenCodeAdapter(path.join(os.tmpdir(), 'evidence'));
 		expect((adapter as any).mapPhase('specify')).toBe('specify');
 		expect((adapter as any).mapPhase('implement')).toBe('implement');
 		expect((adapter as any).mapPhase('plan')).toBe('plan');
 	});
 
 	test('falls back to implement for unknown phase', () => {
-		const adapter = new RealOpenCodeAdapter('/tmp/evidence');
+		const adapter = new RealOpenCodeAdapter(path.join(os.tmpdir(), 'evidence'));
 		expect((adapter as any).mapPhase('unknown-phase')).toBe('implement');
 	});
 
 	test('falls back to implement for empty phase', () => {
-		const adapter = new RealOpenCodeAdapter('/tmp/evidence');
+		const adapter = new RealOpenCodeAdapter(path.join(os.tmpdir(), 'evidence'));
 		expect((adapter as any).mapPhase('')).toBe('implement');
 	});
 });
@@ -260,9 +260,9 @@ describe('RealOpenCodeAdapter mapPhase', () => {
 // ---------------------------------------------------------------------------
 describe('RealOpenCodeAdapter saveEvidence edge cases', () => {
 	test('returns empty object when mkdir fails (catch path)', () => {
-		const adapter = new RealOpenCodeAdapter('/tmp/evidence');
+		const adapter = new RealOpenCodeAdapter(path.join(os.tmpdir(), 'evidence'));
 		// Create a file where the directory should be to cause mkdirSync to fail
-		const conflictPath = path.join('/tmp', 'evidence-conflict-test');
+		const conflictPath = path.join(os.tmpdir(), 'opencode-evidence-conflict-test');
 		try {
 			fs.writeFileSync(conflictPath, 'block');
 			const adapterWithBadDir = new RealOpenCodeAdapter(conflictPath);
@@ -350,7 +350,7 @@ describe('RealOpenCodeAdapter runSlashCommand success path', () => {
 	});
 
 	test('healthCheck returns unavailable when runCommand throws', async () => {
-		const adapter = new RealOpenCodeAdapter('/tmp/evidence');
+		const adapter = new RealOpenCodeAdapter(path.join(os.tmpdir(), 'evidence'));
 		vi.mocked(runCommand).mockRejectedValueOnce(new Error('Command not found'));
 		const health = await adapter.healthCheck(tmpWorkspace);
 		expect(health.available).toBe(false);
