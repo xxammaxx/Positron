@@ -146,16 +146,36 @@ const eventLevelArb = fc.constantFrom<'INFO' | 'WARN' | 'ERROR' | 'GATE' | 'HUMA
 	'HUMAN',
 );
 
-/** Arbitrary: a transition chain of valid transitions (length 2-20) */
-const transitionChainArb = fc
-	.array(validTransitionArb, { minLength: 2, maxLength: 20 })
-	.filter((chain) => {
-		for (let i = 0; i < chain.length - 1; i++) {
-			if (chain[i]![1] !== chain[i + 1]![0]) return false;
+/**
+ * Arbitrary: a transition chain of valid transitions (length 2-20).
+ *
+ * Constructive generator: builds connected chains directly by starting from a
+ * random valid transition and extending the chain step-by-step through valid
+ * outgoing edges. This replaces the previous rejection-based
+ * `fc.array(...).filter(...)` approach, which was extremely inefficient for
+ * sparse transition graphs (28 phases, few valid edges per phase). Under
+ * full-suite parallelism, the old generator caused Invariant 8 to time out at
+ * 5000ms because fast-check had to discard thousands of rejected arrays before
+ * finding 500 connected ones.
+ */
+const transitionChainArb: fc.Arbitrary<[Phase, Phase][]> = fc
+	.tuple(validTransitionArb, fc.integer({ min: 2, max: 20 }))
+	.map(([seed, targetLength]) => {
+		const chain: [Phase, Phase][] = [seed];
+		let currentPhase: Phase = seed[1];
+
+		while (chain.length < targetLength) {
+			const nextTargets = VALID_TRANSITIONS[currentPhase] as readonly Phase[];
+			if (nextTargets.length === 0) break; // reached terminal phase
+
+			// Deterministic but varied selection: cycle through available targets
+			const nextPhase = nextTargets[chain.length % nextTargets.length]!;
+			chain.push([currentPhase, nextPhase]);
+			currentPhase = nextPhase;
 		}
-		return true;
-	})
-	.map((chain) => chain) as fc.Arbitrary<[Phase, Phase][]>;
+
+		return chain;
+	});
 
 // =========================================================================
 // Invariant 1: VALID_TRANSITIONS consistency
