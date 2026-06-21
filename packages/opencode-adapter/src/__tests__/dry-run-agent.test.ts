@@ -6,11 +6,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 // RT1/RT2: This import WILL FAIL until dry-run-agent.ts exists.
 import { OpenCodeDryRunAgent } from '../dry-run-agent.js';
-import type {
-	DryRunAgentConfig,
-	ActionPlan,
-	EvidenceReport,
-} from '../dry-run-agent.js';
+import type { DryRunAgentConfig, ActionPlan, EvidenceReport } from '../dry-run-agent.js';
 import type { OpenCodeRunInput } from '@positron/shared';
 
 // --------------- Test Constants ---------------
@@ -127,9 +123,7 @@ describe('OpenCodeDryRunAgent — RT3: Blocked File Write', () => {
 		const result = await agent.analyzeActions([WRITE_ACTION], TEST_INPUT);
 
 		expect(result.blockedActions.length).toBeGreaterThan(0);
-		const blocked = result.blockedActions.find(
-			(a) => a.operation === 'write file',
-		);
+		const blocked = result.blockedActions.find((a) => a.operation === 'write file');
 		expect(blocked).toBeDefined();
 		expect(blocked!.reason).toMatch(/write|controlled|path/i);
 		expect(result.status).not.toBe('success');
@@ -140,9 +134,7 @@ describe('OpenCodeDryRunAgent — RT3: Blocked File Write', () => {
 		const result = await agent.analyzeActions([WRITE_ACTION], TEST_INPUT);
 
 		// No file should actually be created
-		expect(result.blockedActions.find(
-			(a) => a.operation === 'write file',
-		)).toBeDefined();
+		expect(result.blockedActions.find((a) => a.operation === 'write file')).toBeDefined();
 		expect(result.changedFiles).toEqual([]);
 	});
 
@@ -155,9 +147,7 @@ describe('OpenCodeDryRunAgent — RT3: Blocked File Write', () => {
 		const result = await agent.analyzeActions([controlledWrite], TEST_INPUT);
 
 		// Controlled path writes should be simulated, not blocked
-		const blocked = result.blockedActions.find(
-			(a) => a.operation === 'write file',
-		);
+		const blocked = result.blockedActions.find((a) => a.operation === 'write file');
 		expect(blocked).toBeUndefined();
 	});
 });
@@ -184,9 +174,7 @@ describe('OpenCodeDryRunAgent — RT4: Blocked GitHub Push', () => {
 		const agent = new OpenCodeDryRunAgent();
 		const result = await agent.analyzeActions([PUSH_ACTION], TEST_INPUT);
 
-		const blocked = result.blockedActions.find(
-			(a) => a.operation === 'git push',
-		);
+		const blocked = result.blockedActions.find((a) => a.operation === 'git push');
 		expect(blocked).toBeDefined();
 		expect(blocked!.reason).toMatch(/POSITRON_ENABLE_PUSH/i);
 	});
@@ -195,9 +183,7 @@ describe('OpenCodeDryRunAgent — RT4: Blocked GitHub Push', () => {
 		const agent = new OpenCodeDryRunAgent();
 		const result = await agent.analyzeActions([FORCE_PUSH_ACTION], TEST_INPUT);
 
-		const blocked = result.blockedActions.find(
-			(a) => a.operation.includes('push'),
-		);
+		const blocked = result.blockedActions.find((a) => a.operation.includes('push'));
 		expect(blocked).toBeDefined();
 		expect(blocked!.reason).toMatch(/POSITRON_ENABLE_PUSH/i);
 	});
@@ -232,9 +218,7 @@ describe('OpenCodeDryRunAgent — RT5: Blocked PR Creation', () => {
 		const agent = new OpenCodeDryRunAgent();
 		const result = await agent.analyzeActions([PR_CREATE_ACTION], TEST_INPUT);
 
-		const blocked = result.blockedActions.find(
-			(a) => a.operation === 'gh pr create',
-		);
+		const blocked = result.blockedActions.find((a) => a.operation === 'gh pr create');
 		expect(blocked).toBeDefined();
 		expect(blocked!.reason).toMatch(/PR|pull request|write|blocked/i);
 	});
@@ -262,33 +246,23 @@ describe('OpenCodeDryRunAgent — RT6: Blocked Merge / Branch Delete', () => {
 		const agent = new OpenCodeDryRunAgent();
 		const result = await agent.analyzeActions([MERGE_ACTION], TEST_INPUT);
 
-		const blocked = result.blockedActions.find(
-			(a) => a.operation === 'git merge',
-		);
+		const blocked = result.blockedActions.find((a) => a.operation === 'git merge');
 		expect(blocked).toBeDefined();
 		expect(blocked!.reason).toMatch(/POSITRON_MERGE_KILL_SWITCH/i);
 	});
 
 	it('RT6b: git branch -d is blocked with reason citing POSITRON_MERGE_KILL_SWITCH', async () => {
 		const agent = new OpenCodeDryRunAgent();
-		const result = await agent.analyzeActions(
-			[BRANCH_DELETE_ACTION],
-			TEST_INPUT,
-		);
+		const result = await agent.analyzeActions([BRANCH_DELETE_ACTION], TEST_INPUT);
 
-		const blocked = result.blockedActions.find(
-			(a) => a.operation === 'git branch -d',
-		);
+		const blocked = result.blockedActions.find((a) => a.operation === 'git branch -d');
 		expect(blocked).toBeDefined();
 		expect(blocked!.reason).toMatch(/POSITRON_MERGE_KILL_SWITCH/i);
 	});
 
 	it('RT6c: no actual git merge or branch delete is executed', async () => {
 		const agent = new OpenCodeDryRunAgent();
-		const result = await agent.analyzeActions(
-			[MERGE_ACTION, BRANCH_DELETE_ACTION],
-			TEST_INPUT,
-		);
+		const result = await agent.analyzeActions([MERGE_ACTION, BRANCH_DELETE_ACTION], TEST_INPUT);
 
 		expect(result.executionMode).toBe('dry-run');
 		expect(result.status).toBe('blocked');
@@ -371,9 +345,7 @@ describe('OpenCodeDryRunAgent — Kill Switch Integration', () => {
 		const agent = new OpenCodeDryRunAgent();
 		const result = await agent.analyzeActions([MERGE_ACTION], TEST_INPUT);
 
-		expect(result.warnings).toContainEqual(
-			expect.stringMatching(/POSITRON_MERGE_KILL_SWITCH/i),
-		);
+		expect(result.warnings).toContainEqual(expect.stringMatching(/POSITRON_MERGE_KILL_SWITCH/i));
 	});
 
 	it('warns when POSITRON_ENABLE_PUSH is not true', async () => {
@@ -382,9 +354,7 @@ describe('OpenCodeDryRunAgent — Kill Switch Integration', () => {
 		const agent = new OpenCodeDryRunAgent();
 		const result = await agent.analyzeActions([PUSH_ACTION], TEST_INPUT);
 
-		const hasWarning = result.warnings.some((w) =>
-			/POSITRON_ENABLE_PUSH/i.test(w),
-		);
+		const hasWarning = result.warnings.some((w) => /POSITRON_ENABLE_PUSH/i.test(w));
 		expect(hasWarning).toBe(true);
 	});
 
@@ -395,9 +365,7 @@ describe('OpenCodeDryRunAgent — Kill Switch Integration', () => {
 		const result = await agent.analyzeActions([MERGE_ACTION], TEST_INPUT);
 
 		// Merge must show as blocked, not simulated or success
-		const blocked = result.blockedActions.find(
-			(a) => a.operation === 'git merge',
-		);
+		const blocked = result.blockedActions.find((a) => a.operation === 'git merge');
 		expect(blocked).toBeDefined();
 		expect(blocked!.reason).not.toMatch(/would succeed/i);
 	});
@@ -418,9 +386,7 @@ describe('OpenCodeDryRunAgent — POSITRON_ENABLE_DRY_RUN Gate', () => {
 		process.env['POSITRON_ENABLE_DRY_RUN'] = 'false';
 		process.env['NODE_ENV'] = 'production';
 
-		expect(() => new OpenCodeDryRunAgent()).toThrow(
-			/POSITRON_ENABLE_DRY_RUN/i,
-		);
+		expect(() => new OpenCodeDryRunAgent()).toThrow(/POSITRON_ENABLE_DRY_RUN/i);
 	});
 
 	it('allows construction when POSITRON_ENABLE_DRY_RUN is "true"', () => {
@@ -468,19 +434,13 @@ describe('OpenCodeDryRunAgent — Operation Classification (ADR-C)', () => {
 
 	it('git diff is simulated', async () => {
 		const agent = new OpenCodeDryRunAgent();
-		const result = await agent.analyzeActions(
-			[{ operation: 'git diff' }],
-			TEST_INPUT,
-		);
+		const result = await agent.analyzeActions([{ operation: 'git diff' }], TEST_INPUT);
 		expect(result.simulatedActions).toContain('git diff');
 	});
 
 	it('gh issue view is simulated', async () => {
 		const agent = new OpenCodeDryRunAgent();
-		const result = await agent.analyzeActions(
-			[{ operation: 'gh issue view' }],
-			TEST_INPUT,
-		);
+		const result = await agent.analyzeActions([{ operation: 'gh issue view' }], TEST_INPUT);
 		expect(result.simulatedActions).toContain('gh issue view');
 	});
 
@@ -489,35 +449,23 @@ describe('OpenCodeDryRunAgent — Operation Classification (ADR-C)', () => {
 		const agent = new OpenCodeDryRunAgent();
 		const result = await agent.analyzeActions([WORKTREE_ACTION], TEST_INPUT);
 
-		const blocked = result.blockedActions.find(
-			(a) => a.operation === 'git worktree add',
-		);
+		const blocked = result.blockedActions.find((a) => a.operation === 'git worktree add');
 		expect(blocked).toBeDefined();
 	});
 
 	it('npm install is blocked', async () => {
 		const agent = new OpenCodeDryRunAgent();
-		const result = await agent.analyzeActions(
-			[NPM_INSTALL_ACTION],
-			TEST_INPUT,
-		);
+		const result = await agent.analyzeActions([NPM_INSTALL_ACTION], TEST_INPUT);
 
-		const blocked = result.blockedActions.find(
-			(a) => a.operation === 'npm install',
-		);
+		const blocked = result.blockedActions.find((a) => a.operation === 'npm install');
 		expect(blocked).toBeDefined();
 	});
 
 	it('git commit is blocked', async () => {
 		const agent = new OpenCodeDryRunAgent();
-		const result = await agent.analyzeActions(
-			[GIT_COMMIT_ACTION],
-			TEST_INPUT,
-		);
+		const result = await agent.analyzeActions([GIT_COMMIT_ACTION], TEST_INPUT);
 
-		const blocked = result.blockedActions.find(
-			(a) => a.operation === 'git commit',
-		);
+		const blocked = result.blockedActions.find((a) => a.operation === 'git commit');
 		expect(blocked).toBeDefined();
 	});
 });
@@ -536,10 +484,7 @@ describe('OpenCodeDryRunAgent — runSlashCommand', () => {
 
 	it('runSlashCommand never executes actual command', async () => {
 		const agent = new OpenCodeDryRunAgent();
-		const result = await agent.runSlashCommand(
-			'spec-driven-development',
-			TEST_INPUT,
-		);
+		const result = await agent.runSlashCommand('spec-driven-development', TEST_INPUT);
 
 		expect(result.executionMode).toBe('dry-run');
 		// Command should not actually execute — no real side effects
@@ -549,10 +494,7 @@ describe('OpenCodeDryRunAgent — runSlashCommand', () => {
 
 	it('runSlashCommand returns EvidenceReport, not OpenCodeCommandResult', async () => {
 		const agent = new OpenCodeDryRunAgent();
-		const result = await agent.runSlashCommand(
-			'spec-driven-development',
-			TEST_INPUT,
-		);
+		const result = await agent.runSlashCommand('spec-driven-development', TEST_INPUT);
 
 		// Must conform to EvidenceReport interface
 		expect(result.executionMode).toBe('dry-run');
@@ -585,14 +527,9 @@ describe('OpenCodeDryRunAgent — Constructor Config', () => {
 			blockedOperations: ['custom-dangerous-op'],
 		};
 		const agent = new OpenCodeDryRunAgent(config);
-		const result = await agent.analyzeActions(
-			[{ operation: 'custom-dangerous-op' }],
-			TEST_INPUT,
-		);
+		const result = await agent.analyzeActions([{ operation: 'custom-dangerous-op' }], TEST_INPUT);
 
-		const blocked = result.blockedActions.find(
-			(a) => a.operation === 'custom-dangerous-op',
-		);
+		const blocked = result.blockedActions.find((a) => a.operation === 'custom-dangerous-op');
 		expect(blocked).toBeDefined();
 	});
 });
