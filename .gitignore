@@ -80,3 +80,6 @@ e2e/**/*.d.ts.map
 
 # Agent worktree isolation directory (never commit)
 .agent-worktrees/
+
+# OpenCode local audit logs (never commit)
+.opencode/logs/
