@@ -96,10 +96,7 @@ export class DeterministicFixtureAgent {
 	 * @param input — OpenCodeRunInput context (runId, workspace, issue info)
 	 * @returns EvidenceReport with executionMode='fixture'
 	 */
-	async execute(
-		scenario: string,
-		input: OpenCodeRunInput,
-	): Promise<EvidenceReport> {
+	async execute(scenario: string, input: OpenCodeRunInput): Promise<EvidenceReport> {
 		const startTime = Date.now();
 
 		const fixture = this.fixtures.get(scenario);
@@ -113,9 +110,7 @@ export class DeterministicFixtureAgent {
 		}
 
 		// Map fixture phases to simulated actions
-		const simulatedActions = fixture.phases.map(
-			(p) => p.phase,
-		);
+		const simulatedActions = fixture.phases.map((p) => p.phase);
 
 		// Build evidence report — deterministic from fixture data
 		const report = this.buildReport(input.runId, {

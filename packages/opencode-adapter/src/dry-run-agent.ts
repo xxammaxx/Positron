@@ -9,11 +9,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import type {
-	OpenCodeRunInput,
-	ExecutionMode,
-	OpenCodePhase,
-} from '@positron/shared';
+import type { OpenCodeRunInput, ExecutionMode, OpenCodePhase } from '@positron/shared';
 
 // =============================================================================
 // Types (package-local, per ADR-D)
@@ -116,10 +112,7 @@ const DEFAULT_SIMULATED_PATTERNS: string[] = [
  * Classify an operation into one of three tiers.
  * Pure function — no side effects, no I/O.
  */
-function classifyOperation(
-	op: string,
-	additionalBlocked: string[],
-): Classification {
+function classifyOperation(op: string, additionalBlocked: string[]): Classification {
 	const normalized = op.toLowerCase().trim();
 
 	// Check explicit blocked patterns (user-defined + defaults)
@@ -162,7 +155,9 @@ function checkKillSwitch(op: string): string | null {
 
 	// POSITRON_MERGE_KILL_SWITCH: merge and branch-delete blocked if active
 	if (
-		(normalized.includes('merge') || normalized.includes('branch -d') || normalized.includes('branch -d')) &&
+		(normalized.includes('merge') ||
+			normalized.includes('branch -d') ||
+			normalized.includes('branch -d')) &&
 		process.env['POSITRON_MERGE_KILL_SWITCH'] !== 'false'
 	) {
 		return 'POSITRON_MERGE_KILL_SWITCH is active — merge/branch-delete would be blocked';
@@ -184,8 +179,8 @@ const CONTROLLED_PATH_PREFIXES = [
 
 function isControlledPath(target: string): boolean {
 	const normalized = target.replace(/\\/g, '/').toLowerCase();
-	return CONTROLLED_PATH_PREFIXES.some(
-		(prefix) => normalized.startsWith(prefix.replace(/\\/g, '/').toLowerCase()),
+	return CONTROLLED_PATH_PREFIXES.some((prefix) =>
+		normalized.startsWith(prefix.replace(/\\/g, '/').toLowerCase()),
 	);
 }
 
@@ -209,19 +204,13 @@ export class OpenCodeDryRunAgent {
 
 	constructor(config: DryRunAgentConfig = {}) {
 		// Gate: must be explicitly enabled (ADR-E)
-		if (
-			process.env['NODE_ENV'] !== 'test' &&
-			process.env['POSITRON_ENABLE_DRY_RUN'] !== 'true'
-		) {
-			throw new Error(
-				'Dry-run agent disabled: POSITRON_ENABLE_DRY_RUN not set to "true"',
-			);
+		if (process.env['NODE_ENV'] !== 'test' && process.env['POSITRON_ENABLE_DRY_RUN'] !== 'true') {
+			throw new Error('Dry-run agent disabled: POSITRON_ENABLE_DRY_RUN not set to "true"');
 		}
 
 		this.evidenceDir = config.evidenceDir ?? '.positron/evidence/';
 		this.extraBlocked = config.blockedOperations ?? [];
-		this.getTimestamp =
-			config.getTimestamp ?? (() => new Date().toISOString());
+		this.getTimestamp = config.getTimestamp ?? (() => new Date().toISOString());
 	}
 
 	/**
@@ -241,17 +230,11 @@ export class OpenCodeDryRunAgent {
 		const warnings: string[] = [];
 
 		// Collect kill switch warnings upfront
-		if (
-			process.env['POSITRON_MERGE_KILL_SWITCH'] !== 'false'
-		) {
-			warnings.push(
-				'POSITRON_MERGE_KILL_SWITCH is active — merge would be blocked',
-			);
+		if (process.env['POSITRON_MERGE_KILL_SWITCH'] !== 'false') {
+			warnings.push('POSITRON_MERGE_KILL_SWITCH is active — merge would be blocked');
 		}
 		if (process.env['POSITRON_ENABLE_PUSH'] !== 'true') {
-			warnings.push(
-				'POSITRON_ENABLE_PUSH is not set to "true" — push would be blocked',
-			);
+			warnings.push('POSITRON_ENABLE_PUSH is not set to "true" — push would be blocked');
 		}
 
 		for (const action of plannedActions) {
@@ -268,11 +251,7 @@ export class OpenCodeDryRunAgent {
 			let classification = classifyOperation(op, this.extraBlocked);
 
 			// Path-aware override: file writes to controlled paths are simulated, not blocked
-			if (
-				classification === 'blocked' &&
-				op.toLowerCase().includes('write') &&
-				action.target
-			) {
+			if (classification === 'blocked' && op.toLowerCase().includes('write') && action.target) {
 				if (isControlledPath(action.target)) {
 					classification = 'simulated';
 				}
@@ -286,33 +265,25 @@ export class OpenCodeDryRunAgent {
 					// Determine a specific blocking reason
 					let reason = `Operation "${op}" is blocked in dry-run mode`;
 					if (op.toLowerCase().includes('write')) {
-						reason =
-							'Blocked: File write outside controlled path is prohibited in dry-run';
+						reason = 'Blocked: File write outside controlled path is prohibited in dry-run';
 					} else if (op.toLowerCase().includes('push')) {
-						reason =
-							'Blocked: Git push is prohibited in dry-run';
+						reason = 'Blocked: Git push is prohibited in dry-run';
 					} else if (op.toLowerCase().includes('pr create')) {
-						reason =
-							'Blocked: Pull request creation is prohibited in dry-run';
+						reason = 'Blocked: Pull request creation is prohibited in dry-run';
 					} else if (op.toLowerCase().includes('merge')) {
-						reason =
-							'Blocked: Git merge is prohibited in dry-run';
+						reason = 'Blocked: Git merge is prohibited in dry-run';
 					} else if (op.toLowerCase().includes('branch -d')) {
-						reason =
-							'Blocked: Branch deletion is prohibited in dry-run';
+						reason = 'Blocked: Branch deletion is prohibited in dry-run';
 					} else if (op.toLowerCase().includes('worktree')) {
-						reason =
-							'Blocked: Worktree creation is prohibited in dry-run';
+						reason = 'Blocked: Worktree creation is prohibited in dry-run';
 					} else if (
 						op.toLowerCase().includes('npm install') ||
 						op.toLowerCase().includes('npm publish') ||
 						op.toLowerCase().includes('npm uninstall')
 					) {
-						reason =
-							'Blocked: Package installation/publishing is prohibited in dry-run';
+						reason = 'Blocked: Package installation/publishing is prohibited in dry-run';
 					} else if (op.toLowerCase().includes('commit')) {
-						reason =
-							'Blocked: Git commit is prohibited in dry-run';
+						reason = 'Blocked: Git commit is prohibited in dry-run';
 					}
 
 					// Ensure reason NEVER contains env var values, tokens, or credentials (SR4, SR5)
@@ -365,10 +336,7 @@ export class OpenCodeDryRunAgent {
 	 * Report intended slash command execution without running it.
 	 * Never executes the actual command — returns an EvidenceReport.
 	 */
-	async runSlashCommand(
-		command: string,
-		input: OpenCodeRunInput,
-	): Promise<EvidenceReport> {
+	async runSlashCommand(command: string, input: OpenCodeRunInput): Promise<EvidenceReport> {
 		const startTime = Date.now();
 
 		const report: EvidenceReport = {

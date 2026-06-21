@@ -152,7 +152,7 @@ export class SecretManager {
      * Lists all configured provider names.
      */
     getProviderNames() {
-        return this.providers.map(p => p.name);
+        return this.providers.map((p) => p.name);
     }
     resolveDefaultEnvPath() {
         // Try common locations
@@ -164,7 +164,7 @@ export class SecretManager {
             if (fs.existsSync(candidate))
                 return candidate;
         }
-        return candidates[0] ?? '.env';
+        return candidates[0];
     }
 }
 //# sourceMappingURL=secret-manager.js.map

@@ -7,7 +7,11 @@ import { describe, it, expect, beforeEach } from 'vitest';
 // RT1/RT2: This import WILL FAIL until deterministic-fixture-agent.ts exists.
 // The test file itself is valid TypeScript/vitest, but module resolution will fail.
 import { DeterministicFixtureAgent } from '../deterministic-fixture-agent.js';
-import type { FixtureAgentConfig, Fixture, EvidenceReport } from '../deterministic-fixture-agent.js';
+import type {
+	FixtureAgentConfig,
+	Fixture,
+	EvidenceReport,
+} from '../deterministic-fixture-agent.js';
 import type { OpenCodeRunInput, OpenCodePhase, OpenCodeCommandResult } from '@positron/shared';
 
 // --------------- Inline Fixture Data (OQ1: inline test fixtures) ---------------

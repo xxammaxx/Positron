@@ -3,11 +3,23 @@ import crypto from 'node:crypto';
 /** Standard-Regeln für Secret-Redaction */
 export const DEFAULT_REDACTION_RULES = [
     { name: 'github-token', pattern: /ghp_[a-zA-Z0-9]{36}/g, replacement: 'ghp_***REDACTED***' },
-    { name: 'github-oauth-token', pattern: /gho_[a-zA-Z0-9_]{36}/g, replacement: 'gho_***REDACTED***' },
+    {
+        name: 'github-oauth-token',
+        pattern: /gho_[a-zA-Z0-9_]{36}/g,
+        replacement: 'gho_***REDACTED***',
+    },
     { name: 'github-app-token', pattern: /ghb_[a-zA-Z0-9_]{36}/g, replacement: 'ghb_***REDACTED***' },
-    { name: 'github-token-v2', pattern: /github_pat_[a-zA-Z0-9_]{82}/g, replacement: 'github_pat_***REDACTED***' },
+    {
+        name: 'github-token-v2',
+        pattern: /github_pat_[a-zA-Z0-9_]{82}/g,
+        replacement: 'github_pat_***REDACTED***',
+    },
     { name: 'openai-key', pattern: /sk-[a-zA-Z0-9]{48,}/g, replacement: 'sk-***REDACTED***' },
-    { name: 'anthropic-key', pattern: /anthropic_[a-zA-Z0-9]{40,}/g, replacement: 'anthropic_***REDACTED***' },
+    {
+        name: 'anthropic-key',
+        pattern: /anthropic_[a-zA-Z0-9]{40,}/g,
+        replacement: 'anthropic_***REDACTED***',
+    },
     { name: 'gemini-key', pattern: /AIza[a-zA-Z0-9_-]{35}/g, replacement: 'AIza***REDACTED***' },
 ];
 /**
@@ -88,6 +100,6 @@ export function truncate(s, max) {
  * Wartet für eine bestimmte Anzahl von Millisekunden.
  */
 export async function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
 }
 //# sourceMappingURL=utils.js.map
