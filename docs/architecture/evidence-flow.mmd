@@ -1,0 +1,12 @@
+flowchart TD
+    I[GitHub Issue] --> S[Spec / Plan / Tasks when needed]
+    S --> B[Branch]
+    B --> T[Local Tests / Gates]
+    T --> E[Evidence Handoff]
+    E --> P[Pull Request]
+    P --> R[Reviewer-Agent]
+    R --> H[Human Approval]
+    H --> M[Squash Merge]
+    M --> C[Issue Comment / Close]
+    C --> L[Living Evidence Portfolio]
+    L --> D[Status / Architecture Docs]
