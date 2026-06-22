@@ -193,6 +193,30 @@ Positron successfully completed a **full dogfood run** on its own repository:
 
 ---
 
+## Current Project Status
+
+Positron currently uses **local gates as the source of truth** for merge decisions.
+
+Mandatory local gates:
+
+- `git diff --check`
+- `npx biome format .`
+- `npm run build`
+- `npm run typecheck`
+- `npm test` — core: **917/917 passing** (50 test files)
+
+GitHub Actions is **advisory-only** and tracked separately in [Issue #268](https://github.com/xxammaxx/Positron/issues/268). Remote CI is not required for local development decisions.
+
+See also:
+
+- [`docs/status/current-capabilities.md`](docs/status/current-capabilities.md)
+- [`docs/status/known-limitations.md`](docs/status/known-limitations.md)
+- [`docs/architecture/local-ci-flow.mmd`](docs/architecture/local-ci-flow.mmd)
+- [`docs/architecture/evidence-flow.mmd`](docs/architecture/evidence-flow.mmd)
+- [`docs/architecture/agent-flow.mmd`](docs/architecture/agent-flow.mmd)
+
+---
+
 ## License
 
 MIT
