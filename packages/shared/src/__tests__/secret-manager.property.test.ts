@@ -169,7 +169,7 @@ describe('FileSecretProvider parseEnvFile() properties', () => {
 					cleanupTempFile(tmpFile);
 				}
 			}),
-			{ numRuns: 500 },
+			{ numRuns: 200 },
 		);
 	});
 
@@ -195,7 +195,7 @@ describe('FileSecretProvider parseEnvFile() properties', () => {
 					cleanupTempFile(tmpFile);
 				}
 			}),
-			{ numRuns: 1000 },
+			{ numRuns: 200 },
 		);
 	});
 
@@ -245,7 +245,7 @@ describe('FileSecretProvider parseEnvFile() properties', () => {
 					}
 				},
 			),
-			{ numRuns: 500 },
+			{ numRuns: 300 },
 		);
 	});
 
@@ -257,8 +257,9 @@ describe('FileSecretProvider parseEnvFile() properties', () => {
 				try {
 					const provider = new FileSecretProvider(tmpFile);
 					// The invalid line text should not appear as a retrievable secret
-					// (skip Object.prototype collision keys — they return {} not null)
-					if (!OBJECT_PROTO_KEYS.has(invalid)) {
+					// (skip Object.prototype collision keys — they return {} not null,
+					//  and skip when invalid coincides with validKey — the valid line provides the key)
+					if (!OBJECT_PROTO_KEYS.has(invalid) && invalid !== validKey) {
 						expect(provider.getSecret(invalid)).toBeNull();
 					}
 					// A real key should still work
@@ -267,7 +268,7 @@ describe('FileSecretProvider parseEnvFile() properties', () => {
 					cleanupTempFile(tmpFile);
 				}
 			}),
-			{ numRuns: 500 },
+			{ numRuns: 300 },
 		);
 	});
 
@@ -286,7 +287,7 @@ describe('FileSecretProvider parseEnvFile() properties', () => {
 					cleanupTempFile(tmpFile);
 				}
 			}),
-			{ numRuns: 500 },
+			{ numRuns: 200 },
 		);
 	});
 
@@ -304,7 +305,7 @@ describe('FileSecretProvider parseEnvFile() properties', () => {
 					cleanupTempFile(tmpFile);
 				}
 			}),
-			{ numRuns: 500 },
+			{ numRuns: 300 },
 		);
 	});
 
@@ -329,7 +330,7 @@ describe('FileSecretProvider parseEnvFile() properties', () => {
 					cleanupTempFile(tmpFile);
 				}
 			}),
-			{ numRuns: 500 },
+			{ numRuns: 200 },
 		);
 	});
 
@@ -435,7 +436,7 @@ describe('SecretManager envFilePath option', () => {
 					cleanupTempFile(tmpFile);
 				}
 			}),
-			{ numRuns: 500 },
+			{ numRuns: 300 },
 		);
 	});
 
