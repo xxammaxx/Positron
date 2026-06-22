@@ -1,13 +1,13 @@
 # Positron — Evidence-Gated AI Agent for Autonomous GitHub Issue Resolution
 
-[![Version](https://img.shields.io/badge/version-v0.2.0-blue.svg)](https://github.com/xxammaxx/Positron/releases)
-[![Tests](https://img.shields.io/badge/tests-107%20passing-brightgreen.svg)](https://github.com/xxammaxx/Positron/actions)
-[![E2E](https://img.shields.io/badge/e2e-17%20passing-brightgreen.svg)](https://github.com/xxammaxx/Positron/actions)
+[![Version](https://img.shields.io/badge/version-v0.1.0-blue.svg)](https://github.com/xxammaxx/Positron/releases)
+[![Tests](https://img.shields.io/badge/tests-917%20passing-brightgreen.svg)](https://github.com/xxammaxx/Positron/actions)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/docker-ready-2496ED?logo=docker)](https://github.com/xxammaxx/Positron)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite)](https://vitejs.dev/)
+[![Vite](https://img.shields.io/badge/Vite-5.4-646CFF?logo=vite)](https://vitejs.dev/)
+[![Node.js](https://img.shields.io/badge/Node.js-24-339933?logo=node.js)](https://nodejs.org/)
 
 **Positron** is an evidence-gated AI agent execution system for GitHub Issues. It runs a **28-phase pipeline** (QUEUED → CLAIMED → SPECIFY → PLAN → TASKS → IMPLEMENT → REVIEW → MERGE → DONE → CLEANUP) where every phase produces verifiable artifacts. A happy-path run progresses through ~17 execution phases. Each step is auditable, replayable, and gated by evidence requirements.
 
@@ -125,13 +125,12 @@ All settings via environment variables or `apps/server/.env`:
 ## Tests
 
 ```bash
-npx vitest run                  # 107 unit/integration tests
-cd apps/web && npx vitest run   # 58 frontend tests
-npx playwright test             # 17 E2E tests
-./scripts/dogfood-test.sh       # Full dogfood pipeline test
+npx vitest run                  # 917 core/package tests (50 test files)
+cd apps/web && npx vitest run   # 87 frontend tests (3 suites pass; 5 TSX suites pending Vitest transform fix)
+npx playwright test             # E2E tests (advisory-only, see Issue #268)
 ```
 
-All 107 tests pass. Full E2E workflow proof documented in `docs/release/ui-workflow-proof/`.
+Core/packages: **917/917 passing**. See [Current Project Status](#current-project-status) for the latest local gate results.
 
 ---
 
@@ -169,22 +168,22 @@ Positron/
 
 | Layer | Technology |
 |-------|-----------|
-| **Runtime** | Node.js 22, TypeScript 5.7 |
-| **Frontend** | React 18, Vite 6, Tailwind CSS 3 |
+| **Runtime** | Node.js 24, TypeScript 5.9 |
+| **Frontend** | React 18, Vite 5.4, Tailwind CSS 3 |
 | **Backend** | Express 4, SQLite (better-sqlite3) |
 | **State Machine** | Custom pipeline engine (28 phases) |
 | **E2E Testing** | Playwright 1.60 |
-| **Unit Testing** | Vitest 4 |
+| **Unit Testing** | Vitest 4.1 (core) / 1.6 (web) |
 | **Container** | Docker + docker-compose |
 
 ---
 
-## Dogfood Results (v0.2.0)
+## Dogfood Results (v0.1.0)
 
 Positron successfully completed a **full dogfood run** on its own repository:
 
 - **28-Phase State Machine**: Happy path (CLAIMED → DONE) completed in **13.7 seconds**
-- **107 Tests**: All green
+- **917 Tests**: All green (core/packages)
 - **SSE Live Updates**: Dashboard + Event Timeline functional
 - **PR Auto-Creation**: Blocked by Kill-Switch as configured
 - **Evidence Trail**: Complete with screenshots, logs, test results
@@ -197,7 +196,7 @@ Positron successfully completed a **full dogfood run** on its own repository:
 
 Positron currently uses **local gates as the source of truth** for merge decisions.
 
-Mandatory local gates:
+### Mandatory local gates
 
 - `git diff --check`
 - `npx biome format .`
@@ -205,9 +204,14 @@ Mandatory local gates:
 - `npm run typecheck`
 - `npm test` — core: **917/917 passing** (50 test files)
 
-GitHub Actions is **advisory-only** and tracked separately in [Issue #268](https://github.com/xxammaxx/Positron/issues/268). Remote CI is not required for local development decisions.
+### Known limitations
 
-See also:
+- **GitHub Actions**: advisory-only (zero-step CI), tracked in [Issue #268](https://github.com/xxammaxx/Positron/issues/268).
+- **`npx biome check .`**: lint backlog with known warnings/errors — triaged separately.
+- **`apps/web` tests**: 5 TSX test suites fail due to a Vitest JSX transform issue; 3 suites (87 tests) pass.
+- **E2E tests**: not currently verified in local gates; advisory-only.
+
+### See also
 
 - [`docs/status/current-capabilities.md`](docs/status/current-capabilities.md)
 - [`docs/status/known-limitations.md`](docs/status/known-limitations.md)
