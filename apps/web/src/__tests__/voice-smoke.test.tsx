@@ -1,17 +1,17 @@
 import React from 'react';
 import { describe, expect, test, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import VoiceControls from '../components/VoiceControls.js';
-import VoiceStatusIndicator from '../components/VoiceStatusIndicator.js';
+import VoiceControls from '../components/VoiceControls';
+import VoiceStatusIndicator from '../components/VoiceStatusIndicator';
 import {
 	speakEvent,
 	speakTest,
 	resetVoiceState,
 	resetRateLimitForTest,
 	getLastSpoken,
-} from '../voice/voice-output.js';
-import { saveVoiceSettings, DEFAULT_VOICE_SETTINGS } from '../voice/voice-settings.js';
-import type { RunEvent, Phase, LogLevel } from '../types.js';
+} from '../voice/voice-output';
+import { saveVoiceSettings, DEFAULT_VOICE_SETTINGS } from '../voice/voice-settings';
+import type { RunEvent, Phase, LogLevel } from '../types';
 
 // ── Mocks ──
 const mockSpeak = vi.fn();
