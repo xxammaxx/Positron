@@ -223,6 +223,9 @@ Positron currently uses **local gates as the source of truth** for merge decisio
 - [`docs/architecture/local-ci-flow.mmd`](docs/architecture/local-ci-flow.mmd)
 - [`docs/architecture/evidence-flow.mmd`](docs/architecture/evidence-flow.mmd)
 - [`docs/architecture/agent-flow.mmd`](docs/architecture/agent-flow.mmd)
+- [`docs/architecture/ki-solution-system-map.mmd`](docs/architecture/ki-solution-system-map.mmd)
+- [`docs/architecture/ki-solution-decision-flow.mmd`](docs/architecture/ki-solution-decision-flow.mmd)
+- [`docs/specs/issue-279-phase-0.md`](docs/specs/issue-279-phase-0.md) — KI-Lösung Architecture Spec
 
 ---
 
