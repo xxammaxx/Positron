@@ -315,7 +315,7 @@ async function main() {
 						'WARN',
 						`QueueBacklogCritical (production) is firing! state=${productionAlerts[0].state}`,
 					);
-					console.log(`      This may be normal if the pipeline queue has >50 jobs.`);
+					console.log('      This may be normal if the pipeline queue has >50 jobs.');
 				} else {
 					log('INFO', 'QueueBacklogCritical (production) NOT firing — correct');
 				}
@@ -392,8 +392,8 @@ async function main() {
 	console.log(`  Queue used:       ${DRILL_QUEUE}`);
 	console.log(`  Jobs enqueued:    ${queuedCount}`);
 	console.log(`  Jobs waiting:     ${drillWaiting}`);
-	console.log(`  Production queue: UNTOUCHED`);
-	console.log(`  Cleanup:          Queue obliterated from Redis`);
+	console.log('  Production queue: UNTOUCHED');
+	console.log('  Cleanup:          Queue obliterated from Redis');
 	console.log('');
 	console.log('  ⚠️  QueueBacklogCriticalDrill may have fired on Prometheus.');
 	console.log('     Check: curl http://localhost:9090/api/v1/alerts');

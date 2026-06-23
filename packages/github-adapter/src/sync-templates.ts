@@ -21,14 +21,14 @@ export function renderSyncAccepted(
 	const marker = syncMarker(runId, 'CLAIMED', 'accepted');
 	return [
 		marker,
-		`## ✅ Run Accepted`,
-		``,
+		'## ✅ Run Accepted',
+		'',
 		`**Run ID:** \`${runId}\``,
 		`**Issue:** #${issueNumber}`,
 		branchName ? `**Branch:** \`${branchName}\`` : null,
-		``,
-		`Positron hat dieses Issue übernommen.`,
-		`_Automated by Positron v3.0_`,
+		'',
+		'Positron hat dieses Issue übernommen.',
+		'_Automated by Positron v3.0_',
 	]
 		.filter(Boolean)
 		.join('\n');
@@ -46,14 +46,14 @@ export function renderSyncPhaseUpdate(
 	const marker = syncMarker(runId, phase, 'phase-update');
 	return [
 		marker,
-		`## 🔄 Phase Update`,
-		``,
+		'## 🔄 Phase Update',
+		'',
 		`**Run ID:** \`${runId}\``,
 		`**Phase:** ${phase}`,
 		`**Status:** ${status}`,
 		message ? `**Message:** ${message}` : null,
-		``,
-		`_Automated by Positron v3.0_`,
+		'',
+		'_Automated by Positron v3.0_',
 	]
 		.filter(Boolean)
 		.join('\n');
@@ -72,21 +72,21 @@ export function renderSyncTestReport(
 	return [
 		marker,
 		`### ${statusIcon} Test Report`,
-		``,
+		'',
 		`**Run ID:** \`${runId}\``,
 		branchName ? `**Branch:** \`${branchName}\`` : null,
-		``,
-		`| Metric | Value |`,
-		`|--------|-------|`,
+		'',
+		'| Metric | Value |',
+		'|--------|-------|',
 		`| Status | ${report.status} |`,
 		`| Passed | ${report.passed} |`,
 		`| Failed | ${report.failed} |`,
 		`| Total  | ${report.total} |`,
 		`| Time   | ${report.durationMs}ms |`,
-		``,
+		'',
 		`**${report.summary}**`,
-		``,
-		`_Automated by Positron v3.0_`,
+		'',
+		'_Automated by Positron v3.0_',
 	].join('\n');
 }
 
@@ -102,15 +102,15 @@ export function renderSyncBlocked(
 	const marker = syncMarker(runId, phase, 'blocked');
 	return [
 		marker,
-		`## 🚫 Run Blocked`,
-		``,
+		'## 🚫 Run Blocked',
+		'',
 		`**Run ID:** \`${runId}\``,
 		`**Phase:** ${phase}`,
-		``,
+		'',
 		`**Reason:** ${reason}`,
 		evidence ? `\n${evidence}` : null,
-		``,
-		`_Automated by Positron v3.0_`,
+		'',
+		'_Automated by Positron v3.0_',
 	]
 		.filter(Boolean)
 		.join('\n');
@@ -128,15 +128,15 @@ export function renderSyncFailed(
 	const marker = syncMarker(runId, phase, 'failed');
 	return [
 		marker,
-		`## ❌ Run Failed`,
-		``,
+		'## ❌ Run Failed',
+		'',
 		`**Run ID:** \`${runId}\``,
 		`**Phase:** ${phase}`,
-		``,
+		'',
 		`**Reason:** ${reason}`,
 		evidence ? `\n${evidence}` : null,
-		``,
-		`_Automated by Positron v3.0_`,
+		'',
+		'_Automated by Positron v3.0_',
 	]
 		.filter(Boolean)
 		.join('\n');
@@ -149,13 +149,13 @@ export function renderSyncDone(runId: string, evidence?: string, branchName?: st
 	const marker = syncMarker(runId, 'DONE', 'done');
 	return [
 		marker,
-		`## ✅ Run Completed`,
-		``,
+		'## ✅ Run Completed',
+		'',
 		`**Run ID:** \`${runId}\``,
 		branchName ? `**Branch:** \`${branchName}\`` : null,
 		evidence ?? '',
-		``,
-		`_Automated by Positron v3.0_`,
+		'',
+		'_Automated by Positron v3.0_',
 	]
 		.filter(Boolean)
 		.join('\n');
@@ -180,12 +180,12 @@ export function renderEvidenceSection(evidence: EvidenceItem[], _runId: string):
 		return `| ${e.kind} | ${icon} ${e.status} | ${e.summary} |`;
 	});
 	return [
-		`### 📋 Evidence`,
-		``,
-		`| Kind | Status | Summary |`,
-		`|------|--------|---------|`,
+		'### 📋 Evidence',
+		'',
+		'| Kind | Status | Summary |',
+		'|------|--------|---------|',
 		...rows,
-		``,
+		'',
 	].join('\n');
 }
 
@@ -209,15 +209,15 @@ export function renderSyncPrCreated(
 	const marker = syncMarker(runId, 'PR_CREATED', 'pr-created');
 	return [
 		marker,
-		`## 🔀 Pull Request Created`,
-		``,
+		'## 🔀 Pull Request Created',
+		'',
 		`**Run ID:** \`${runId}\``,
 		prNumber ? `**PR:** #${prNumber}` : null,
 		prUrl ? `**URL:** ${prUrl}` : null,
 		branchName ? `**Branch:** \`${branchName}\`` : null,
 		issueNumber ? `**Closes:** #${issueNumber}` : null,
-		``,
-		`_Automated by Positron v3.0_`,
+		'',
+		'_Automated by Positron v3.0_',
 	]
 		.filter(Boolean)
 		.join('\n');
@@ -235,14 +235,14 @@ export function renderSyncMerged(
 	const marker = syncMarker(runId, 'MERGED', 'merged');
 	return [
 		marker,
-		`## 🎉 Pull Request Merged`,
-		``,
+		'## 🎉 Pull Request Merged',
+		'',
 		`**Run ID:** \`${runId}\``,
 		prNumber ? `**PR:** #${prNumber}` : null,
 		prUrl ? `**URL:** ${prUrl}` : null,
 		branchOrSha ? `**Branch/SHA:** \`${branchOrSha}\`` : null,
-		``,
-		`_Automated by Positron v3.0_`,
+		'',
+		'_Automated by Positron v3.0_',
 	]
 		.filter(Boolean)
 		.join('\n');

@@ -60,20 +60,20 @@ export function applyDogfoodFixtureChange(input: FixtureChangeInput): FixtureCha
 
 	try {
 		const content = [
-			`# Positron Dogfood Fixture`,
-			``,
+			'# Positron Dogfood Fixture',
+			'',
 			`**Run ID:** ${runId}`,
 			`**Issue:** #${issueNumber}`,
 			`**Created:** ${new Date().toISOString()}`,
-			``,
+			'',
 			`This file was created automatically by Positron's dogfood fixture change provider.`,
-			`It serves as a deterministic change for PR validation.`,
-			``,
-			`## Purpose`,
-			``,
-			`1. Verify that Positron can create, stage, commit, and push file changes`,
-			`2. Provide a predictable diff for PR body generation and review`,
-			`3. Validate the end-to-end change lifecycle without requiring a real codebase change`,
+			'It serves as a deterministic change for PR validation.',
+			'',
+			'## Purpose',
+			'',
+			'1. Verify that Positron can create, stage, commit, and push file changes',
+			'2. Provide a predictable diff for PR body generation and review',
+			'3. Validate the end-to-end change lifecycle without requiring a real codebase change',
 		].join('\n');
 
 		fs.writeFileSync(filePath, content, 'utf-8');

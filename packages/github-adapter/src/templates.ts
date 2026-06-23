@@ -5,13 +5,13 @@
  */
 export function renderAccepted(runId: string, issueNumber: number, branchName?: string): string {
 	return [
-		`## ✅ Positron accepted this issue`,
-		``,
+		'## ✅ Positron accepted this issue',
+		'',
 		`**Run ID:** \`${runId}\``,
 		`**Issue:** #${issueNumber}`,
 		branchName ? `**Branch:** \`${branchName}\`` : null,
-		``,
-		`_Automated by Positron v3.0_`,
+		'',
+		'_Automated by Positron v3.0_',
 	]
 		.filter(Boolean)
 		.join('\n');
@@ -27,14 +27,14 @@ export function renderStatusUpdate(
 	branchName?: string,
 ): string {
 	return [
-		`## 🔄 Positron Status Update`,
-		``,
+		'## 🔄 Positron Status Update',
+		'',
 		`**Run ID:** \`${runId}\``,
 		`**Phase:** ${phase}`,
 		`**Status:** ${status}`,
 		branchName ? `**Branch:** \`${branchName}\`` : null,
-		``,
-		`_Automated by Positron v3.0_`,
+		'',
+		'_Automated by Positron v3.0_',
 	]
 		.filter(Boolean)
 		.join('\n');
@@ -45,13 +45,13 @@ export function renderStatusUpdate(
  */
 export function renderBlocked(runId: string, reason: string): string {
 	return [
-		`## 🚫 Positron blocked`,
-		``,
+		'## 🚫 Positron blocked',
+		'',
 		`**Run ID:** \`${runId}\``,
-		``,
+		'',
 		`**Reason:** ${reason}`,
-		``,
-		`_Automated by Positron v3.0_`,
+		'',
+		'_Automated by Positron v3.0_',
 	].join('\n');
 }
 
@@ -60,14 +60,14 @@ export function renderBlocked(runId: string, reason: string): string {
  */
 export function renderDone(runId: string, summary: string, branchName?: string): string {
 	return [
-		`## ✅ Positron completed`,
-		``,
+		'## ✅ Positron completed',
+		'',
 		`**Run ID:** \`${runId}\``,
 		branchName ? `**Branch:** \`${branchName}\`` : null,
-		``,
+		'',
 		summary,
-		``,
-		`_Automated by Positron v3.0_`,
+		'',
+		'_Automated by Positron v3.0_',
 	]
 		.filter(Boolean)
 		.join('\n');

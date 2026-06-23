@@ -369,7 +369,7 @@ export default function RunDetail(): React.ReactElement {
 						<h3 className="text-sm font-medium text-slate-300 mb-2">Quick Links</h3>
 						<div className="space-y-1.5">
 							<Link
-								to={`/evidence`}
+								to={'/evidence'}
 								className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 transition-colors"
 							>
 								<svg

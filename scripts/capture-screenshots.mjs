@@ -59,7 +59,7 @@ async function main() {
 
 		// Capture run detail page
 		try {
-			console.log(`📸 Fetching latest run...`);
+			console.log('📸 Fetching latest run...');
 			const resp = await page.request.get('http://localhost:3000/api/runs');
 			const data = await resp.json();
 			if (data.runs && data.runs.length > 0) {

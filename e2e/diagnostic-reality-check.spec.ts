@@ -174,7 +174,7 @@ test.describe('Positron Reality Check', () => {
 		const safetyRes = await page.request.get(`${API_BASE}/api/safety`);
 		expect(safetyRes.ok()).toBeTruthy();
 		const safetyData = await safetyRes.json();
-		console.log(`[Diagnostic] Safety:`, JSON.stringify(safetyData));
+		console.log('[Diagnostic] Safety:', JSON.stringify(safetyData));
 
 		const metricsRes = await page.request.get(`${API_BASE}/api/metrics`);
 		expect(metricsRes.ok()).toBeTruthy();

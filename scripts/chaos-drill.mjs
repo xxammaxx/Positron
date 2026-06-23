@@ -290,12 +290,12 @@ async function main() {
 	// ── Section 5: Worker Restart Drill Instructions ───────────────────────
 	console.log(BOLD + '[5/8] Worker Restart Drill' + RESET);
 	console.log(`  ${YELLOW}ℹ️${RESET} Manual steps for Worker restart drill:`);
-	console.log(`      1. Verify worker process is running`);
-	console.log(`      2. Stop worker: kill the worker process`);
-	console.log(`      3. Wait ~2 min for Prometheus to detect (for: 2m in alert rule)`);
+	console.log('      1. Verify worker process is running');
+	console.log('      2. Stop worker: kill the worker process');
+	console.log('      3. Wait ~2 min for Prometheus to detect (for: 2m in alert rule)');
 	console.log(`      4. Check: curl ${MOCK_URL}/alerts/critical | jq`);
-	console.log(`      5. Start worker: npm run worker (from apps/worker)`);
-	console.log(`      6. Wait for Redis-collect cycle (30s) + Prometheus scrape (10s)`);
+	console.log('      5. Start worker: npm run worker (from apps/worker)');
+	console.log('      6. Wait for Redis-collect cycle (30s) + Prometheus scrape (10s)');
 	console.log(
 		`      7. Verify: curl ${MOCK_URL}/alerts/critical | jq '.alerts[] | select(.data.status=="resolved")'`,
 	);
@@ -309,15 +309,15 @@ async function main() {
 	console.log(BOLD + '[6/8] Redis Failover Drill' + RESET);
 	console.log(`  ${YELLOW}ℹ️${RESET} Manual steps for Redis failover drill:`);
 	console.log(`      1. Verify Redis is UP: curl ${SERVER_URL}/metrics | grep queue_redis_up`);
-	console.log(`      2. Stop Redis: docker compose stop redis`);
-	console.log(`      3. Wait ~1.5 min for Prometheus to detect (30s collect + 1m for)`);
+	console.log('      2. Stop Redis: docker compose stop redis');
+	console.log('      3. Wait ~1.5 min for Prometheus to detect (30s collect + 1m for)');
 	console.log(`      4. Check: curl ${MOCK_URL}/alerts/critical | jq`);
-	console.log(`      5. Start Redis: docker compose up -d redis`);
-	console.log(`      6. Wait for metric to recover`);
+	console.log('      5. Start Redis: docker compose up -d redis');
+	console.log('      6. Wait for metric to recover');
 	console.log(
 		`      7. Verify: curl ${MOCK_URL}/alerts/critical | jq '.alerts[] | select(.data.status=="resolved")'`,
 	);
-	console.log(`      ⚠️  Only stop local dev Redis. Never touch production Redis.`);
+	console.log('      ⚠️  Only stop local dev Redis. Never touch production Redis.');
 	console.log('');
 
 	await checkSkip(
@@ -385,10 +385,10 @@ async function main() {
 	console.log(
 		`  ${YELLOW}ℹ️${RESET} QueueBacklogCritical targets the production 'positron-pipeline' queue.`,
 	);
-	console.log(`       Safe local simulation requires an isolated test queue.`);
+	console.log('       Safe local simulation requires an isolated test queue.');
 	console.log(`       Recommendation: Use a dedicated test queue 'positron-observability-drill'`);
-	console.log(`       with max 60 jobs and auto-removal.`);
-	console.log(`       See docs/observability.md for the implementation plan.`);
+	console.log('       with max 60 jobs and auto-removal.');
+	console.log('       See docs/observability.md for the implementation plan.');
 	console.log('');
 
 	await checkSkip(

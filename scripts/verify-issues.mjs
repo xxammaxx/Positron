@@ -40,9 +40,9 @@ function gh(args) {
 }
 
 function verifyIssue(issueNumber) {
-	console.log(`\n========================================`);
+	console.log('\n========================================');
 	console.log(`🔍 Verifiziere Issue #${issueNumber}`);
-	console.log(`========================================`);
+	console.log('========================================');
 
 	// Issue-Daten laden
 	const issueJson = gh(`issue view ${issueNumber} --json number,title,body,state,labels,closedAt`);
@@ -237,18 +237,18 @@ function generateReport(allResults, mode) {
 }
 
 function printSummary(report) {
-	console.log(`\n═══════════════════════════════════════`);
-	console.log(`  ISSUE VERIFIKATIONS SUMMARY`);
+	console.log('\n═══════════════════════════════════════');
+	console.log('  ISSUE VERIFIKATIONS SUMMARY');
 	console.log(`  ${REPO}`);
 	console.log(`  ${report.commit}`);
-	console.log(`═══════════════════════════════════════\n`);
+	console.log('═══════════════════════════════════════\n');
 
 	console.log(`Geprueft: ${report.total} Issues`);
 	console.log(`  ✅  PASS:          ${report.summary.pass}`);
 	console.log(`  ⚠️  PARTIAL:       ${report.summary.partial}`);
 	console.log(`  📝 NO_CRITERIA:    ${report.summary.noCriteria}`);
 	console.log(`  ❌  ERROR:          ${report.summary.error}`);
-	console.log(`\nBericht: reports/issue-verification-*.json`);
+	console.log('\nBericht: reports/issue-verification-*.json');
 }
 
 // --- MAIN ---
