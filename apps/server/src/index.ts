@@ -617,7 +617,7 @@ async function executePhase(
 	github: GitHubAdapter,
 	syncService?: GitHubStatusSyncService,
 ): Promise<RunState> {
-	let current = run;
+	const current = run;
 	let result;
 
 	switch (current.phase) {

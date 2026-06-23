@@ -69,12 +69,12 @@ export async function runTasks(workspacePath?: string, plan?: string): Promise<s
 		throw new Error('DEPRECATED: runTasks is deprecated. Use SpecKitAdapter instead.');
 	}
 	return [
-		`TASK-1: Codebase-Analyse für Issue #0`,
-		`TASK-2: Feature-Implementierung (Hauptlogik)`,
-		`TASK-3: Unit-Tests für die neue Funktionalität`,
-		`TASK-4: Integrationstests und End-to-End-Tests`,
-		`TASK-5: Code-Review und Bug-Fixes`,
-		`TASK-6: PR-Erstellung und Dokumentation`,
+		'TASK-1: Codebase-Analyse für Issue #0',
+		'TASK-2: Feature-Implementierung (Hauptlogik)',
+		'TASK-3: Unit-Tests für die neue Funktionalität',
+		'TASK-4: Integrationstests und End-to-End-Tests',
+		'TASK-5: Code-Review und Bug-Fixes',
+		'TASK-6: PR-Erstellung und Dokumentation',
 	];
 }
 

@@ -85,7 +85,7 @@ export class RealSpecKitAdapter implements SpecKitAdapter {
 				cwd: input.workspacePath,
 				exitCode: result.exitCode,
 				durationMs: Date.now() - startTime,
-				summary: `Spec Kit initialized successfully`,
+				summary: 'Spec Kit initialized successfully',
 				artifacts: scanWorkspace(input.workspacePath),
 			};
 		} catch (err) {

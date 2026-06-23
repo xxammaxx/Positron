@@ -40,7 +40,7 @@ async function captureScene(page, name, url, waitMs = 2000) {
 }
 
 async function main() {
-	let exitCode = 0;
+	const exitCode = 0;
 	fs.mkdirSync(OUT_DIR, { recursive: true });
 
 	const browser = await chromium.launch({

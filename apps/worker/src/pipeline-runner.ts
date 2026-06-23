@@ -371,7 +371,7 @@ async function generateResearchDocument(
 // ---------------------------------------------------------------------------
 
 async function executePhase(run: RunState, deps: PipelineDeps): Promise<RunState> {
-	let current = run;
+	const current = run;
 	let result;
 
 	switch (current.phase) {

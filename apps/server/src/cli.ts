@@ -172,7 +172,7 @@ export async function runCommand(args: RunCommandArgs): Promise<void> {
 			eventCount: number;
 		};
 
-		console.log(`✅ Run erfolgreich gestartet:`);
+		console.log('✅ Run erfolgreich gestartet:');
 		console.log(`   ID:     ${data.run.id}`);
 		console.log(`   Phase:  ${data.run.phase}`);
 		console.log(`   Status: ${data.run.status}`);
