@@ -1,43 +1,43 @@
 // Positron — Real GitHub Adapter (Octokit-basiert)
 
-import type { Octokit } from '@octokit/rest';
 import { RequestError } from '@octokit/request-error';
+import type { Octokit } from '@octokit/rest';
+import { redactSecrets } from '@positron/shared';
+import type { GitHubAdapter } from './adapter.js';
 import { createGitHubClient } from './client.js';
-import { pollIssues, isPullRequest } from './issues.js';
-import { syncManagedLabels } from './labels.js';
 import { writeComment } from './comments.js';
+import {
+	GitHubAuthError,
+	GitHubError,
+	GitHubIssuesDisabledError,
+	GitHubNetworkError,
+	GitHubNotFoundError,
+	GitHubPermissionError,
+	GitHubRateLimitError,
+	GitHubSecondaryRateLimitError,
+	GitHubUnknownError,
+	GitHubValidationError,
+} from './errors.js';
+import { isPullRequest, pollIssues } from './issues.js';
+import { syncManagedLabels } from './labels.js';
+import { renderAccepted } from './templates.js';
 import type {
+	ClaimOptions,
+	CreatePROptions,
+	GitHubCommentResult,
+	GitHubIssueClaimResult,
+	GitHubIssueComment,
 	GitHubIssueRef,
 	GitHubIssueSummary,
-	GitHubIssueComment,
-	GitHubCommentResult,
-	GitHubRepositorySummary,
-	GitHubIssueClaimResult,
-	ClaimOptions,
-	GitHubPullRequest,
-	CreatePROptions,
-	PRListOptions,
 	GitHubPRFile,
+	GitHubPullRequest,
+	GitHubRepositorySummary,
 	MergePROptions,
 	MergePRResult,
+	PRListOptions,
 	RequestReviewersOptions,
 	RequestReviewersResult,
 } from './types.js';
-import { renderAccepted } from './templates.js';
-import {
-	GitHubAuthError,
-	GitHubPermissionError,
-	GitHubNotFoundError,
-	GitHubIssuesDisabledError,
-	GitHubValidationError,
-	GitHubRateLimitError,
-	GitHubSecondaryRateLimitError,
-	GitHubNetworkError,
-	GitHubUnknownError,
-	GitHubError,
-} from './errors.js';
-import { redactSecrets } from '@positron/shared';
-import type { GitHubAdapter } from './adapter.js';
 
 // ---------------------------------------------------------------------------
 // Error Mapping

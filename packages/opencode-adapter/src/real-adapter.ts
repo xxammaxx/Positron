@@ -5,8 +5,8 @@ import path from 'node:path';
 import { runCommand } from '@positron/sandbox';
 import type {
 	OpenCodeAdapter,
-	OpenCodeHealth,
 	OpenCodeCommandResult,
+	OpenCodeHealth,
 	OpenCodeRunInput,
 } from '@positron/shared';
 

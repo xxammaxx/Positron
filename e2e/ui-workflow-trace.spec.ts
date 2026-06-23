@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 /**
  * UI Workflow Trace & Network Proof — Issue #161
  *
@@ -14,9 +16,7 @@
  *
  * Artifacts saved to: test-results/positron-ui-workflow/
  */
-import { test, expect, type Page, type BrowserContext } from '@playwright/test';
-import fs from 'fs';
-import path from 'path';
+import { type BrowserContext, type Page, expect, test } from '@playwright/test';
 
 const ARTIFACT_DIR = 'test-results/positron-ui-workflow';
 const BACKEND_URL = 'http://localhost:3000';

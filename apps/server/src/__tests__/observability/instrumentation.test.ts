@@ -4,11 +4,11 @@
  * metrics actually record values during simulated runtime operations.
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import http from 'node:http';
-import { createServer } from '../../index.js';
 import type { Server } from 'node:http';
-import { resetMetricsForTest, registry } from '../../observability/metrics.js';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { createServer } from '../../index.js';
+import { registry, resetMetricsForTest } from '../../observability/metrics.js';
 
 let server: Server;
 let port: number;

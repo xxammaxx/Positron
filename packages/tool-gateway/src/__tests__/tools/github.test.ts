@@ -1,9 +1,9 @@
 // Built-in Tool Tests: github.*
 // Issue #219 — T-011
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
+import { githubCommentEvidenceDraftHandler, githubReadIssueHandler } from '../../tools/github.js';
 import type { ToolCall } from '../../types.js';
-import { githubReadIssueHandler, githubCommentEvidenceDraftHandler } from '../../tools/github.js';
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 

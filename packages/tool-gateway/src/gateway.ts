@@ -3,9 +3,9 @@
 
 import path from 'node:path';
 import { redactSecrets } from '@positron/shared';
-import type { ToolCall, ToolResult, ToolDefinition, GatewayConfig, BlockReason } from './types.js';
-import { DEFAULT_GATEWAY_CONFIG, BLOCK_REASONS } from './types.js';
 import type { ToolRegistry } from './registry.js';
+import type { BlockReason, GatewayConfig, ToolCall, ToolDefinition, ToolResult } from './types.js';
+import { BLOCK_REASONS, DEFAULT_GATEWAY_CONFIG } from './types.js';
 
 /**
  * Result with timing information.

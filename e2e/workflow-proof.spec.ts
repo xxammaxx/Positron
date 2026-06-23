@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 /**
  * UI Workflow Proof — 16-Step Acceptance Test (Issue #53, #56, #68)
  *
@@ -9,9 +11,7 @@
  *
  * Artifacts saved to: docs/release/ui-workflow-proof/
  */
-import { test, expect } from './fixtures/observe';
-import fs from 'fs';
-import path from 'path';
+import { expect, test } from './fixtures/observe';
 
 const ARTIFACT_DIR = 'docs/release/ui-workflow-proof';
 const BACKEND_URL = 'http://localhost:3000';

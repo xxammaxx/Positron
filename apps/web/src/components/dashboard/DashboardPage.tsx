@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDashboardSSE } from '../../hooks/useDashboardSSE.js';
-import StatusSummary from './StatusSummary.jsx';
-import EvidenceSummary from './EvidenceSummary.jsx';
-import AttentionQueue from './AttentionQueue.jsx';
-import RecentActivity from './RecentActivity.jsx';
-import SystemHealth from './SystemHealth.jsx';
+import VoiceStatusIndicator from '../VoiceStatusIndicator.jsx';
 import EmptyState from '../shared/EmptyState.js';
 import ErrorBanner from '../shared/ErrorBanner.js';
-import NewRunModal from './NewRunModal.jsx';
+import AttentionQueue from './AttentionQueue.jsx';
 import BlueprintPanel from './BlueprintPanel.jsx';
-import VoiceStatusIndicator from '../VoiceStatusIndicator.jsx';
+import EvidenceSummary from './EvidenceSummary.jsx';
+import NewRunModal from './NewRunModal.jsx';
+import RecentActivity from './RecentActivity.jsx';
+import StatusSummary from './StatusSummary.jsx';
+import SystemHealth from './SystemHealth.jsx';
 
 export default function DashboardPage(): React.ReactElement {
 	const navigate = useNavigate();

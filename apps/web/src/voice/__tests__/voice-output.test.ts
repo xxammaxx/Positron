@@ -1,19 +1,19 @@
-import { describe, expect, test, beforeEach, vi, afterEach } from 'vitest';
-import type { RunEvent, Phase, LogLevel } from '../../types.js';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import type { LogLevel, Phase, RunEvent } from '../../types.js';
 import {
-	isSpeechSupported,
-	getAvailableVoices,
+	cancelSpeech,
 	classifyEvent,
-	mapEventToSpeech,
 	eventToSpeechText,
+	getAvailableVoices,
+	getLastSpoken,
+	isSpeechSupported,
+	mapEventToSpeech,
+	resetRateLimitForTest,
+	resetVoiceState,
 	speakEvent,
 	speakTest,
-	cancelSpeech,
-	getLastSpoken,
-	resetVoiceState,
-	resetRateLimitForTest,
 } from '../voice-output.js';
-import { saveVoiceSettings, DEFAULT_VOICE_SETTINGS } from '../voice-settings.js';
+import { DEFAULT_VOICE_SETTINGS, saveVoiceSettings } from '../voice-settings.js';
 
 // ── SpeechSynthesis Mock ──
 const mockSpeak = vi.fn();

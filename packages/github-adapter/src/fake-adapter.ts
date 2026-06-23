@@ -1,23 +1,23 @@
 // Positron — Fake GitHub Adapter (für Tests)
 
+import type { GitHubAdapter } from './adapter.js';
 import type {
+	ClaimOptions,
+	CreatePROptions,
+	GitHubCommentResult,
+	GitHubIssueClaimResult,
+	GitHubIssueComment,
 	GitHubIssueRef,
 	GitHubIssueSummary,
-	GitHubIssueComment,
-	GitHubCommentResult,
-	GitHubRepositorySummary,
-	GitHubIssueClaimResult,
-	ClaimOptions,
-	GitHubPullRequest,
-	CreatePROptions,
-	PRListOptions,
 	GitHubPRFile,
+	GitHubPullRequest,
+	GitHubRepositorySummary,
 	MergePROptions,
 	MergePRResult,
+	PRListOptions,
 	RequestReviewersOptions,
 	RequestReviewersResult,
 } from './types.js';
-import type { GitHubAdapter } from './adapter.js';
 
 export class FakeGitHubAdapter implements GitHubAdapter {
 	private repos = new Map<string, GitHubRepositorySummary>();

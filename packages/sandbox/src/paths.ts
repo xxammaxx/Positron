@@ -1,8 +1,8 @@
 // Positron — Sandbox Pfad-Hilfsfunktionen
 
-import path from 'node:path';
-import os from 'node:os';
 import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 
 /** Standard-Workspace-Root */
 const DEFAULT_WORKSPACE_ROOT = path.join(os.homedir(), '.positron', 'workspaces');

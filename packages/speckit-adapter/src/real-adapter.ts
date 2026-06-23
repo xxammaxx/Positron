@@ -1,22 +1,22 @@
 // Positron — Real SpecKit Adapter
 
 import { runCommand } from '@positron/sandbox';
-import { scanWorkspace, isPathSafe } from './artifact-scanner.js';
 import type {
 	SpecKitAdapter,
-	SpecKitHealth,
-	SpecKitCommandResult,
 	SpecKitArtifactRef,
+	SpecKitCommandResult,
+	SpecKitHealth,
 	SpecKitRunInput,
 } from '@positron/shared';
 import {
+	SpecKitCommandFailedError,
+	SpecKitCommandNotAllowedError,
 	SpecKitNotInstalledError,
 	SpecKitTimeoutError,
-	SpecKitCommandFailedError,
-	SpecKitWorkspaceInvalidError,
-	SpecKitCommandNotAllowedError,
 	SpecKitUnsupportedCommandError,
+	SpecKitWorkspaceInvalidError,
 } from '@positron/shared';
+import { isPathSafe, scanWorkspace } from './artifact-scanner.js';
 
 /**
  * RealSpecKitAdapter — führt echte Spec Kit CLI-Kommandos aus.

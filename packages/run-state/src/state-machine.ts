@@ -1,7 +1,7 @@
 // Positron — State Machine für Run-Management
 
 import crypto from 'node:crypto';
-import type { Phase, RunStatus, EventLevel } from '@positron/shared';
+import type { EventLevel, Phase, RunStatus } from '@positron/shared';
 
 /**
  * Vollständiger Zustand eines Runs.

@@ -1,9 +1,9 @@
 // Built-in Tool Tests: tests.*
 // Issue #219 — T-011
 
-import { describe, it, expect } from 'vitest';
-import type { ToolCall } from '../../types.js';
+import { describe, expect, it } from 'vitest';
 import { testsDetectHandler, testsRunSelectedHandler } from '../../tools/tests.js';
+import type { ToolCall } from '../../types.js';
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 

@@ -1,8 +1,8 @@
 // Positron — Shared Package: Smoke-Tests
 
 import { describe, expect, test } from 'vitest';
+import { ALL_PHASES, isTerminalPhase, isValidPhase } from '../types.js';
 import { createRunId, formatDuration, sleep, truncate } from '../utils.js';
-import { isValidPhase, ALL_PHASES, isTerminalPhase } from '../types.js';
 
 describe('utils', () => {
 	test('createRunId() generiert einen validen UUID', () => {

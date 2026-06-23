@@ -1,6 +1,6 @@
+import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
-import { describe, expect, test, beforeEach, vi, afterEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import VoiceControls from '../components/VoiceControls';
 import VoiceStatusIndicator from '../components/VoiceStatusIndicator';
 

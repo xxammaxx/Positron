@@ -2,12 +2,12 @@
 // Issue #219
 // Verifies the 7 review-agent findings have been fixed.
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import { ToolRegistry } from '../../registry.js';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { GatewayService } from '../../gateway.js';
+import { ToolRegistry } from '../../registry.js';
 import { scanToolDefinition } from '../../scanner.js';
 import { BLOCK_REASONS } from '../../types.js';
-import type { ToolDefinition, ToolHandler, ToolCall, ToolResult } from '../../types.js';
+import type { ToolCall, ToolDefinition, ToolHandler, ToolResult } from '../../types.js';
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 

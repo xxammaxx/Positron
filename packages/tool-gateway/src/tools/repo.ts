@@ -2,9 +2,9 @@
 // Issue #219
 // repo.read_file, repo.list_files, repo.get_diff
 
+import { execSync } from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { execSync } from 'node:child_process';
 import type { ToolDefinition, ToolHandler, ToolResult } from '../types.js';
 
 // ─── Tool Definitions ────────────────────────────────────────────────

@@ -1,19 +1,19 @@
 // Positron — GitHub Adapter: Interface
 
 import type {
+	ClaimOptions,
+	CreatePROptions,
+	GitHubCommentResult,
+	GitHubIssueClaimResult,
+	GitHubIssueComment,
 	GitHubIssueRef,
 	GitHubIssueSummary,
-	GitHubIssueComment,
-	GitHubCommentResult,
-	GitHubRepositorySummary,
-	GitHubIssueClaimResult,
-	ClaimOptions,
-	GitHubPullRequest,
-	CreatePROptions,
-	PRListOptions,
 	GitHubPRFile,
+	GitHubPullRequest,
+	GitHubRepositorySummary,
 	MergePROptions,
 	MergePRResult,
+	PRListOptions,
 	RequestReviewersOptions,
 	RequestReviewersResult,
 } from './types.js';

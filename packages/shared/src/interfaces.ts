@@ -2,7 +2,7 @@
 // ACHTUNG: Duplikate mit speckit-types.ts und opencode-types.ts vermeiden!
 // Adapter-Interfaces und deren Input/Result-Typen sind in den dedizierten Type-Dateien.
 
-import type { Phase, RunStatus, AutonomyLevel, EventLevel } from './types.js';
+import type { AutonomyLevel, EventLevel, Phase, RunStatus } from './types.js';
 
 /** Ergebnis eines einzelnen Test-Kommandos */
 export interface TestCommandExecutionResult {

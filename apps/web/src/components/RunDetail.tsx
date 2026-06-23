@@ -1,16 +1,16 @@
+import { parsePhase } from '@positron/shared';
 import React, { useState, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
+import { api } from '../api.js';
 import { useRun } from '../hooks/useRun.js';
 import { useSSE } from '../hooks/useSSE.js';
-import { api } from '../api.js';
-import LogViewer from './LogViewer.jsx';
-import PhaseTimeline from './PhaseTimeline.jsx';
-import PhasePipeline from './PhasePipeline.jsx';
-import GateControls from './GateControls.jsx';
-import ArtifactPanel from './ArtifactPanel.jsx';
-import PhaseBadge from './PhaseBadge.jsx';
 import type { Phase } from '../types.js';
-import { parsePhase } from '@positron/shared';
+import ArtifactPanel from './ArtifactPanel.jsx';
+import GateControls from './GateControls.jsx';
+import LogViewer from './LogViewer.jsx';
+import PhaseBadge from './PhaseBadge.jsx';
+import PhasePipeline from './PhasePipeline.jsx';
+import PhaseTimeline from './PhaseTimeline.jsx';
 
 function formatDuration(ms: number): string {
 	if (ms < 1000) return `${ms}ms`;

@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 /**
  * Record a Positron demo video walking through key features.
  * Usage:
@@ -7,8 +9,6 @@
  * Output: docs/release/video-demo/positron-demo-recording.webm
  */
 import { chromium } from '@playwright/test';
-import fs from 'fs';
-import path from 'path';
 
 const OUT_DIR = 'docs/release/video-demo';
 const BASE_URL = 'http://localhost:5173';

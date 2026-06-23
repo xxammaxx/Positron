@@ -1,7 +1,7 @@
-import React from 'react';
-import { describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
+import { describe, expect, test, vi } from 'vitest';
 import BlueprintPanel from '../components/dashboard/BlueprintPanel';
 
 // Mock the api module

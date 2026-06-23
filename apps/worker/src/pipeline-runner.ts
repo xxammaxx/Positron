@@ -2,37 +2,37 @@
 // Self-contained pipeline logic for BullMQ worker processes.
 // Accepts all dependencies via DI (PipelineDeps interface) for clean separation from the server.
 
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import Database from 'better-sqlite3';
+import { GitHubStatusSyncService } from '@positron/github-adapter';
+import type {
+	EvidenceItem,
+	GitHubAdapter,
+	GitHubStatusSyncInput,
+	GitHubStatusSyncResult,
+} from '@positron/github-adapter';
+import { createRun, markFailed, transition } from '@positron/run-state';
+import type { RunEventData, RunState } from '@positron/run-state';
+import { TestCommandDetector, TestRunner } from '@positron/sandbox';
+import type { GitWorkspaceAdapter } from '@positron/sandbox';
 import {
-	createRunId,
-	buildRemoteUrl,
 	MAX_FIX_LOOPS,
+	buildRemoteUrl,
+	createRunId,
 	generateBranchName,
 	parsePhase,
 	parseRunStatus,
 } from '@positron/shared';
-import { createRun, transition, markFailed } from '@positron/run-state';
-import { TestCommandDetector, TestRunner } from '@positron/sandbox';
-import { GitHubStatusSyncService } from '@positron/github-adapter';
 import type {
-	Phase,
 	EventLevel,
+	OpenCodeAdapter,
+	Phase,
 	RepositoryConfig,
 	SpecKitAdapter,
-	OpenCodeAdapter,
 } from '@positron/shared';
-import type { RunState, RunEventData } from '@positron/run-state';
-import type {
-	GitHubAdapter,
-	GitHubStatusSyncInput,
-	GitHubStatusSyncResult,
-	EvidenceItem,
-} from '@positron/github-adapter';
-import type { GitWorkspaceAdapter } from '@positron/sandbox';
+import Database from 'better-sqlite3';
 
 // ---------------------------------------------------------------------------
 // Dependency Injection Interface

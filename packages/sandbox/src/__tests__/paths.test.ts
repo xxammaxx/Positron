@@ -3,14 +3,14 @@
 //         GitWorkspacePathError, GitRemoteInvalidError, createWorkspacePath
 
 import path from 'node:path';
-import { describe, expect, test, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import {
+	GitRemoteInvalidError,
+	GitWorkspacePathError,
 	createPositronBranchName,
+	createWorkspacePath,
 	validatePath,
 	validateRemoteUrl,
-	createWorkspacePath,
-	GitWorkspacePathError,
-	GitRemoteInvalidError,
 } from '../paths.js';
 
 const originalEnv = { ...process.env };

@@ -2,8 +2,8 @@
 // Issue #219
 
 import type { Phase } from '@positron/shared';
-import type { ToolDefinition, ToolHandler } from './types.js';
 import { scanToolDefinition } from './scanner.js';
+import type { ToolDefinition, ToolHandler } from './types.js';
 
 /**
  * Error thrown when a tool is already registered.

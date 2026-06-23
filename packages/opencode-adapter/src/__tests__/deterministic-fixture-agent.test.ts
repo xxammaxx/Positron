@@ -2,17 +2,17 @@
 // These tests MUST fail before implementation (modules don't exist yet).
 // Red Test Coverage: RT1, RT2, RT7, RT8
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
+import type { OpenCodeCommandResult, OpenCodePhase, OpenCodeRunInput } from '@positron/shared';
 // RT1/RT2: This import WILL FAIL until deterministic-fixture-agent.ts exists.
 // The test file itself is valid TypeScript/vitest, but module resolution will fail.
 import { DeterministicFixtureAgent } from '../deterministic-fixture-agent.js';
 import type {
-	FixtureAgentConfig,
-	Fixture,
 	EvidenceReport,
+	Fixture,
+	FixtureAgentConfig,
 } from '../deterministic-fixture-agent.js';
-import type { OpenCodeRunInput, OpenCodePhase, OpenCodeCommandResult } from '@positron/shared';
 
 // --------------- Inline Fixture Data (OQ1: inline test fixtures) ---------------
 

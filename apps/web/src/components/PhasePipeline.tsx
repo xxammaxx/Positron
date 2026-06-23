@@ -1,6 +1,6 @@
+import { ALL_PHASES } from '@positron/shared';
 import React from 'react';
 import type { Phase } from '../types.js';
-import { ALL_PHASES } from '@positron/shared';
 
 interface PhasePipelineProps {
 	currentPhase?: Phase;

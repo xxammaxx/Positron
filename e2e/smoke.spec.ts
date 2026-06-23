@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 test.describe('Positron Smoke Tests', () => {
 	test('Health Check ist erreichbar', async ({ page }) => {

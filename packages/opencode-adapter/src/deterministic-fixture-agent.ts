@@ -10,10 +10,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type {
-	OpenCodeRunInput,
-	OpenCodePhase,
-	OpenCodeCommandResult,
 	ExecutionMode,
+	OpenCodeCommandResult,
+	OpenCodePhase,
+	OpenCodeRunInput,
 } from '@positron/shared';
 
 // =============================================================================

@@ -2,17 +2,17 @@
  * Queue & Worker Observability Tests (QA-012).
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
-	queueJobsTotal,
-	queueJobsActive,
-	queueJobsWaiting,
-	queueJobsCompletedTotal,
-	queueJobsFailedTotal,
 	queueJobDurationSeconds,
 	queueJobRetriesTotal,
-	queueWorkerUp,
+	queueJobsActive,
+	queueJobsCompletedTotal,
+	queueJobsFailedTotal,
+	queueJobsTotal,
+	queueJobsWaiting,
 	queueRedisUp,
+	queueWorkerUp,
 } from '../../observability/queue-metrics.js';
 
 describe('Queue Metrics (QA-012)', () => {

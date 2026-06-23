@@ -4,13 +4,13 @@
 
 import { describe, expect, test } from 'vitest';
 import {
-	isValidPhase,
-	isTerminalPhase,
+	ALL_PHASES,
 	isFailurePhase,
+	isTerminalPhase,
+	isValidPhase,
 	parsePhase,
 	parseRunStatus,
 	safeJsonParse,
-	ALL_PHASES,
 } from '../types.js';
 
 // ---------------------------------------------------------------------------

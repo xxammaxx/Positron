@@ -2,7 +2,7 @@
 // Issue #219
 // Detects prompt injection, tool poisoning, and suspicious metadata patterns.
 
-import type { ToolDefinition, ScanResult } from './types.js';
+import type { ScanResult, ToolDefinition } from './types.js';
 
 /**
  * Known prompt injection patterns that indicate a tool description

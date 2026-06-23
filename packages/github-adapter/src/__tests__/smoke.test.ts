@@ -1,6 +1,6 @@
 // Positron — GitHub Adapter: Smoke-Tests
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { FakeGitHubAdapter } from '../fake-adapter.js';
 import type { GitHubIssueSummary, GitHubRepositorySummary } from '../types.js';
 

@@ -6,18 +6,18 @@
 
 import { describe, expect, test } from 'vitest';
 import {
-	syncMarker,
-	renderSyncAccepted,
-	renderSyncPhaseUpdate,
-	renderSyncTestReport,
-	renderSyncBlocked,
-	renderSyncFailed,
-	renderSyncDone,
-	truncateComment,
 	renderEvidenceSection,
 	renderLlmMetadataSection,
-	renderSyncPrCreated,
+	renderSyncAccepted,
+	renderSyncBlocked,
+	renderSyncDone,
+	renderSyncFailed,
 	renderSyncMerged,
+	renderSyncPhaseUpdate,
+	renderSyncPrCreated,
+	renderSyncTestReport,
+	syncMarker,
+	truncateComment,
 } from '../sync-templates.js';
 import type { EvidenceItem, SafeLlmRunMetadata } from '../sync-types.js';
 

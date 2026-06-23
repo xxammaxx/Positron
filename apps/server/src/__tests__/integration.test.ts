@@ -1,6 +1,6 @@
-import { describe, expect, test, beforeAll, afterAll } from 'vitest';
-import { createServer } from '../index.js';
 import type http from 'node:http';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { createServer } from '../index.js';
 
 let server: http.Server;
 let baseUrl: string;

@@ -1,16 +1,16 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
+	getAvailableVoices,
+	getLastSpoken,
+	isSpeechSupported,
+	speakTest,
+} from '../voice/voice-output.js';
+import {
+	type VoiceEventType,
 	loadVoiceSettings,
 	saveVoiceSettings,
 	toggleVoiceEnabled,
-	type VoiceEventType,
 } from '../voice/voice-settings.js';
-import {
-	isSpeechSupported,
-	getAvailableVoices,
-	speakTest,
-	getLastSpoken,
-} from '../voice/voice-output.js';
 
 const EVENT_LABELS: Record<VoiceEventType, string> = {
 	run_started: 'Run started',

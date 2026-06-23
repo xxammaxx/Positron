@@ -1,14 +1,14 @@
 // Positron — Commit Policy: Comprehensive branch coverage tests
 // Covers: guardBranch, evaluatePushPolicy, generateCommitMessage, isValidPositronBranch
 
-import { describe, expect, test, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import {
-	guardBranch,
-	evaluatePushPolicy,
-	generateCommitMessage,
-	isValidPositronBranch,
 	ALLOWED_BRANCH_PATTERN,
 	PROTECTED_BRANCHES,
+	evaluatePushPolicy,
+	generateCommitMessage,
+	guardBranch,
+	isValidPositronBranch,
 } from '../commit-policy.js';
 
 // ---------------------------------------------------------------------------

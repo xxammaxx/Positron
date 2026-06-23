@@ -2,9 +2,9 @@
 
 import type {
 	SpecKitAdapter,
-	SpecKitHealth,
-	SpecKitCommandResult,
 	SpecKitArtifactRef,
+	SpecKitCommandResult,
+	SpecKitHealth,
 	SpecKitRunInput,
 } from '@positron/shared';
 

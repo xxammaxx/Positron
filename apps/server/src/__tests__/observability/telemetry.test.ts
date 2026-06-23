@@ -4,15 +4,15 @@
  * Uses FakeGitHubAdapter — no real GitHub API calls.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
-	recordGitHubApiSuccess,
-	recordGitHubApiFailure,
-	githubApiRequestsTotal,
-	githubApiFailuresTotal,
-	githubApiDurationSeconds,
-	githubRateLimitHitsTotal,
 	classifyGitHubError,
+	githubApiDurationSeconds,
+	githubApiFailuresTotal,
+	githubApiRequestsTotal,
+	githubRateLimitHitsTotal,
+	recordGitHubApiFailure,
+	recordGitHubApiSuccess,
 	registry,
 } from '../../observability/metrics.js';
 import type { GitHubApiMethod } from '../../observability/metrics.js';

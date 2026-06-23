@@ -2,9 +2,9 @@
 // Issue #219 — T-018
 // Verifies that tests.run_selected does not execute arbitrary shell commands.
 
-import { describe, it, expect } from 'vitest';
-import type { ToolCall, ToolResult } from '../../types.js';
+import { describe, expect, it } from 'vitest';
 import { testsRunSelectedHandler } from '../../tools/tests.js';
+import type { ToolCall, ToolResult } from '../../types.js';
 
 describe('Red Test: Shell Injection', () => {
 	it("BLOCKS: command with shell metacharacter ';'", async () => {

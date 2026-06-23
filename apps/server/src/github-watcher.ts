@@ -10,8 +10,8 @@
 //
 // Idempotenz: Bereits existierende Runs für eine Issue werden nicht dupliziert.
 
-import { createRunId } from '@positron/shared';
 import { createRun } from '@positron/run-state';
+import { createRunId } from '@positron/shared';
 import { createLogger } from './logger.js';
 
 const log = createLogger('Watcher');
