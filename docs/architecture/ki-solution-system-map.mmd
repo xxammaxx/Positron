@@ -1,0 +1,91 @@
+graph TB
+    subgraph "External"
+        USER["👤 Human Operator"]
+        GH["🐙 GitHub Issues/PRs"]
+    end
+
+    subgraph "Core Orchestration"
+        ORCH["Issue Orchestrator Agent"]
+        RECON["GitHub Context Reconciler"]
+        DECIDE["Issue/PR Decision Engine"]
+        CLASSIFY["Risk Classifier"]
+    end
+
+    subgraph "Agent Runtime"
+        FIXTURE["DeterministicFixtureAgent<br/>fixture mode"]
+        DRYRUN["OpenCodeDryRunAgent<br/>dry-run mode"]
+        REAL["Real Agent<br/>real mode"]
+    end
+
+    subgraph "Safety Layer"
+        STOPASK["Stop/Ask Policy<br/>(PR #218 — deferred)"]
+        GATEAPPR["GATE_APPROVE Hook<br/>(PR #218 — deferred)"]
+        EVIDENCE["Evidence Gate"]
+        HUMAN["Human Approval Gate"]
+    end
+
+    subgraph "Local Gates"
+        DIFF["git diff --check"]
+        FORMAT["npx biome format ."]
+        BUILD["npm run build"]
+        TYPECHECK["npm run typecheck"]
+        TEST["npm test"]
+    end
+
+    subgraph "MCP/Tool Layer"
+        MCPMAN["MCP Capability Manifest"]
+        TOOLGW["Tool Gateway"]
+        PERM["Tool Permission Layer"]
+    end
+
+    subgraph "Infrastructure"
+        INSTALL["install-local.ps1"]
+        START["start-local.ps1"]
+        PACKAGE["package-local-release.ps1"]
+    end
+
+    subgraph "Documentation"
+        STATUS["docs/status/current-capabilities.md"]
+        LIMITS["docs/status/known-limitations.md"]
+        EVIDDIR["docs/evidence/"]
+        ARCH["docs/architecture/"]
+        MERMAID["Mermaid Diagrams"]
+    end
+
+    USER -->|approves| ORCH
+    GH -->|read issues/PRs| RECON
+    RECON --> DECIDE
+    DECIDE --> CLASSIFY
+
+    CLASSIFY -->|GREEN_SAFE| FIXTURE
+    CLASSIFY -->|YELLOW_REVIEW| DRYRUN
+    CLASSIFY -->|YELLOW_REVIEW → approved| REAL
+    CLASSIFY -->|RED_HOLD| HUMAN
+
+    FIXTURE --> EVIDENCE
+    DRYRUN --> EVIDENCE
+    REAL --> STOPASK
+    STOPASK --> GATEAPPR
+    GATEAPPR --> EVIDENCE
+
+    EVIDENCE --> DIFF
+    DIFF --> FORMAT
+    FORMAT --> BUILD
+    BUILD --> TYPECHECK
+    TYPECHECK --> TEST
+    TEST --> HUMAN
+
+    HUMAN -->|approved| GH
+
+    REAL --> TOOLGW
+    TOOLGW --> PERM
+    PERM --> MCPMAN
+
+    INSTALL --> START
+    START --> PACKAGE
+
+    EVIDENCE --> EVIDDIR
+    EVIDENCE --> STATUS
+    EVIDENCE --> LIMITS
+    EVIDENCE --> ARCH
+    ARCH --> MERMAID
