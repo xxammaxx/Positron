@@ -126,7 +126,7 @@ All settings via environment variables or `apps/server/.env`:
 
 ```bash
 npx vitest run                  # 917 core/package tests (50 test files)
-cd apps/web && npx vitest run   # 87 frontend tests (3 suites pass; 5 TSX suites pending Vitest transform fix)
+cd apps/web && npx vitest run   # 196 frontend tests (8 test files, JSX/TSX fixed)
 npx playwright test             # E2E tests (advisory-only, see Issue #268)
 ```
 
@@ -208,11 +208,14 @@ Positron currently uses **local gates as the source of truth** for merge decisio
 
 - **GitHub Actions**: advisory-only (zero-step CI), tracked in [Issue #268](https://github.com/xxammaxx/Positron/issues/268).
 - **`npx biome check .`**: lint backlog with known warnings/errors — triaged separately.
-- **`apps/web` tests**: 5 TSX test suites fail due to a Vitest JSX transform issue; 3 suites (87 tests) pass.
+- **`apps/web` tests**: **196/196 passing** (8 test files, JSX/TSX Vitest fixed).
 - **E2E tests**: not currently verified in local gates; advisory-only.
 
 ### See also
 
+- [CONTRIBUTING.md](CONTRIBUTING.md)
+- [SECURITY.md](SECURITY.md)
+- [CHANGELOG.md](CHANGELOG.md)
 - [`docs/status/current-capabilities.md`](docs/status/current-capabilities.md)
 - [`docs/status/known-limitations.md`](docs/status/known-limitations.md)
 - [`docs/architecture/local-ci-flow.mmd`](docs/architecture/local-ci-flow.mmd)
