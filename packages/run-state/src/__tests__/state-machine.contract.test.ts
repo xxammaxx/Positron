@@ -14,18 +14,18 @@
  * - VALID_TRANSITIONS is a complete map with all 28 phases
  */
 
-import { describe, it, expect } from 'vitest';
 import {
-	createRun,
+	VALID_TRANSITIONS,
 	canTransition,
-	transition,
+	createRun,
+	isFailurePhase,
+	isTerminalPhase,
 	markFailed,
 	retry,
-	isTerminalPhase,
-	isFailurePhase,
-	VALID_TRANSITIONS,
+	transition,
 } from '@positron/run-state';
 import type { RunState } from '@positron/run-state';
+import { describe, expect, it } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // Helper

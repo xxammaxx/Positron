@@ -11,9 +11,9 @@
  * All generated values are synthetic fakes. No real secrets or tokens.
  */
 
-import { describe, it, expect } from 'vitest';
+import { generateBranchName, redactValue } from '@positron/shared';
 import fc from 'fast-check';
-import { redactValue, generateBranchName } from '@positron/shared';
+import { describe, expect, it } from 'vitest';
 
 // =========================================================================
 // GENERATORS: Secret/Token Patterns (Phase 4)

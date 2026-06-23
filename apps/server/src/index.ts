@@ -1,8 +1,8 @@
 // Positron Server — Orchestrator und REST API
 
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 // Simple .env loader (no external dependency needed)
@@ -28,102 +28,102 @@ import { fileURLToPath } from 'node:url';
 	}
 })();
 
-import express from 'express';
 import http from 'node:http';
-import Database from 'better-sqlite3';
 import {
-	openDatabase,
+	FakeGitHubAdapter,
+	GitHubStatusSyncService,
+	createRealGitHubAdapter,
+} from '@positron/github-adapter';
+import type { GitHubAdapter } from '@positron/github-adapter';
+import type {
+	EvidenceItem,
+	GitHubStatusSyncInput,
+	GitHubStatusSyncResult,
+} from '@positron/github-adapter';
+import { renderAccepted } from '@positron/github-adapter';
+import { FakeOpenCodeAdapter, RealOpenCodeAdapter } from '@positron/opencode-adapter';
+import {
 	createRun,
-	transition,
 	markFailed,
-	retry,
-	resumeFromEvents,
+	openDatabase,
 	resolveDatabasePath,
+	resumeFromEvents,
+	retry,
+	transition,
 } from '@positron/run-state';
-import { RealSpecKitAdapter, FakeSpecKitAdapter } from '@positron/speckit-adapter';
-import { RealOpenCodeAdapter, FakeOpenCodeAdapter } from '@positron/opencode-adapter';
+import type { RunEventData, RunState } from '@positron/run-state';
+import { FakeGitWorkspaceAdapter, RealGitWorkspaceAdapter } from '@positron/sandbox';
+import type { GitWorkspaceAdapter } from '@positron/sandbox';
+import { TestCommandDetector, TestRunner } from '@positron/sandbox';
+import type { TestReport } from '@positron/sandbox';
 import {
-	generateBranchName,
+	MAX_FIX_LOOPS,
+	buildRemoteUrl,
 	createRunId,
+	generateBranchName,
 	loadRepositoryConfig,
 	normalizeRepositoryConfig,
-	buildRemoteUrl,
-	MAX_FIX_LOOPS,
 	parsePhase,
 	parseRunStatus,
 	safeJsonParse,
 } from '@positron/shared';
 import { SecretManager } from '@positron/shared';
-import type { Phase, RunStatus, EventLevel } from '@positron/shared';
+import type { EventLevel, Phase, RunStatus } from '@positron/shared';
 import type {
-	RepositoryConfig,
-	SpecKitAdapter,
 	OpenCodeAdapter,
 	OpenCodeRunInput,
+	RepositoryConfig,
+	SpecKitAdapter,
 } from '@positron/shared';
-import type { RunState, RunEventData } from '@positron/run-state';
-import {
-	FakeGitHubAdapter,
-	createRealGitHubAdapter,
-	GitHubStatusSyncService,
-} from '@positron/github-adapter';
-import type { GitHubAdapter } from '@positron/github-adapter';
-import type {
-	GitHubStatusSyncInput,
-	GitHubStatusSyncResult,
-	EvidenceItem,
-} from '@positron/github-adapter';
-import { renderAccepted } from '@positron/github-adapter';
-import { FakeGitWorkspaceAdapter, RealGitWorkspaceAdapter } from '@positron/sandbox';
-import type { GitWorkspaceAdapter } from '@positron/sandbox';
-import { TestCommandDetector, TestRunner } from '@positron/sandbox';
-import type { TestReport } from '@positron/sandbox';
+import { FakeSpecKitAdapter, RealSpecKitAdapter } from '@positron/speckit-adapter';
+import Database from 'better-sqlite3';
+import express from 'express';
+import { createDemoLiveRunHandler } from './demo/live-run-handler.js';
 import { startWatcher } from './github-watcher.js';
+import { createCancelHandler } from './handlers/cancel-run.js';
 import { createLogger } from './logger.js';
 import {
-	broadcastSSE,
-	addSSEClient,
-	removeSSEClient,
-	resetEventSequence,
-	primeEventSequence,
-} from './sse/broadcaster.js';
-import {
-	initSignalsDb,
-	setRunSignal,
-	clearRunSignal,
-	checkRunSignal,
-	getResumePhaseTarget,
-} from './signals.js';
-import { createCancelHandler } from './handlers/cancel-run.js';
-import { createDemoLiveRunHandler } from './demo/live-run-handler.js';
-import {
-	renderMetrics,
-	serverUptimeSeconds,
 	activeRuns,
-	runsTotal,
-	runDurationSeconds,
-	runFailuresTotal,
-	retriesTotal,
-	cancellationsTotal,
-	gateRevisionsTotal,
 	blockedMergesTotal,
 	blockedPushesTotal,
-	opencodeCommandTotal,
+	cancellationsTotal,
+	classifyRuntimeError,
+	gateRevisionsTotal,
 	opencodeCommandDurationSeconds,
 	opencodeCommandFailuresTotal,
-	classifyRuntimeError,
+	opencodeCommandTotal,
+	renderMetrics,
+	retriesTotal,
+	runDurationSeconds,
+	runFailuresTotal,
+	runsTotal,
+	serverUptimeSeconds,
 } from './observability/metrics.js';
 import {
-	renderQueueMetrics,
-	queueJobsTotal,
+	queueJobRetriesTotal,
 	queueJobsActive,
-	queueJobsWaiting,
 	queueJobsCompletedTotal,
 	queueJobsFailedTotal,
-	queueJobRetriesTotal,
-	queueWorkerUp,
+	queueJobsTotal,
+	queueJobsWaiting,
 	queueRedisUp,
+	queueWorkerUp,
+	renderQueueMetrics,
 } from './observability/queue-metrics.js';
+import {
+	checkRunSignal,
+	clearRunSignal,
+	getResumePhaseTarget,
+	initSignalsDb,
+	setRunSignal,
+} from './signals.js';
+import {
+	addSSEClient,
+	broadcastSSE,
+	primeEventSequence,
+	removeSSEClient,
+	resetEventSequence,
+} from './sse/broadcaster.js';
 
 const __serverDirname = path.dirname(fileURLToPath(import.meta.url));
 const log = createLogger('Server');

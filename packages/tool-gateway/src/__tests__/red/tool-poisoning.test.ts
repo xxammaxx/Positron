@@ -2,9 +2,9 @@
 // Issue #219 — T-016
 // Verifies that a tool with poisoned description cannot be registered.
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { ToolRegistry } from '../../registry.js';
-import type { ToolDefinition, ToolHandler, ToolCall, ToolResult } from '../../types.js';
+import type { ToolCall, ToolDefinition, ToolHandler, ToolResult } from '../../types.js';
 
 describe('Red Test: Tool Poisoning', () => {
 	const noopHandler: ToolHandler = async (_c: ToolCall): Promise<ToolResult> => ({

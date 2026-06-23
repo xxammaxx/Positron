@@ -3,10 +3,10 @@
  * Validates: endpoint reachable, Prometheus format, no secrets, no high-cardinality labels.
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import http from 'node:http';
-import { createServer } from '../../index.js';
 import type { Server } from 'node:http';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { createServer } from '../../index.js';
 
 let server: Server;
 let port: number;

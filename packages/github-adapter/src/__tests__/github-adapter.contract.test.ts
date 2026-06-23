@@ -13,21 +13,21 @@
  * - Idempotency where documented
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
 import type {
+	ClaimOptions,
 	GitHubAdapter,
+	GitHubCommentResult,
+	GitHubIssueClaimResult,
 	GitHubIssueRef,
 	GitHubIssueSummary,
-	GitHubCommentResult,
-	GitHubRepositorySummary,
-	GitHubIssueClaimResult,
-	GitHubPullRequest,
 	GitHubPRFile,
+	GitHubPullRequest,
+	GitHubRepositorySummary,
 	MergePRResult,
 	RequestReviewersResult,
-	ClaimOptions,
 } from '@positron/github-adapter';
 import { FakeGitHubAdapter } from '@positron/github-adapter';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // Helpers

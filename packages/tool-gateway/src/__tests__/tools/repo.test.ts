@@ -1,9 +1,9 @@
 // Built-in Tool Tests: repo.*
 // Issue #219 — T-011
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
+import { repoGetDiffHandler, repoListFilesHandler, repoReadFileHandler } from '../../tools/repo.js';
 import type { ToolCall } from '../../types.js';
-import { repoReadFileHandler, repoListFilesHandler, repoGetDiffHandler } from '../../tools/repo.js';
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 

@@ -39,7 +39,7 @@
  * | B      | Optional    | E2E-Test ist neu; optional bis stabile CI-Runs |
  */
 
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 const BACKEND_URL = 'http://localhost:3000';
 const FRONTEND_URL = 'http://localhost:5173';

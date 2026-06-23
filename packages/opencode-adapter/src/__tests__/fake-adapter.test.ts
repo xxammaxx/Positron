@@ -3,13 +3,13 @@
 //         setShouldFailCommands, getCommandCallLog, clearCallLog,
 //         healthCheck, runSlashCommand (success + fail paths), runImplement
 
-import { describe, expect, test, beforeEach } from 'vitest';
+import type { OpenCodeRunInput } from '@positron/shared';
+import { beforeEach, describe, expect, test } from 'vitest';
 import {
-	FakeOpenCodeAdapter,
 	FAKE_OPENCODE_HEALTH_AVAILABLE,
 	FAKE_OPENCODE_HEALTH_UNAVAILABLE,
+	FakeOpenCodeAdapter,
 } from '../fake-adapter.js';
-import type { OpenCodeRunInput } from '@positron/shared';
 
 const makeInput = (overrides?: Partial<OpenCodeRunInput>): OpenCodeRunInput => ({
 	workspacePath: '/tmp/test-ws',

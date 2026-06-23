@@ -3,14 +3,14 @@
 //         validateSpecKitCommand, SpecKitCommandPolicyError,
 //         ALLOWED_SPECKIT_COMMANDS, BLOCKED_SPECKIT_COMMANDS
 
-import { describe, expect, test, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import {
+	ALLOWED_SPECKIT_COMMANDS,
+	BLOCKED_SPECKIT_COMMANDS,
+	SpecKitCommandPolicyError,
 	isAllowedSpecKitCommand,
 	isBlockedSpecKitCommand,
 	validateSpecKitCommand,
-	SpecKitCommandPolicyError,
-	ALLOWED_SPECKIT_COMMANDS,
-	BLOCKED_SPECKIT_COMMANDS,
 } from '../speckit-policy.js';
 
 const originalEnv = { ...process.env };

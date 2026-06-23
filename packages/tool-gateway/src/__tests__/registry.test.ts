@@ -1,14 +1,14 @@
 // ToolRegistry Unit Tests
 // Issue #219 — T-004
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
-	ToolRegistry,
-	ToolAlreadyRegisteredError,
 	RegistrySealedError,
+	ToolAlreadyRegisteredError,
 	ToolNotFoundError,
+	ToolRegistry,
 } from '../registry.js';
-import type { ToolDefinition, ToolHandler, ToolCall, ToolResult } from '../types.js';
+import type { ToolCall, ToolDefinition, ToolHandler, ToolResult } from '../types.js';
 
 // ─── Test Helpers ────────────────────────────────────────────────────
 

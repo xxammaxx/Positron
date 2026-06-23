@@ -2,11 +2,11 @@
 // Issue #219 — T-019
 // Verifies that write-risk tools require approval and cannot be bypassed.
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import { ToolRegistry } from '../../registry.js';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { GatewayService } from '../../gateway.js';
+import { ToolRegistry } from '../../registry.js';
 import { BLOCK_REASONS } from '../../types.js';
-import type { ToolDefinition, ToolHandler, ToolCall, ToolResult } from '../../types.js';
+import type { ToolCall, ToolDefinition, ToolHandler, ToolResult } from '../../types.js';
 
 describe('Red Test: Approval Bypass', () => {
 	let registry: ToolRegistry;

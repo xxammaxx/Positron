@@ -2,10 +2,10 @@
 // Issue #219 — T-021
 // Verifies that secrets in arguments and outputs are redacted before logging.
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import { ToolRegistry } from '../../registry.js';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { GatewayService } from '../../gateway.js';
-import type { ToolDefinition, ToolHandler, ToolCall, ToolResult } from '../../types.js';
+import { ToolRegistry } from '../../registry.js';
+import type { ToolCall, ToolDefinition, ToolHandler, ToolResult } from '../../types.js';
 
 describe('Red Test: Secret Leakage', () => {
 	let registry: ToolRegistry;

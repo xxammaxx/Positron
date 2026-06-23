@@ -3,8 +3,8 @@
  * Idempotent, status-protected, broadcasts SSE events.
  */
 
-import type { Request, Response } from 'express';
 import crypto from 'node:crypto';
+import type { Request, Response } from 'express';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createCancelHandler(deps: Record<string, any>) {

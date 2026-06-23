@@ -2,17 +2,17 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { runCommand, GitCommandFailedError, GitCommandError } from './command-runner.js';
-import { validatePath, validateRemoteUrl } from './paths.js';
-import { evaluatePushPolicy, generateCommitMessage } from './commit-policy.js';
 import type {
+	GitDiffSummary,
+	GitStatusSummary,
 	GitWorkspaceAdapter,
 	PrepareWorkspaceInput,
 	PreparedWorkspace,
-	GitStatusSummary,
-	GitDiffSummary,
 	PushOptions,
 } from '@positron/shared';
+import { GitCommandError, GitCommandFailedError, runCommand } from './command-runner.js';
+import { evaluatePushPolicy, generateCommitMessage } from './commit-policy.js';
+import { validatePath, validateRemoteUrl } from './paths.js';
 
 /**
  * Echter Git-Workspace-Adapter.

@@ -3,11 +3,11 @@
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { runCommand } from '../command-runner.js';
-import { FakeGitWorkspaceAdapter } from '../fake-adapter.js';
+import { evaluatePushPolicy, generateCommitMessage, guardBranch } from '../commit-policy.js';
 import { TestCommandDetector } from '../detector.js';
-import { validatePath, createWorkspacePath } from '../paths.js';
+import { FakeGitWorkspaceAdapter } from '../fake-adapter.js';
+import { createWorkspacePath, validatePath } from '../paths.js';
 import { TestRunner } from '../test-runner.js';
-import { evaluatePushPolicy, guardBranch, generateCommitMessage } from '../commit-policy.js';
 
 describe('FakeGitWorkspaceAdapter', () => {
 	test('prepareWorkspace wirft keinen Fehler', async () => {

@@ -2,7 +2,7 @@
 // Covers: renderAccepted, renderStatusUpdate, renderBlocked, renderDone
 
 import { describe, expect, test } from 'vitest';
-import { renderAccepted, renderStatusUpdate, renderBlocked, renderDone } from '../templates.js';
+import { renderAccepted, renderBlocked, renderDone, renderStatusUpdate } from '../templates.js';
 
 const runId = 'run-abc-123';
 const issueNumber = 42;

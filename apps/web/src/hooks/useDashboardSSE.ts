@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
-import type { Run, Metrics } from '../types.js';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { Metrics, Run } from '../types.js';
 
 interface DashboardData {
 	metrics: Metrics | null;

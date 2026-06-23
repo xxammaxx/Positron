@@ -2,8 +2,8 @@
 
 import type {
 	OpenCodeAdapter,
-	OpenCodeHealth,
 	OpenCodeCommandResult,
+	OpenCodeHealth,
 	OpenCodeRunInput,
 } from '@positron/shared';
 

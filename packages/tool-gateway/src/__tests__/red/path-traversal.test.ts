@@ -2,11 +2,11 @@
 // Issue #219 — T-017
 // Verifies that path traversal outside workspace is blocked.
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import { ToolRegistry } from '../../registry.js';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { GatewayService } from '../../gateway.js';
+import { ToolRegistry } from '../../registry.js';
 import { BLOCK_REASONS } from '../../types.js';
-import type { ToolDefinition, ToolHandler, ToolCall, ToolResult } from '../../types.js';
+import type { ToolCall, ToolDefinition, ToolHandler, ToolResult } from '../../types.js';
 
 describe('Red Test: Path Traversal', () => {
 	let registry: ToolRegistry;

@@ -1,7 +1,7 @@
 // Positron — Run State Datenbank-Konstanten
 
-import path from 'node:path';
 import os from 'node:os';
+import path from 'node:path';
 
 /** Standard-Pfad zur SQLite-Datenbank */
 export const POSITRON_DB_PATH = path.join(os.homedir(), '.positron', 'positron.db');

@@ -4,9 +4,9 @@
  * Security-gated: only available in dev mode or with POSITRON_ENABLE_DEMO_LIVE=1.
  */
 
+import type { RunEventData, RunState } from '@positron/run-state';
+import type { EventLevel, Phase } from '@positron/shared';
 import type { Request, Response } from 'express';
-import type { Phase, EventLevel } from '@positron/shared';
-import type { RunState, RunEventData } from '@positron/run-state';
 
 /** Dependencies interface — strongly typed to prevent silent mismatches like the old Record<string,any>. */
 export interface DemoLiveRunDeps {

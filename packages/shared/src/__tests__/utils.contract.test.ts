@@ -13,15 +13,15 @@
  * - sleep() resolves after the specified time
  */
 
-import { describe, it, expect } from 'vitest';
 import {
-	redactValue,
-	generateBranchName,
 	createRunId,
 	formatDuration,
-	truncate,
+	generateBranchName,
+	redactValue,
 	sleep,
+	truncate,
 } from '@positron/shared';
+import { describe, expect, it } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // Contract: redactValue()

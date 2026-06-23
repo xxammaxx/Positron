@@ -2,9 +2,9 @@
 
 import { describe, expect, test } from 'vitest';
 import {
-	FakeOpenCodeAdapter,
 	FAKE_OPENCODE_HEALTH_AVAILABLE,
 	FAKE_OPENCODE_HEALTH_UNAVAILABLE,
+	FakeOpenCodeAdapter,
 } from '../fake-adapter.js';
 
 describe('FakeOpenCodeAdapter', () => {

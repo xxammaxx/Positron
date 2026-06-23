@@ -1,12 +1,12 @@
 // Positron — SpecKit Adapter: Smoke-Tests
 
 import { describe, expect, test } from 'vitest';
+import { computeSha256, isPathSafe, scanWorkspace } from '../artifact-scanner.js';
 import {
-	FakeSpecKitAdapter,
 	FAKE_HEALTH_AVAILABLE,
 	FAKE_HEALTH_UNAVAILABLE,
+	FakeSpecKitAdapter,
 } from '../fake-adapter.js';
-import { scanWorkspace, isPathSafe, computeSha256 } from '../artifact-scanner.js';
 
 describe('FakeSpecKitAdapter', () => {
 	test('healthCheck mit Standard-Health', async () => {

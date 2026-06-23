@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { api, setAdminToken, getAdminToken, type AdminStats } from '../../api.js';
+import { type AdminStats, api, getAdminToken, setAdminToken } from '../../api.js';
 
 type AuthStatus = 'idle' | 'connecting' | 'valid' | 'error';
 

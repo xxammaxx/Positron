@@ -17,21 +17,21 @@
  * Generators produce no real secrets. All values are synthetic fakes.
  */
 
-import { describe, it, expect } from 'vitest';
-import fc from 'fast-check';
 import {
-	createRun,
-	canTransition,
-	transition,
-	markFailed,
-	retry,
-	resumeFromEvents,
-	isTerminalPhase,
-	isFailurePhase,
 	VALID_TRANSITIONS,
+	canTransition,
+	createRun,
+	isFailurePhase,
+	isTerminalPhase,
+	markFailed,
+	resumeFromEvents,
+	retry,
+	transition,
 } from '@positron/run-state';
-import type { RunState, RunEventData } from '@positron/run-state';
+import type { RunEventData, RunState } from '@positron/run-state';
 import type { Phase } from '@positron/shared';
+import fc from 'fast-check';
+import { describe, expect, it } from 'vitest';
 
 // =========================================================================
 // Generators (Phase 4)

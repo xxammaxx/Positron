@@ -1,8 +1,8 @@
 // Positron — Test Runner
 
+import type { TestCommandExecutionResult, TestReport } from '@positron/shared';
 import { runCommand } from './command-runner.js';
 import type { DetectedTestCommand, TestCommandDetectionResult } from './detector.js';
-import type { TestReport, TestCommandExecutionResult } from '@positron/shared';
 
 /** Optionen für den Test-Runner */
 export interface RunOptions {

@@ -3,14 +3,14 @@
 
 import { describe, expect, test } from 'vitest';
 import {
-	createRun,
 	canTransition,
-	isTerminalPhase,
+	createRun,
 	isFailurePhase,
-	transition,
+	isTerminalPhase,
 	markFailed,
-	retry,
 	resumeFromEvents,
+	retry,
+	transition,
 } from '../state-machine.js';
 import type { RunEventData } from '../state-machine.js';
 

@@ -2,13 +2,13 @@
 // Covers: validateOpenCodeCommand, OpenCodeCommandPolicyError,
 //         ALLOWED_OPENCODE_COMMANDS, BLOCKED_OPENCODE_COMMANDS, ALLOWED_SLASH_COMMANDS
 
-import { describe, expect, test, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import {
-	validateOpenCodeCommand,
-	OpenCodeCommandPolicyError,
 	ALLOWED_OPENCODE_COMMANDS,
-	BLOCKED_OPENCODE_COMMANDS,
 	ALLOWED_SLASH_COMMANDS,
+	BLOCKED_OPENCODE_COMMANDS,
+	OpenCodeCommandPolicyError,
+	validateOpenCodeCommand,
 } from '../opencode-policy.js';
 
 const originalEnv = { ...process.env };

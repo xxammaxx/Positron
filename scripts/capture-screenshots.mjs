@@ -1,10 +1,10 @@
+import fs from 'node:fs';
+import path from 'node:path';
 /**
  * Capture screenshots of all main Positron pages for README.
  * Usage: node scripts/capture-screenshots.mjs
  */
 import { chromium } from '@playwright/test';
-import fs from 'fs';
-import path from 'path';
 
 const OUT_DIR = 'docs/screenshots';
 const BASE_URL = 'http://localhost:5173';

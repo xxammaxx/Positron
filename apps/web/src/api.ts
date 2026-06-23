@@ -1,17 +1,17 @@
 // Positron Web — API Client
 
+import { parsePhase } from '@positron/shared';
 import type {
-	Repository,
+	ApiError,
+	Artifact,
+	HealthStatus,
 	Issue,
+	Metrics,
+	Repository,
 	Run,
 	RunEvent,
-	Artifact,
-	Metrics,
-	HealthStatus,
-	ApiError,
 } from './types.jsx';
 import type { Phase, RunStatus } from './types.jsx';
-import { parsePhase } from '@positron/shared';
 
 const BASE = '/api';
 

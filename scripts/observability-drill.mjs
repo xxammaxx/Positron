@@ -13,8 +13,8 @@
  *   1 — Prerequisites not met
  */
 
-import http from 'node:http';
 import { Buffer } from 'node:buffer';
+import http from 'node:http';
 
 // ── Configuration ────────────────────────────────────────────────────────
 const SERVER_URL = process.env.POSITRON_SERVER_URL ?? 'http://localhost:3000';

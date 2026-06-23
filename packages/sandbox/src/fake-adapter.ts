@@ -1,11 +1,11 @@
 // Positron — Fake Git Workspace Adapter (für Tests)
 
 import type {
+	GitDiffSummary,
+	GitStatusSummary,
 	GitWorkspaceAdapter,
 	PrepareWorkspaceInput,
 	PreparedWorkspace,
-	GitStatusSummary,
-	GitDiffSummary,
 	PushOptions,
 } from '@positron/shared';
 

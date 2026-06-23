@@ -1,13 +1,13 @@
-import { describe, expect, test, beforeEach, afterEach, vi } from 'vitest';
-import {
-	SecretManager,
-	EnvSecretProvider,
-	DockerSecretProvider,
-	FileSecretProvider,
-} from '../secret-manager.js';
 import fs from 'node:fs';
-import path from 'node:path';
 import os from 'node:os';
+import path from 'node:path';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import {
+	DockerSecretProvider,
+	EnvSecretProvider,
+	FileSecretProvider,
+	SecretManager,
+} from '../secret-manager.js';
 
 // ---------------------------------------------------------------------------
 // EnvSecretProvider

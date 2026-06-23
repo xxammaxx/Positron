@@ -1,15 +1,15 @@
-import React from 'react';
-import { describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
+import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
-import PhaseBadge from '../components/PhaseBadge';
-import LogViewer from '../components/LogViewer';
-import GateControls from '../components/GateControls';
+import { describe, expect, test, vi } from 'vitest';
 import Dashboard from '../components/Dashboard';
+import GateControls from '../components/GateControls';
+import LogViewer from '../components/LogViewer';
+import PhaseBadge from '../components/PhaseBadge';
 import PhaseTimeline from '../components/PhaseTimeline';
 import { useSSE } from '../hooks/useSSE';
-import { renderHook } from '@testing-library/react';
-import type { Phase, RunEvent, LogLevel } from '../types';
+import type { LogLevel, Phase, RunEvent } from '../types';
 import { ALL_PHASES } from '../types';
 
 // Mock api for Dashboard

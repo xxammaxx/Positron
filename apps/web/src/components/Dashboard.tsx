@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
-import PhaseBadge from './PhaseBadge.jsx';
-import type { Run, Phase } from '../types.js';
+import type { Phase, Run } from '../types.js';
 import { ALL_PHASES } from '../types.js';
+import PhaseBadge from './PhaseBadge.jsx';
 
 function formatDuration(ms: number): string {
 	if (ms < 1000) return `${ms}ms`;

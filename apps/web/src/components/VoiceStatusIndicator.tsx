@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { getLastSpoken, isSpeechSupported } from '../voice/voice-output.js';
 import { loadVoiceSettings, toggleVoiceEnabled } from '../voice/voice-settings.js';
-import { isSpeechSupported, getLastSpoken } from '../voice/voice-output.js';
 
 export default function VoiceStatusIndicator(): React.ReactElement {
 	const supported = isSpeechSupported();

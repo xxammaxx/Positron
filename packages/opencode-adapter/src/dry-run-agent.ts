@@ -9,7 +9,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import type { OpenCodeRunInput, ExecutionMode, OpenCodePhase } from '@positron/shared';
+import type { ExecutionMode, OpenCodePhase, OpenCodeRunInput } from '@positron/shared';
 
 // =============================================================================
 // Types (package-local, per ADR-D)

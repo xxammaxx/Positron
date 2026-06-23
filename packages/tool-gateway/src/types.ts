@@ -1,7 +1,7 @@
 // MCP-Compatible Internal Tool Gateway — Core Types
 // Issue #219
 
-import type { Phase, AutonomyLevel } from '@positron/shared';
+import type { AutonomyLevel, Phase } from '@positron/shared';
 
 /**
  * Risk level for a tool. Determines what security gates apply.

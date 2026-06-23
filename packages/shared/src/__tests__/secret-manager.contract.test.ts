@@ -17,12 +17,12 @@
  * SECURITY: No real secrets. All values are fakes in test scope only.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs';
-import path from 'node:path';
 import os from 'node:os';
-import { SecretManager, EnvSecretProvider, FileSecretProvider } from '@positron/shared';
+import path from 'node:path';
+import { EnvSecretProvider, FileSecretProvider, SecretManager } from '@positron/shared';
 import type { SecretProvider } from '@positron/shared';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // Helpers

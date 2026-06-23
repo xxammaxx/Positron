@@ -3,31 +3,31 @@
 // Connects to Redis (BullMQ), opens SQLite DB, creates adapters,
 // and processes pipeline jobs from the queue.
 
-import { Queue, Worker, type Job } from 'bullmq';
-import { openDatabase } from '@positron/run-state';
 import {
-	resolveRedisUrl,
+	FakeGitHubAdapter,
+	GitHubStatusSyncService,
+	createRealGitHubAdapter,
+} from '@positron/github-adapter';
+import type { GitHubAdapter } from '@positron/github-adapter';
+import { FakeOpenCodeAdapter, RealOpenCodeAdapter } from '@positron/opencode-adapter';
+import { openDatabase } from '@positron/run-state';
+import type { RunState } from '@positron/run-state';
+import { FakeGitWorkspaceAdapter, RealGitWorkspaceAdapter } from '@positron/sandbox';
+import type { GitWorkspaceAdapter } from '@positron/sandbox';
+import {
 	PIPELINE_QUEUE,
 	type PipelineJobData,
 	type PipelineJobResult,
+	buildRemoteUrl,
 	loadRepositoryConfig,
 	normalizeRepositoryConfig,
-	buildRemoteUrl,
+	resolveRedisUrl,
 } from '@positron/shared';
-import {
-	FakeGitHubAdapter,
-	createRealGitHubAdapter,
-	GitHubStatusSyncService,
-} from '@positron/github-adapter';
-import { RealSpecKitAdapter, FakeSpecKitAdapter } from '@positron/speckit-adapter';
-import { RealOpenCodeAdapter, FakeOpenCodeAdapter } from '@positron/opencode-adapter';
-import { FakeGitWorkspaceAdapter, RealGitWorkspaceAdapter } from '@positron/sandbox';
-import { runPipeline, type PipelineDeps } from './pipeline-runner.js';
 import type { RepositoryConfig } from '@positron/shared';
-import type { SpecKitAdapter, OpenCodeAdapter } from '@positron/shared';
-import type { GitWorkspaceAdapter } from '@positron/sandbox';
-import type { GitHubAdapter } from '@positron/github-adapter';
-import type { RunState } from '@positron/run-state';
+import type { OpenCodeAdapter, SpecKitAdapter } from '@positron/shared';
+import { FakeSpecKitAdapter, RealSpecKitAdapter } from '@positron/speckit-adapter';
+import { type Job, Queue, Worker } from 'bullmq';
+import { type PipelineDeps, runPipeline } from './pipeline-runner.js';
 
 // ---------------------------------------------------------------------------
 // Configuration

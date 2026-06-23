@@ -1,23 +1,23 @@
 // Positron — GitHub Status Sync Service
 
-import type { GitHubAdapter } from './adapter.js';
-import type { GitHubIssueRef, GitHubIssueComment } from './types.js';
 import type { TestReport } from '@positron/shared';
-import type { EvidenceItem, SafeLlmRunMetadata } from './sync-types.js';
 import { redactSecrets } from '@positron/shared';
+import type { GitHubAdapter } from './adapter.js';
+import { getLabelsForPhase } from './label-lifecycle.js';
 import {
 	renderSyncAccepted,
-	renderSyncPhaseUpdate,
-	renderSyncTestReport,
 	renderSyncBlocked,
-	renderSyncFailed,
 	renderSyncDone,
-	renderSyncPrCreated,
+	renderSyncFailed,
 	renderSyncMerged,
+	renderSyncPhaseUpdate,
+	renderSyncPrCreated,
+	renderSyncTestReport,
 	syncMarker,
 	truncateComment,
 } from './sync-templates.js';
-import { getLabelsForPhase } from './label-lifecycle.js';
+import type { EvidenceItem, SafeLlmRunMetadata } from './sync-types.js';
+import type { GitHubIssueComment, GitHubIssueRef } from './types.js';
 
 export type { EvidenceItem, SafeLlmRunMetadata } from './sync-types.js';
 

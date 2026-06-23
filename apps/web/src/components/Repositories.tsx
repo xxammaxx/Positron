@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
-import type { Repository, Issue } from '../types.js';
+import type { Issue, Repository } from '../types.js';
 
 export default function Repositories(): React.ReactElement {
 	const navigate = useNavigate();

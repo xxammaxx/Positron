@@ -2,7 +2,7 @@
 // Covers: redactValue(), generateBranchName()
 
 import { describe, expect, test } from 'vitest';
-import { redactValue, generateBranchName, redactSecrets } from '../utils.js';
+import { generateBranchName, redactSecrets, redactValue } from '../utils.js';
 
 // ---------------------------------------------------------------------------
 // redactValue()

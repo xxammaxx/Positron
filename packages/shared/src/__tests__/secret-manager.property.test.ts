@@ -16,13 +16,13 @@
  * All values are synthetic fakes. No real secrets, no real .env files.
  */
 
-import { describe, it, expect } from 'vitest';
-import fc from 'fast-check';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { FileSecretProvider, DockerSecretProvider, SecretManager } from '@positron/shared';
+import { DockerSecretProvider, FileSecretProvider, SecretManager } from '@positron/shared';
 import type { SecretProvider } from '@positron/shared';
+import fc from 'fast-check';
+import { describe, expect, it } from 'vitest';
 
 // =========================================================================
 // HELPERS

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { redactForSpeech, truncateForSpeech, cleanForSpeech } from '../redact-for-speech.js';
+import { cleanForSpeech, redactForSpeech, truncateForSpeech } from '../redact-for-speech.js';
 
 describe('redactForSpeech', () => {
 	test('redacts GitHub PAT (ghp_)', () => {

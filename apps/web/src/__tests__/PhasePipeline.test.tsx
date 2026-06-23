@@ -1,8 +1,8 @@
+import { ALL_PHASES } from '@positron/shared';
+import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
 import PhasePipeline from '../components/PhasePipeline';
-import { ALL_PHASES } from '@positron/shared';
 
 describe('PhasePipeline', () => {
 	test('renders without crashing', () => {

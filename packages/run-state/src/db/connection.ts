@@ -1,9 +1,9 @@
 // Positron — Datenbank-Verbindungsverwaltung
 
-import Database from 'better-sqlite3';
 import fs from 'node:fs';
 import path from 'node:path';
-import { POSITRON_DB_PATH, DB_TIMEOUT_MS } from './constants.js';
+import Database from 'better-sqlite3';
+import { DB_TIMEOUT_MS, POSITRON_DB_PATH } from './constants.js';
 import { applyMigrations } from './schema.js';
 
 /** Globale Datenbank-Instanz */

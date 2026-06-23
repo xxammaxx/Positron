@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import type { RunEvent, LogLevel } from '../types.js';
+import type { LogLevel, RunEvent } from '../types.js';
 
 interface LogViewerProps {
 	events: RunEvent[];

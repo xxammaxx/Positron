@@ -3,10 +3,10 @@
 // Maps internal Tool Gateway types to MCP protocol types.
 // NOT enabled by default. Requires POSITRON_MCP_EXPOSE_ENABLED=true.
 
-import type { ToolDefinition, ToolCall, ToolResult } from './types.js';
 import type { Phase } from '@positron/shared';
-import type { ToolRegistry } from './registry.js';
 import type { GatewayService } from './gateway.js';
+import type { ToolRegistry } from './registry.js';
+import type { ToolCall, ToolDefinition, ToolResult } from './types.js';
 
 // ─── Runtime Validation ──────────────────────────────────────────────
 
