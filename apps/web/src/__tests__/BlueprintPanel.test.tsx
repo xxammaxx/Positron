@@ -2,10 +2,10 @@ import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import BlueprintPanel from '../components/dashboard/BlueprintPanel.js';
+import BlueprintPanel from '../components/dashboard/BlueprintPanel';
 
 // Mock the api module
-vi.mock('../api.js', () => ({
+vi.mock('../api', () => ({
 	api: {
 		startDemoRun: vi.fn().mockResolvedValue({
 			run: { id: 'demo-run-123' },

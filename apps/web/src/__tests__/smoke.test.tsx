@@ -2,18 +2,18 @@ import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import PhaseBadge from '../components/PhaseBadge.js';
-import LogViewer from '../components/LogViewer.js';
-import GateControls from '../components/GateControls.js';
-import Dashboard from '../components/Dashboard.js';
-import PhaseTimeline from '../components/PhaseTimeline.js';
-import { useSSE } from '../hooks/useSSE.js';
+import PhaseBadge from '../components/PhaseBadge';
+import LogViewer from '../components/LogViewer';
+import GateControls from '../components/GateControls';
+import Dashboard from '../components/Dashboard';
+import PhaseTimeline from '../components/PhaseTimeline';
+import { useSSE } from '../hooks/useSSE';
 import { renderHook } from '@testing-library/react';
-import type { Phase, RunEvent, LogLevel } from '../types.js';
-import { ALL_PHASES } from '../types.js';
+import type { Phase, RunEvent, LogLevel } from '../types';
+import { ALL_PHASES } from '../types';
 
 // Mock api for Dashboard
-vi.mock('../api.js', () => ({
+vi.mock('../api', () => ({
 	api: {
 		getHealth: vi.fn().mockResolvedValue({ status: 'ok', adapters: {}, uptime: 0 }),
 		getRuns: vi.fn().mockResolvedValue({ runs: [], total: 0 }),
