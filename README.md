@@ -52,6 +52,8 @@ npm run dev:web
 # Note: Without Redis, the worker queue falls back to inline execution.
 ```
 
+> **Windows users:** See the [Windows Local Installer Guide](docs/install/windows-local-installer.md) for a one-command setup with PowerShell scripts.
+
 ### Local Development (with Redis + Worker)
 
 ```bash
