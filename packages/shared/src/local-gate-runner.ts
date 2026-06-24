@@ -146,7 +146,7 @@ const BLOCKED_COMMAND_COMBOS: ReadonlySet<string> = new Set([
  *
  * Required: git diff --check, build, typecheck, test, test --workspace apps/web
  * Format: npx biome format .
- * Advisory: npx biome check .
+ * Advisory: npx biome check ., npx biome lint .
  */
 export function getDefaultLocalGateDefinitions(): LocalGateDefinition[] {
 	return [
@@ -198,6 +198,13 @@ export function getDefaultLocalGateDefinitions(): LocalGateDefinition[] {
 			kind: 'advisory',
 			command: 'npx',
 			args: ['biome', 'check', '.'],
+		},
+		{
+			id: 'biome-lint',
+			label: 'Biome Lint (advisory)',
+			kind: 'advisory',
+			command: 'npx',
+			args: ['biome', 'lint', '.'],
 		},
 	];
 }

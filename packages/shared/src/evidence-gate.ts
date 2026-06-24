@@ -163,11 +163,13 @@ export function createEvidenceGateReportFromRows(
  * Pure function. No side effects.
  *
  * @param snapshot - GitHubContextSnapshot from the Snapshot Collector.
+ * @param options - Optional configuration including local gate report.
  * @returns Structured EvidenceGateReport.
  */
 export function createEvidenceGateReportFromGitHubContext(
 	snapshot: GitHubContextSnapshot,
+	options?: EvidenceGateReportOptions,
 ): EvidenceGateReport {
 	const reconciliation = reconcileGitHubContext(snapshot);
-	return createEvidenceGateReportFromRows(reconciliation.rows);
+	return createEvidenceGateReportFromRows(reconciliation.rows, options);
 }
