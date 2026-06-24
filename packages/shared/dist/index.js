@@ -20,4 +20,5 @@ export * from './decision-manifest.js';
 export * from './github-context-reconciler.js';
 export * from './github-snapshot-collector.js';
 export * from './evidence-gate.js';
+export * from './local-gate-runner.js';
 //# sourceMappingURL=index.js.map

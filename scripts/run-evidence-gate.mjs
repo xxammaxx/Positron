@@ -85,6 +85,8 @@ function parseArgs() {
 		output: null,      // path to write report JSON
 		format: 'text',    // 'text' or 'json'
 		help: false,
+		includeLocalGates: false,      // Phase 1E
+		localGatesDryRun: false,        // Phase 1E
 	};
 
 	for (let i = 0; i < args.length; i++) {
@@ -104,6 +106,12 @@ function parseArgs() {
 			case '--format':
 				options.format = args[++i] ?? 'text';
 				break;
+			case '--include-local-gates':
+				options.includeLocalGates = true;
+				break;
+			case '--local-gates-dry-run':
+				options.localGatesDryRun = true;
+				break;
 			case '--help':
 			case '-h':
 				options.help = true;
@@ -118,11 +126,12 @@ function parseArgs() {
 
 function printHelp() {
 	console.log(`
-Positron Evidence Gate CLI (Issue #279 Phase 1D)
+Positron Evidence Gate CLI (Issue #279 Phase 1D+1E)
 
 Read-only evidence gate that combines the GitHub Snapshot Collector,
 GitHub Context Reconciler and Decision Manifest Validator into an
-audit-ready decision report.
+audit-ready decision report. Optionally includes local build/test/typecheck
+gate results (Phase 1E).
 
 Usage:
   node scripts/run-evidence-gate.mjs [options]
@@ -133,6 +142,8 @@ Options:
   --snapshot <path>       Read snapshot from JSON file instead of live gh
   --output <path>         Write report JSON to file
   --format text|json      Output format (default: text)
+  --include-local-gates   Include local build/test/typecheck gate results (Phase 1E)
+  --local-gates-dry-run   Simulate local gates without execution (Phase 1E)
   --help, -h              Show this help
 
 Examples:
@@ -147,6 +158,12 @@ Examples:
 
   # Live collect (read-only) and report
   node scripts/run-evidence-gate.mjs --repo xxammaxx/Positron
+
+  # Dry-run with simulated local gates (Phase 1E)
+  node scripts/run-evidence-gate.mjs --dry-run --include-local-gates --local-gates-dry-run
+
+  # Full run with real local gates (Phase 1E)
+  node scripts/run-evidence-gate.mjs --dry-run --include-local-gates
 
 Safety: Read-only gh commands only. No mutations. No apply behavior.
 Exit codes: 0=OK, 1=validation errors, 2=usage error, 3=safety violation
@@ -308,6 +325,33 @@ function printReport(report) {
 		}
 	}
 
+	// Local Gate Report (Phase 1E)
+	if (report.localGateReport) {
+		const lg = report.localGateReport;
+		console.log('───────────────────────────────────────────────');
+		console.log('  LOCAL GATES:');
+		console.log(`    Status:  ${lg.status}`);
+		console.log(`    Total:   ${lg.total}`);
+		console.log(`    Passed:  ${lg.passed}`);
+		console.log(`    Warned:  ${lg.warned}`);
+		console.log(`    Failed:  ${lg.failed}`);
+		console.log(`    Skipped: ${lg.skipped}`);
+		console.log('');
+		for (const r of lg.results) {
+			const icon = r.status === 'PASS' ? '✅' :
+				r.status === 'WARN' ? '⚠️' :
+				r.status === 'FAIL' ? '❌' :
+				r.status === 'SKIPPED' ? '⏭️' : '❓';
+			console.log(`    ${icon} ${r.label} (${r.kind}) — ${r.status} (${r.durationMs}ms)`);
+			if (r.exitCode !== null) {
+				console.log(`       exit=${r.exitCode}`);
+			}
+			if (r.error) {
+				console.log(`       err=${r.error}`);
+			}
+		}
+	}
+
 	// Applyable rows (if any)
 	if (report.applyableRows.length > 0) {
 		console.log('───────────────────────────────────────────────');
@@ -386,6 +430,100 @@ function validateOutputPath(outputPath) {
 }
 
 // ---------------------------------------------------------------------------
+// Local Gate Runner helpers (Phase 1E)
+// ---------------------------------------------------------------------------
+
+/**
+ * Run a local gate command using spawnSync.
+ * Only allowlisted commands are accepted.
+ */
+function runLocalGate(gate) {
+	const start = Date.now();
+	let result;
+
+	try {
+		result = spawnSync(gate.command, gate.args, {
+			cwd: gate.cwd || process.cwd(),
+			encoding: 'utf-8',
+			stdio: ['ignore', 'pipe', 'pipe'],
+			timeout: gate.timeoutMs ?? 120000,
+		});
+	} catch (err) {
+		return {
+			exitCode: null,
+			stdout: '',
+			stderr: err.message,
+			durationMs: Date.now() - start,
+			error: err.message,
+		};
+	}
+
+	const durationMs = Date.now() - start;
+
+	if (result.error) {
+		return {
+			exitCode: null,
+			stdout: result.stdout?.trim() ?? '',
+			stderr: result.stderr?.trim() ?? '',
+			durationMs,
+			error: result.error.message,
+		};
+	}
+
+	return {
+		exitCode: result.status,
+		stdout: result.stdout?.trim() ?? '',
+		stderr: result.stderr?.trim() ?? '',
+		durationMs,
+		error: result.status !== 0 ? `exit code ${result.status}` : undefined,
+	};
+}
+
+/**
+ * Execute local gates and produce a LocalGateReport.
+ */
+function executeLocalGates(gates, localGateMod) {
+	const results = [];
+
+	for (const gate of gates) {
+		const errors = localGateMod.validateLocalGateDefinition(gate);
+		if (errors.length > 0) {
+			results.push({
+				id: gate.id,
+				label: gate.label,
+				kind: gate.kind,
+				command: gate.command,
+				args: gate.args,
+				status: 'FAIL',
+				exitCode: null,
+				durationMs: 0,
+				error: `REJECTED: ${errors.join('; ')}`,
+			});
+			continue;
+		}
+
+		const cmdResult = runLocalGate(gate);
+		const status = localGateMod.computeGateStatus(gate.kind, cmdResult.exitCode);
+
+		results.push({
+			id: gate.id,
+			label: gate.label,
+			kind: gate.kind,
+			command: gate.command,
+			args: gate.args,
+			status,
+			exitCode: cmdResult.exitCode,
+			durationMs: cmdResult.durationMs,
+			stdoutSnippet: cmdResult.stdout ? localGateMod.truncateSnippet(cmdResult.stdout) : undefined,
+			stderrSnippet: cmdResult.stderr ? localGateMod.truncateSnippet(cmdResult.stderr) : undefined,
+			error: cmdResult.error,
+		});
+	}
+
+	return localGateMod.createLocalGateReport(results);
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -433,12 +571,28 @@ async function main() {
 
 	const { createEvidenceGateReportFromGitHubContext } = evidenceGateMod;
 
+	// Phase 1E: load local gate runner module (optional)
+	let localGateMod = null;
+	if (options.includeLocalGates) {
+		try {
+			localGateMod = await import('../packages/shared/dist/local-gate-runner.js');
+		} catch (err) {
+			console.error('Error: Cannot load local-gate-runner module.');
+			console.error('  Run `npm run build` first to generate shared/dist artifacts.');
+			console.error(`  Detail: ${err.message}`);
+			process.exit(EXIT.USAGE_ERROR);
+		}
+	}
+
 	let snapshot;
 
 	try {
 		if (options.dryRun) {
-			console.log('[DRY-RUN] Evidence Gate CLI — Phase 1D');
+			console.log(`[DRY-RUN] Evidence Gate CLI — Phase 1D${options.includeLocalGates ? '+1E' : ''}`);
 			console.log(`  Repo: ${options.repo}`);
+			if (options.includeLocalGates) {
+				console.log(`  Local gates: ${options.localGatesDryRun ? 'simulated (dry-run)' : 'live'}`);
+			}
 			console.log('');
 			console.log('  Using synthetic dry-run fixture...');
 			snapshot = buildDryRunSnapshot();
@@ -462,6 +616,54 @@ async function main() {
 	} catch (err) {
 		console.error(`Error generating evidence gate report: ${err.message}`);
 		process.exit(EXIT.VALIDATION_ERROR);
+	}
+
+	// Phase 1E: include local gate results if requested
+	if (options.includeLocalGates && localGateMod) {
+		console.log('');
+		console.log('[LOCAL GATES]');
+
+		let localGateReport;
+		const gates = localGateMod.getDefaultLocalGateDefinitions();
+
+		if (options.localGatesDryRun) {
+			console.log('  Mode: DRY-RUN (no real commands executed)');
+			localGateReport = localGateMod.createDryRunLocalGateReport(gates);
+		} else {
+			console.log('  Mode: LIVE (executing allowlisted commands)');
+			console.log(`  Running ${gates.length} gates...`);
+			localGateReport = executeLocalGates(gates, localGateMod);
+		}
+
+		// Print gate results
+		for (const r of localGateReport.results) {
+			const icon = r.status === 'PASS' ? 'PASS' :
+				r.status === 'WARN' ? 'WARN' :
+				r.status === 'FAIL' ? 'FAIL' :
+				r.status === 'SKIPPED' ? 'SKIP' : '??';
+			console.log(`  [${icon}] ${r.label} (${r.durationMs}ms)`);
+			if (r.error) {
+				console.log(`        Error: ${r.error}`);
+			}
+		}
+		console.log(`  Summary: ${localGateReport.passed} passed, ${localGateReport.warned} warned, ${localGateReport.failed} failed, ${localGateReport.skipped} skipped`);
+		console.log(`  Verdict: ${localGateReport.status}`);
+
+		// Regenerate report with local gate results
+		try {
+			report = createEvidenceGateReportFromGitHubContext(snapshot);
+			report.localGateReport = localGateReport;
+			// Re-determine status considering local gates
+			const localStatus = localGateReport.status;
+			if (report.validation.errors.length === 0 && localStatus === 'FAIL') {
+				report.status = 'FAIL';
+			} else if (report.validation.errors.length === 0 && localStatus === 'WARN' && report.status === 'PASS') {
+				report.status = 'WARN';
+			}
+		} catch (err) {
+			console.error(`Error regenerating report with local gates: ${err.message}`);
+			// Continue with original report
+		}
 	}
 
 	// Output

@@ -1,6 +1,6 @@
-// Positron — Evidence Gate CLI MVP (Issue #279 Phase 1D)
+// Positron — Evidence Gate CLI MVP (Issue #279 Phase 1D+1E)
 // Combines GitHub Context Reconciler + Decision Manifest Validator
-// into a structured, audit-ready evidence report.
+// + optional Local Gate Runner into a structured, audit-ready evidence report.
 //
 // Pure functions only. No GitHub API calls, no shell execution,
 // no mutations, no network, no file system writes.
@@ -12,10 +12,17 @@ import type {
 import { validateDecisionManifest } from './decision-manifest.js';
 import type { GitHubContextSnapshot } from './github-context-reconciler.js';
 import { reconcileGitHubContext } from './github-context-reconciler.js';
+import type { LocalGateReport } from './local-gate-runner.js';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
+
+/** Options for evidence gate report creation. */
+export interface EvidenceGateReportOptions {
+	/** Optional local gate report to include (Phase 1E). */
+	localGateReport?: LocalGateReport;
+}
 
 /** Structured evidence gate report. */
 export interface EvidenceGateReport {
@@ -40,6 +47,8 @@ export interface EvidenceGateReport {
 	blockedRows: DecisionManifestRow[];
 	/** Full validation result from the Decision Manifest Validator. */
 	validation: DecisionManifestValidationResult;
+	/** Optional local gate report (Phase 1E). */
+	localGateReport?: LocalGateReport;
 }
 
 // ---------------------------------------------------------------------------
@@ -62,18 +71,35 @@ function countByKey<T extends string>(
 }
 
 /**
- * Determine overall gate status from validation result.
+ * Determine overall gate status from validation result and optional local gate report.
  * - FAIL if any blocking validation errors exist
- * - WARN if validation warnings exist but no errors
+ * - FAIL if required/format local gates have failures
+ * - WARN if validation warnings exist (but no errors)
+ * - WARN if advisory local gates have warnings (but no failures)
  * - PASS otherwise
  */
-function determineStatus(validation: DecisionManifestValidationResult): 'PASS' | 'WARN' | 'FAIL' {
+function determineStatus(
+	validation: DecisionManifestValidationResult,
+	localGateReport?: LocalGateReport,
+): 'PASS' | 'WARN' | 'FAIL' {
+	// GitHub validation errors → FAIL
 	if (!validation.valid || validation.errors.length > 0) {
 		return 'FAIL';
 	}
+
+	// Required/format local gate failures → FAIL
+	if (localGateReport && localGateReport.status === 'FAIL') {
+		return 'FAIL';
+	}
+
+	// Warnings from validation or local gates → WARN
 	if (validation.warnings.length > 0) {
 		return 'WARN';
 	}
+	if (localGateReport && localGateReport.status === 'WARN') {
+		return 'WARN';
+	}
+
 	return 'PASS';
 }
 
@@ -87,10 +113,12 @@ function determineStatus(validation: DecisionManifestValidationResult): 'PASS' |
  * Pure function. No side effects.
  *
  * @param rows - DecisionManifestRow[] from the GitHub Context Reconciler.
+ * @param options - Optional configuration including local gate report.
  * @returns Structured EvidenceGateReport.
  */
 export function createEvidenceGateReportFromRows(
 	rows: DecisionManifestRow[],
+	options?: EvidenceGateReportOptions,
 ): EvidenceGateReport {
 	const validation = validateDecisionManifest(rows);
 
@@ -103,9 +131,9 @@ export function createEvidenceGateReportFromRows(
 			!(row.risk_class === 'GREEN_SAFE' && row.agent_recommendation === 'APPLY_GREEN_SAFE'),
 	);
 
-	const status = determineStatus(validation);
+	const status = determineStatus(validation, options?.localGateReport);
 
-	return {
+	const report: EvidenceGateReport = {
 		status,
 		generatedAt: new Date().toISOString(),
 		summary: {
@@ -120,6 +148,12 @@ export function createEvidenceGateReportFromRows(
 		blockedRows,
 		validation,
 	};
+
+	if (options?.localGateReport) {
+		report.localGateReport = options.localGateReport;
+	}
+
+	return report;
 }
 
 /**
