@@ -18,4 +18,5 @@ export * from './queue/types.js';
 export * from './secret-manager.js';
 export * from './decision-manifest.js';
 export * from './github-context-reconciler.js';
+export * from './github-snapshot-collector.js';
 //# sourceMappingURL=index.js.map
