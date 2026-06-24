@@ -21,4 +21,5 @@ export * from './github-context-reconciler.js';
 export * from './github-snapshot-collector.js';
 export * from './evidence-gate.js';
 export * from './local-gate-runner.js';
+export * from './human-approval-pack.js';
 //# sourceMappingURL=index.js.map

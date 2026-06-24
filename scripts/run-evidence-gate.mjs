@@ -87,6 +87,7 @@ function parseArgs() {
 		help: false,
 		includeLocalGates: false,      // Phase 1E
 		localGatesDryRun: false,        // Phase 1E
+		approvalPack: false,            // Phase 1F
 	};
 
 	for (let i = 0; i < args.length; i++) {
@@ -112,6 +113,9 @@ function parseArgs() {
 			case '--local-gates-dry-run':
 				options.localGatesDryRun = true;
 				break;
+			case '--approval-pack':
+				options.approvalPack = true;
+				break;
 			case '--help':
 			case '-h':
 				options.help = true;
@@ -126,12 +130,12 @@ function parseArgs() {
 
 function printHelp() {
 	console.log(`
-Positron Evidence Gate CLI (Issue #279 Phase 1D+1E)
+Positron Evidence Gate CLI (Issue #279 Phase 1D+1E+1F)
 
 Read-only evidence gate that combines the GitHub Snapshot Collector,
 GitHub Context Reconciler and Decision Manifest Validator into an
 audit-ready decision report. Optionally includes local build/test/typecheck
-gate results (Phase 1E).
+gate results (Phase 1E) and Human Approval Pack generation (Phase 1F).
 
 Usage:
   node scripts/run-evidence-gate.mjs [options]
@@ -144,26 +148,21 @@ Options:
   --format text|json      Output format (default: text)
   --include-local-gates   Include local build/test/typecheck gate results (Phase 1E)
   --local-gates-dry-run   Simulate local gates without execution (Phase 1E)
+  --approval-pack         Generate Human Approval Pack from evidence report (Phase 1F)
   --help, -h              Show this help
 
 Examples:
   # Dry-run with default repo
   node scripts/run-evidence-gate.mjs --dry-run
 
-  # Read existing snapshot and output JSON
-  node scripts/run-evidence-gate.mjs --snapshot .local-release/snapshot.json --format json
+  # Dry-run with approval pack
+  node scripts/run-evidence-gate.mjs --dry-run --approval-pack
 
-  # Dry-run and write report
-  node scripts/run-evidence-gate.mjs --dry-run --output .local-release/evidence-gate/report.json
+  # Dry-run with local gates and approval pack
+  node scripts/run-evidence-gate.mjs --dry-run --include-local-gates --local-gates-dry-run --approval-pack
 
-  # Live collect (read-only) and report
-  node scripts/run-evidence-gate.mjs --repo xxammaxx/Positron
-
-  # Dry-run with simulated local gates (Phase 1E)
-  node scripts/run-evidence-gate.mjs --dry-run --include-local-gates --local-gates-dry-run
-
-  # Full run with real local gates (Phase 1E)
-  node scripts/run-evidence-gate.mjs --dry-run --include-local-gates
+  # Full run with output
+  node scripts/run-evidence-gate.mjs --dry-run --include-local-gates --local-gates-dry-run --approval-pack --output .local-release/evidence-gate/report.json --format json
 
 Safety: Read-only gh commands only. No mutations. No apply behavior.
 Exit codes: 0=OK, 1=validation errors, 2=usage error, 3=safety violation
@@ -266,6 +265,70 @@ function collectLiveSnapshot(options) {
 // ---------------------------------------------------------------------------
 // Report rendering
 // ---------------------------------------------------------------------------
+
+/**
+ * Print an approval pack report in human-readable format.
+ */
+function printApprovalPackReport(approvalPackReport) {
+	console.log('');
+	console.log('───────────────────────────────────────────────');
+	console.log('  HUMAN APPROVAL PACK REPORT (Phase 1F)');
+	console.log('───────────────────────────────────────────────');
+	console.log(`  Status:            ${approvalPackReport.status}`);
+	console.log(`  Total Packages:    ${approvalPackReport.totalPackages}`);
+	console.log(`  Applyable:         ${approvalPackReport.applyablePackages}`);
+	console.log(`  Review Required:   ${approvalPackReport.reviewPackages}`);
+	console.log(`  Held:              ${approvalPackReport.holdPackages}`);
+	console.log(`  Deferred:          ${approvalPackReport.deferredPackages}`);
+	console.log('───────────────────────────────────────────────');
+
+	for (const pkg of approvalPackReport.packages) {
+		const icon =
+			pkg.type === 'GREEN_SAFE_PACKAGE' ? '🟢' :
+			pkg.type === 'YELLOW_REVIEW_PACKAGE' ? '🟡' :
+			pkg.type === 'RED_HOLD_PACKAGE' ? '🔴' :
+			pkg.type === 'TOOL_GAP_PACKAGE' ? '🔧' :
+			pkg.type === 'DEFER_TO_279_PACKAGE' ? '⏸' : '❓';
+
+		const applyIcon = pkg.applyable ? '✅' : '⛔';
+		console.log(`  ${icon} ${pkg.type} ${applyIcon}`);
+		console.log(`     ID: ${pkg.id}`);
+		console.log(`     Status: ${pkg.status}`);
+		console.log(`     Title: ${pkg.title}`);
+		console.log(`     Summary: ${pkg.summary}`);
+		console.log(`     Items: ${pkg.rowIds.join(', ')}`);
+		if (pkg.blockerReasons.length > 0) {
+			console.log('     BLOCKERS:');
+			for (const reason of pkg.blockerReasons) {
+				console.log(`       - ${reason}`);
+			}
+		}
+		if (pkg.warnings.length > 0) {
+			console.log('     WARNINGS:');
+			for (const warn of pkg.warnings) {
+				console.log(`       - ${warn}`);
+			}
+		}
+		if (pkg.approvalPhrase) {
+			console.log(`     APPROVAL: ${pkg.approvalPhrase}`);
+		}
+		console.log('');
+	}
+
+	// Summary for owner
+	console.log('───────────────────────────────────────────────');
+	console.log('  OWNER DECISION SUMMARY');
+	console.log('───────────────────────────────────────────────');
+	for (const pkg of approvalPackReport.packages) {
+		if (pkg.approvalPhrase) {
+			console.log(`  → ${pkg.approvalPhrase}`);
+		}
+	}
+	if (approvalPackReport.applyablePackages === 0) {
+		console.log('  → No applyable packages. No automated mutations possible.');
+	}
+	console.log('');
+}
 
 function printReport(report) {
 	console.log('');
@@ -584,14 +647,33 @@ async function main() {
 		}
 	}
 
+	// Phase 1F: load human approval pack module (optional)
+	let approvalPackMod = null;
+	if (options.approvalPack) {
+		try {
+			approvalPackMod = await import('../packages/shared/dist/human-approval-pack.js');
+		} catch (err) {
+			console.error('Error: Cannot load human-approval-pack module.');
+			console.error('  Run `npm run build` first to generate shared/dist artifacts.');
+			console.error(`  Detail: ${err.message}`);
+			process.exit(EXIT.USAGE_ERROR);
+		}
+	}
+
 	let snapshot;
 
 	try {
 		if (options.dryRun) {
-			console.log(`[DRY-RUN] Evidence Gate CLI — Phase 1D${options.includeLocalGates ? '+1E' : ''}`);
+			const phases = ['1D'];
+			if (options.includeLocalGates) phases.push('1E');
+			if (options.approvalPack) phases.push('1F');
+			console.log(`[DRY-RUN] Evidence Gate CLI — Phase ${phases.join('+')}`);
 			console.log(`  Repo: ${options.repo}`);
 			if (options.includeLocalGates) {
 				console.log(`  Local gates: ${options.localGatesDryRun ? 'simulated (dry-run)' : 'live'}`);
+			}
+			if (options.approvalPack) {
+				console.log(`  Approval pack: enabled`);
 			}
 			console.log('');
 			console.log('  Using synthetic dry-run fixture...');
@@ -649,20 +731,33 @@ async function main() {
 		console.log(`  Summary: ${localGateReport.passed} passed, ${localGateReport.warned} warned, ${localGateReport.failed} failed, ${localGateReport.skipped} skipped`);
 		console.log(`  Verdict: ${localGateReport.status}`);
 
-		// Regenerate report with local gate results
+		// Regenerate report with local gate results using proper API (Phase 1E+1F)
 		try {
-			report = createEvidenceGateReportFromGitHubContext(snapshot);
-			report.localGateReport = localGateReport;
-			// Re-determine status considering local gates
-			const localStatus = localGateReport.status;
-			if (report.validation.errors.length === 0 && localStatus === 'FAIL') {
-				report.status = 'FAIL';
-			} else if (report.validation.errors.length === 0 && localStatus === 'WARN' && report.status === 'PASS') {
-				report.status = 'WARN';
-			}
+			report = createEvidenceGateReportFromGitHubContext(snapshot, {
+				localGateReport,
+			});
 		} catch (err) {
 			console.error(`Error regenerating report with local gates: ${err.message}`);
 			// Continue with original report
+		}
+	}
+
+	// Phase 1F: generate approval pack if requested
+	let approvalPackReport = null;
+	if (options.approvalPack && approvalPackMod) {
+		console.log('');
+		console.log('[APPROVAL PACK] Generating Human Approval Pack from evidence report...');
+
+		try {
+			approvalPackReport = approvalPackMod.createHumanApprovalPackReport(report);
+			console.log(`  Generated ${approvalPackReport.totalPackages} package(s).`);
+			console.log(`  Applyable: ${approvalPackReport.applyablePackages}, Review: ${approvalPackReport.reviewPackages}, Hold: ${approvalPackReport.holdPackages}, Deferred: ${approvalPackReport.deferredPackages}`);
+
+			// Attach approval pack to the report for JSON output
+			report.approvalPackReport = approvalPackReport;
+		} catch (err) {
+			console.error(`  Error generating approval pack: ${err.message}`);
+			// Continue without approval pack — non-fatal
 		}
 	}
 
@@ -682,6 +777,11 @@ async function main() {
 	} else {
 		// Text format
 		printReport(report);
+
+		// Phase 1F: print approval pack after evidence report
+		if (approvalPackReport) {
+			printApprovalPackReport(approvalPackReport);
+		}
 
 		if (options.output) {
 			const dir = dirname(options.output);
