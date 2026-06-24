@@ -11,6 +11,10 @@ import type {
 	GitHubPullRequestSnapshot,
 	GitHubIssueSnapshot,
 } from '../github-context-reconciler.js';
+import type {
+	LocalGateReport,
+	LocalGateResult,
+} from '../local-gate-runner.js';
 import {
 	createEvidenceGateReportFromRows,
 	createEvidenceGateReportFromGitHubContext,
@@ -262,6 +266,131 @@ describe('Evidence Gate', () => {
 		const report = createEvidenceGateReportFromRows(repoFixture());
 		// Our repoFixture has GREEN_SAFE + DO_NOT_APPLY which generates a warning
 		expect(report.validation.warnings.length).toBeGreaterThan(0);
+		expect(report.status).toBe('WARN');
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Extended test suite: Local Gate Runner integration (Phase 1E)
+// ---------------------------------------------------------------------------
+
+describe('Evidence Gate — Local Gate Integration', () => {
+	/** Create a minimal passing local gate report fixture. */
+	function passingLocalGateReport(): LocalGateReport {
+		return {
+			status: 'PASS',
+			total: 3,
+			passed: 3,
+			warned: 0,
+			failed: 0,
+			skipped: 0,
+			results: [
+				{ id: 'build', label: 'Build', kind: 'required', command: 'npm', args: ['run', 'build'], status: 'PASS', exitCode: 0, durationMs: 2000 },
+				{ id: 'typecheck', label: 'Typecheck', kind: 'required', command: 'npm', args: ['run', 'typecheck'], status: 'PASS', exitCode: 0, durationMs: 1500 },
+				{ id: 'test', label: 'Test', kind: 'required', command: 'npm', args: ['test'], status: 'PASS', exitCode: 0, durationMs: 5000 },
+			] as LocalGateResult[],
+		};
+	}
+
+	/** Create a local gate report with a required failure. */
+	function failingLocalGateReport(): LocalGateReport {
+		return {
+			status: 'FAIL',
+			total: 3,
+			passed: 2,
+			warned: 0,
+			failed: 1,
+			skipped: 0,
+			results: [
+				{ id: 'build', label: 'Build', kind: 'required', command: 'npm', args: ['run', 'build'], status: 'PASS', exitCode: 0, durationMs: 2000 },
+				{ id: 'typecheck', label: 'Typecheck', kind: 'required', command: 'npm', args: ['run', 'typecheck'], status: 'FAIL', exitCode: 2, durationMs: 1500, stderrSnippet: 'Found 3 type errors.' },
+				{ id: 'test', label: 'Test', kind: 'required', command: 'npm', args: ['test'], status: 'PASS', exitCode: 0, durationMs: 5000 },
+			] as LocalGateResult[],
+		};
+	}
+
+	/** Create a local gate report with advisory warning. */
+	function advisoryLocalGateReport(): LocalGateReport {
+		return {
+			status: 'WARN',
+			total: 4,
+			passed: 3,
+			warned: 1,
+			failed: 0,
+			skipped: 0,
+			results: [
+				{ id: 'build', label: 'Build', kind: 'required', command: 'npm', args: ['run', 'build'], status: 'PASS', exitCode: 0, durationMs: 2000 },
+				{ id: 'typecheck', label: 'Typecheck', kind: 'required', command: 'npm', args: ['run', 'typecheck'], status: 'PASS', exitCode: 0, durationMs: 1500 },
+				{ id: 'test', label: 'Test', kind: 'required', command: 'npm', args: ['test'], status: 'PASS', exitCode: 0, durationMs: 5000 },
+				{ id: 'biome-check', label: 'Biome Check', kind: 'advisory', command: 'npx', args: ['biome', 'check', '.'], status: 'WARN', exitCode: 1, durationMs: 3000, stderrSnippet: 'Lint backlog: 478 errors' },
+			] as LocalGateResult[],
+		};
+	}
+
+	// 21. EvidenceGateReport can include local gate report
+	test('EvidenceGateReport can include local gate report', () => {
+		const report = createEvidenceGateReportFromRows(repoFixture(), {
+			localGateReport: passingLocalGateReport(),
+		});
+		expect(report.localGateReport).toBeDefined();
+		expect(report.localGateReport!.status).toBe('PASS');
+		expect(report.localGateReport!.total).toBe(3);
+		expect(report.localGateReport!.results.length).toBe(3);
+	});
+
+	// 22. failing required local gate makes EvidenceGateReport FAIL
+	test('failing required local gate makes EvidenceGateReport FAIL', () => {
+		const report = createEvidenceGateReportFromRows(repoFixture(), {
+			localGateReport: failingLocalGateReport(),
+		});
+		expect(report.localGateReport).toBeDefined();
+		expect(report.localGateReport!.status).toBe('FAIL');
+		// Overall report status should reflect the local gate failure
+		expect(report.status).toBe('FAIL');
+	});
+
+	// 23. advisory local gate warning keeps EvidenceGateReport WARN/PASS
+	test('advisory local gate warning keeps EvidenceGateReport status at or above WARN', () => {
+		// Without local gates, the repo fixture produces WARN (due to DO_NOT_APPLY warning)
+		const report = createEvidenceGateReportFromRows(repoFixture(), {
+			localGateReport: advisoryLocalGateReport(),
+		});
+		expect(report.localGateReport).toBeDefined();
+		expect(report.localGateReport!.status).toBe('WARN');
+		// Overall report should be WARN (not FAIL), since advisory gates don't fail
+		expect(report.status).toBe('WARN');
+	});
+
+	// 24. JSON serialization includes local gates
+	test('JSON serialization includes local gates', () => {
+		const report = createEvidenceGateReportFromRows(repoFixture(), {
+			localGateReport: passingLocalGateReport(),
+		});
+		const json = JSON.stringify(report);
+		expect(json).toContain('localGateReport');
+		expect(json).toContain('"status":"PASS"');
+		const parsed = JSON.parse(json);
+		expect(parsed.localGateReport).toBeDefined();
+		expect(parsed.localGateReport.total).toBe(3);
+	});
+
+	// 25. report still has 0 applyable actions by default
+	test('report still has 0 applyable actions by default (with local gates)', () => {
+		const report = createEvidenceGateReportFromRows(repoFixture(), {
+			localGateReport: passingLocalGateReport(),
+		});
+		expect(report.summary.applyableActions).toBe(0);
+		expect(report.applyableRows).toHaveLength(0);
+	});
+
+	// 26. old behavior without local gates remains unchanged
+	test('old behavior without local gates remains unchanged', () => {
+		const report = createEvidenceGateReportFromRows(repoFixture());
+		// localGateReport should be undefined when not provided
+		expect(report.localGateReport).toBeUndefined();
+		// All existing behavior preserved
+		expect(report.summary.totalRows).toBe(5);
+		expect(report.summary.applyableActions).toBe(0);
 		expect(report.status).toBe('WARN');
 	});
 });
