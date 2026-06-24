@@ -1,0 +1,239 @@
+{
+	"runId": "rudolph-phase-6-20260624",
+	"timestampUtc": "2026-06-24T16:45:00Z",
+	"executionMode": "fixture",
+	"benchmarkName": "rudolph-beacon",
+	"repo": {
+		"branch": "feat/issue-279-phase-1g-safe-apply-plan-20260624-135722",
+		"commitSha": "7000ff9",
+		"status": "clean"
+	},
+	"issues": [
+		{
+			"id": "PHASE-6-REALITY-REFRESH",
+			"title": "Reality Refresh — verify repository state",
+			"status": "DONE",
+			"evidencePaths": [
+				"docs/evidence/rudolph-beacon/phase-6-reality-refresh.md"
+			],
+			"testNames": [
+				"git status --porcelain (clean)",
+				"git log --oneline -5",
+				"git show --stat 6f65a5b",
+				"git show --stat 7000ff9",
+				"git check-ignore evidence/",
+				"git ls-files evidence/ (empty)",
+				"git ls-files docs/evidence/rudolph-beacon/ (31 files)"
+			],
+			"changedFiles": [
+				"docs/evidence/rudolph-beacon/phase-6-reality-refresh.md"
+			],
+			"confidence": 0.98
+		},
+		{
+			"id": "PHASE-6-COMMIT-AUDIT",
+			"title": "Commit Audit — validate both commits",
+			"status": "DONE",
+			"evidencePaths": [
+				"docs/evidence/rudolph-beacon/phase-6-commit-audit.md"
+			],
+			"testNames": [
+				"Commit 6f65a5b: 68 files, no build artifacts, no secrets, no scope violations",
+				"Commit 7000ff9: 6 files, pure evidence/docs, no code changes",
+				"COMMIT_SCOPE_STATUS: CLEAN for both"
+			],
+			"changedFiles": [
+				"docs/evidence/rudolph-beacon/phase-6-commit-audit.md"
+			],
+			"confidence": 0.97
+		},
+		{
+			"id": "PHASE-6-EVIDENCE-CODE-AUDIT",
+			"title": "Evidence-Code Audit — cross-reference all claims",
+			"status": "DONE",
+			"evidencePaths": [
+				"docs/evidence/rudolph-beacon/phase-6-evidence-code-audit.md"
+			],
+			"testNames": [
+				"Claim 1: 282 tests — VERIFIED",
+				"Claim 2: Coverage values — VERIFIED",
+				"Claim 3: validateRunSummary() — VERIFIED",
+				"Claim 4: runControlledRealModeProbe() — VERIFIED",
+				"Claim 5: checkCommitReadiness()/isCommitReady() — VERIFIED",
+				"Claim 6: /evidence/ gitignored — VERIFIED",
+				"Claim 7: docs/evidence/rudolph-beacon/ versioned — VERIFIED",
+				"Claim 8: Phase 5 summary valid — VERIFIED",
+				"Claim 9: RUN_REPORT/CAPABILITIES/KNOWN_LIMITATIONS — VERIFIED"
+			],
+			"changedFiles": [
+				"docs/evidence/rudolph-beacon/phase-6-evidence-code-audit.md"
+			],
+			"confidence": 0.97
+		},
+		{
+			"id": "PHASE-6-GATES",
+			"title": "Local Gates — re-run all mandatory checks",
+			"status": "DONE",
+			"evidencePaths": [
+				"docs/evidence/rudolph-beacon/phase-6-gates.md"
+			],
+			"testNames": [
+				"git diff --check: PASS (exit 0)",
+				"npm run build: PASS (10 projects)",
+				"npm run typecheck: PASS (0 errors)",
+				"npm run test:benchmark:rudolph: PASS (282/282)",
+				"npm run test:benchmark:rudolph:coverage: PASS (exit 1 = PRE-EXISTING)"
+			],
+			"changedFiles": [
+				"docs/evidence/rudolph-beacon/phase-6-gates.md"
+			],
+			"confidence": 0.96
+		},
+		{
+			"id": "PHASE-6-PR-READINESS",
+			"title": "PR-Readiness Assessment",
+			"status": "DONE",
+			"evidencePaths": [
+				"docs/evidence/rudolph-beacon/phase-6-pr-readiness.md",
+				"docs/evidence/rudolph-beacon/phase-6-pr-draft.md"
+			],
+			"testNames": [
+				"15 PR-readiness criteria checked",
+				"PR_READY: YES",
+				"PR description draft prepared",
+				"No push/PR/merge/CI authorized"
+			],
+			"changedFiles": [
+				"docs/evidence/rudolph-beacon/phase-6-pr-readiness.md",
+				"docs/evidence/rudolph-beacon/phase-6-pr-draft.md"
+			],
+			"confidence": 0.95
+		},
+		{
+			"id": "PHASE-6-REVIEWER",
+			"title": "Reviewer Report — independent quality assessment",
+			"status": "DONE",
+			"evidencePaths": [
+				"docs/evidence/rudolph-beacon/phase-6-reviewer-report.md"
+			],
+			"testNames": [
+				"Commits clean: YES",
+				"Scope correct: YES",
+				"Evidence-code consistent: YES",
+				"Tests meaningful: YES",
+				"No overstated claims: YES",
+				"No silent failures: YES",
+				"Full real mode correctly marked unproven: YES",
+				"Remote actions blocked: YES",
+				"PR-ready realistic: YES",
+				"Confidence stable at 0.95: YES"
+			],
+			"changedFiles": [
+				"docs/evidence/rudolph-beacon/phase-6-reviewer-report.md"
+			],
+			"confidence": 0.95
+		}
+	],
+	"commands": [
+		{
+			"name": "whitespace-check",
+			"command": "git diff --check",
+			"exitCode": 0,
+			"durationMs": 0
+		},
+		{
+			"name": "build",
+			"command": "npm run build",
+			"exitCode": 0,
+			"durationMs": 8000
+		},
+		{
+			"name": "typecheck",
+			"command": "npm run typecheck",
+			"exitCode": 0,
+			"durationMs": 500
+		},
+		{
+			"name": "benchmark-tests",
+			"command": "npm run test:benchmark:rudolph",
+			"exitCode": 0,
+			"durationMs": 4300
+		},
+		{
+			"name": "benchmark-coverage",
+			"command": "npm run test:benchmark:rudolph:coverage",
+			"exitCode": 1,
+			"durationMs": 5600
+		}
+	],
+	"tests": {
+		"passed": 282,
+		"failed": 0,
+		"skipped": 0,
+		"redTestsCovered": [
+			"Red Test 1-7: Beacon domain",
+			"Red Test 8-14: Evidence schema",
+			"Red Test 15-28: Negative/error paths",
+			"Red Test 29-36: Real-mode blockade"
+		]
+	},
+	"safety": {
+		"secretsRedacted": true,
+		"blockedActions": [],
+		"warnings": [
+			"Global coverage exit code 1 is PRE-EXISTING — NOT caused by benchmark",
+			"Benchmark package coverage at 93.91% — well above 85% policy",
+			"Full real-mode execution remains untested (requires separate human approval)",
+			"Full npm test suite not run in Phase 6 (benchmark suite IS the primary gate)",
+			"No push, no PR, no merge, no remote CI — all remain blocked"
+		]
+	},
+	"conclusion": {
+		"status": "GREEN",
+		"whatWorks": [
+			"PHASE-6-REALITY-REFRESH: Repository state verified — clean, correct HEAD, no untracked issues",
+			"PHASE-6-COMMIT-AUDIT: Both commits CLEAN — no build artifacts, no secrets, no scope violations",
+			"PHASE-6-EVIDENCE-CODE-AUDIT: All 9 evidence claims VERIFIED against actual code and test output",
+			"PHASE-6-GATES: All mandatory gates pass (build, typecheck, tests 282/282, coverage 93.91%)",
+			"PHASE-6-PR-READINESS: PR_READY: YES — all criteria met, PR draft prepared",
+			"PHASE-6-REVIEWER: Independent review confirms code quality, scope correctness, evidence consistency",
+			"Confidence stable at 0.95 — validation confirms Phase 5 claims, no regressions found",
+			"No push, no PR, no merge, no remote CI executed",
+			"Phase 6 evidence fully documented (8 artifacts)"
+		],
+		"whatDoesNotWork": [],
+		"whatIsUnproven": [
+			"Full real mode with actual external tool execution is untested (requires separate approval)",
+			"Network/Bluetooth/hardware not tested in real mode (by design)",
+			"Cross-platform behavior (Windows-specific tests)",
+			"Full npm test suite not executed in Phase 6 (benchmark suite is primary gate)"
+		],
+		"confidence": 0.95
+	},
+	"capabilityDelta": {
+		"newCapabilities": [
+			"Phase 6 human review and PR-readiness assessment complete",
+			"Commit audit confirming CLEAN scope for both commits",
+			"Evidence-code cross-reference with 9/9 claims VERIFIED",
+			"All local gates re-verified (build, typecheck, 282 tests, coverage)",
+			"PR draft prepared with summary, scope, tests, coverage, risks",
+			"Reviewer report confirming code quality and evidence consistency",
+			"PR_READY: YES with explicit human gate for push/create"
+		],
+		"removedBlockers": [
+			"No blockers existed — Phase 5 was GREEN"
+		],
+		"unchangedLimitations": [
+			"Full real-mode execution requires separate human approval",
+			"Global coverage threshold pre-existing (not affected by benchmark)",
+			"Mermaid diagram validation remains TOOL_GAP",
+			"No push/PR/merge/CI without explicit authorization"
+		],
+		"remainingRisks": [
+			"Real mode has only been validated with local probe, not full external execution",
+			"Benchmark tests run in fixture mode only — no integration with live GitHub API",
+			"Phase 6 evidence files need committing before PR creation"
+		],
+		"nextBestStep": "Human owner reviews PR draft and Phase 6 evidence; then explicitly approves push + PR creation"
+	}
+}

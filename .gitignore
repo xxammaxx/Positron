@@ -86,3 +86,7 @@ e2e/**/*.d.ts.map
 
 # Local release packaging (generated, never commit)
 .local-release/
+
+# Runtime evidence artifacts (not documentation)
+# docs/evidence/ is versioned documentation — this only affects root evidence/
+/evidence/

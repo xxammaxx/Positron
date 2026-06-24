@@ -1,0 +1,55 @@
+graph LR
+    subgraph "Input"
+        I1["BENCH-001: Domain Baseline"]
+        I2["BENCH-002: Scan Simulator"]
+        I3["BENCH-003: Evidence Contract"]
+        I4["BENCH-004: Traceability"]
+        I5["BENCH-005: Dry-Run Safety"]
+    end
+
+    subgraph "Process"
+        P1["Fixture Tests<br/>beacon-domain.test.ts"]
+        P2["Fixture Tests<br/>beacon-fixtures.test.ts"]
+        P3["Schema Tests<br/>evidence-contract.test.ts"]
+        P4["Trace Tests<br/>traceability.test.ts"]
+        P5["Integration Tests<br/>benchmark-runner.test.ts"]
+    end
+
+    subgraph "Evidence"
+        E1["Test Results<br/>91/91 PASS"]
+        E2["Build + Typecheck<br/>PASS"]
+        E3["Traceability Map<br/>traceability-map.json"]
+        E4["Run Report<br/>RUN_REPORT.md"]
+        E5["Reviewer Report<br/>reviewer-report.md"]
+    end
+
+    subgraph "Conclusion"
+        C1["whatWorks: Domain, Scan, Evidence, Traceability, Safety"]
+        C2["whatDoesNotWork: (none blocked)"]
+        C3["whatIsUnproven: Real mode (requires human approval)"]
+        C4["confidence: 0.89"]
+        C5["status: YELLOW → DONE (all issues verified via fixture/dry-run)"]
+    end
+
+    I1 --> P1
+    I2 --> P2
+    I3 --> P3
+    I4 --> P4
+    I5 --> P5
+
+    P1 --> E1
+    P2 --> E1
+    P3 --> E1
+    P4 --> E1
+    P5 --> E1
+
+    E1 --> C1
+    E2 --> C1
+    E3 --> C1
+    E4 --> C1
+    E5 --> C1
+
+    C1 --> C5
+    C2 --> C5
+    C3 --> C5
+    C4 --> C5
