@@ -79,7 +79,7 @@ Die folgenden Benchmark-Artefakte belegen die Ausrichtung:
 | `docs/benchmark/rudolph-beacon/KNOWN_LIMITATIONS.md` | Bekannte Grenzen |
 | `docs/evidence/rudolph-beacon/run-summary.fixture.json` | Fixture-Mode-Ergebnis |
 | `docs/evidence/rudolph-beacon/run-summary.dry-run.json` | Dry-Run-Ergebnis |
-| `packages/benchmark-rudolph/src/__tests__/` | 171 Tests, 28 Red Tests |
+| `packages/benchmark-rudolph/src/__tests__/` | 282 Tests, 36 Red Tests |
 
 ---
 

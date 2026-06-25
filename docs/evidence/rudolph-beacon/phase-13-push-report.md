@@ -20,7 +20,7 @@
 
 ## Commits Pushed
 
-```
+```text
 9b4f488 fix(issue-279): format safe apply plan test for CodeRabbit
 ```
 

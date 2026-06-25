@@ -172,7 +172,6 @@ export function simulateBeaconScan(
 	nowIso: string,
 	requestedIds?: string[],
 ): BeaconScanResult {
-	const startTime = Date.now();
 	const warnings: string[] = [];
 	const notFound: string[] = [];
 
@@ -226,7 +225,8 @@ export function simulateBeaconScan(
 		scannedAt: nowIso,
 		entries,
 		notFound,
-		durationMs: Date.now() - startTime,
+		// Deterministic simulated duration (no wall-clock dependency)
+		durationMs: Math.round(seededHash(seed, idsToScan.length) * 50),
 		warnings,
 	};
 }

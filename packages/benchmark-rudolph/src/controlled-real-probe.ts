@@ -373,8 +373,9 @@ export interface CommitReadinessCheck {
 
 /** Dateimuster, die NIEMALS committed werden dürfen */
 const FORBIDDEN_PATTERNS = [
-	/\.env$/,
-	/\.env\.local$/,
+	// Block all .env variants (.env.local, .env.production, .env.test, etc.)
+	// Exception: .env.example files are explicitly allowed (see checkCommitSafe)
+	/(^|\/)\.env(\.[^/]+)?$/,
 	/\.db$/,
 	/\.db-shm$/,
 	/\.db-wal$/,
@@ -400,7 +401,12 @@ export function checkCommitReadiness(
 	filePaths: string[],
 ): CommitReadinessCheck[] {
 	return filePaths.map((path) => {
-		// Check forbidden patterns first
+		// .env.example is explicitly allowed (template, no secrets)
+		if (/\.env\.example$/.test(path)) {
+			return { path, safe: true };
+		}
+
+		// Check forbidden patterns
 		for (const pattern of FORBIDDEN_PATTERNS) {
 			if (pattern.test(path)) {
 				return {

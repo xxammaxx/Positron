@@ -9,7 +9,7 @@
 ```
 STATUS: GREEN (local gates) / YELLOW (awaiting owner review)
 CONFIDENCE: 0.92
-PR: #295 — Draft
+PR: #295 — OPEN (isDraft: false)
 MERGE: NOT REQUESTED
 AUTO-MERGE: DISABLED
 ```
