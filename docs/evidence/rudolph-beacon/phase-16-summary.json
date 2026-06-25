@@ -1,0 +1,91 @@
+{
+  "phase": 16,
+  "timestamp": "2026-06-25T10:10:00Z",
+  "pr": 295,
+  "branch": "feat/issue-279-phase-1g-safe-apply-plan-20260624-135722",
+  "commit": "8067b19c316eda4258019f36b6346eaa266e670f",
+  "status": "GREEN",
+  "confidence": 0.90,
+  "realityRefresh": {
+    "status": "CURRENT",
+    "localHead": "8067b19",
+    "remoteHead": "8067b19",
+    "prState": "OPEN",
+    "prMergeable": "MERGEABLE",
+    "prMergeStateStatus": "UNSTABLE"
+  },
+  "coderabbit": {
+    "status": "PARTIAL_YELLOW_REVIEW",
+    "totalComments": 11,
+    "resolved": 8,
+    "unresolved": 3,
+    "greenSafeFixed": 5,
+    "yellowReview": 3,
+    "alreadyResolved": 3
+  },
+  "fixes": {
+    "applied": 5,
+    "codeFixes": 2,
+    "docsFixes": 3,
+    "verifiedByTests": true
+  },
+  "lockfile": {
+    "status": "FIXED_GREEN_SAFE",
+    "linesAdded": 12,
+    "externalDependencyChanges": 0
+  },
+  "gates": {
+    "gitDiffCheck": "PASS",
+    "build": "PASS",
+    "typecheck": "PASS",
+    "benchmarkTests": "282/282 PASS",
+    "benchmarkCoverage": "PRE_EXISTING_GLOBAL_THRESHOLD",
+    "fullTestSuite": "1642+ PASS",
+    "classification": "GREEN"
+  },
+  "push": {
+    "status": "SUCCESS",
+    "forcePush": false,
+    "type": "fast-forward"
+  },
+  "prStatus": {
+    "classification": "READY_WITH_WARNINGS",
+    "ciChecksPassed": 2,
+    "ciChecksTotal": 7,
+    "codeRabbit": "PENDING"
+  },
+  "mergeRecommendation": "MERGE_AFTER_FINAL_GATES",
+  "untouched": [
+    "PR #218",
+    "PR chain #230-#242",
+    ".github/workflows/*",
+    "Manual CI trigger",
+    "Merge",
+    "Auto-merge",
+    "Force push",
+    "Secrets / .env",
+    "Full Real Mode",
+    "Reviewer auto-request",
+    "Labels"
+  ],
+  "risks": [
+    "CI still shows UNSTABLE (awaiting lockfile fix verification)",
+    "CodeRabbit PENDING (new review may flag new issues)",
+    "3 YELLOW_REVIEW items require Owner decision",
+    "No human review performed"
+  ],
+  "artifacts": [
+    "phase-16-reality-refresh.md",
+    "phase-16-coderabbit-comments-audit.md",
+    "phase-16-fix-report.md",
+    "phase-16-lockfile-audit.md",
+    "phase-16-phase-14-correction.md",
+    "phase-16-gates.md",
+    "phase-16-push-report.md",
+    "phase-16-pr-status-audit.md",
+    "phase-16-owner-merge-package.md",
+    "phase-16-summary.json",
+    "phase-16-report.md",
+    "phase-16-reviewer-report.md"
+  ]
+}
