@@ -733,7 +733,7 @@ async function main() {
 
 	// Phase 1F: load human approval pack module (optional)
 	let approvalPackMod = null;
-	if (options.approvalPack) {
+	if (options.approvalPack || options.safeApplyPlan) {
 		try {
 			approvalPackMod = await import('../packages/shared/dist/human-approval-pack.js');
 		} catch (err) {
@@ -770,7 +770,7 @@ async function main() {
 			if (options.includeLocalGates) {
 				console.log(`  Local gates: ${options.localGatesDryRun ? 'simulated (dry-run)' : 'live'}`);
 			}
-			if (options.approvalPack) {
+	if (options.approvalPack || options.safeApplyPlan) {
 				console.log(`  Approval pack: enabled`);
 			}
 			if (options.safeApplyPlan) {

@@ -62,7 +62,7 @@ Safe Apply Plan Export wurde erfolgreich implementiert. Human Approval Pack Repo
 
 Red tests were confirmed failing (module not found) before implementation:
 
-```
+```text
 FAIL  packages/shared/src/__tests__/safe-apply-plan.test.ts
 Error: Cannot find module '../safe-apply-plan.js'
 ```
@@ -71,7 +71,7 @@ Error: Cannot find module '../safe-apply-plan.js'
 
 All 27 Safe Apply Plan tests pass:
 
-```
+```text
 Test Files  1 passed (1)
      Tests  27 passed (27)
 ```
@@ -94,19 +94,19 @@ All existing test suites pass (no regressions):
 ## CLI Dry-Run Evidence
 
 ### Basic approval-pack + safe-apply-plan
-```
+```bash
 node scripts/run-evidence-gate.mjs --dry-run --approval-pack --safe-apply-plan
 → Exit 0, WARN status, 3 plans, 0 executable
 ```
 
 ### With local gates + safe-apply-plan
-```
+```bash
 node scripts/run-evidence-gate.mjs --dry-run --include-local-gates --local-gates-dry-run --approval-pack --safe-apply-plan
 → Exit 0, WARN status, 8 local gates SKIPPED, 3 plans, 0 executable
 ```
 
 ### JSON output
-```
+```bash
 node scripts/run-evidence-gate.mjs --dry-run --include-local-gates --local-gates-dry-run --approval-pack --safe-apply-plan --output ".local-release/evidence-gate/evidence-gate-safe-apply-plan-dry-run.json" --format json
 → Exit 0, JSON written to gitignored path
 ```
