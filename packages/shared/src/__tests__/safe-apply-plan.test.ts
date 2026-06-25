@@ -9,9 +9,7 @@ import type { ApprovalPackage, ApprovalPackReport } from '../human-approval-pack
 // Test fixtures — ApprovalPackage objects matching Phase 1F output shape
 // ---------------------------------------------------------------------------
 
-function makePackage(
-	overrides: Partial<ApprovalPackage> = {},
-): ApprovalPackage {
+function makePackage(overrides: Partial<ApprovalPackage> = {}): ApprovalPackage {
 	return {
 		id: 'GREEN_SAFE_PACKAGE-1',
 		type: 'GREEN_SAFE_PACKAGE',
