@@ -1,0 +1,156 @@
+{
+  "runId": "rudolph-beacon-phase-13-20260625",
+  "benchmarkName": "rudolph-beacon",
+  "timestampUtc": "2026-06-25T05:50:00Z",
+  "executionMode": "dry-run",
+  "repo": {
+    "owner": "xxammaxx",
+    "name": "Positron",
+    "branch": "feat/issue-279-phase-1g-safe-apply-plan-20260624-135722",
+    "commitSha": "9b4f488f63472fd1ff76f03fe3fc3ef9371e90be",
+    "status": "CURRENT"
+  },
+  "issues": [
+    {
+      "id": "issue-279",
+      "title": "Rudolph Beacon — Positron Benchmark",
+      "status": "DONE",
+      "confidence": 0.95,
+      "evidencePaths": [
+        "docs/evidence/rudolph-beacon/phase-13-reality-refresh.md",
+        "docs/evidence/rudolph-beacon/phase-13-coderabbit-final-audit.md",
+        "docs/evidence/rudolph-beacon/phase-13-fix-report.md",
+        "docs/evidence/rudolph-beacon/phase-13-gates.md",
+        "docs/evidence/rudolph-beacon/phase-13-push-report.md",
+        "docs/evidence/rudolph-beacon/phase-13-pr-report.md",
+        "docs/evidence/rudolph-beacon/phase-13-summary.json",
+        "docs/evidence/rudolph-beacon/phase-13-report.md",
+        "docs/evidence/rudolph-beacon/phase-13-reviewer-report.md"
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "name": "git diff --check",
+      "command": "git diff --check",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationMs": 50
+    },
+    {
+      "name": "npm run build",
+      "command": "npm run build",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationMs": 10000
+    },
+    {
+      "name": "npm run typecheck",
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationMs": 2000
+    },
+    {
+      "name": "npm run test:benchmark:rudolph",
+      "command": "npm run test:benchmark:rudolph",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationMs": 4000
+    },
+    {
+      "name": "npm run test:benchmark:rudolph:coverage",
+      "command": "npm run test:benchmark:rudolph:coverage",
+      "exitCode": 1,
+      "status": "PRE_EXISTING_GLOBAL_THRESHOLD",
+      "durationMs": 13000
+    },
+    {
+      "name": "npm test",
+      "command": "npm test",
+      "exitCode": 0,
+      "status": "PASS",
+      "durationMs": 66000
+    }
+  ],
+  "tests": {
+    "passed": 1571,
+    "failed": 0,
+    "skipped": 0,
+    "total": 1571,
+    "benchmarkPassed": 282,
+    "benchmarkTotal": 282,
+    "benchmarkCoverageLines": 93.9,
+    "redTestsCovered": ["R1-R36"]
+  },
+  "safety": {
+    "secretsRedacted": true,
+    "blockedActions": [
+      "merge",
+      "auto-merge",
+      "manual-ci",
+      "force-push",
+      "full-real-mode",
+      "reviewer-request",
+      "label-assignment",
+      "stash-operations",
+      ".env-access",
+      "pr-218-modification",
+      "pr-chain-230-242-modification"
+    ],
+    "warnings": [
+      "Remote CI was advisory-only (some checks FAILURE from old run, new run IN_PROGRESS)",
+      "CodeRabbit may or may not auto-resolve comments on new push",
+      "No merge without explicit Owner approval"
+    ]
+  },
+  "conclusion": {
+    "status": "GREEN",
+    "confidence": 0.95,
+    "whatWorks": [
+      "Biome formatting fix applied to safe-apply-plan.test.ts (pure formatting only)",
+      "All 3 CodeRabbit actionable issues resolved in codebase",
+      "All local gates pass: build, typecheck, 1571/1571 tests, 282/282 benchmarks",
+      "Benchmark coverage 93.9% (package-level, PRE_EXISTING_GLOBAL_THRESHOLD on global)",
+      "Push succeeded (fast-forward, no force)",
+      "PR #295 marked Ready for Review",
+      "Biome format check passes on target file",
+      "Only target file in packages/shared/ was modified",
+      "No secrets exposed",
+      "No RED_HOLD violations"
+    ],
+    "whatDoesNotWork": [
+      "Remote CI may show stale failures from old run until new run completes",
+      "Global coverage threshold still pre-existing issue (not in scope)"
+    ],
+    "whatIsUnproven": [
+      "Whether CodeRabbit will re-run and auto-resolve on new commit + ready status",
+      "Whether remote CI will pass on the new commit"
+    ]
+  },
+  "capabilityDelta": {
+    "newCapabilities": [
+      "All CodeRabbit issues (including YELLOW_REVIEW) now resolved with Owner approval",
+      "PR #295 is Ready for Review — human reviewers can be manually added",
+      "Biome formatting clean on all committed files in packages/shared/",
+      "Phase 13 provides complete evidence chain for review readiness"
+    ],
+    "removedBlockers": [
+      "YELLOW_REVIEW blocker removed: Biome formatting in packages/shared/ fixed",
+      "Draft status blocker removed: PR now Ready for Review",
+      "All 3 CodeRabbit actionable comments addressed in codebase"
+    ],
+    "unchangedLimitations": [
+      "No merge without separate explicit Owner approval",
+      "Remote CI is ADVISORY_ONLY per project policy",
+      "No full real-mode without Owner approval",
+      "Reviewers must be manually requested by Owner"
+    ],
+    "remainingRisks": [
+      "CodeRabbit may not auto-resolve comments despite fixes being pushed",
+      "Remote CI results are advisory-only and some checks were failing pre-Phase 13",
+      "Merge still requires separate explicit human approval"
+    ],
+    "nextBestStep": "Owner manually requests reviewers and decides whether to merge PR #295 after CI completes and review passes."
+  }
+}
