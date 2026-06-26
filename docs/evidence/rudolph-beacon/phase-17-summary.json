@@ -1,0 +1,115 @@
+{
+  "phase": 17,
+  "timestamp": "2026-06-26T00:12:00Z",
+  "pr": 295,
+  "commit": "5494851b222822773388dc8a6b0cd64c030ae829",
+  "status": "GREEN",
+  "confidence": 0.90,
+  "coderabbit": {
+    "status": "DECOMMISSIONED",
+    "repoConfigFiles": 0,
+    "activeCodeReferencesRemoved": 4,
+    "activeDocReferencesUpdated": 5,
+    "historicalEvidencePreserved": true,
+    "externalAppInstalled": true,
+    "ownerActionRequired": "REMOVE_CODERABBIT_GITHUB_APP"
+  },
+  "gates": {
+    "diffCheck": "PASS",
+    "build": "PASS",
+    "typecheck": "PASS",
+    "fullTest": "PASS (1571/1571, exit 0)",
+    "classification": "GREEN"
+  },
+  "push": {
+    "status": "SUCCESS",
+    "forcePush": false,
+    "previousHead": "dcffe22061ed0e1473e2213e2a19ae19fbe10b0b",
+    "newHead": "5494851b222822773388dc8a6b0cd64c030ae829"
+  },
+  "prStatus": {
+    "classification": "READY_WITH_WARNINGS",
+    "mergeable": "MERGEABLE",
+    "mergeStateStatus": "UNSTABLE",
+    "draft": false,
+    "autoMerge": false,
+    "warnings": [
+      "mergeStateStatus UNSTABLE (CI advisory-only)",
+      "CodeRabbit external app still installed",
+      "No human review performed"
+    ]
+  },
+  "ciStatus": {
+    "classification": "ADVISORY_ONLY",
+    "passCount": 2,
+    "failCount": 5,
+    "totalChecks": 7,
+    "lockfileFixInHistory": true,
+    "lockfileCiVerified": false
+  },
+  "mergeRecommendation": "MERGE_AFTER_FINAL_GATES",
+  "blocked": [
+    "MERGE (not in this run scope)",
+    "AUTO_MERGE (prohibited)",
+    "FORCE_PUSH (prohibited)",
+    "MANUAL_CI (prohibited)",
+    "FULL_REAL_MODE (prohibited without separate approval)"
+  ],
+  "evidenceFiles": [
+    "docs/evidence/rudolph-beacon/phase-17-reality-refresh.md",
+    "docs/evidence/rudolph-beacon/phase-17-coderabbit-repo-scan.md",
+    "docs/evidence/rudolph-beacon/phase-17-coderabbit-decommission.md",
+    "docs/evidence/rudolph-beacon/phase-17-external-coderabbit-removal.md",
+    "docs/evidence/rudolph-beacon/phase-17-ci-lockfile-status.md",
+    "docs/evidence/rudolph-beacon/phase-17-gates.md",
+    "docs/evidence/rudolph-beacon/phase-17-push-report.md",
+    "docs/evidence/rudolph-beacon/phase-17-pr-status-audit.md",
+    "docs/evidence/rudolph-beacon/phase-17-owner-merge-package.md",
+    "docs/evidence/rudolph-beacon/phase-17-summary.json",
+    "docs/evidence/rudolph-beacon/phase-17-report.md",
+    "docs/evidence/rudolph-beacon/phase-17-reviewer-report.md"
+  ],
+  "notTouched": [
+    "PR #218",
+    "PR chain #230-#242",
+    ".github/workflows/* (no CodeRabbit config found)",
+    "Stashes (none exist)",
+    "Secrets/.env (not read)",
+    "Historical phase evidence (preserved as-is)"
+  ],
+  "risks": [
+    "CodeRabbit external app still installed (Owner action needed)",
+    "mergeStateStatus UNSTABLE due to CI (advisory-only)",
+    "No human review performed",
+    "3 CodeRabbit comments on PR remain (decommissioned, not blocking)"
+  ],
+  "capabilityDelta": {
+    "newCapabilities": [
+      "CodeRabbit decommissioned from all active repo components",
+      "Production code uses generic 'external AI reviewer' language",
+      "Phase 15/16 decision packages updated with decommission notices",
+      "Phase 17 evidence package complete (12 files)",
+      "Merge criteria simplified to: local gates + PR diff + mergeability + human review",
+      "CodeRabbit findings no longer decision-relevant"
+    ],
+    "removedBlockers": [
+      "CodeRabbit status check no longer a merge gate",
+      "CodeRabbit review comments no longer YELLOW_REVIEW blockers",
+      "CodeRabbit docstring coverage warning no longer tracked",
+      "CodeRabbit PENDING status no longer delays merge"
+    ],
+    "unchangedLimitations": [
+      "Remote CI is advisory-only (Issue #268)",
+      "mergeStateStatus remains UNSTABLE",
+      "No human review performed",
+      "Full real-mode testing requires separate approval",
+      "Lockfile CI verification not yet confirmed by remote CI"
+    ],
+    "remainingRisks": [
+      "CodeRabbit external app still installed on repo (Owner action needed)",
+      "Stale lockfile may still cause local npm ci issues (untested)",
+      "No human code review (best practice gap)"
+    ],
+    "nextBestStep": "Owner approves merge (`APPROVE MERGE PR 295 AFTER FINAL GATES`) or removes CodeRabbit GitHub App from repo settings"
+  }
+}
