@@ -11,7 +11,7 @@ Final 7-layer quality system documentation. No code changes.
 ### Layer 1 — AI Code Review
 | Source | Status | Location |
 |--------|--------|----------|
-| CodeRabbit | Optional | `.coderabbit.yaml` |
+| ~~CodeRabbit~~ | ~~Optional~~ (decommissioned Phase 17, 2026-06-26) | ~~`.coderabbit.yaml`~~ (removed) |
 | PR Evidence Template | Manual | `.positron/` |
 
 ### Layer 2 — Static Analysis

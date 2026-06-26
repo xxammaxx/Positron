@@ -106,13 +106,13 @@ const ghPrListJson = [
 /** Simulates `gh pr view 218 --json reviews,statusCheckRollup` enrichment data */
 const ghPrReviewEnrichment = {
 	reviews: [
-		{ id: 'r1', author: { login: 'coderabbitai' }, state: 'COMMENTED', body: 'Actionable comments: 5' },
-		{ id: 'r2', author: { login: 'coderabbitai' }, state: 'COMMENTED', body: 'Actionable comments: 4' },
+		{ id: 'r1', author: { login: 'ai-reviewer-bot' }, state: 'COMMENTED', body: 'Actionable comments: 5' },
+		{ id: 'r2', author: { login: 'ai-reviewer-bot' }, state: 'COMMENTED', body: 'Actionable comments: 4' },
 	],
 	statusCheckRollup: [
 		{ name: 'build-and-test', conclusion: 'FAILURE' },
 		{ name: 'e2e-playwright', conclusion: 'FAILURE' },
-		{ name: 'CodeRabbit', conclusion: 'SUCCESS' },
+		{ name: 'AI Reviewer', conclusion: 'SUCCESS' },
 	],
 };
 
@@ -204,7 +204,7 @@ describe('normalizeGitHubPullRequestsFromGhJson', () => {
 		});
 		const pr218 = prs.find((p) => p.number === 218);
 		expect(pr218!.reviewFindingCount).toBe(2);
-		// Both reviews from coderabbitai with "Actionable comments" → actionableFindingCount = 2
+		// Both reviews from ai-reviewer-bot with "Actionable comments" → actionableFindingCount = 2
 		expect(pr218!.actionableFindingCount).toBe(2);
 		expect(pr218!.findingsAccessible).toBe(true);
 	});

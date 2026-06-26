@@ -1,0 +1,57 @@
+graph TB
+    subgraph "Rudolph Beacon Benchmark"
+        BD["beacon-domain.ts<br/>ReindeerBeacon, classifyBeacon"]
+        BF["beacon-fixtures.ts<br/>simulateBeaconScan, KNOWN_BEACONS"]
+        EC["evidence-contract.ts<br/>RudolphBenchmarkRunSummary, redactSecrets"]
+        TR["traceability.ts<br/>buildTraceabilityMap, validateTraceabilityMap"]
+        BR["benchmark-runner.ts<br/>BenchmarkRunner.execute()"]
+    end
+
+    subgraph "Positron Core (existing, imported)"
+        DFA["DeterministicFixtureAgent<br/>packages/opencode-adapter"]
+        DRA["OpenCodeDryRunAgent<br/>packages/opencode-adapter"]
+        EM["ExecutionMode<br/>packages/shared"]
+        OCI["OpenCodeRunInput<br/>packages/shared"]
+    end
+
+    subgraph "Test Suite"
+        BDT["beacon-domain.test.ts<br/>34 tests"]
+        BFT["beacon-fixtures.test.ts<br/>15 tests"]
+        ECT["evidence-contract.test.ts<br/>21 tests"]
+        TRT["traceability.test.ts<br/>15 tests"]
+        BRT["benchmark-runner.test.ts<br/>6+ tests"]
+    end
+
+    subgraph "Evidence Output"
+        PR["preflight.md"]
+        RR["reality-refresh.md"]
+        RPT["RUN_REPORT.md"]
+        FS["run-summary.fixture.json"]
+        DS["run-summary.dry-run.json"]
+        TM["traceability-map.json"]
+        RV["reviewer-report.md"]
+    end
+
+    BD --> BF
+    BD --> EC
+    BF --> BR
+    EC --> BR
+    TR --> BR
+    BR --> DFA
+    BR --> DRA
+    BR --> EM
+    BR --> OCI
+
+    BDT --> BD
+    BFT --> BF
+    ECT --> EC
+    TRT --> TR
+    BRT --> BR
+
+    BR --> PR
+    BR --> RR
+    BR --> RPT
+    BR --> FS
+    BR --> DS
+    BR --> TM
+    BR --> RV

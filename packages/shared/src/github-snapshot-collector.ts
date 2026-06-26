@@ -65,7 +65,7 @@ function extractLabels(labels: unknown): string[] | undefined {
 
 /**
  * Determine if review findings are accessible and count actionable ones.
- * Reviews from coderabbitai that mention "Actionable comments:" are counted.
+ * Reviews from external AI reviewers that mention "Actionable comments:" are counted.
  */
 function extractReviewFindings(
 	enrichment: GhPrEnrichment | undefined,

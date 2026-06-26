@@ -22,6 +22,7 @@
 		{ "path": "./packages/speckit-adapter" },
 		{ "path": "./packages/opencode-adapter" },
 		{ "path": "./packages/tool-gateway" },
+		{ "path": "./packages/benchmark-rudolph" },
 		{ "path": "./apps/server" },
 		{ "path": "./apps/worker" }
 	]

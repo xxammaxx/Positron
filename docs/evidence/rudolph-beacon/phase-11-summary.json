@@ -1,0 +1,169 @@
+{
+  "runId": "rudolph-beacon-phase-11-2026-06-24T20-33-00Z",
+  "timestampUtc": "2026-06-24T20:40:00Z",
+  "benchmarkName": "rudolph-beacon",
+  "executionMode": "dry-run",
+  "repo": {
+    "owner": "xxammaxx",
+    "name": "Positron",
+    "branch": "feat/issue-279-phase-1g-safe-apply-plan-20260624-135722",
+    "commitSha": "bfd25eb6a58e7a3764df241862f0b2e99f9fd9e0",
+    "status": "CLEAN"
+  },
+  "issues": [
+    {
+      "id": "phase-11-reality-refresh",
+      "title": "Reality Refresh",
+      "status": "VERIFIED",
+      "confidence": 1.0,
+      "evidencePaths": ["docs/evidence/rudolph-beacon/phase-11-reality-refresh.md"]
+    },
+    {
+      "id": "phase-11-pr-diff-audit",
+      "title": "PR Diff Audit",
+      "status": "VERIFIED",
+      "confidence": 1.0,
+      "evidencePaths": ["docs/evidence/rudolph-beacon/phase-11-pr-diff-audit.md"]
+    },
+    {
+      "id": "phase-11-evidence-code-audit",
+      "title": "Evidence-Code Audit",
+      "status": "VERIFIED",
+      "confidence": 1.0,
+      "evidencePaths": ["docs/evidence/rudolph-beacon/phase-11-evidence-code-audit.md"]
+    },
+    {
+      "id": "phase-11-gates",
+      "title": "Local Gates",
+      "status": "VERIFIED",
+      "confidence": 1.0,
+      "evidencePaths": ["docs/evidence/rudolph-beacon/phase-11-gates.md"]
+    },
+    {
+      "id": "phase-11-github-checks",
+      "title": "GitHub Checks (Read-Only)",
+      "status": "VERIFIED",
+      "confidence": 0.9,
+      "evidencePaths": ["docs/evidence/rudolph-beacon/phase-11-github-checks.md"]
+    },
+    {
+      "id": "phase-11-pr-review-decision",
+      "title": "PR Review Decision",
+      "status": "VERIFIED",
+      "confidence": 0.92,
+      "evidencePaths": ["docs/evidence/rudolph-beacon/phase-11-pr-review-decision.md"]
+    },
+    {
+      "id": "phase-11-owner-decision",
+      "title": "Owner Decision Package",
+      "status": "VERIFIED",
+      "confidence": 0.92,
+      "evidencePaths": ["docs/evidence/rudolph-beacon/phase-11-owner-decision-package.md"]
+    }
+  ],
+  "commands": [
+    { "name": "git-fetch", "command": "git fetch --all --prune", "exitCode": 0, "durationMs": 1200 },
+    { "name": "git-status", "command": "git status --porcelain", "exitCode": 0, "durationMs": 200 },
+    { "name": "git-log", "command": "git log --oneline --decorate -12", "exitCode": 0, "durationMs": 150 },
+    { "name": "gh-pr-view", "command": "gh pr view 295 --json ...", "exitCode": 0, "durationMs": 800 },
+    { "name": "gh-pr-diff", "command": "gh pr diff 295 --name-only", "exitCode": 0, "durationMs": 600 },
+    { "name": "git-diff-check", "command": "git diff --check", "exitCode": 0, "durationMs": 500 },
+    { "name": "npm-build", "command": "npm run build", "exitCode": 0, "durationMs": 35000 },
+    { "name": "npm-typecheck", "command": "npm run typecheck", "exitCode": 0, "durationMs": 5000 },
+    { "name": "npm-test-benchmark", "command": "npm run test:benchmark:rudolph", "exitCode": 0, "durationMs": 6000 },
+    { "name": "npm-test-benchmark-cov", "command": "npm run test:benchmark:rudolph:coverage", "exitCode": 1, "durationMs": 12000 },
+    { "name": "npm-test", "command": "npm test", "exitCode": 0, "durationMs": 86000 }
+  ],
+  "tests": {
+    "passed": 1571,
+    "failed": 0,
+    "total": 1571,
+    "benchmarkPassed": 282,
+    "benchmarkTotal": 282,
+    "frontendPassed": 196,
+    "frontendTotal": 196,
+    "redTestsCovered": ["RT-15", "RT-16", "RT-17", "RT-18", "RT-19", "RT-20", "RT-21", "RT-22", "RT-23", "RT-24", "RT-25", "RT-26", "RT-27", "RT-28", "RT-29", "RT-30", "RT-31", "RT-32", "RT-33", "RT-34", "RT-35", "RT-36"]
+  },
+  "coverage": {
+    "benchmarkPackage": {
+      "statements": 93.91,
+      "branches": 88.57,
+      "functions": 94.33,
+      "lines": 93.9
+    },
+    "global": {
+      "statements": 8.59,
+      "threshold": 30,
+      "status": "PRE_EXISTING_GLOBAL_THRESHOLD"
+    }
+  },
+  "safety": {
+    "secretsRedacted": true,
+    "blockedActions": [
+      "gh pr merge",
+      "git merge",
+      "auto-merge",
+      "force push",
+      "gh workflow run",
+      "gh run rerun",
+      "gh pr ready",
+      "PR #218 modification",
+      "old PR chain #230-#242 modification"
+    ],
+    "warnings": [
+      "Remote CI: 5/7 checks FAILED (advisory-only per SECURITY.md)",
+      "mergeStateStatus: UNSTABLE (caused by advisory-only CI)",
+      "CodeRabbit: 3 actionable issues found (formatting/linting)",
+      "Global coverage threshold exit code 1 (pre-existing)",
+      "Build artifacts (dist/) in PR (pre-existing from earlier phases)",
+      "Full real mode not tested",
+      "Cross-platform not tested"
+    ]
+  },
+  "conclusion": {
+    "status": "YELLOW",
+    "confidence": 0.92,
+    "whatWorks": [
+      "All 1571 tests pass (no regressions since Phase 10)",
+      "282 benchmark tests pass with 93.91% package coverage",
+      "PR diff is CLEAN — no RED_HOLD areas, no secrets",
+      "All 10 evidence-code claims VERIFIED",
+      "Push protection history cleaned (Phase 10)",
+      "All 6 local gates pass"
+    ],
+    "whatDoesNotWork": [
+      "Remote CI shows 5/7 failures (advisory-only, not blocking)",
+      "CodeRabbit found 3 minor issues (formatting/linting)",
+      "Global coverage threshold not met (pre-existing, not caused by PR)"
+    ],
+    "whatIsUnproven": [
+      "Full real mode execution (controlled probe only)",
+      "Cross-platform compatibility (win32 only)",
+      "Remote CI fix (Issue #268 tracked separately)",
+      "Merge readiness (not tested — merge is RED_HOLD in this phase)"
+    ]
+  },
+  "capabilityDelta": {
+    "newCapabilities": [
+      "Phase 11 evidence package complete (10 files)",
+      "PR diff audit methodology validated",
+      "Evidence-code cross-audit confirmed all 10 claims",
+      "Owner decision package with 4 clear options (A/B/C/D)"
+    ],
+    "nextBestStep": "Owner reviews CodeRabbit comments and chooses Option A (keep draft), B (ready for review), or C (request reviewers)",
+    "removedBlockers": [
+      "Push protection false-positive (Phase 10 cleanup)"
+    ],
+    "unchangedLimitations": [
+      "No merge, no auto-merge, no manual CI (per policy)",
+      "Full real mode untested",
+      "Cross-platform untested",
+      "Remote CI advisory-only"
+    ],
+    "remainingRisks": [
+      "CodeRabbit issues could cause CI failures on next push",
+      "Build artifacts (dist/) in repo (pre-existing, not fixed)",
+      "Owner needs to make explicit decision for next step"
+    ]
+  }
+}

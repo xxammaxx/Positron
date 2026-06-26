@@ -357,7 +357,7 @@ export function createHumanApprovalPackReport(
 		// YELLOW_REVIEW: add PR-review specific warnings
 		if (pkgType === 'YELLOW_REVIEW_PACKAGE') {
 			warnings.push(
-				`${rows.length} item(s) require human review — CodeRabbit/security findings may apply.`,
+				`${rows.length} item(s) require human review — external AI reviewer/security findings may apply.`,
 			);
 		}
 

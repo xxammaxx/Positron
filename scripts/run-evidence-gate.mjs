@@ -88,6 +88,7 @@ function parseArgs() {
 		includeLocalGates: false,      // Phase 1E
 		localGatesDryRun: false,        // Phase 1E
 		approvalPack: false,            // Phase 1F
+		safeApplyPlan: false,           // Phase 1G
 	};
 
 	for (let i = 0; i < args.length; i++) {
@@ -116,6 +117,9 @@ function parseArgs() {
 			case '--approval-pack':
 				options.approvalPack = true;
 				break;
+			case '--safe-apply-plan':
+				options.safeApplyPlan = true;
+				break;
 			case '--help':
 			case '-h':
 				options.help = true;
@@ -128,14 +132,15 @@ function parseArgs() {
 	return options;
 }
 
-function printHelp() {
+	function printHelp() {
 	console.log(`
-Positron Evidence Gate CLI (Issue #279 Phase 1D+1E+1F)
+Positron Evidence Gate CLI (Issue #279 Phase 1D+1E+1F+1G)
 
 Read-only evidence gate that combines the GitHub Snapshot Collector,
 GitHub Context Reconciler and Decision Manifest Validator into an
 audit-ready decision report. Optionally includes local build/test/typecheck
-gate results (Phase 1E) and Human Approval Pack generation (Phase 1F).
+gate results (Phase 1E), Human Approval Pack generation (Phase 1F),
+and Safe Apply Plan Export (Phase 1G).
 
 Usage:
   node scripts/run-evidence-gate.mjs [options]
@@ -149,6 +154,7 @@ Options:
   --include-local-gates   Include local build/test/typecheck gate results (Phase 1E)
   --local-gates-dry-run   Simulate local gates without execution (Phase 1E)
   --approval-pack         Generate Human Approval Pack from evidence report (Phase 1F)
+  --safe-apply-plan       Generate Safe Apply Plan Export from approval pack (Phase 1G)
   --help, -h              Show this help
 
 Examples:
@@ -158,13 +164,17 @@ Examples:
   # Dry-run with approval pack
   node scripts/run-evidence-gate.mjs --dry-run --approval-pack
 
-  # Dry-run with local gates and approval pack
-  node scripts/run-evidence-gate.mjs --dry-run --include-local-gates --local-gates-dry-run --approval-pack
+  # Dry-run with approval pack and safe apply plan
+  node scripts/run-evidence-gate.mjs --dry-run --approval-pack --safe-apply-plan
+
+  # Dry-run with local gates, approval pack, and safe apply plan
+  node scripts/run-evidence-gate.mjs --dry-run --include-local-gates --local-gates-dry-run --approval-pack --safe-apply-plan
 
   # Full run with output
-  node scripts/run-evidence-gate.mjs --dry-run --include-local-gates --local-gates-dry-run --approval-pack --output .local-release/evidence-gate/report.json --format json
+  node scripts/run-evidence-gate.mjs --dry-run --include-local-gates --local-gates-dry-run --approval-pack --safe-apply-plan --output .local-release/evidence-gate/report.json --format json
 
-Safety: Read-only gh commands only. No mutations. No apply behavior.
+Safety: Read-only gh commands only. No mutations. No apply behavior. No execution.
+All Safe Apply Plans are explicitly non-executing (executable=false).
 Exit codes: 0=OK, 1=validation errors, 2=usage error, 3=safety violation
 `);
 }
@@ -326,6 +336,80 @@ function printApprovalPackReport(approvalPackReport) {
 	}
 	if (approvalPackReport.applyablePackages === 0) {
 		console.log('  → No applyable packages. No automated mutations possible.');
+	}
+	console.log('');
+}
+
+/**
+ * Print a safe apply plan report in human-readable format.
+ */
+function printSafeApplyPlanReport(safeApplyPlanReport) {
+	console.log('');
+	console.log('───────────────────────────────────────────────');
+	console.log('  SAFE APPLY PLAN REPORT (Phase 1G)');
+	console.log('───────────────────────────────────────────────');
+	console.log(`  Status:              ${safeApplyPlanReport.status}`);
+	console.log(`  Total Plans:         ${safeApplyPlanReport.totalPlans}`);
+	console.log(`  Executable Plans:    ${safeApplyPlanReport.executablePlans} (always 0 — non-executing)`);
+	console.log(`  Blocked Plans:       ${safeApplyPlanReport.blockedPlans}`);
+	console.log(`  Review Plans:        ${safeApplyPlanReport.reviewPlans}`);
+	console.log(`  Hold Plans:          ${safeApplyPlanReport.holdPlans}`);
+	console.log(`  Deferred Plans:      ${safeApplyPlanReport.deferredPlans}`);
+	console.log('───────────────────────────────────────────────');
+
+	for (const plan of safeApplyPlanReport.plans) {
+		const icon =
+			plan.type === 'GREEN_SAFE_APPLY_PLAN' ? '🟢' :
+			plan.type === 'YELLOW_REVIEW_PLAN' ? '🟡' :
+			plan.type === 'RED_HOLD_PLAN' ? '🔴' :
+			plan.type === 'TOOL_GAP_PLAN' ? '🔧' :
+			plan.type === 'DEFER_TO_279_PLAN' ? '⏸' :
+			plan.type === 'BLOCKED_PLAN' ? '🚫' :
+			plan.type === 'NO_ACTION_PLAN' ? '⭕' : '❓';
+
+		const execIcon = '⛔ NON-EXECUTING';
+		console.log(`  ${icon} ${plan.type} ${execIcon}`);
+		console.log(`     ID: ${plan.id}`);
+		console.log(`     Package: ${plan.packageId}`);
+		console.log(`     Title: ${plan.title}`);
+		console.log(`     Summary: ${plan.summary}`);
+		console.log(`     Executable: ${plan.executable}`);
+		console.log(`     Actions: ${plan.actions.length}`);
+
+		for (const action of plan.actions) {
+			console.log(`       - ${action.id} | executable=${action.executable} | blocked=${action.blocked}`);
+			if (action.approvalPhrase) {
+				console.log(`         Approval: ${action.approvalPhrase}`);
+			}
+			if (action.blockerReasons.length > 0) {
+				for (const reason of action.blockerReasons) {
+					console.log(`         Blocker: ${reason}`);
+				}
+			}
+		}
+
+		if (plan.blockerReasons.length > 0) {
+			console.log('     PLAN BLOCKERS:');
+			for (const reason of plan.blockerReasons) {
+				console.log(`       - ${reason}`);
+			}
+		}
+		if (plan.warnings.length > 0) {
+			console.log('     PLAN WARNINGS:');
+			for (const warn of plan.warnings) {
+				console.log(`       - ${warn}`);
+			}
+		}
+		console.log('');
+	}
+
+	console.log('───────────────────────────────────────────────');
+	console.log('  SAFE APPLY PLAN SUMMARY');
+	console.log('───────────────────────────────────────────────');
+	console.log(`  All ${safeApplyPlanReport.totalPlans} plan(s) are non-executing.`);
+	console.log('  No actions have been or will be executed by this tool.');
+	if (safeApplyPlanReport.blockedPlans > 0) {
+		console.log(`  ⚠ ${safeApplyPlanReport.blockedPlans} plan(s) are BLOCKED.`);
 	}
 	console.log('');
 }
@@ -649,11 +733,24 @@ async function main() {
 
 	// Phase 1F: load human approval pack module (optional)
 	let approvalPackMod = null;
-	if (options.approvalPack) {
+	if (options.approvalPack || options.safeApplyPlan) {
 		try {
 			approvalPackMod = await import('../packages/shared/dist/human-approval-pack.js');
 		} catch (err) {
 			console.error('Error: Cannot load human-approval-pack module.');
+			console.error('  Run `npm run build` first to generate shared/dist artifacts.');
+			console.error(`  Detail: ${err.message}`);
+			process.exit(EXIT.USAGE_ERROR);
+		}
+	}
+
+	// Phase 1G: load safe apply plan module (optional)
+	let safeApplyPlanMod = null;
+	if (options.safeApplyPlan) {
+		try {
+			safeApplyPlanMod = await import('../packages/shared/dist/safe-apply-plan.js');
+		} catch (err) {
+			console.error('Error: Cannot load safe-apply-plan module.');
 			console.error('  Run `npm run build` first to generate shared/dist artifacts.');
 			console.error(`  Detail: ${err.message}`);
 			process.exit(EXIT.USAGE_ERROR);
@@ -667,13 +764,17 @@ async function main() {
 			const phases = ['1D'];
 			if (options.includeLocalGates) phases.push('1E');
 			if (options.approvalPack) phases.push('1F');
+			if (options.safeApplyPlan) phases.push('1G');
 			console.log(`[DRY-RUN] Evidence Gate CLI — Phase ${phases.join('+')}`);
 			console.log(`  Repo: ${options.repo}`);
 			if (options.includeLocalGates) {
 				console.log(`  Local gates: ${options.localGatesDryRun ? 'simulated (dry-run)' : 'live'}`);
 			}
-			if (options.approvalPack) {
+	if (options.approvalPack || options.safeApplyPlan) {
 				console.log(`  Approval pack: enabled`);
+			}
+			if (options.safeApplyPlan) {
+				console.log(`  Safe apply plan: enabled`);
 			}
 			console.log('');
 			console.log('  Using synthetic dry-run fixture...');
@@ -761,6 +862,43 @@ async function main() {
 		}
 	}
 
+	// Phase 1G: generate safe apply plan if requested
+	let safeApplyPlanReport = null;
+	if (options.safeApplyPlan && safeApplyPlanMod) {
+		if (!approvalPackReport) {
+			console.error('Error: --safe-apply-plan requires --approval-pack. Generating approval pack first...');
+			// Try to generate approval pack on the fly if not already done
+			if (approvalPackMod) {
+				try {
+					approvalPackReport = approvalPackMod.createHumanApprovalPackReport(report);
+					report.approvalPackReport = approvalPackReport;
+				} catch (err) {
+					console.error(`  Error generating approval pack: ${err.message}`);
+					process.exit(EXIT.VALIDATION_ERROR);
+				}
+			} else {
+				console.error('  Cannot generate approval pack — module not loaded. Add --approval-pack.');
+				process.exit(EXIT.USAGE_ERROR);
+			}
+		}
+
+		console.log('');
+		console.log('[SAFE APPLY PLAN] Generating Safe Apply Plan from approval pack...');
+
+		try {
+			safeApplyPlanReport = safeApplyPlanMod.createSafeApplyPlanReport(approvalPackReport);
+			console.log(`  Generated ${safeApplyPlanReport.totalPlans} plan(s).`);
+			console.log(`  Executable plans: ${safeApplyPlanReport.executablePlans} (always 0 — non-executing)`);
+			console.log(`  Blocked: ${safeApplyPlanReport.blockedPlans}, Review: ${safeApplyPlanReport.reviewPlans}, Hold: ${safeApplyPlanReport.holdPlans}, Deferred: ${safeApplyPlanReport.deferredPlans}`);
+
+			// Attach safe apply plan to the report for JSON output
+			report.safeApplyPlanReport = safeApplyPlanReport;
+		} catch (err) {
+			console.error(`  Error generating safe apply plan: ${err.message}`);
+			// Continue without safe apply plan — non-fatal
+		}
+	}
+
 	// Output
 	if (options.format === 'json') {
 		if (options.output) {
@@ -781,6 +919,11 @@ async function main() {
 		// Phase 1F: print approval pack after evidence report
 		if (approvalPackReport) {
 			printApprovalPackReport(approvalPackReport);
+		}
+
+		// Phase 1G: print safe apply plan after approval pack
+		if (safeApplyPlanReport) {
+			printSafeApplyPlanReport(safeApplyPlanReport);
 		}
 
 		if (options.output) {
