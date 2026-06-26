@@ -1,20 +1,22 @@
 # Phase 15 — Owner Merge Decision Package
 
+> **⚠️ PHASE 17 UPDATE (2026-06-26): CodeRabbit is decommissioned.** This document's CodeRabbit references, status, and criteria are now historical. They are no longer decision-relevant for PR #295. See `phase-17-coderabbit-decommission.md` for the current merge criteria.
+
 ## Metadata
 - **Timestamp**: 2026-06-25T08:15:00Z
 - **Phase**: 15
 - **PR**: #295
 - **Target**: Owner (xxammaxx)
 
-## Current State Summary
+## Current State Summary (Phase 15 — Historical)
 
 | Aspect | Status |
 |--------|--------|
 | PR #295 | OPEN, Ready for Review, MERGEABLE, UNSTABLE merge state |
 | Local Gates | ALL GREEN (build, typecheck, 1571+282 tests, diff check) |
 | Total Tests | 1853/1853 PASS (1571 backend+frontend + 282 benchmark) |
-| Review Comments | 8 unresolved CodeRabbit (3 code, 5 docs) — ALL advisory |
-| CodeRabbit | SUCCESS (not blocking) |
+| Review Comments (historical) | 8 unresolved external reviewer comments (3 code, 5 docs) — ALL advisory |
+| ~~CodeRabbit~~ (historical) | ~~SUCCESS (not blocking — now decommissioned)~~ |
 | CI | 2/7 PASS, 5/7 FAIL (stale lockfile, pre-existing, ADVISORY_ONLY) |
 | Merge Conflicts | NONE |
 | Secrets | NONE |
@@ -29,7 +31,7 @@
 
 ### Option A — Weiter beobachten (Continue Observing)
 
-**What**: No action. Wait for human reviewers or let existing CodeRabbit comments age.
+**What**: No action. Wait for human reviewers or let existing review comments age.
 
 **When to choose**:
 - Owner wants more time before merging
@@ -37,7 +39,7 @@
 - No urgency to merge
 
 **Pros**: Safest. No risk of premature merge.
-**Cons**: PR stays open. 8 CodeRabbit comments remain unaddressed.
+**Cons**: PR stays open. 8 review comments remain unaddressed (advisory only; now decommissioned).
 
 **Owner text**:
 ```text
@@ -72,11 +74,11 @@ APPROVE REQUEST REVIEWERS FOR PR 295: <github-usernames>
 
 **What**: Merge PR #295 to `main` after final gate verification.
 
-**Preconditions**:
+**Preconditions (Phase 15 — historical)**:
 - `FINAL_MERGE_READY: YES` ✅ (confirmed in this Phase 15 run)
 - All local gates green ✅
 - No blocking review comments ✅
-- CodeRabbit status SUCCESS ✅
+- ~~CodeRabbit status SUCCESS ✅~~ (now decommissioned)
 
 **What the orchestrator would do** (in a separate future run):
 - Final reality refresh
@@ -95,35 +97,36 @@ APPROVE MERGE PR 295 AFTER FINAL GATES
 ```
 
 **Pros**: Completes the PR lifecycle. Gets the feature into `main`.
-**Cons**: No human review performed. 8 unresolved advisory comments.
+**Cons**: No human review performed. 8 unresolved advisory comments (historical).
 
 ---
 
-### Option D — Vor Merge: CodeRabbit-Kommentare fixen + Lockfile aktualisieren (Fix + Merge)
+### Option D — ~~Vor Merge: CodeRabbit-Kommentare fixen~~ (Historical — now decommissioned)
 
-**What**: Fix the 8 unresolved CodeRabbit comments and update stale lockfile, then merge.
+**What (historical Phase 15 proposal)**: Fix the 8 unresolved review comments and update stale lockfile, then merge.
 
 **Steps** (would require additional Owner phases):
-1. `APPROVE FIX CODERABBIT COMMENTS FOR PR 295` — address 3 code + 5 doc issues
+1. `APPROVE FIX REVIEW COMMENTS FOR PR 295` — address 3 code + 5 doc issues
 2. `APPROVE UPDATE LOCKFILE FOR PR 295` — `npm install` to update `package-lock.json`
 3. `APPROVE MERGE PR 295 AFTER FINAL GATES` — merge
 
 **Estimated effort**: ~20 min (3 code fixes + 5 doc updates + lockfile)
 
-**Pros**: All CodeRabbit issues resolved. CI would pass. Cleanest final state.
-**Cons**: Most effort. Delays merge.
+**Phase 17 Note**: Option D was partially executed in Phase 16 (5 fixes + lockfile). The remaining 3 YELLOW_REVIEW items are now decommissioned and advisory-only.
 
 ---
 
-## Orchestrator Recommendation
+## Orchestrator Recommendation (Phase 15 — Historical)
 
-**Recommended**: **Option D → Option C** (Fix + Merge)
+**Phase 15 Recommended**: **Option D → Option C** (Fix + Merge)
+
+> **Phase 17 Update**: Option D was partially executed (Phase 16 fixed 5 advisory comments + lockfile). The remaining 3 items are now decommissioned per Phase 17. See `phase-17-owner-merge-package.md` for current recommendation.
 
 The recommended path provides the cleanest merge with all issues resolved:
 
 | Step | Action | Owner Approval |
 |------|--------|---------------|
-| 1 | Fix 3 code CodeRabbit comments + 5 doc issues + lockfile | `APPROVE FIX CODERABBIT COMMENTS FOR PR 295` |
+| 1 | Fix 3 code review comments + 5 doc issues + lockfile | `APPROVE FIX REVIEW COMMENTS FOR PR 295` |
 | 2 | Commit and push fixes | (included in step 1) |
 | 3 | Final gate check | `APPROVE FINAL GATES FOR PR 295 MERGE READINESS` |
 | 4 | Merge to main | `APPROVE MERGE PR 295 AFTER FINAL GATES` |

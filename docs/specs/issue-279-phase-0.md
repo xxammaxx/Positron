@@ -160,7 +160,7 @@ PR #218 (Stop/Ask Policy + GATE_APPROVE integration) wurde read-only auditiert:
 
 - **Status:** OPEN, MERGEABLE, not draft
 - **Scope:** `packages/sandbox/src/` (stop-ask-policy.ts, gate-approve.ts) + Tests + Docs
-- **Findings:** 9 CodeRabbit actionable findings, alle unaddressed
+- **Findings:** 9 CodeRabbit actionable findings, alle unaddressed (historical — CodeRabbit decommissioned Phase 17, 2026-06-26)
 - **Risiko:** Sicherheitskritisch (Runtime Enforcement Layer)
 - **Entscheidung:** DO_NOT_MERGE_NOW — YELLOW_REVIEW
 - **Nächster Schritt:** Separater PR #218 Fix/Close-Prompt erforderlich

@@ -357,7 +357,7 @@ describe('createSafeApplyPlanReport', () => {
 			approvalPhrase: 'APPROVE REVIEW YELLOW_REVIEW_PACKAGE YELLOW_REVIEW_PACKAGE-1',
 			riskClasses: ['YELLOW_REVIEW'],
 			recommendations: ['REVIEW_REQUIRED'],
-			warnings: ['1 item(s) require human review — CodeRabbit/security findings may apply.'],
+			warnings: ['1 item(s) require human review — external AI reviewer/security findings may apply.'],
 		});
 		const report = makePackageReport([pkg]);
 
