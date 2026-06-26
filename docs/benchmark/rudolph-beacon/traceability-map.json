@@ -1,67 +1,67 @@
 {
-  "benchmark": "rudolph-beacon",
-  "generatedAt": "2026-06-24T14:30:00Z",
-  "executionMode": "fixture+dry-run",
-  "issues": {
-    "BENCH-001": {
-      "spec": "docs/benchmark/rudolph-beacon/issues/BENCH-001.md",
-      "tests": ["packages/benchmark-rudolph/src/__tests__/beacon-domain.test.ts"],
-      "files": ["packages/benchmark-rudolph/src/beacon-domain.ts"],
-      "evidence": [
-        "docs/evidence/rudolph-beacon/reality-refresh.md",
-        "docs/evidence/rudolph-beacon/preflight.md",
-        "docs/evidence/rudolph-beacon/RUN_REPORT.md"
-      ],
-      "status": "DONE",
-      "confidence": 0.95
-    },
-    "BENCH-002": {
-      "spec": "docs/benchmark/rudolph-beacon/issues/BENCH-002.md",
-      "tests": ["packages/benchmark-rudolph/src/__tests__/beacon-fixtures.test.ts"],
-      "files": ["packages/benchmark-rudolph/src/beacon-fixtures.ts"],
-      "evidence": [
-        "docs/evidence/rudolph-beacon/RUN_REPORT.md",
-        "docs/evidence/rudolph-beacon/run-summary.fixture.json"
-      ],
-      "status": "DONE",
-      "confidence": 0.90
-    },
-    "BENCH-003": {
-      "spec": "docs/benchmark/rudolph-beacon/issues/BENCH-003.md",
-      "tests": ["packages/benchmark-rudolph/src/__tests__/evidence-contract.test.ts"],
-      "files": ["packages/benchmark-rudolph/src/evidence-contract.ts"],
-      "evidence": [
-        "docs/benchmark/rudolph-beacon/POSITRON_EVALUATION_CONTRACT.md",
-        "docs/evidence/rudolph-beacon/RUN_REPORT.md"
-      ],
-      "status": "DONE",
-      "confidence": 0.90
-    },
-    "BENCH-004": {
-      "spec": "docs/benchmark/rudolph-beacon/issues/BENCH-004.md",
-      "tests": ["packages/benchmark-rudolph/src/__tests__/traceability.test.ts"],
-      "files": ["packages/benchmark-rudolph/src/traceability.ts"],
-      "evidence": [
-        "docs/benchmark/rudolph-beacon/TRACEABILITY_CONTRACT.md",
-        "docs/benchmark/rudolph-beacon/traceability-map.json",
-        "docs/evidence/rudolph-beacon/RUN_REPORT.md"
-      ],
-      "status": "DONE",
-      "confidence": 0.85
-    },
-    "BENCH-005": {
-      "spec": "docs/benchmark/rudolph-beacon/issues/BENCH-005.md",
-      "tests": ["packages/benchmark-rudolph/src/__tests__/benchmark-runner.test.ts"],
-      "files": [
-        "packages/benchmark-rudolph/src/benchmark-runner.ts",
-        "packages/opencode-adapter/src/dry-run-agent.ts"
-      ],
-      "evidence": [
-        "docs/evidence/rudolph-beacon/RUN_REPORT.md",
-        "docs/evidence/rudolph-beacon/run-summary.dry-run.json"
-      ],
-      "status": "DONE",
-      "confidence": 0.90
-    }
-  }
+	"benchmark": "rudolph-beacon",
+	"generatedAt": "2026-06-24T14:30:00Z",
+	"executionMode": "fixture+dry-run",
+	"issues": {
+		"BENCH-001": {
+			"spec": "docs/benchmark/rudolph-beacon/issues/BENCH-001.md",
+			"tests": ["packages/benchmark-rudolph/src/__tests__/beacon-domain.test.ts"],
+			"files": ["packages/benchmark-rudolph/src/beacon-domain.ts"],
+			"evidence": [
+				"docs/evidence/rudolph-beacon/reality-refresh.md",
+				"docs/evidence/rudolph-beacon/preflight.md",
+				"docs/evidence/rudolph-beacon/RUN_REPORT.md"
+			],
+			"status": "DONE",
+			"confidence": 0.95
+		},
+		"BENCH-002": {
+			"spec": "docs/benchmark/rudolph-beacon/issues/BENCH-002.md",
+			"tests": ["packages/benchmark-rudolph/src/__tests__/beacon-fixtures.test.ts"],
+			"files": ["packages/benchmark-rudolph/src/beacon-fixtures.ts"],
+			"evidence": [
+				"docs/evidence/rudolph-beacon/RUN_REPORT.md",
+				"docs/evidence/rudolph-beacon/run-summary.fixture.json"
+			],
+			"status": "DONE",
+			"confidence": 0.9
+		},
+		"BENCH-003": {
+			"spec": "docs/benchmark/rudolph-beacon/issues/BENCH-003.md",
+			"tests": ["packages/benchmark-rudolph/src/__tests__/evidence-contract.test.ts"],
+			"files": ["packages/benchmark-rudolph/src/evidence-contract.ts"],
+			"evidence": [
+				"docs/benchmark/rudolph-beacon/POSITRON_EVALUATION_CONTRACT.md",
+				"docs/evidence/rudolph-beacon/RUN_REPORT.md"
+			],
+			"status": "DONE",
+			"confidence": 0.9
+		},
+		"BENCH-004": {
+			"spec": "docs/benchmark/rudolph-beacon/issues/BENCH-004.md",
+			"tests": ["packages/benchmark-rudolph/src/__tests__/traceability.test.ts"],
+			"files": ["packages/benchmark-rudolph/src/traceability.ts"],
+			"evidence": [
+				"docs/benchmark/rudolph-beacon/TRACEABILITY_CONTRACT.md",
+				"docs/benchmark/rudolph-beacon/traceability-map.json",
+				"docs/evidence/rudolph-beacon/RUN_REPORT.md"
+			],
+			"status": "DONE",
+			"confidence": 0.85
+		},
+		"BENCH-005": {
+			"spec": "docs/benchmark/rudolph-beacon/issues/BENCH-005.md",
+			"tests": ["packages/benchmark-rudolph/src/__tests__/benchmark-runner.test.ts"],
+			"files": [
+				"packages/benchmark-rudolph/src/benchmark-runner.ts",
+				"packages/opencode-adapter/src/dry-run-agent.ts"
+			],
+			"evidence": [
+				"docs/evidence/rudolph-beacon/RUN_REPORT.md",
+				"docs/evidence/rudolph-beacon/run-summary.dry-run.json"
+			],
+			"status": "DONE",
+			"confidence": 0.9
+		}
+	}
 }

@@ -218,7 +218,11 @@ describe('getApplyableGreenSafeActions', () => {
 	test('returns only GREEN_SAFE + APPLY_GREEN_SAFE', () => {
 		const rows: DecisionManifestRow[] = [
 			{ action_id: 'ACT-001', risk_class: 'GREEN_SAFE', agent_recommendation: 'APPLY_GREEN_SAFE' },
-			{ action_id: 'ACT-002', risk_class: 'YELLOW_REVIEW', agent_recommendation: 'APPLY_GREEN_SAFE' },
+			{
+				action_id: 'ACT-002',
+				risk_class: 'YELLOW_REVIEW',
+				agent_recommendation: 'APPLY_GREEN_SAFE',
+			},
 			{ action_id: 'ACT-003', risk_class: 'GREEN_SAFE', agent_recommendation: 'DO_NOT_APPLY' },
 		];
 		const applyable = getApplyableGreenSafeActions(rows);

@@ -1,154 +1,152 @@
 {
-  "runId": "rudolph-beacon-phase-12-20260625",
-  "benchmarkName": "rudolph-beacon",
-  "timestampUtc": "2026-06-25T00:00:00Z",
-  "executionMode": "dry-run",
-  "repo": {
-    "owner": "xxammaxx",
-    "name": "Positron",
-    "branch": "feat/issue-279-phase-1g-safe-apply-plan-20260624-135722",
-    "commitSha": "6e05c72092b53f3c0acea06047b209503ba11288",
-    "status": "CURRENT"
-  },
-  "issues": [
-    {
-      "id": "issue-279",
-      "title": "Rudolph Beacon — Positron Benchmark",
-      "status": "DONE",
-      "confidence": 0.92,
-      "evidencePaths": [
-        "docs/evidence/rudolph-beacon/phase-12-reality-refresh.md",
-        "docs/evidence/rudolph-beacon/phase-12-coderabbit-audit.md",
-        "docs/evidence/rudolph-beacon/phase-12-fix-report.md",
-        "docs/evidence/rudolph-beacon/phase-12-gates.md",
-        "docs/evidence/rudolph-beacon/phase-12-push-report.md",
-        "docs/evidence/rudolph-beacon/phase-12-pr-report.md",
-        "docs/evidence/rudolph-beacon/phase-12-owner-decision-package.md",
-        "docs/evidence/rudolph-beacon/phase-12-report.md",
-        "docs/evidence/rudolph-beacon/phase-12-reviewer-report.md",
-        "docs/evidence/rudolph-beacon/phase-12-summary.json"
-      ]
-    }
-  ],
-  "commands": [
-    {
-      "name": "git diff --check",
-      "command": "git diff --check",
-      "exitCode": 0,
-      "status": "PASS",
-      "durationMs": 100
-    },
-    {
-      "name": "npm run build",
-      "command": "npm run build",
-      "exitCode": 0,
-      "status": "PASS",
-      "durationMs": 12000
-    },
-    {
-      "name": "npm run typecheck",
-      "command": "npm run typecheck",
-      "exitCode": 0,
-      "status": "PASS",
-      "durationMs": 3000
-    },
-    {
-      "name": "npm run test:benchmark:rudolph",
-      "command": "npm run test:benchmark:rudolph",
-      "exitCode": 0,
-      "status": "PASS",
-      "durationMs": 2500
-    },
-    {
-      "name": "npm run test:benchmark:rudolph:coverage",
-      "command": "npm run test:benchmark:rudolph:coverage",
-      "exitCode": 1,
-      "status": "PRE_EXISTING_GLOBAL_THRESHOLD",
-      "durationMs": 11500
-    },
-    {
-      "name": "npm test",
-      "command": "npm test",
-      "exitCode": 0,
-      "status": "PASS",
-      "durationMs": 30000
-    }
-  ],
-  "tests": {
-    "passed": 1571,
-    "failed": 0,
-    "skipped": 0,
-    "total": 1571,
-    "benchmarkPassed": 282,
-    "benchmarkTotal": 282,
-    "benchmarkCoverageLines": 93.9,
-    "redTestsCovered": ["R1-R36"]
-  },
-  "safety": {
-    "secretsRedacted": true,
-    "blockedActions": [
-      "merge",
-      "auto-merge",
-      "ready-for-review",
-      "manual-ci",
-      "force-push",
-      "full-real-mode",
-      "reviewer-request",
-      "label-assignment",
-      "stash-operations",
-      ".env-access"
-    ],
-    "warnings": [
-      "YELLOW_REVIEW issue pending: Biome formatting in packages/shared/",
-      "Remote CI 5/7 failed (advisory-only)",
-      "CodeRabbit may not auto-resolve comments on push"
-    ]
-  },
-  "conclusion": {
-    "status": "YELLOW",
-    "confidence": 0.92,
-    "whatWorks": [
-      "All 3 CodeRabbit actionable issues read and classified",
-      "2 GREEN_SAFE fixes applied (MD040 + approval-pack loading)",
-      "Phase-11 evidence committed and pushed",
-      "Phase-12 evidence created",
-      "All local gates pass (build, typecheck, 1571/1571 tests, 282/282 benchmarks)",
-      "Push succeeded (fast-forward, no force)",
-      "PR #295 updated with new commit, still Draft",
-      "No RED_HOLD violations",
-      "No secrets exposed"
-    ],
-    "whatDoesNotWork": [
-      "Biome formatting in packages/shared/ test not fixed (YELLOW_REVIEW, Owner decision needed)",
-      "CodeRabbit may not auto-resolve resolved comments"
-    ],
-    "whatIsUnproven": [
-      "Whether CodeRabbit will re-run and auto-resolve fixed issues"
-    ]
-  },
-  "capabilityDelta": {
-    "newCapabilities": [
-      "CodeRabbit actionable issues are now evidence-classified (GREEN_SAFE/YELLOW_REVIEW/RED_HOLD)",
-      "2 of 3 CodeRabbit issues resolved in codebase",
-      "approval-pack module loads correctly when --safe-apply-plan is used alone",
-      "handoff-report.md is markdownlint MD040 compliant"
-    ],
-    "removedBlockers": [
-      "approval-pack fallback path is now reachable (was dead code)",
-      "handoff-report.md fenced blocks have language identifiers"
-    ],
-    "unchangedLimitations": [
-      "PR #295 still Draft",
-      "Remote CI still advisory-only",
-      "Biome formatting in packages/shared/ still pending Owner decision",
-      "No merge without Owner approval",
-      "No full real-mode without Owner approval"
-    ],
-    "remainingRisks": [
-      "CodeRabbit may not auto-resolve comments on new push",
-      "YELLOW_REVIEW issue in packages/shared/ needs Owner attention",
-      "Remote CI 5/7 failures (advisory-only per project policy)"
-    ],
-    "nextBestStep": "Owner reviews YELLOW_REVIEW issue and decides whether to approve the trivial Biome formatting fix, then potentially marks PR #295 ready for review."
-  }
+	"runId": "rudolph-beacon-phase-12-20260625",
+	"benchmarkName": "rudolph-beacon",
+	"timestampUtc": "2026-06-25T00:00:00Z",
+	"executionMode": "dry-run",
+	"repo": {
+		"owner": "xxammaxx",
+		"name": "Positron",
+		"branch": "feat/issue-279-phase-1g-safe-apply-plan-20260624-135722",
+		"commitSha": "6e05c72092b53f3c0acea06047b209503ba11288",
+		"status": "CURRENT"
+	},
+	"issues": [
+		{
+			"id": "issue-279",
+			"title": "Rudolph Beacon — Positron Benchmark",
+			"status": "DONE",
+			"confidence": 0.92,
+			"evidencePaths": [
+				"docs/evidence/rudolph-beacon/phase-12-reality-refresh.md",
+				"docs/evidence/rudolph-beacon/phase-12-coderabbit-audit.md",
+				"docs/evidence/rudolph-beacon/phase-12-fix-report.md",
+				"docs/evidence/rudolph-beacon/phase-12-gates.md",
+				"docs/evidence/rudolph-beacon/phase-12-push-report.md",
+				"docs/evidence/rudolph-beacon/phase-12-pr-report.md",
+				"docs/evidence/rudolph-beacon/phase-12-owner-decision-package.md",
+				"docs/evidence/rudolph-beacon/phase-12-report.md",
+				"docs/evidence/rudolph-beacon/phase-12-reviewer-report.md",
+				"docs/evidence/rudolph-beacon/phase-12-summary.json"
+			]
+		}
+	],
+	"commands": [
+		{
+			"name": "git diff --check",
+			"command": "git diff --check",
+			"exitCode": 0,
+			"status": "PASS",
+			"durationMs": 100
+		},
+		{
+			"name": "npm run build",
+			"command": "npm run build",
+			"exitCode": 0,
+			"status": "PASS",
+			"durationMs": 12000
+		},
+		{
+			"name": "npm run typecheck",
+			"command": "npm run typecheck",
+			"exitCode": 0,
+			"status": "PASS",
+			"durationMs": 3000
+		},
+		{
+			"name": "npm run test:benchmark:rudolph",
+			"command": "npm run test:benchmark:rudolph",
+			"exitCode": 0,
+			"status": "PASS",
+			"durationMs": 2500
+		},
+		{
+			"name": "npm run test:benchmark:rudolph:coverage",
+			"command": "npm run test:benchmark:rudolph:coverage",
+			"exitCode": 1,
+			"status": "PRE_EXISTING_GLOBAL_THRESHOLD",
+			"durationMs": 11500
+		},
+		{
+			"name": "npm test",
+			"command": "npm test",
+			"exitCode": 0,
+			"status": "PASS",
+			"durationMs": 30000
+		}
+	],
+	"tests": {
+		"passed": 1571,
+		"failed": 0,
+		"skipped": 0,
+		"total": 1571,
+		"benchmarkPassed": 282,
+		"benchmarkTotal": 282,
+		"benchmarkCoverageLines": 93.9,
+		"redTestsCovered": ["R1-R36"]
+	},
+	"safety": {
+		"secretsRedacted": true,
+		"blockedActions": [
+			"merge",
+			"auto-merge",
+			"ready-for-review",
+			"manual-ci",
+			"force-push",
+			"full-real-mode",
+			"reviewer-request",
+			"label-assignment",
+			"stash-operations",
+			".env-access"
+		],
+		"warnings": [
+			"YELLOW_REVIEW issue pending: Biome formatting in packages/shared/",
+			"Remote CI 5/7 failed (advisory-only)",
+			"CodeRabbit may not auto-resolve comments on push"
+		]
+	},
+	"conclusion": {
+		"status": "YELLOW",
+		"confidence": 0.92,
+		"whatWorks": [
+			"All 3 CodeRabbit actionable issues read and classified",
+			"2 GREEN_SAFE fixes applied (MD040 + approval-pack loading)",
+			"Phase-11 evidence committed and pushed",
+			"Phase-12 evidence created",
+			"All local gates pass (build, typecheck, 1571/1571 tests, 282/282 benchmarks)",
+			"Push succeeded (fast-forward, no force)",
+			"PR #295 updated with new commit, still Draft",
+			"No RED_HOLD violations",
+			"No secrets exposed"
+		],
+		"whatDoesNotWork": [
+			"Biome formatting in packages/shared/ test not fixed (YELLOW_REVIEW, Owner decision needed)",
+			"CodeRabbit may not auto-resolve resolved comments"
+		],
+		"whatIsUnproven": ["Whether CodeRabbit will re-run and auto-resolve fixed issues"]
+	},
+	"capabilityDelta": {
+		"newCapabilities": [
+			"CodeRabbit actionable issues are now evidence-classified (GREEN_SAFE/YELLOW_REVIEW/RED_HOLD)",
+			"2 of 3 CodeRabbit issues resolved in codebase",
+			"approval-pack module loads correctly when --safe-apply-plan is used alone",
+			"handoff-report.md is markdownlint MD040 compliant"
+		],
+		"removedBlockers": [
+			"approval-pack fallback path is now reachable (was dead code)",
+			"handoff-report.md fenced blocks have language identifiers"
+		],
+		"unchangedLimitations": [
+			"PR #295 still Draft",
+			"Remote CI still advisory-only",
+			"Biome formatting in packages/shared/ still pending Owner decision",
+			"No merge without Owner approval",
+			"No full real-mode without Owner approval"
+		],
+		"remainingRisks": [
+			"CodeRabbit may not auto-resolve comments on new push",
+			"YELLOW_REVIEW issue in packages/shared/ needs Owner attention",
+			"Remote CI 5/7 failures (advisory-only per project policy)"
+		],
+		"nextBestStep": "Owner reviews YELLOW_REVIEW issue and decides whether to approve the trivial Biome formatting fix, then potentially marks PR #295 ready for review."
+	}
 }

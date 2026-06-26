@@ -7,6 +7,10 @@ on:
     branches: [main, master, develop]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  actions: write
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -112,6 +116,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build packages (required for Stryker)
+        run: npm run build
+
       - name: Ensure test results directory
         run: mkdir -p test-results
 
@@ -146,6 +153,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build packages (required for Stryker)
+        run: npm run build
+
       - name: Ensure test results directory
         run: mkdir -p test-results
 
@@ -170,6 +180,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     continue-on-error: true
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
 

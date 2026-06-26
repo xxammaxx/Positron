@@ -13,9 +13,7 @@ import type { OpenCodePhase } from '@positron/shared';
 
 const FIXED_TIMESTAMP = '2026-12-24T10:00:00Z';
 
-function createBaseConfig(
-	overrides: Partial<RudolphBenchmarkConfig> = {},
-): RudolphBenchmarkConfig {
+function createBaseConfig(overrides: Partial<RudolphBenchmarkConfig> = {}): RudolphBenchmarkConfig {
 	return {
 		executionMode: 'fixture',
 		runId: 'test-run-001',
@@ -58,8 +56,8 @@ describe('Red Test 12 — Dry-run blocks risky operations', () => {
 		const runner = new BenchmarkRunner(config);
 		const summary = await runner.execute();
 
-		const pushBlocked = summary.safety.blockedActions.some(
-			(ba) => ba.operation.toLowerCase().includes('push'),
+		const pushBlocked = summary.safety.blockedActions.some((ba) =>
+			ba.operation.toLowerCase().includes('push'),
 		);
 		expect(pushBlocked).toBe(true);
 	});
@@ -73,8 +71,8 @@ describe('Red Test 12 — Dry-run blocks risky operations', () => {
 		const runner = new BenchmarkRunner(config);
 		const summary = await runner.execute();
 
-		const prBlocked = summary.safety.blockedActions.some(
-			(ba) => ba.operation.toLowerCase().includes('pr create'),
+		const prBlocked = summary.safety.blockedActions.some((ba) =>
+			ba.operation.toLowerCase().includes('pr create'),
 		);
 		expect(prBlocked).toBe(true);
 	});
@@ -88,8 +86,8 @@ describe('Red Test 12 — Dry-run blocks risky operations', () => {
 		const runner = new BenchmarkRunner(config);
 		const summary = await runner.execute();
 
-		const mergeBlocked = summary.safety.blockedActions.some(
-			(ba) => ba.operation.toLowerCase().includes('merge'),
+		const mergeBlocked = summary.safety.blockedActions.some((ba) =>
+			ba.operation.toLowerCase().includes('merge'),
 		);
 		expect(mergeBlocked).toBe(true);
 	});
@@ -103,8 +101,8 @@ describe('Red Test 12 — Dry-run blocks risky operations', () => {
 		const runner = new BenchmarkRunner(config);
 		const summary = await runner.execute();
 
-		const worktreeBlocked = summary.safety.blockedActions.some(
-			(ba) => ba.operation.toLowerCase().includes('worktree'),
+		const worktreeBlocked = summary.safety.blockedActions.some((ba) =>
+			ba.operation.toLowerCase().includes('worktree'),
 		);
 		expect(worktreeBlocked).toBe(true);
 	});

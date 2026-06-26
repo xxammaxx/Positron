@@ -233,13 +233,8 @@ export async function runControlledRealModeProbe(
 			title: 'Controlled Real-Mode Probe',
 			status: 'DONE',
 			evidencePaths: [`${evidenceDir}phase-4-real-probe-evidence.json`],
-			testNames: [
-				'controlled-real-probe.test.ts',
-				'red-negative-tests.test.ts',
-			],
-			changedFiles: [
-				'packages/benchmark-rudolph/src/controlled-real-probe.ts',
-			],
+			testNames: ['controlled-real-probe.test.ts', 'red-negative-tests.test.ts'],
+			changedFiles: ['packages/benchmark-rudolph/src/controlled-real-probe.ts'],
 			confidence: 0.85,
 		},
 	];
@@ -280,9 +275,7 @@ export async function runControlledRealModeProbe(
 		},
 		conclusion: {
 			status: 'YELLOW', // Conservative: real mode is locally validated but not production-grade
-			whatWorks: [
-				'PHASE-4-REAL-PROBE: Controlled real-mode probe executed with all gates passed',
-			],
+			whatWorks: ['PHASE-4-REAL-PROBE: Controlled real-mode probe executed with all gates passed'],
 			whatDoesNotWork: [],
 			whatIsUnproven: [
 				'Real mode has not been tested with actual external tool execution',
@@ -291,18 +284,13 @@ export async function runControlledRealModeProbe(
 			confidence: 0.85,
 		},
 		capabilityDelta: {
-			newCapabilities: [
-				'Controlled real-mode probe with full gate validation',
-			],
+			newCapabilities: ['Controlled real-mode probe with full gate validation'],
 			removedBlockers: [],
-			unchangedLimitations: [
-				'Full real-mode execution requires separate human approval',
-			],
+			unchangedLimitations: ['Full real-mode execution requires separate human approval'],
 			remainingRisks: [
 				'Real mode has only been validated with local probe, not full external execution',
 			],
-			nextBestStep:
-				'Validate real-mode probe with actual environment variable gates in test suite',
+			nextBestStep: 'Validate real-mode probe with actual environment variable gates in test suite',
 		},
 	};
 
@@ -313,10 +301,7 @@ export async function runControlledRealModeProbe(
 			status: 'YELLOW',
 			summary,
 			gates: [...approval.gates, ...envChecks],
-			warnings: [
-				...summary.safety.warnings,
-				...validationErrors.map((e) => `SCHEMA: ${e}`),
-			],
+			warnings: [...summary.safety.warnings, ...validationErrors.map((e) => `SCHEMA: ${e}`)],
 		};
 	}
 
@@ -328,9 +313,7 @@ export async function runControlledRealModeProbe(
 			status: 'RED',
 			blockReason: 'Generated summary contains potential secrets — blocked',
 			gates: [...approval.gates, ...envChecks],
-			warnings: [
-				'RED: Generated summary contains potential secrets. Real mode refused.',
-			],
+			warnings: ['RED: Generated summary contains potential secrets. Real mode refused.'],
 		};
 	}
 
@@ -397,9 +380,7 @@ const BUILD_ARTIFACT_PATTERNS = [
  * Prüft eine Liste von Dateipfaden auf Commit-Readiness.
  * Dist-/Build-/Secret-Artefakte werden als NOT safe eingestuft.
  */
-export function checkCommitReadiness(
-	filePaths: string[],
-): CommitReadinessCheck[] {
+export function checkCommitReadiness(filePaths: string[]): CommitReadinessCheck[] {
 	return filePaths.map((path) => {
 		// .env.example is explicitly allowed (template, no secrets)
 		if (/\.env\.example$/.test(path)) {

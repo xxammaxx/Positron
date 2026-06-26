@@ -260,7 +260,9 @@ export function validateRunSummary(summary: unknown): string[] {
 		errors.push('timestampUtc: must be a non-empty string');
 	}
 	if (!VALID_EXECUTION_MODES.includes(s.executionMode as 'fixture')) {
-		errors.push(`executionMode: must be one of ${VALID_EXECUTION_MODES.join(', ')}, got "${s.executionMode}"`);
+		errors.push(
+			`executionMode: must be one of ${VALID_EXECUTION_MODES.join(', ')}, got "${s.executionMode}"`,
+		);
 	}
 	if (s.benchmarkName !== 'rudolph-beacon') {
 		errors.push(`benchmarkName: must be "rudolph-beacon", got "${s.benchmarkName}"`);
@@ -278,7 +280,9 @@ export function validateRunSummary(summary: unknown): string[] {
 			errors.push('repo.commitSha: must be a non-empty string');
 		}
 		if (!VALID_REPO_STATUSES.includes(repo.status as 'clean')) {
-			errors.push(`repo.status: must be one of ${VALID_REPO_STATUSES.join(', ')}, got "${repo.status}"`);
+			errors.push(
+				`repo.status: must be one of ${VALID_REPO_STATUSES.join(', ')}, got "${repo.status}"`,
+			);
 		}
 	}
 
@@ -296,13 +300,17 @@ export function validateRunSummary(summary: unknown): string[] {
 				errors.push(`issues[${i}].title: must be a non-empty string`);
 			}
 			if (!VALID_ISSUE_STATUSES.includes(issue.status as 'DONE')) {
-				errors.push(`issues[${i}].status: must be one of ${VALID_ISSUE_STATUSES.join(', ')}, got "${issue.status}"`);
+				errors.push(
+					`issues[${i}].status: must be one of ${VALID_ISSUE_STATUSES.join(', ')}, got "${issue.status}"`,
+				);
 			}
 			if (!Array.isArray(issue.evidencePaths)) {
 				errors.push(`issues[${i}].evidencePaths: must be an array`);
 			}
 			if (typeof issue.confidence !== 'number' || issue.confidence < 0 || issue.confidence > 1) {
-				errors.push(`issues[${i}].confidence: must be a number between 0 and 1, got ${issue.confidence}`);
+				errors.push(
+					`issues[${i}].confidence: must be a number between 0 and 1, got ${issue.confidence}`,
+				);
 			}
 
 			// DONE without evidence is forbidden
@@ -372,10 +380,18 @@ export function validateRunSummary(summary: unknown): string[] {
 		errors.push('conclusion: must be an object');
 	} else {
 		if (!VALID_CONCLUSION_STATUSES.includes(conclusion.status as 'GREEN')) {
-			errors.push(`conclusion.status: must be one of ${VALID_CONCLUSION_STATUSES.join(', ')}, got "${conclusion.status}"`);
+			errors.push(
+				`conclusion.status: must be one of ${VALID_CONCLUSION_STATUSES.join(', ')}, got "${conclusion.status}"`,
+			);
 		}
-		if (typeof conclusion.confidence !== 'number' || conclusion.confidence < 0 || conclusion.confidence > 1) {
-			errors.push(`conclusion.confidence: must be a number between 0 and 1, got ${conclusion.confidence}`);
+		if (
+			typeof conclusion.confidence !== 'number' ||
+			conclusion.confidence < 0 ||
+			conclusion.confidence > 1
+		) {
+			errors.push(
+				`conclusion.confidence: must be a number between 0 and 1, got ${conclusion.confidence}`,
+			);
 		}
 		if (!Array.isArray(conclusion.whatWorks)) {
 			errors.push('conclusion.whatWorks: must be an array');
@@ -394,7 +410,9 @@ export function validateRunSummary(summary: unknown): string[] {
 				(i) => i.status === 'DONE' && i.confidence >= 0.7 && i.evidencePaths.length > 0,
 			);
 			if (!allDone && issuesArr.length > 0) {
-				errors.push('conclusion.status: GREEN requires all issues DONE with confidence >= 0.7 and evidence paths');
+				errors.push(
+					'conclusion.status: GREEN requires all issues DONE with confidence >= 0.7 and evidence paths',
+				);
 			}
 		}
 	}

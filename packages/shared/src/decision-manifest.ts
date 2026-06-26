@@ -69,11 +69,7 @@ const KNOWN_AGENT_RECOMMENDATIONS: ReadonlySet<string> = new Set([
 ]);
 
 /** Columns that MUST be present in any decision manifest CSV header. */
-const REQUIRED_COLUMNS: ReadonlyArray<string> = [
-	'action_id',
-	'risk_class',
-	'agent_recommendation',
-];
+const REQUIRED_COLUMNS: ReadonlyArray<string> = ['action_id', 'risk_class', 'agent_recommendation'];
 
 /** Risk classes that can NEVER be applyable, regardless of recommendation. */
 const NON_APPLYABLE_RISK_CLASSES: ReadonlySet<string> = new Set([
@@ -147,10 +143,7 @@ function buildHeaderIndex(header: string[]): Map<string, number> {
  * Returns true if the given row is applyable (GREEN_SAFE + APPLY_GREEN_SAFE).
  */
 function isApplyableAction(row: DecisionManifestRow): boolean {
-	return (
-		row.risk_class === 'GREEN_SAFE' &&
-		row.agent_recommendation === 'APPLY_GREEN_SAFE'
-	);
+	return row.risk_class === 'GREEN_SAFE' && row.agent_recommendation === 'APPLY_GREEN_SAFE';
 }
 
 // ---------------------------------------------------------------------------
@@ -172,16 +165,12 @@ export function parseDecisionManifestCsv(input: string): DecisionManifestRow[] {
 
 	const rawLines = trimmed.split(/\r?\n/);
 	if (rawLines.length < 2) {
-		throw new SyntaxError(
-			'Decision manifest CSV is empty (header only, no data rows)',
-		);
+		throw new SyntaxError('Decision manifest CSV is empty (header only, no data rows)');
 	}
 
 	const lines = rawLines.map((l) => l.trim()).filter((l) => l.length > 0);
 	if (lines.length < 2) {
-		throw new SyntaxError(
-			'Decision manifest CSV is empty (no data rows after filtering)',
-		);
+		throw new SyntaxError('Decision manifest CSV is empty (no data rows after filtering)');
 	}
 
 	const header = parseCsvLine(lines[HEADER_ROW]!);
@@ -221,9 +210,7 @@ export function parseDecisionManifestCsv(input: string): DecisionManifestRow[] {
 
 		// Validate risk class
 		if (!KNOWN_RISK_CLASSES.has(riskClass)) {
-			throw new SyntaxError(
-				`Row ${i}: unknown risk_class "${riskClass}" for action "${actionId}"`,
-			);
+			throw new SyntaxError(`Row ${i}: unknown risk_class "${riskClass}" for action "${actionId}"`);
 		}
 
 		// Validate recommendation
@@ -287,9 +274,7 @@ export function validateDecisionManifest(
 
 	// Warning for GREEN_SAFE with DO_NOT_APPLY (common cleanup scenario)
 	const greenDoNotApply = rows.filter(
-		(row) =>
-			row.risk_class === 'GREEN_SAFE' &&
-			row.agent_recommendation === 'DO_NOT_APPLY',
+		(row) => row.risk_class === 'GREEN_SAFE' && row.agent_recommendation === 'DO_NOT_APPLY',
 	);
 	if (greenDoNotApply.length > 0 && applyableActions.length === 0) {
 		warnings.push(
@@ -315,8 +300,6 @@ export function validateDecisionManifest(
  * @param rows - Parsed decision manifest rows.
  * @returns Array of applyable actions.
  */
-export function getApplyableGreenSafeActions(
-	rows: DecisionManifestRow[],
-): DecisionManifestRow[] {
+export function getApplyableGreenSafeActions(rows: DecisionManifestRow[]): DecisionManifestRow[] {
 	return rows.filter(isApplyableAction);
 }

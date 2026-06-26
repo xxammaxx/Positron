@@ -2,11 +2,7 @@
 // Maps GitHub issue/PR snapshots into Decision Manifest rows.
 // Pure functions only. No GitHub API calls, no mutations.
 
-import type {
-	DecisionManifestRow,
-	RiskClass,
-	AgentRecommendation,
-} from './decision-manifest.js';
+import type { DecisionManifestRow, RiskClass, AgentRecommendation } from './decision-manifest.js';
 import { validateDecisionManifest } from './decision-manifest.js';
 
 // ---------------------------------------------------------------------------
@@ -89,30 +85,54 @@ function classifyPR(pr: GitHubPullRequestSnapshot): DecisionManifestRow {
 	if (pr.state === 'OPEN') {
 		// CONFLICTING: cannot apply
 		if (pr.mergeable === 'CONFLICTING') {
-			return { action_id: actionId, risk_class: 'YELLOW_REVIEW', agent_recommendation: 'REVIEW_REQUIRED' };
+			return {
+				action_id: actionId,
+				risk_class: 'YELLOW_REVIEW',
+				agent_recommendation: 'REVIEW_REQUIRED',
+			};
 		}
 
 		// Draft: not ready
 		if (pr.isDraft) {
-			return { action_id: actionId, risk_class: 'YELLOW_REVIEW', agent_recommendation: 'REVIEW_REQUIRED' };
+			return {
+				action_id: actionId,
+				risk_class: 'YELLOW_REVIEW',
+				agent_recommendation: 'REVIEW_REQUIRED',
+			};
 		}
 
 		// Review findings known
 		if (pr.findingsAccessible === true) {
 			if (pr.actionableFindingCount !== undefined && pr.actionableFindingCount > 0) {
-				return { action_id: actionId, risk_class: 'YELLOW_REVIEW', agent_recommendation: 'REVIEW_REQUIRED' };
+				return {
+					action_id: actionId,
+					risk_class: 'YELLOW_REVIEW',
+					agent_recommendation: 'REVIEW_REQUIRED',
+				};
 			}
 			// Findings accessible but zero — still requires review to confirm
-			return { action_id: actionId, risk_class: 'YELLOW_REVIEW', agent_recommendation: 'REVIEW_REQUIRED' };
+			return {
+				action_id: actionId,
+				risk_class: 'YELLOW_REVIEW',
+				agent_recommendation: 'REVIEW_REQUIRED',
+			};
 		}
 
 		// Findings inaccessible or undefined — tool gap
 		if (pr.findingsAccessible === false || pr.findingsAccessible === undefined) {
 			// But if we know there are findings (reviewFindingCount > 0), mark as TOOL_GAP
 			if (pr.reviewFindingCount !== undefined && pr.reviewFindingCount > 0) {
-				return { action_id: actionId, risk_class: 'TOOL_GAP', agent_recommendation: 'REVIEW_REQUIRED' };
+				return {
+					action_id: actionId,
+					risk_class: 'TOOL_GAP',
+					agent_recommendation: 'REVIEW_REQUIRED',
+				};
 			}
-			return { action_id: actionId, risk_class: 'TOOL_GAP', agent_recommendation: 'REVIEW_REQUIRED' };
+			return {
+				action_id: actionId,
+				risk_class: 'TOOL_GAP',
+				agent_recommendation: 'REVIEW_REQUIRED',
+			};
 		}
 	}
 
@@ -121,11 +141,7 @@ function classifyPR(pr: GitHubPullRequestSnapshot): DecisionManifestRow {
 }
 
 /** Labels/title markers that indicate an issue is an architecture replacement or deferred epic. */
-const ARCHITECTURE_LABELS = new Set([
-	'architecture',
-	'epic',
-	'infrastructure',
-]);
+const ARCHITECTURE_LABELS = new Set(['architecture', 'epic', 'infrastructure']);
 
 const ARCHITECTURE_TITLE_PATTERNS = [
 	/rebuild/i,
@@ -142,10 +158,7 @@ const DATA_LOSS_BODY_PATTERNS = [
 	/destructive/i,
 ];
 
-const RED_HOLD_LABELS = new Set([
-	'RED_HOLD',
-	'data-loss',
-]);
+const RED_HOLD_LABELS = new Set(['RED_HOLD', 'data-loss']);
 
 /**
  * Check if an issue title indicates an architecture/deferred epic.

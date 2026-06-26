@@ -245,7 +245,12 @@ describe('reconcileGitHubContextToDecisionManifestRows', () => {
 				makePR({ number: 229, state: 'CLOSED' }),
 			],
 			issues: [
-				makeIssue({ number: 279, title: 'Replacement: rebuild...', state: 'OPEN', labels: ['architecture', 'epic'] }),
+				makeIssue({
+					number: 279,
+					title: 'Replacement: rebuild...',
+					state: 'OPEN',
+					labels: ['architecture', 'epic'],
+				}),
 				makeIssue({ number: 268, title: 'CI Recovery...', state: 'OPEN', labels: ['bug'] }),
 			],
 		};
@@ -292,10 +297,7 @@ describe('reconcileGitHubContextToDecisionManifestRows', () => {
 				makePR({ number: 1, state: 'CLOSED' }),
 				makePR({ number: 2, state: 'OPEN' }),
 			],
-			issues: [
-				makeIssue({ number: 5, state: 'OPEN' }),
-				makeIssue({ number: 4, state: 'CLOSED' }),
-			],
+			issues: [makeIssue({ number: 5, state: 'OPEN' }), makeIssue({ number: 4, state: 'CLOSED' })],
 		});
 		const rows1 = reconcileGitHubContextToDecisionManifestRows(makeInput());
 		const rows2 = reconcileGitHubContextToDecisionManifestRows(makeInput());
@@ -312,12 +314,16 @@ describe('reconcileGitHubContextToDecisionManifestRows', () => {
 	test('no row is applyable without APPLY_GREEN_SAFE recommendation', () => {
 		const input: GitHubContextSnapshot = {
 			pullRequests: [
-				makePR({ number: 1, state: 'OPEN', mergeable: 'MERGEABLE', findingsAccessible: true, actionableFindingCount: 0 }),
+				makePR({
+					number: 1,
+					state: 'OPEN',
+					mergeable: 'MERGEABLE',
+					findingsAccessible: true,
+					actionableFindingCount: 0,
+				}),
 				makePR({ number: 2, state: 'CLOSED' }),
 			],
-			issues: [
-				makeIssue({ number: 3, state: 'CLOSED', labels: [] }),
-			],
+			issues: [makeIssue({ number: 3, state: 'CLOSED', labels: [] })],
 		};
 		const rows = reconcileGitHubContextToDecisionManifestRows(input);
 		for (const row of rows) {
@@ -341,8 +347,8 @@ describe('reconcileGitHubContextToDecisionManifestRows', () => {
 		for (const key of reconcilerKeys) {
 			// These functions produce DecisionManifestRow[] or result objects
 			// They must NOT produce mutations (gh calls, etc.)
-			expect(typeof (reconcileGitHubContextToDecisionManifestRows)).toBe('function');
-			expect(typeof (reconcileGitHubContext)).toBe('function');
+			expect(typeof reconcileGitHubContextToDecisionManifestRows).toBe('function');
+			expect(typeof reconcileGitHubContext).toBe('function');
 		}
 	});
 });
@@ -355,10 +361,22 @@ describe('reconcileGitHubContext', () => {
 	test('returns structured result with rows and validation', () => {
 		const input: GitHubContextSnapshot = {
 			pullRequests: [
-				makePR({ number: 218, state: 'OPEN', mergeable: 'MERGEABLE', reviewFindingCount: 9, actionableFindingCount: 9, findingsAccessible: true }),
+				makePR({
+					number: 218,
+					state: 'OPEN',
+					mergeable: 'MERGEABLE',
+					reviewFindingCount: 9,
+					actionableFindingCount: 9,
+					findingsAccessible: true,
+				}),
 			],
 			issues: [
-				makeIssue({ number: 279, title: 'Replacement: rebuild...', state: 'OPEN', labels: ['architecture', 'epic'] }),
+				makeIssue({
+					number: 279,
+					title: 'Replacement: rebuild...',
+					state: 'OPEN',
+					labels: ['architecture', 'epic'],
+				}),
 			],
 		};
 		const result = reconcileGitHubContext(input);
@@ -411,9 +429,7 @@ describe('reconciler edge cases', () => {
 
 	test('draft PR is classified as non-applyable', () => {
 		const input: GitHubContextSnapshot = {
-			pullRequests: [
-				makePR({ number: 1, state: 'OPEN', isDraft: true, mergeable: 'MERGEABLE' }),
-			],
+			pullRequests: [makePR({ number: 1, state: 'OPEN', isDraft: true, mergeable: 'MERGEABLE' })],
 			issues: [],
 		};
 		const rows = reconcileGitHubContextToDecisionManifestRows(input);

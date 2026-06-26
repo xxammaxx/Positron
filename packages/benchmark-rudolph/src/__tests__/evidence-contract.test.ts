@@ -55,7 +55,8 @@ describe('Red Test 9 — Evidence contains no secrets', () => {
 	});
 
 	it('redacts multiple patterns in one string', () => {
-		const input = 'ghp_token123456789012345678901234567890 and sk-key123456789012345678901234567890';
+		const input =
+			'ghp_token123456789012345678901234567890 and sk-key123456789012345678901234567890';
 		const result = redactSecrets(input);
 		expect(result).not.toContain('ghp_');
 		expect(result).not.toContain('sk-');

@@ -39,7 +39,9 @@ function isAllowedGhCommand(cmd) {
  */
 function runGh(args, dryRun) {
 	if (!isAllowedGhCommand(args)) {
-		throw new Error(`BLOCKED: gh command not in read-only allowlist: ${args.slice(0, 3).join(' ')}`);
+		throw new Error(
+			`BLOCKED: gh command not in read-only allowlist: ${args.slice(0, 3).join(' ')}`,
+		);
 	}
 
 	if (dryRun) {
@@ -157,18 +159,60 @@ async function collectSnapshot(options) {
 
 	// 1. Collect open issues
 	console.log('[1/4] Collecting open issues...');
-	const issues = runGh(['gh', 'issue', 'list', '--repo', repo, '--state', 'open', '--limit', '100', '--json', 'number,title,state,labels,url,body'], dryRun);
+	const issues = runGh(
+		[
+			'gh',
+			'issue',
+			'list',
+			'--repo',
+			repo,
+			'--state',
+			'open',
+			'--limit',
+			'100',
+			'--json',
+			'number,title,state,labels,url,body',
+		],
+		dryRun,
+	);
 
 	// 2. Collect open PRs
 	console.log('[2/4] Collecting open PRs...');
-	const pullRequests = runGh(['gh', 'pr', 'list', '--repo', repo, '--state', 'open', '--limit', '100', '--json', 'number,title,state,mergeable,isDraft,url'], dryRun);
+	const pullRequests = runGh(
+		[
+			'gh',
+			'pr',
+			'list',
+			'--repo',
+			repo,
+			'--state',
+			'open',
+			'--limit',
+			'100',
+			'--json',
+			'number,title,state,mergeable,isDraft,url',
+		],
+		dryRun,
+	);
 
 	// 3. Optional: enrich target PR with review findings
 	let prEnrichment = {};
 	if (targetPr && !dryRun) {
 		console.log(`[2a/4] Enriching PR #${targetPr} with review findings...`);
 		try {
-			const enrichment = runGh(['gh', 'pr', 'view', String(targetPr), '--repo', repo, '--json', 'reviews,statusCheckRollup'], false);
+			const enrichment = runGh(
+				[
+					'gh',
+					'pr',
+					'view',
+					String(targetPr),
+					'--repo',
+					repo,
+					'--json',
+					'reviews,statusCheckRollup',
+				],
+				false,
+			);
 			prEnrichment = { [targetPr]: enrichment };
 		} catch (err) {
 			console.warn(`  Warning: could not enrich PR #${targetPr}: ${err.message}`);
@@ -180,7 +224,19 @@ async function collectSnapshot(options) {
 	if (targetIssue && !dryRun) {
 		console.log(`[3a/4] Fetching targeted issue #${targetIssue} details...`);
 		try {
-			const issueDetail = runGh(['gh', 'issue', 'view', String(targetIssue), '--repo', repo, '--json', 'number,title,state,labels,url,body'], false);
+			const issueDetail = runGh(
+				[
+					'gh',
+					'issue',
+					'view',
+					String(targetIssue),
+					'--repo',
+					repo,
+					'--json',
+					'number,title,state,labels,url,body',
+				],
+				false,
+			);
 			// gh issue view returns a single object; wrap in array
 			if (issueDetail && typeof issueDetail.number === 'number') {
 				targetedIssues = [issueDetail];
@@ -224,7 +280,9 @@ async function printDecisionSummary(snapshot, options) {
 		// Fallback: print raw snapshot summary
 		console.log('--- Decision Summary (raw) ---');
 		console.log(`  Issues: ${Array.isArray(snapshot.issues) ? snapshot.issues.length : 0}`);
-		console.log(`  PRs: ${Array.isArray(snapshot.pullRequests) ? snapshot.pullRequests.length : 0}`);
+		console.log(
+			`  PRs: ${Array.isArray(snapshot.pullRequests) ? snapshot.pullRequests.length : 0}`,
+		);
 		console.log('  (No reconciler available — build shared/dist first)');
 		return;
 	}
@@ -277,20 +335,28 @@ async function printDecisionSummary(snapshot, options) {
 		if (!existsSync(dir)) {
 			mkdirSync(dir, { recursive: true });
 		}
-		writeFileSync(outputPath, JSON.stringify({
-			collectedAt: snapshot.collectedAt,
-			repo: snapshot.repo,
-			dryRun: snapshot.dryRun,
-			snapshot: ctxSnapshot,
-			result: {
-				rows: result.rows,
-				valid: result.validation.valid,
-				errors: result.validation.errors,
-				warnings: result.validation.warnings,
-				counts: result.validation.counts,
-				applyableCount: result.applyableCount,
-			},
-		}, null, 2), 'utf-8');
+		writeFileSync(
+			outputPath,
+			JSON.stringify(
+				{
+					collectedAt: snapshot.collectedAt,
+					repo: snapshot.repo,
+					dryRun: snapshot.dryRun,
+					snapshot: ctxSnapshot,
+					result: {
+						rows: result.rows,
+						valid: result.validation.valid,
+						errors: result.validation.errors,
+						warnings: result.validation.warnings,
+						counts: result.validation.counts,
+						applyableCount: result.applyableCount,
+					},
+				},
+				null,
+				2,
+			),
+			'utf-8',
+		);
 		console.log(`\nOutput written to: ${outputPath}`);
 	}
 }

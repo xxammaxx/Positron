@@ -33,9 +33,7 @@ import {
 
 const FIXED_TIMESTAMP = '2026-12-24T10:00:00Z';
 
-function createBaseConfig(
-	overrides: Partial<RudolphBenchmarkConfig> = {},
-): RudolphBenchmarkConfig {
+function createBaseConfig(overrides: Partial<RudolphBenchmarkConfig> = {}): RudolphBenchmarkConfig {
 	return {
 		executionMode: 'fixture',
 		runId: 'red-neg-test',
@@ -45,9 +43,7 @@ function createBaseConfig(
 			commitSha: 'abc123def456',
 			status: 'clean',
 		},
-		benchmarkIssues: [
-			{ id: 'BENCH-001', title: 'Domain Baseline' },
-		],
+		benchmarkIssues: [{ id: 'BENCH-001', title: 'Domain Baseline' }],
 		evidenceDir: '.positron/evidence/',
 		...overrides,
 	};
@@ -117,9 +113,7 @@ describe('Red Test 15 — GREEN without evidence schema validation is forbidden'
 		expect(rawStatus).toBe('YELLOW');
 
 		// With proper evidence validation:
-		const isValid = issues.every(
-			(i) => !(i.status === 'DONE' && i.evidencePaths.length === 0),
-		);
+		const isValid = issues.every((i) => !(i.status === 'DONE' && i.evidencePaths.length === 0));
 		expect(isValid).toBe(false);
 	});
 });
@@ -292,9 +286,10 @@ describe('Red Test 18 — Missing coverage must not yield blind GREEN', () => {
 
 		// Rule: if coverage is UNKNOWN_COVERAGE, the conclusion should
 		// mention this in whatIsUnproven
-		const hasCoverageNote = coverageStatus === 'UNKNOWN_COVERAGE'
-			? 'Coverage was not measured — documented as UNKNOWN_COVERAGE'
-			: null;
+		const hasCoverageNote =
+			coverageStatus === 'UNKNOWN_COVERAGE'
+				? 'Coverage was not measured — documented as UNKNOWN_COVERAGE'
+				: null;
 
 		expect(hasCoverageNote).not.toBeNull();
 		expect(hasCoverageNote).toContain('UNKNOWN_COVERAGE');
@@ -315,8 +310,8 @@ describe('Red Test 19 — Real-Mode without human approval must not start', () =
 		const summary = await runner.execute();
 
 		// Real mode should produce a warning about human approval
-		const hasApprovalWarning = summary.safety.warnings.some(
-			(w) => w.toLowerCase().includes('human approval'),
+		const hasApprovalWarning = summary.safety.warnings.some((w) =>
+			w.toLowerCase().includes('human approval'),
 		);
 		expect(hasApprovalWarning).toBe(true);
 
@@ -383,7 +378,7 @@ describe('Red Test 20 — YELLOW_REVIEW decision must not auto-execute', () => {
 		expect(decision.requiresHumanApproval).toBe(true);
 
 		// YELLOW_REVIEW must not be in auto-execution queue
-		const autoExecutionQueue: typeof decision[] = [];
+		const autoExecutionQueue: (typeof decision)[] = [];
 		// Only GREEN_SAFE goes into auto-execution
 		expect(autoExecutionQueue).toHaveLength(0);
 	});
@@ -401,9 +396,7 @@ describe('Red Test 20 — YELLOW_REVIEW decision must not auto-execute', () => {
 	});
 
 	it('decisions can be classified by execution gate', () => {
-		const classifyDecision = (
-			decisionType: string,
-		): 'auto' | 'review' | 'blocked' | 'unknown' => {
+		const classifyDecision = (decisionType: string): 'auto' | 'review' | 'blocked' | 'unknown' => {
 			switch (decisionType) {
 				case 'GREEN_SAFE':
 					return 'auto';
@@ -429,20 +422,17 @@ describe('Red Test 20 — YELLOW_REVIEW decision must not auto-execute', () => {
 describe('Red Test 21 — RED_HOLD action must never execute', () => {
 	it('git push is RED_HOLD', () => {
 		const action = 'git push origin main';
-		const isRedHold = [
-			'git push',
-			'git merge',
-			'gh pr create',
-			'gh pr merge',
-		].some((forbidden) => action.includes(forbidden));
+		const isRedHold = ['git push', 'git merge', 'gh pr create', 'gh pr merge'].some((forbidden) =>
+			action.includes(forbidden),
+		);
 
 		expect(isRedHold).toBe(true);
 	});
 
 	it('GitHub Actions trigger is RED_HOLD', () => {
 		const action = 'workflow_dispatch';
-		const isRedHold = ['workflow_dispatch', '.github/workflows'].some(
-			(forbidden) => action.includes(forbidden),
+		const isRedHold = ['workflow_dispatch', '.github/workflows'].some((forbidden) =>
+			action.includes(forbidden),
 		);
 		expect(isRedHold).toBe(true);
 	});
@@ -463,9 +453,7 @@ describe('Red Test 21 — RED_HOLD action must never execute', () => {
 		const summary = await runner.execute();
 
 		// All risky operations should be in blockedActions
-		const blockedOperations = summary.safety.blockedActions.map((ba) =>
-			ba.operation.toLowerCase(),
-		);
+		const blockedOperations = summary.safety.blockedActions.map((ba) => ba.operation.toLowerCase());
 
 		const mustBeBlocked = ['push', 'pr create', 'merge', 'commit'];
 		for (const op of mustBeBlocked) {
@@ -493,15 +481,13 @@ describe('Red Test 22 — UNKNOWN must not be replaced by assumption', () => {
 		// Pretend to set status DONE without evidence
 		// This should be caught by validation
 		const isValidConversion =
-			upgradedResult.status === 'UNKNOWN_EVIDENCE' &&
-			upgradedResult.evidencePaths.length === 0;
+			upgradedResult.status === 'UNKNOWN_EVIDENCE' && upgradedResult.evidencePaths.length === 0;
 		expect(isValidConversion).toBe(true); // it's valid because it stayed UNKNOWN
 
 		// Now try the invalid conversion
 		const invalidResult = { ...result, status: 'DONE' as const };
 		const isInvalidConversion =
-			invalidResult.status === 'DONE' &&
-			invalidResult.evidencePaths.length === 0;
+			invalidResult.status === 'DONE' && invalidResult.evidencePaths.length === 0;
 		expect(isInvalidConversion).toBe(true); // this IS the invalid case
 	});
 
@@ -793,9 +779,8 @@ describe('Red Test 27 — Coverage exit code 1 not misclassified as benchmark fa
 		expect(benchmarkCoverage.isBenchmarkFault).toBe(false);
 
 		// The benchmark should NOT be classified as RED
-		const benchmarkStatus = benchmarkCoverage.isAcceptable && !benchmarkCoverage.isBenchmarkFault
-			? 'GREEN'
-			: 'YELLOW';
+		const benchmarkStatus =
+			benchmarkCoverage.isAcceptable && !benchmarkCoverage.isBenchmarkFault ? 'GREEN' : 'YELLOW';
 		expect(benchmarkStatus).toBe('GREEN');
 	});
 
@@ -806,7 +791,8 @@ describe('Red Test 27 — Coverage exit code 1 not misclassified as benchmark fa
 	});
 
 	it('exit code 1 from global threshold is documented as PRE-EXISTING', () => {
-		const exitCodeNote = 'Global coverage threshold exit code 1 is PRE-EXISTING — NOT introduced by benchmark';
+		const exitCodeNote =
+			'Global coverage threshold exit code 1 is PRE-EXISTING — NOT introduced by benchmark';
 		expect(exitCodeNote).toContain('PRE-EXISTING');
 		expect(exitCodeNote).toContain('NOT introduced by benchmark');
 	});
@@ -1096,9 +1082,7 @@ describe('Red Test 32 — Real mode must not produce push/merge/PR', () => {
 		const result = await runControlledRealModeProbe();
 		expect(result.summary).toBeDefined();
 		if (result.summary) {
-			const blockedOps = result.summary.safety.blockedActions.map((a) =>
-				a.operation.toLowerCase(),
-			);
+			const blockedOps = result.summary.safety.blockedActions.map((a) => a.operation.toLowerCase());
 			expect(blockedOps).not.toContain('git push');
 			expect(blockedOps).not.toContain('gh pr create');
 			expect(blockedOps).not.toContain('git merge');
@@ -1375,7 +1359,9 @@ describe('Red Test 36 — Commit-readiness rejects build/secret artifacts', () =
 	});
 
 	it('test .ts files ARE commit-safe', () => {
-		const checks = checkCommitReadiness(['packages/benchmark-rudolph/src/__tests__/beacon-domain.test.ts']);
+		const checks = checkCommitReadiness([
+			'packages/benchmark-rudolph/src/__tests__/beacon-domain.test.ts',
+		]);
 		expect(checks[0]!.safe).toBe(true);
 	});
 

@@ -28,9 +28,7 @@ describe('Red Test 6 — Deterministic scan: same seed = identical result', () =
 	});
 
 	it('same seed "santa" produces identical results on repeated calls', () => {
-		const results = Array.from({ length: 5 }, () =>
-			simulateBeaconScan('santa', SCAN_TIME),
-		);
+		const results = Array.from({ length: 5 }, () => simulateBeaconScan('santa', SCAN_TIME));
 
 		// All 5 runs must be identical
 		const first = results[0]!;
@@ -80,9 +78,7 @@ describe('Red Test 7 — Unknown beacon ID produces error', () => {
 
 	it('unknown beacon ID generates warning', () => {
 		const result = simulateBeaconScan('test', SCAN_TIME, ['fake-beacon-42']);
-		expect(result.warnings).toContain(
-			'Unknown beacon ID: "fake-beacon-42" — not in known fleet',
-		);
+		expect(result.warnings).toContain('Unknown beacon ID: "fake-beacon-42" — not in known fleet');
 	});
 
 	it('unknown beacon IDs are not in entries', () => {

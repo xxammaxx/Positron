@@ -69,7 +69,10 @@ export function classifyBeacon(beacon: ReindeerBeacon, nowIso: string): BeaconSt
 	}
 
 	// Check YELLOW conditions
-	if (beacon.batteryPercent >= YELLOW_BATTERY_LOWER && beacon.batteryPercent < GREEN_BATTERY_THRESHOLD) {
+	if (
+		beacon.batteryPercent >= YELLOW_BATTERY_LOWER &&
+		beacon.batteryPercent < GREEN_BATTERY_THRESHOLD
+	) {
 		return 'YELLOW';
 	}
 	if (beacon.rssi >= YELLOW_RSSI_LOWER && beacon.rssi < GREEN_RSSI_THRESHOLD) {
@@ -124,7 +127,9 @@ export const STALE_MINUTES = MAX_SEEN_MINUTES;
  * Create a valid ReindeerBeacon with all required fields.
  * No defaults — every field must be explicitly provided.
  */
-export function createBeacon(partial: Partial<ReindeerBeacon> & { id: string; name: string; beaconId: string }): ReindeerBeacon {
+export function createBeacon(
+	partial: Partial<ReindeerBeacon> & { id: string; name: string; beaconId: string },
+): ReindeerBeacon {
 	return {
 		zone: partial.zone ?? 'unknown',
 		batteryPercent: partial.batteryPercent ?? 100,

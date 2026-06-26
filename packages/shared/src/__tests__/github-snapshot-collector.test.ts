@@ -9,7 +9,10 @@ import type {
 	GitHubPullRequestSnapshot,
 	GitHubContextSnapshot,
 } from '../github-context-reconciler.js';
-import { reconcileGitHubContext, reconcileGitHubContextToDecisionManifestRows } from '../github-context-reconciler.js';
+import {
+	reconcileGitHubContext,
+	reconcileGitHubContextToDecisionManifestRows,
+} from '../github-context-reconciler.js';
 import { validateDecisionManifest, getApplyableGreenSafeActions } from '../decision-manifest.js';
 import {
 	normalizeGitHubIssuesFromGhJson,
@@ -44,24 +47,16 @@ const ghIssueListJson = [
 		number: 268,
 		title: 'CI Recovery: diagnose and repair systemic Quality Gates failures',
 		state: 'OPEN',
-		labels: [
-			{ name: 'bug' },
-			{ name: 'infrastructure' },
-			{ name: 'priority: high' },
-		],
+		labels: [{ name: 'bug' }, { name: 'infrastructure' }, { name: 'priority: high' }],
 		url: 'https://github.com/xxammaxx/Positron/issues/268',
 		body: '',
 	},
 	{
 		number: 229,
-		title: 'MCP/OpenCode Provider Bootstrap: Tool Gateway + Free Models + Spec Kit Sync + Oversight UI',
+		title:
+			'MCP/OpenCode Provider Bootstrap: Tool Gateway + Free Models + Spec Kit Sync + Oversight UI',
 		state: 'OPEN',
-		labels: [
-			{ name: 'enhancement' },
-			{ name: 'architecture' },
-			{ name: 'P1' },
-			{ name: 'epic' },
-		],
+		labels: [{ name: 'enhancement' }, { name: 'architecture' }, { name: 'P1' }, { name: 'epic' }],
 		url: 'https://github.com/xxammaxx/Positron/issues/229',
 		body: '',
 	},
@@ -106,8 +101,18 @@ const ghPrListJson = [
 /** Simulates `gh pr view 218 --json reviews,statusCheckRollup` enrichment data */
 const ghPrReviewEnrichment = {
 	reviews: [
-		{ id: 'r1', author: { login: 'ai-reviewer-bot' }, state: 'COMMENTED', body: 'Actionable comments: 5' },
-		{ id: 'r2', author: { login: 'ai-reviewer-bot' }, state: 'COMMENTED', body: 'Actionable comments: 4' },
+		{
+			id: 'r1',
+			author: { login: 'ai-reviewer-bot' },
+			state: 'COMMENTED',
+			body: 'Actionable comments: 5',
+		},
+		{
+			id: 'r2',
+			author: { login: 'ai-reviewer-bot' },
+			state: 'COMMENTED',
+			body: 'Actionable comments: 4',
+		},
 	],
 	statusCheckRollup: [
 		{ name: 'build-and-test', conclusion: 'FAILURE' },
@@ -134,7 +139,12 @@ describe('normalizeGitHubIssuesFromGhJson', () => {
 		expect(issue279!.title).toContain('Replacement');
 		expect(issue279!.state).toBe('OPEN');
 		expect(issue279!.labels).toEqual([
-			'enhancement', 'infrastructure', 'priority: high', 'architecture', 'epic', 'tooling',
+			'enhancement',
+			'infrastructure',
+			'priority: high',
+			'architecture',
+			'epic',
+			'tooling',
 		]);
 		expect(issue279!.url).toBe('https://github.com/xxammaxx/Positron/issues/279');
 	});
@@ -412,7 +422,15 @@ describe('getAllowedReadOnlyGhCommands', () => {
 
 	test('does not contain any mutate commands', () => {
 		const allowed = getAllowedReadOnlyGhCommands();
-		const mutateCommands = ['gh pr merge', 'gh pr close', 'gh pr comment', 'gh issue close', 'gh issue comment', 'gh workflow run', 'gh run rerun'];
+		const mutateCommands = [
+			'gh pr merge',
+			'gh pr close',
+			'gh pr comment',
+			'gh issue close',
+			'gh issue comment',
+			'gh workflow run',
+			'gh run rerun',
+		];
 		for (const cmd of mutateCommands) {
 			expect(allowed).not.toContain(cmd);
 		}
