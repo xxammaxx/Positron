@@ -1,57 +1,87 @@
 {
-	"issue": 268,
-	"title": "CI Recovery — diagnose and repair systemic Quality Gates / Issue Verification failures",
-	"branch": "main",
-	"head_commit": "40d9d3d89d599f04d4db0921986115a764985ea4",
-	"completed_at": "2026-06-26T09:12:00Z",
-	"steps": [
-		{
-			"step": 1,
-			"name": "LF Normalization — biome format --write",
-			"status": "COMPLETE",
-			"detail": ".gitattributes already existed (PR #269). biome format --write fixed 71 files. biome format . exits 0 with 'No fixes applied'."
-		},
-		{
-			"step": 2,
-			"name": "Add permissions to quality-gates.yml",
-			"status": "COMPLETE",
-			"detail": "Added workflow-level permissions: contents: read, actions: write"
-		},
-		{
-			"step": 3,
-			"name": "Repair verify-issues.yml",
-			"status": "COMPLETE",
-			"detail": "Node version 20→22, removed unnecessary gh auth login step, added actions: write permission"
-		},
-		{
-			"step": 4,
-			"name": "Build before Stryker mutation tests",
-			"status": "COMPLETE",
-			"detail": "Added npm run build step before Stryker in both mutation-fast and mutation-safety jobs"
-		},
-		{
-			"step": 5,
-			"name": "Redis service for Playwright E2E",
-			"status": "COMPLETE",
-			"detail": "Added Redis 7 Alpine service container with health check to e2e-playwright job"
-		}
-	],
-	"local_gates": {
-		"biome_format": { "exit_code": 0, "files_checked": 446, "fixes_applied": 0 },
-		"build": { "exit_code": 0 },
-		"typecheck": { "exit_code": 0 },
-		"vitest": { "test_files": 64, "tests": 1375, "passed": 1375, "failed": 0 }
-	},
-	"files_changed": {
-		"workflow_files": 2,
-		"formatted_files": 50,
-		"total": 52,
-		"insertions": 3197,
-		"deletions": 2862
-	},
-	"known_limitations": [
-		"GitHub Actions zero-step failures are a GitHub platform issue (runner quota/billing) — NOT fixed by workflow config changes",
-		"GitHub-CI remains advisory-only per CI Policy v1",
-		"No remote CI was triggered"
-	]
+  "issue": 268,
+  "title": "CI Recovery — diagnose and repair systemic Quality Gates / Issue Verification failures",
+  "branch": "positron/issue-268-ci-recovery-5step",
+  "head_commit": "04bba9db4e4a967f1b09ab057a6b4424141be465",
+  "completed_at": "2026-06-26T10:01:00Z",
+  "steps": [
+    {
+      "step": 1,
+      "name": "LF Normalization — biome format --write",
+      "status": "COMPLETE",
+      "detail": ".gitattributes already existed (PR #269). biome format --write applied to 50 files. biome format . exits 0 (447 files, No fixes applied)."
+    },
+    {
+      "step": 2,
+      "name": "Add permissions to quality-gates.yml",
+      "status": "COMPLETE",
+      "detail": "Added workflow-level permissions: contents: read, actions: write"
+    },
+    {
+      "step": 3,
+      "name": "Repair verify-issues.yml",
+      "status": "COMPLETE",
+      "detail": "Node version 20→22, removed unnecessary gh auth login step, added actions: write permission"
+    },
+    {
+      "step": 4,
+      "name": "Build before Stryker mutation tests",
+      "status": "COMPLETE",
+      "detail": "Added npm run build step before Stryker in both mutation-fast and mutation-safety jobs"
+    },
+    {
+      "step": 5,
+      "name": "Redis service for Playwright E2E",
+      "status": "COMPLETE",
+      "detail": "Added Redis 7 Alpine service container with health check to e2e-playwright job"
+    }
+  ],
+  "local_gates": {
+    "biome_format": {
+      "exit_code": 0,
+      "files_checked": 447,
+      "fixes_applied": 0,
+      "note": "pre-existing issues-all.json size limit (1.2 MiB > 1.0 MiB config) is not a formatting error"
+    },
+    "build": {
+      "exit_code": 0,
+      "projects_built": 10
+    },
+    "typecheck": {
+      "exit_code": 0,
+      "projects": 10
+    },
+    "vitest_core": {
+      "test_files": 64,
+      "tests": 1375,
+      "passed": 1375,
+      "failed": 0
+    },
+    "vitest_web": {
+      "test_files": 8,
+      "tests": 196,
+      "passed": 196,
+      "failed": 0
+    },
+    "total": {
+      "test_files": 72,
+      "tests": 1571,
+      "passed": 1571,
+      "failed": 0
+    }
+  },
+  "files_changed": {
+    "workflow_files": 2,
+    "formatted_files": 50,
+    "evidence_files": 1,
+    "total": 53,
+    "insertions": 3254,
+    "deletions": 2862
+  },
+  "known_limitations": [
+    "GitHub Actions zero-step failures are a GitHub platform issue (runner quota/billing) — NOT fixed by workflow config changes",
+    "GitHub-CI remains advisory-only per CI Policy v1",
+    "No remote CI was triggered",
+    "evidence/github-issue-cleanup/issues-all.json (1.2 MiB) exceeds Biome max file size config — pre-existing, not blocking"
+  ]
 }
