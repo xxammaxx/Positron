@@ -1,6 +1,8 @@
 # Rudolph Beacon — Capabilities
 
-**Last Updated:** 2026-06-24 (Phase 4 — Controlled Real-Mode Probe)
+**Last Updated:** 2026-06-26 (Phase 19 — Post-Merge Closure)
+**Merge Status:** MERGED into main (PR #295, SHA `a835cf6`)
+**Issue #279:** CLOSED
 
 ## Verified Capabilities (Evidence-Backed)
 
@@ -41,16 +43,25 @@
 | **33** | **Commit-Readiness Validation** | Red Test #36 — PASS | **0.95** |
 | **34** | **Controlled Evidence Path Enforcement** | Red Test #35 — PASS | **0.90** |
 
-## Capability Status: OPERATIONAL
+| **35** | **PR #295 merged into main** | Phase 18 merge report, GitHub confirmation | **1.0** |
+| **36** | **CodeRabbit decommissioned as gate** | Phase 17 commit `5494851`, Phase 18-19 verification | **1.0** |
+| **37** | **CodeRabbit-free merge validated** | Local gates sufficient for quality assurance | **0.98** |
+| **38** | **Issue #279 closed with evidence** | Closed 2026-06-26, reason: completed | **1.0** |
+| **39** | **Phase 3-19 evidence committed to main** | 100+ evidence files in `docs/evidence/rudolph-beacon/` | **1.0** |
+| **40** | **1571 total tests passing on main** | `npm test` — 1375 core + 196 web = 1571 | **1.0** |
 
-All benchmark components are functional in fixture and dry-run modes.
-Real mode is now validated through a controlled local probe with full approval gate checks.
+## Capability Status: MERGED ON MAIN
+
+All benchmark components are functional on the canonical `main` branch.
+PR #295 merged via standard merge commit (`--merge`). No force push, no admin-merge, no auto-merge.
+CodeRabbit has been decommissioned as an active gate (Phase 17) and was not consulted for the merge decision.
+Real mode is validated through a controlled local probe with full approval gate checks.
 Evidence schema validation checks runtime JSON artifacts against the contract.
 
-## NEW in Phase 4
+## NEW in Phase 19 (Post-Merge)
 
-- **Controlled Real-Mode Probe:** `runControlledRealModeProbe()` checks HUMAN_APPROVED_REAL, POSITRON_ENABLE_REAL, POSITRON_ENABLE_PUSH, POSITRON_ENABLE_MERGE, POSITRON_MERGE_KILL_SWITCH before allowing execution
-- **Real-Mode Blockade:** Without approval, real mode is BLOCKED (not GREEN, not YELLOW, not RED — explicitly BLOCKED)
-- **Commit-Readiness Validator:** `checkCommitReadiness()` / `isCommitReady()` rejects dist, build, secret, and forbidden file patterns
-- **8 New Red Tests (29-36):** Full coverage of real-mode blockade, gate enforcement, secret protection, evidence path control
-- **All 36 Red Tests PASS:** Complete test coverage for safety and evidence gates
+- **PR #295 merged:** Rudolph Beacon benchmark package is now part of the canonical main branch
+- **CodeRabbit-free merge:** Local gates (build, typecheck, 1571 tests) sufficient for merge — no external gate dependency
+- **Issue #279 closed:** Rudolph Beacon implementation formally complete
+- **Phase 3-19 evidence committed:** Full audit trail preserved on main
+- **1571 tests verified on main:** No regressions from evidence-only commit

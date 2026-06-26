@@ -1,20 +1,30 @@
 # Rudolph Beacon — Known Limitations
 
-**Last Updated:** 2026-06-24 (Phase 4 — Controlled Real-Mode Probe)
+**Last Updated:** 2026-06-26 (Phase 19 — Post-Merge Closure)
+**Merge Status:** MERGED (PR #295)
 
 ## Current Limitations
 
 | # | Limitation | Severity | Notes |
 |---|-----------|----------|-------|
-| 1 | Real execution mode not fully tested | MEDIUM | Controlled local probe implemented and validated (Red Tests #29-#35). Full external tool execution with network/Bluetooth requires separate human approval. |
+| 1 | Real execution mode not fully tested | MEDIUM | Controlled local probe validated (Red Tests #29-#35). Full external execution remains separate optional follow-up. Not part of Issue #279 closure. |
 | 2 | No long-term beacon history simulation | LOW | Current simulator provides point-in-time scans only. Historical tracking not implemented. |
 | 3 | No zone-transition simulation | LOW | Beacons have static zones. Movement simulation (zone A → zone B) not implemented. |
 | 4 | No multi-seed statistical validation | LOW | Current tests verify 2-3 seeds. Exhaustive seed testing not performed. |
 | 5 | EvidenceReport duplication in opencode-adapter | COSMETIC | `EvidenceReport` is defined identically in `deterministic-fixture-agent.ts` and `dry-run-agent.ts`. Pre-existing issue, not introduced by benchmark. |
 | 6 | Mermaid diagram validation not automated | TOOL_GAP | No local Mermaid validator available. Diagrams are manually reviewed. |
-| 7 | apps/web test failures not addressed | PRE-EXISTING | 5 pre-existing JSX/TSX failures in apps/web. Not related to benchmark. |
+| 7 | apps/web: React act() warnings | PRE-EXISTING | Cosmetic React act() warnings in Dashboard smoke test. All 196 web tests pass. Not related to benchmark. |
 | 8 | GitHub Actions remains advisory-only | POLICY | Per Issue #268, remote CI cannot be triggered. This is a policy constraint, not a benchmark limitation. |
 | 9 | evidence-contract.ts coverage at 82.73% | LOW | 0.73% below 85% branch threshold. Uncovered branches are edge-case unreachable code in `validateRunSummary()`. |
+
+## Resolved Limitations (Phase 19 — Post-Merge)
+
+| # | Former Limitation | Resolution |
+|---|-------------------|------------|
+| ~~15~~ | ~~PR #295 not merged~~ | **RESOLVED (Phase 18)** — Merged into main (`a835cf6`). |
+| ~~16~~ | ~~CodeRabbit blocking as gate~~ | **RESOLVED (Phase 17)** — Decommissioned, removed from PR #295 workflow. |
+| ~~17~~ | ~~Issue #279 open~~ | **RESOLVED (Phase 19)** — Closed 2026-06-26, reason: completed. |
+| ~~18~~ | ~~Phase-18 evidence not committed~~ | **RESOLVED (Phase 19)** — Committed to main (`14b2d00`), pushed fast-forward. |
 
 ## Resolved Limitations (Phase 4)
 
