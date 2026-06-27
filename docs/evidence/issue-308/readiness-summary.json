@@ -1,0 +1,121 @@
+{
+  "audit": {
+    "issue": 308,
+    "title": "[RESEARCH] Validation: Supervised Full Real Mode pilot with combined approval gates",
+    "audit_date": "2026-06-27T21:40:00+02:00",
+    "auditor": "issue-orchestrator",
+    "mode": "READ_ONLY_AUDIT",
+    "real_mode_executed": false
+  },
+  "reality": {
+    "branch": "main",
+    "local_head": "35c422508c8864de3c570807da440f945da938e1",
+    "remote_head": "35c422508c8864de3c570807da440f945da938e1",
+    "working_tree": "CLEAN",
+    "status": "STALE"
+  },
+  "blockers": {
+    "215": {
+      "state": "OPEN",
+      "title": "Safety: Integrate Stop/Ask Policy via GATE_APPROVE runtime hook",
+      "code_on_main": false,
+      "pr": 218,
+      "pr_state": "OPEN_NOT_MERGED",
+      "pr_status": "NEEDS_FIXES",
+      "verdict": "OPEN_BLOCKER"
+    },
+    "244": {
+      "state": "OPEN",
+      "title": "[APPROVAL REQUIRED] Implement Runtime Workspace Cleanup for GitWorkspaceAdapter",
+      "code_on_main": false,
+      "pr": 255,
+      "pr_state": "CLOSED_CONFLICTING",
+      "verdict": "OPEN_BLOCKER"
+    },
+    "245": {
+      "state": "OPEN",
+      "title": "[APPROVAL REQUIRED] Enforce requiresAuditLog in Tool Gateway Runtime",
+      "code_on_main": false,
+      "pr": 255,
+      "pr_state": "CLOSED_CONFLICTING",
+      "verdict": "OPEN_BLOCKER"
+    },
+    "246": {
+      "state": "OPEN",
+      "title": "[APPROVAL REQUIRED] Enforce GateType Layers in Pipeline Loop",
+      "code_on_main": false,
+      "pr": 255,
+      "pr_state": "CLOSED_CONFLICTING",
+      "verdict": "OPEN_BLOCKER"
+    },
+    "overall": "BLOCKED"
+  },
+  "pr_218": {
+    "number": 218,
+    "state": "OPEN",
+    "is_draft": false,
+    "head": "positron/issue-215-gate-approve-stop-ask",
+    "base": "main",
+    "mergeable": "UNKNOWN",
+    "human_review": "NOT_DONE",
+    "coderabbit_comments": 9,
+    "coderabbit_blocking": 0,
+    "files_changed": 7,
+    "additions": 1847,
+    "staleness_days": 12,
+    "status": "NEEDS_FIXES"
+  },
+  "gate_code": {
+    "status": "PARTIAL",
+    "present": [
+      "GATE_APPROVE_phase_definition",
+      "phase_constants_and_types",
+      "label_lifecycle",
+      "decision_classification",
+      "local_gate_runner"
+    ],
+    "absent": [
+      "stop_ask_policy_module",
+      "gate_approve_runtime_hook",
+      "workspace_cleanup",
+      "requires_audit_log_enforcement",
+      "gate_type_runtime_enforcement",
+      "pipeline_orchestrator_gate_integration"
+    ],
+    "tests_missing_from_main": 141,
+    "gate_completeness_pct": 20
+  },
+  "readiness_decision": {
+    "ready_to_start": false,
+    "criteria_met": 2,
+    "criteria_total": 9,
+    "next_blocker": "215",
+    "recommended_build": "215",
+    "build_order": ["215", "244", "245", "246", "308"]
+  },
+  "local_gates": {
+    "git_diff_check": "PASS",
+    "npm_build": "PASS",
+    "npm_typecheck": "PASS",
+    "npm_test_packages": "PASS (1409/1409)",
+    "npm_test_web": "PASS (196/196)",
+    "total_tests": 1605,
+    "total_failed": 0,
+    "classification": "GREEN"
+  },
+  "compliance": {
+    "real_mode_executed": false,
+    "env_vars_set": false,
+    "workflow_files_changed": false,
+    "manual_ci_triggered": false,
+    "pr_218_modified": false,
+    "pr_218_merged": false,
+    "coderabbit_reactivated": false,
+    "secrets_exposed": false,
+    "branches_deleted": false,
+    "stashes_applied": false,
+    "labels_mutated": false,
+    "issues_mutated": false,
+    "milestones_changed": false
+  }
+}
