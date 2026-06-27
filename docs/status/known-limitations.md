@@ -2,33 +2,40 @@
 
 ## Remote CI
 
-GitHub Actions currently fails in zero-step/runner-quota style and is advisory-only. Despite correctly configured workflow YAML and passing local gates, no runner steps execute. Root cause assessment points to runner quota/billing exhaustion for the private repository. Tracked in Issue #268.
+GitHub Actions remains advisory-only. Workflow YAML files are syntactically valid and partially executable (restored via PR #296, Issue #268 CLOSED), but runner quota/billing restrictions prevent reliable remote execution on the private repository.
 
-- GitHub Actions: all jobs fail in 2–3 seconds with empty steps arrays.
+- Remote CI is advisory-only; local gates are the primary truth for merge decisions.
+- Workflow files present and valid in `.github/workflows/`.
 - No self-hosted runners available.
 - Billing API inaccessible (requires `user` scope).
+- Remote CI status is separate from the `advisory-only` policy: the workflows are fixed, but CI is not required for decisions.
 
 ## Biome Lint Backlog
 
 `npx biome check .` remains advisory-only due to a known lint backlog (approximately 786 errors / 486 warnings). This is separate from formatting; `npx biome format .` passes consistently with 370 files checked and 0 fixes needed.
 
-## apps/web Test Backlog
+## Full Real Mode Not Productively Validated
 
-The latest closeout verification reports 5 pre-existing JSX/TSX test failures in `apps/web`:
+- Full Real Mode (human-in-the-loop GitHub operations) has not been productively proven.
+- The Rudolph Beacon `controlled-real-probe` validates safety gates in simulation but does not exercise real GitHub operations with a live token.
+- Full Real Mode Pilot is tracked in Issue #308 (YELLOW_VALIDATE, P1).
+- Real mode requires combined approval gates (GATE_APPROVE → #215, #244, #245, #246).
 
-- `src/__tests__/BlueprintPanel.test.tsx` — JSX parsing failure
-- `src/__tests__/PhasePipeline.test.tsx` — JSX parsing failure
-- `src/__tests__/smoke.test.tsx` — JSX parsing failure
-- `src/__tests__/voice-smoke.test.tsx` — JSX parsing failure
-- `src/__tests__/VoiceControls.test.tsx` — JSX parsing failure
+## E2E Testing
 
-These are not part of the local core/package test gate (917/917 passing) and should be triaged separately if app/web closure is required. Likely root cause: Vite/Vitest JSX transform configuration for the `apps/web` workspace.
+### Playwright E2E Tracing Flake (#304, OPEN)
+
+- E2E Playwright tests have tracing lifecycle instability.
+- Local gates do not currently gate on E2E test results.
+- E2E tests are advisory-only for now.
+- Tracked in Issue #304 (YELLOW, P2).
 
 ## Open Issues / PRs
 
-- **15 open issues** — classified as: approval-blocked, deferred, superseded, safe/closeable, and 1 CI tracker (#268).
-- **15 open PRs** — includes the 13-PR Issue #229 chain (#230–#242), plus PRs #218 and #228.
-- The Issue #229 PR chain (#230–#242) remains intentionally untouched pending human decision on whether to merge, rebase, or close.
+- **1 open PR**: Only PR #218 (GATE_APPROVE for #215) remains open.
+- **PR-Chain #230–#242**: 13 PRs in the Issue #229 chain remain intentionally untouched pending human decision.
+- **#229 MCP Bootstrap Epic**: Large epic requiring decomposition before implementation.
+- **#243 Agentic Baseline Epic**: Large epic requiring decomposition before implementation.
 
 ## Issue #229 PR-Chain Status
 
@@ -59,14 +66,32 @@ Two stashes remain preserved and untouched on `main`:
 
 These must not be applied, popped, or dropped without explicit human instruction.
 
-## Missing / Deferred
+## Active Limitations (Post-Closeout)
 
-| Item | Status |
-|------|--------|
-| Mermaid architecture diagrams | Added as baseline in this closeout PR |
-| `docs/status/` documentation | Added in this closeout PR |
-| GitHub repository polish | Deferred (Issue #252, #211) |
-| Remote CI reactivation | Requires explicit approval + quota resolution |
-| Biome lint backlog resolution | Out of scope for closeout |
-| apps/web test fixes | Out of scope for closeout |
-| CHANGELOG v0.3.0 | Deferred |
+| Item | Status | Issue |
+|------|--------|-------|
+| E2E tracing lifecycle flake | Open | #304 |
+| Portfolio auto-update mechanism | Open | #305 |
+| Backlog hygiene (milestones, labels, taxonomy) | Open | #306 |
+| Documentation drift | Being addressed | #307 |
+| Full Real Mode not productively validated | Open | #308 |
+| Large epics need decomposition | Open | #229, #243 |
+| Security/runtime gates (GATE_APPROVE) | Approval-bound / RED_HOLD | #215, #244, #245, #246 |
+| CodeRabbit external removal | Owner action only | — |
+| Repository polish (labels, wiki) | Deferred | #211 |
+| Biome lint backlog resolution | Out of scope for closeout | — |
+| api-overview #229 endpoint expansion | Separate issue | #251 |
+| Remote CI reactivation | Requires explicit approval | — |
+| CHANGELOG v0.2.0/v0.3.0 | Being created | #307 |
+
+## Resolved Limitations (Reference)
+
+| Item | Resolution |
+|------|-----------|
+| #268 CI zero-step infrastructure | Resolved via PR #296; CI advisory-only policy retained |
+| #252 Repository badges/links cleanup | CLOSED |
+| #297 Flaky E2E test | Stabilized and CLOSED |
+| #298 Biome JSON formatting | Resolved and CLOSED |
+| #299 Windows module resolution | Resolved and CLOSED |
+| apps/web JSX/TSX test failures | Resolved (all 196 web tests pass) |
+| CodeRabbit automation | Decommissioned (internal), external pending owner |
