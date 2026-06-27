@@ -1,0 +1,106 @@
+{
+	"issue": 298,
+	"title": "Post-298 Cleanup: Fix Remaining Biome Evidence JSON Warning",
+	"timestamp": "2026-06-27T09:15:00Z",
+	"agent": "issue-orchestrator",
+	"branch": "fix/post-298-biome-evidence-json",
+	"head_before": "17d9c74",
+	"head_after": "PENDING_COMMIT",
+	"status": "GREEN",
+	"confidence": 0.99,
+	"classifications": {
+		"POST_298_CLEANUP_REALITY_STATUS": "CURRENT",
+		"POST_298_CLEANUP_BRANCH_STATUS": "READY",
+		"POST_298_CLEANUP_FIX_STATUS": "FORMAT_ONLY",
+		"POST_298_CLEANUP_GATES": "YELLOW_PREEXISTING"
+	},
+	"target_file": "docs/evidence/post-268/issue-298-summary.json",
+	"fix_applied": {
+		"command": "npx biome format --write",
+		"files_formatted": 1,
+		"files_checked_post": 1,
+		"post_fix_errors": 0,
+		"change_type": "inline JSON objects to expanded multi-line (lines 36, 38)"
+	},
+	"diff_summary": {
+		"files_changed": 1,
+		"lines_added": 14,
+		"lines_removed": 2,
+		"semantic_changes": 0,
+		"format_only": true
+	},
+	"local_gates": {
+		"biome_format_target": {
+			"exit_code": 0,
+			"files_checked": 1,
+			"status": "PASS"
+		},
+		"biome_format_docs": {
+			"exit_code": 1,
+			"files_checked": 31,
+			"errors": 1,
+			"pre_existing_error_file": "issue-298-phase-2-summary.json",
+			"status": "YELLOW_PREEXISTING"
+		},
+		"build": {
+			"exit_code": 0,
+			"projects_built": 10,
+			"status": "PASS"
+		},
+		"typecheck": {
+			"exit_code": 0,
+			"projects": 10,
+			"status": "PASS"
+		},
+		"vitest_core": {
+			"test_files": 64,
+			"tests": 1375,
+			"passed": 1375,
+			"failed": 0,
+			"status": "PASS"
+		},
+		"vitest_web": {
+			"test_files": 8,
+			"tests": 196,
+			"passed": 196,
+			"failed": 0,
+			"status": "PASS"
+		},
+		"npm_test_total": {
+			"test_files": 72,
+			"tests": 1571,
+			"passed": 1571,
+			"failed": 0,
+			"status": "PASS"
+		}
+	},
+	"not_touched": [
+		"biome.json",
+		".editorconfig",
+		".github/workflows/*",
+		"Functional code",
+		"Remote CI (NOT triggered)",
+		"CodeRabbit (NOT reactivated — no config exists)",
+		"PR #218 (NOT touched)",
+		"PR chain #230-#242 (NOT touched)",
+		"Secrets (NOT read or exposed)",
+		".env contents (NOT displayed)",
+		"Merge (NOT executed)",
+		"Auto-merge (NOT configured)",
+		"Force push (NOT used)",
+		"issue-298-phase-2-summary.json (YELLOW_PREEXISTING, out of scope)"
+	],
+	"evidence_artifacts": [
+		"docs/evidence/post-268/issue-298-cleanup-reality-refresh.md",
+		"docs/evidence/post-268/issue-298-cleanup-branch-preflight.md",
+		"docs/evidence/post-268/issue-298-cleanup-format-fix-report.md",
+		"docs/evidence/post-268/issue-298-cleanup-gates.md",
+		"docs/evidence/post-268/issue-298-cleanup-summary.json",
+		"docs/evidence/post-268/issue-298-cleanup-report.md",
+		"docs/evidence/post-268/issue-298-cleanup-reviewer-report.md",
+		"docs/evidence/post-268/issue-298-cleanup-pr-report.md"
+	],
+	"owner_approval": "APPROVE FIX REMAINING POST-298 BIOME EVIDENCE FORMAT WARNING",
+	"risks": ["Pre-existing Phase 2 format finding remains (YELLOW_PREEXISTING, not in scope)"],
+	"next_step": "Commit, push, create Draft PR"
+}

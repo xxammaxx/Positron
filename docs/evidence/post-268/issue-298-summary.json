@@ -33,9 +33,21 @@
 		"biome_format_docs": { "exit_code": 0, "files_checked": 29, "status": "PASS" },
 		"build": { "exit_code": 0, "projects_built": 10, "status": "PASS" },
 		"typecheck": { "exit_code": 0, "projects": 10, "status": "PASS" },
-		"vitest_core": { "test_files": 64, "tests": 1375, "passed": 1375, "failed": 0, "status": "PASS" },
+		"vitest_core": {
+			"test_files": 64,
+			"tests": 1375,
+			"passed": 1375,
+			"failed": 0,
+			"status": "PASS"
+		},
 		"vitest_web": { "test_files": 8, "tests": 196, "passed": 196, "failed": 0, "status": "PASS" },
-		"npm_test_total": { "test_files": 72, "tests": 1571, "passed": 1571, "failed": 0, "status": "PASS" }
+		"npm_test_total": {
+			"test_files": 72,
+			"tests": 1571,
+			"passed": 1571,
+			"failed": 0,
+			"status": "PASS"
+		}
 	},
 	"not_touched": [
 		"biome.json",
