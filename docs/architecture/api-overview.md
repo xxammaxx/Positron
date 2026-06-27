@@ -1,10 +1,12 @@
 ---
-title: Positron v3.0 API Overview
-date: 2026-05-24
+title: Positron API Overview
+date: 2026-06-27
 author: Positron Team
 ---
 
-# Positron v3.0 — API Overview
+# Positron — API Overview
+
+> **Note:** This document catalogs the current API endpoints as of the latest sync. Full expansion of Issue #229 and #243 endpoints is tracked separately in [Issue #251](https://github.com/xxammaxx/Positron/issues/251).
 
 All routes are served by the Express server under `/api`. The current implementation does not enforce application-level authentication; access is expected to be protected by deployment controls.
 
