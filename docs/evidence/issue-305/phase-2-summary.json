@@ -1,0 +1,76 @@
+{
+  "runId": "issue-305-phase-2-merge",
+  "timestampUtc": "2026-06-27T19:33:00Z",
+  "executionMode": "fake",
+  "phase": 2,
+  "parentPhase": {
+    "runId": "issue-305-evidence-portfolio-auto-update",
+    "summaryRef": "docs/evidence/issue-305/summary.json"
+  },
+  "repo": {
+    "branch": "main",
+    "commitSha": "5a1d20ea942b59c1304e5942e1648c78758b9fb2",
+    "status": "clean"
+  },
+  "pr312": {
+    "number": 312,
+    "url": "https://github.com/xxammaxx/Positron/pull/312",
+    "mergeStatus": "SUCCESS",
+    "mergeSha": "5a1d20ea942b59c1304e5942e1648c78758b9fb2",
+    "mergedAt": "2026-06-27T19:30:27Z",
+    "filesChanged": 25,
+    "additions": 3137,
+    "deletions": 2
+  },
+  "issue305": {
+    "number": 305,
+    "status": "CLOSED",
+    "closedAt": "2026-06-27T19:30:28Z",
+    "closedBy": "PR #312 merge"
+  },
+  "auditResults": {
+    "reality": "CURRENT",
+    "scope": "CLEAN_ISSUE_305_MVP",
+    "implementation": "CLEAN",
+    "tests": "CLEAN",
+    "portfolioMarkers": "CLEAN",
+    "phase1Evidence": "CLEAN",
+    "localGates": "GREEN",
+    "mergeReadiness": "YES",
+    "mergeStatus": "SUCCESS",
+    "issueStatus": "CLOSED"
+  },
+  "gates": {
+    "gitDiffCheck": "PASS",
+    "build": "PASS",
+    "typecheck": "PASS",
+    "tests": "PASS (1605/1605, 73 files)"
+  },
+  "boundaries": {
+    "realMode": false,
+    "uiDashboard": false,
+    "traceEvalAggregation": false,
+    "workflowChanges": false,
+    "manualCI": false,
+    "codeRabbit": false,
+    "secrets": false,
+    "pr218": "untouched",
+    "prChain230_242": "untouched",
+    "branchDeletion": false,
+    "forcePush": false,
+    "runFullPipeline": false
+  },
+  "conclusion": {
+    "status": "GREEN",
+    "whatWorks": [
+      "PR #312 successfully merged into main",
+      "Issue #305 auto-closed by GitHub",
+      "Evidence Portfolio Auto-Update code on main",
+      "All 18 merge readiness criteria met",
+      "All 12 non-scope boundaries preserved",
+      "1605 tests pass (0 failures)"
+    ],
+    "whatDoesNotWork": [],
+    "confidence": 0.98
+  }
+}
