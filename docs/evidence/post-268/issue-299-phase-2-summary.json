@@ -1,0 +1,117 @@
+{
+  "issue": 299,
+  "phase": 2,
+  "title": "Post-268: Fix Windows runner module resolution — Phase 2: Remote-CI Validation & Merge",
+  "status": {
+    "reality": "CURRENT",
+    "remote_ci_tool_gateway_windows": "GREEN",
+    "remote_ci_validation": "YELLOW_ADVISORY_OTHER_JOBS",
+    "scope": "CLEAN",
+    "local_gates": "GREEN",
+    "merge_readiness": "YES",
+    "pr_ready_executed": "YES",
+    "merge_status": "SUCCESS",
+    "issue_status": "CLOSED"
+  },
+  "pr": {
+    "number": 303,
+    "title": "fix(issue-299): resolve Windows module resolution failure",
+    "head_branch": "fix/issue-299-windows-module-resolution",
+    "head_sha": "f6e083a1129830f10af4de274978b167873bcb10",
+    "base_branch": "main",
+    "draft_before": true,
+    "ready_after": true,
+    "merge_commit": "640fa79db09b1c90ce33bedbcceb96909c663309",
+    "merge_method": "merge",
+    "merged_at": "2026-06-27T09:24:56Z",
+    "branch_deleted": false,
+    "auto_closed_issue": true
+  },
+  "ci": {
+    "run_id": 28284623560,
+    "event": "pull_request",
+    "trigger": "automatic",
+    "manual_ci": false,
+    "jobs": {
+      "tool_gateway_windows": "SUCCESS",
+      "build_and_test": "FAILURE_BIOME_FORMAT_ONLY",
+      "e2e_playwright": "FAILURE_FLAKY_TEST",
+      "observability_config_check": "SUCCESS",
+      "mutation_fast": "SUCCESS",
+      "mutation_safety": "SUCCESS"
+    },
+    "tool_gateway_windows_pass_rate": "153/153",
+    "err_module_not_found": "RESOLVED",
+    "assertion_error": "RESOLVED",
+    "new_windows_errors": 0
+  },
+  "fixes": [
+    {
+      "error": "ERR_MODULE_NOT_FOUND",
+      "file": ".github/workflows/quality-gates.yml",
+      "change": "Added npm run build step to tool-gateway-windows job",
+      "verified_in_ci": true
+    },
+    {
+      "error": "ASSERTION_ERROR",
+      "file": "packages/tool-gateway/src/__tests__/tools/repo.test.ts",
+      "change": "Replaced process.cwd() with deterministic REPO_ROOT",
+      "verified_in_ci": true
+    }
+  ],
+  "local_gates": {
+    "diff_check": "PASS",
+    "build": "PASS",
+    "typecheck": "PASS",
+    "test_full": "PASS (1571/1571)",
+    "test_tool_gateway": "PASS (153/153)"
+  },
+  "files_changed_code": [
+    ".github/workflows/quality-gates.yml",
+    "packages/tool-gateway/src/__tests__/tools/repo.test.ts"
+  ],
+  "not_touched": [
+    "PR #218",
+    "PR chain #230-#242",
+    "CodeRabbit configuration",
+    "Manual CI trigger",
+    "Auto-merge",
+    "Admin merge",
+    "Force push",
+    "Branch deletion",
+    ".env files",
+    "Test deletion",
+    "Assertion weakening",
+    "Workflow restructuring"
+  ],
+  "evidence_phase2": [
+    "docs/evidence/post-268/issue-299-phase-2-reality-refresh.md",
+    "docs/evidence/post-268/issue-299-phase-2-remote-ci-audit.md",
+    "docs/evidence/post-268/issue-299-phase-2-scope-workflow-audit.md",
+    "docs/evidence/post-268/issue-299-phase-2-final-gates.md",
+    "docs/evidence/post-268/issue-299-phase-2-merge-readiness.md",
+    "docs/evidence/post-268/issue-299-phase-2-pr-ready-report.md",
+    "docs/evidence/post-268/issue-299-phase-2-merge-report.md",
+    "docs/evidence/post-268/issue-299-phase-2-post-merge-sync.md",
+    "docs/evidence/post-268/issue-299-phase-2-issue-status-report.md",
+    "docs/evidence/post-268/issue-299-phase-2-summary.json",
+    "docs/evidence/post-268/issue-299-phase-2-report.md",
+    "docs/evidence/post-268/issue-299-phase-2-reviewer-report.md"
+  ],
+  "risks": [
+    {
+      "description": "Biome format issue in evidence JSON files (pre-existing, not #299)",
+      "level": "LOW",
+      "mitigation": "Tracked separately; advisory-only per CONTRIBUTING.md"
+    },
+    {
+      "description": "Flaky E2E test (tracing.start) still present after #297 fix",
+      "level": "LOW",
+      "mitigation": "Different failure mode than what #297 fixed; needs separate investigation"
+    }
+  ],
+  "timestamp": "2026-06-27T11:28:00Z",
+  "agent": "issue-orchestrator",
+  "classification": "GREEN",
+  "confidence": 0.99
+}
