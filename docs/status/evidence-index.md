@@ -12,6 +12,7 @@ This index catalogs all evidence artifacts in the Positron repository. Evidence 
 | **Docs** | Derived documentation from evidence | `docs/status/`, `docs/architecture/` |
 | **Chat / Memory** | Ephemeral session context | `.opencode/logs/`, `.opencode/memory/` |
 
+<!-- positron:auto-generated:start evidence-map -->
 ## Evidence Directory Map
 
 ### Rudolph Beacon (#279)
@@ -70,6 +71,8 @@ This index catalogs all evidence artifacts in the Positron repository. Evidence 
 | `docs/evidence/issue-307/report.md` | Full run report |
 | `docs/evidence/issue-307/reviewer-report.md` | Reviewer checklist |
 
+<!-- positron:auto-generated:end evidence-map -->
+
 ## Capability & Limitation Documents
 
 | Path | Description |
@@ -77,6 +80,7 @@ This index catalogs all evidence artifacts in the Positron repository. Evidence 
 | `docs/status/current-capabilities.md` | Active capabilities and test reality |
 | `docs/status/known-limitations.md` | Known limitations and open issues |
 
+<!-- positron:auto-generated:start key-reports -->
 ## Key Run Reports
 
 | Path | Issue | Run |
@@ -84,6 +88,7 @@ This index catalogs all evidence artifacts in the Positron repository. Evidence 
 | `docs/evidence/rudolph-beacon/RUN_REPORT.md` | #279 | Rudolph Beacon Benchmark |
 | `docs/evidence/portfolio-gap-discovery/report.md` | PR #309 | Portfolio Gap Discovery |
 | `docs/evidence/issue-307/report.md` | #307 | Documentation Reality Sync |
+<!-- positron:auto-generated:end key-reports -->
 
 ## Notes
 
