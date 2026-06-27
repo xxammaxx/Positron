@@ -21,12 +21,29 @@
 	},
 	"local_gates": {
 		"git_status": { "exit_code": 0, "status": "PASS" },
-		"biome_format": { "exit_code": 1, "files_checked": 450, "errors": 3, "status": "YELLOW_PREEXISTING" },
+		"biome_format": {
+			"exit_code": 1,
+			"files_checked": 450,
+			"errors": 3,
+			"status": "YELLOW_PREEXISTING"
+		},
 		"build": { "exit_code": 0, "projects_built": 10, "status": "PASS" },
 		"typecheck": { "exit_code": 0, "projects": 10, "status": "PASS" },
-		"vitest_core": { "test_files": 64, "tests": 1375, "passed": 1375, "failed": 0, "status": "PASS" },
+		"vitest_core": {
+			"test_files": 64,
+			"tests": 1375,
+			"passed": 1375,
+			"failed": 0,
+			"status": "PASS"
+		},
 		"vitest_web": { "test_files": 8, "tests": 196, "passed": 196, "failed": 0, "status": "PASS" },
-		"npm_test_total": { "test_files": 72, "tests": 1571, "passed": 1571, "failed": 0, "status": "PASS" }
+		"npm_test_total": {
+			"test_files": 72,
+			"tests": 1571,
+			"passed": 1571,
+			"failed": 0,
+			"status": "PASS"
+		}
 	},
 	"issue_268_tracker": {
 		"title_before": "CI Recovery: diagnose and repair systemic Quality Gates / Issue Verification failures",

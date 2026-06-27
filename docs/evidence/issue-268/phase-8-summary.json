@@ -1,87 +1,104 @@
 {
-  "phase": 8,
-  "issue": 268,
-  "title": "Post-Merge Evidence Commit und Infrastruktur-Tracker-Neuausrichtung",
-  "branch": "main",
-  "head_commit": "c5fe4ff913f35cf8e47ee0fa16a3382b4c741944",
-  "completed_at": "2026-06-27T06:20:00Z",
-  "pr_number": 296,
-  "pr_url": "https://github.com/xxammaxx/Positron/pull/296",
-  "assessment": {
-    "reality_status": "CURRENT",
-    "main_sync_status": "SUCCESS",
-    "phase_7_evidence_status": "CLEAN",
-    "post_merge_gates": "GREEN",
-    "infra_tracker_status": "UPDATED_LEFT_OPEN",
-    "branch_cleanup": "NOT_EXECUTED_OPTIONAL",
-    "evidence_commit_executed": true,
-    "evidence_commit_sha": "PENDING",
-    "push_to_main": "PENDING"
-  },
-  "local_gates": {
-    "git_diff_check": { "exit_code": 0, "status": "PASS" },
-    "biome_format": { "exit_code": 1, "files_checked": 449, "status": "YELLOW_PREEXISTING", "note": "2 JSON indentation issues (spaces→tabs), 1 file size warning — cosmetic only" },
-    "build": { "exit_code": 0, "projects_built": 10, "status": "PASS" },
-    "typecheck": { "exit_code": 0, "projects": 10, "status": "PASS" },
-    "vitest_core": { "test_files": 64, "tests": 1375, "passed": 1375, "failed": 0, "status": "PASS" },
-    "vitest_web": { "test_files": 8, "tests": 196, "passed": 196, "failed": 0, "status": "PASS" },
-    "npm_test_total": { "test_files": 72, "tests": 1571, "passed": 1571, "failed": 0, "status": "PASS" }
-  },
-  "pr_verification": {
-    "pr_296_state": "MERGED",
-    "merge_commit_oid": "c5fe4ff913f35cf8e47ee0fa16a3382b4c741944",
-    "merged_at": "2026-06-27T04:10:04Z",
-    "merged_by": "xxammaxx",
-    "workflow_fixes_on_main": true,
-    "verify_issues_working": true
-  },
-  "remote_ci": {
-    "verify_issues": "SUCCESS",
-    "observability_config_check": "SUCCESS",
-    "mutation_fast": "SUCCESS",
-    "mutation_safety": "SUCCESS",
-    "build_and_test": "FAILURE (zero-step/runner/platform)",
-    "e2e_playwright": "FAILURE (zero-step/runner/platform)",
-    "tool_gateway_windows": "FAILURE (Windows runner unavailable)",
-    "coderabbit": "INACTIVE (decommissioned)",
-    "classification": "ADVISORY_ONLY"
-  },
-  "findings": [
-    "PR #296 is merged on main (merge commit c5fe4ff)",
-    "All workflow Fixes A–E are on main",
-    "Fix C (verify-issues.yml) confirmed working — verify-issues job passes on GitHub Actions",
-    "Phase 7 evidence (13 files) audited: CLEAN — no secrets, valid data",
-    "All 7 local gates pass on main — 1571/1571 tests",
-    "Biome format exit 1 is pre-existing cosmetic issue (JSON indentation, file size)",
-    "Issue #268 remains OPEN as infrastructure tracker",
-    "Feature branches NOT deleted — optional cleanup documented",
-    "No force push, no manual CI, no CodeRabbit reactivation"
-  ],
-  "not_touched": [
-    "Issue #268 (NOT closed — updated and left open)",
-    "CodeRabbit (NOT reactivated — remains decommissioned)",
-    "PR #218 (NOT touched)",
-    "PR chain #230–#242 (NOT touched)",
-    "GitHub CI manual trigger (NOT executed)",
-    "Force push (NOT used)",
-    "Feature branch deletion (NOT executed)",
-    "Secrets (NOT read or exposed)",
-    ".env contents (NOT displayed)",
-    "Stashes (NOT applied/popped/deleted)",
-    "New workflow changes (NOT made)",
-    "New feature development (NOT done)"
-  ],
-  "risks": [
-    "Remote CI build-and-test, e2e-playwright, tool-gateway-windows still fail — GitHub platform issue",
-    "Workflow Fixes B, D, E cannot be validated live until runner/quota resolves",
-    "GitHub Actions remains advisory-only per CI Policy v1",
-    "CodeRabbit reactivation requires separate issue and approval"
-  ],
-  "owner_next_steps": [
-    "Review Phase 8 evidence in docs/evidence/issue-268/",
-    "When ready: check GitHub Actions billing/quota in Settings → Billing & plans",
-    "If quota resolves: issue 'APPROVE USE GITHUB CI FOR THIS RUN' for live validation",
-    "For branch cleanup: issue 'APPROVE DELETE ISSUE 268 CI RECOVERY FEATURE BRANCH'",
-    "For CodeRabbit: create separate issue with dedicated approval"
-  ]
+	"phase": 8,
+	"issue": 268,
+	"title": "Post-Merge Evidence Commit und Infrastruktur-Tracker-Neuausrichtung",
+	"branch": "main",
+	"head_commit": "c5fe4ff913f35cf8e47ee0fa16a3382b4c741944",
+	"completed_at": "2026-06-27T06:20:00Z",
+	"pr_number": 296,
+	"pr_url": "https://github.com/xxammaxx/Positron/pull/296",
+	"assessment": {
+		"reality_status": "CURRENT",
+		"main_sync_status": "SUCCESS",
+		"phase_7_evidence_status": "CLEAN",
+		"post_merge_gates": "GREEN",
+		"infra_tracker_status": "UPDATED_LEFT_OPEN",
+		"branch_cleanup": "NOT_EXECUTED_OPTIONAL",
+		"evidence_commit_executed": true,
+		"evidence_commit_sha": "PENDING",
+		"push_to_main": "PENDING"
+	},
+	"local_gates": {
+		"git_diff_check": { "exit_code": 0, "status": "PASS" },
+		"biome_format": {
+			"exit_code": 1,
+			"files_checked": 449,
+			"status": "YELLOW_PREEXISTING",
+			"note": "2 JSON indentation issues (spaces→tabs), 1 file size warning — cosmetic only"
+		},
+		"build": { "exit_code": 0, "projects_built": 10, "status": "PASS" },
+		"typecheck": { "exit_code": 0, "projects": 10, "status": "PASS" },
+		"vitest_core": {
+			"test_files": 64,
+			"tests": 1375,
+			"passed": 1375,
+			"failed": 0,
+			"status": "PASS"
+		},
+		"vitest_web": { "test_files": 8, "tests": 196, "passed": 196, "failed": 0, "status": "PASS" },
+		"npm_test_total": {
+			"test_files": 72,
+			"tests": 1571,
+			"passed": 1571,
+			"failed": 0,
+			"status": "PASS"
+		}
+	},
+	"pr_verification": {
+		"pr_296_state": "MERGED",
+		"merge_commit_oid": "c5fe4ff913f35cf8e47ee0fa16a3382b4c741944",
+		"merged_at": "2026-06-27T04:10:04Z",
+		"merged_by": "xxammaxx",
+		"workflow_fixes_on_main": true,
+		"verify_issues_working": true
+	},
+	"remote_ci": {
+		"verify_issues": "SUCCESS",
+		"observability_config_check": "SUCCESS",
+		"mutation_fast": "SUCCESS",
+		"mutation_safety": "SUCCESS",
+		"build_and_test": "FAILURE (zero-step/runner/platform)",
+		"e2e_playwright": "FAILURE (zero-step/runner/platform)",
+		"tool_gateway_windows": "FAILURE (Windows runner unavailable)",
+		"coderabbit": "INACTIVE (decommissioned)",
+		"classification": "ADVISORY_ONLY"
+	},
+	"findings": [
+		"PR #296 is merged on main (merge commit c5fe4ff)",
+		"All workflow Fixes A–E are on main",
+		"Fix C (verify-issues.yml) confirmed working — verify-issues job passes on GitHub Actions",
+		"Phase 7 evidence (13 files) audited: CLEAN — no secrets, valid data",
+		"All 7 local gates pass on main — 1571/1571 tests",
+		"Biome format exit 1 is pre-existing cosmetic issue (JSON indentation, file size)",
+		"Issue #268 remains OPEN as infrastructure tracker",
+		"Feature branches NOT deleted — optional cleanup documented",
+		"No force push, no manual CI, no CodeRabbit reactivation"
+	],
+	"not_touched": [
+		"Issue #268 (NOT closed — updated and left open)",
+		"CodeRabbit (NOT reactivated — remains decommissioned)",
+		"PR #218 (NOT touched)",
+		"PR chain #230–#242 (NOT touched)",
+		"GitHub CI manual trigger (NOT executed)",
+		"Force push (NOT used)",
+		"Feature branch deletion (NOT executed)",
+		"Secrets (NOT read or exposed)",
+		".env contents (NOT displayed)",
+		"Stashes (NOT applied/popped/deleted)",
+		"New workflow changes (NOT made)",
+		"New feature development (NOT done)"
+	],
+	"risks": [
+		"Remote CI build-and-test, e2e-playwright, tool-gateway-windows still fail — GitHub platform issue",
+		"Workflow Fixes B, D, E cannot be validated live until runner/quota resolves",
+		"GitHub Actions remains advisory-only per CI Policy v1",
+		"CodeRabbit reactivation requires separate issue and approval"
+	],
+	"owner_next_steps": [
+		"Review Phase 8 evidence in docs/evidence/issue-268/",
+		"When ready: check GitHub Actions billing/quota in Settings → Billing & plans",
+		"If quota resolves: issue 'APPROVE USE GITHUB CI FOR THIS RUN' for live validation",
+		"For branch cleanup: issue 'APPROVE DELETE ISSUE 268 CI RECOVERY FEATURE BRANCH'",
+		"For CodeRabbit: create separate issue with dedicated approval"
+	]
 }
