@@ -113,11 +113,7 @@ const DANGEROUS_GIT_SUBCOMMANDS: ReadonlySet<string> = new Set([
  * Args that contain dangerous patterns (checked by substring).
  * --write is the primary concern for auto-fix commands.
  */
-const DANGEROUS_ARG_PATTERNS: ReadonlyArray<string> = [
-	'--write',
-	'--fix',
-	'--force',
-];
+const DANGEROUS_ARG_PATTERNS: ReadonlyArray<string> = ['--write', '--fix', '--force'];
 
 /**
  * Explicitly blocked command+args combinations (joint check).
@@ -268,14 +264,18 @@ export function validateLocalGateDefinition(gate: LocalGateDefinition): string[]
 	const args1 = gate.args[1] ?? '';
 	const comboKey = `${gate.command}::${args0}::${args1}`;
 	if (BLOCKED_COMMAND_COMBOS.has(comboKey)) {
-		errors.push(`Blocked command combination: ${gate.command} ${gate.args.slice(0, 3).join(' ')}`.trim());
+		errors.push(
+			`Blocked command combination: ${gate.command} ${gate.args.slice(0, 3).join(' ')}`.trim(),
+		);
 	}
 
 	// Check dangerous arg patterns
 	for (const arg of gate.args) {
 		for (const pattern of DANGEROUS_ARG_PATTERNS) {
 			if (arg.includes(pattern)) {
-				errors.push(`Dangerous argument pattern: "${arg}" contains "${pattern}". Auto-fix commands are not allowed.`);
+				errors.push(
+					`Dangerous argument pattern: "${arg}" contains "${pattern}". Auto-fix commands are not allowed.`,
+				);
 			}
 		}
 	}
@@ -296,10 +296,7 @@ export function validateLocalGateDefinition(gate: LocalGateDefinition): string[]
  * - exitCode non-zero + kind "advisory" → WARN
  * - exitCode non-zero + kind "required"/"format" → FAIL
  */
-export function computeGateStatus(
-	kind: LocalGateKind,
-	exitCode: number | null,
-): LocalGateStatus {
+export function computeGateStatus(kind: LocalGateKind, exitCode: number | null): LocalGateStatus {
 	if (exitCode === null) {
 		return 'SKIPPED';
 	}
@@ -358,9 +355,7 @@ export function createLocalGateReport(results: LocalGateResult[]): LocalGateRepo
  * @param gates - Optional custom gate definitions (uses defaults if not provided).
  * @returns LocalGateReport with all gates SKIPPED.
  */
-export function createDryRunLocalGateReport(
-	gates?: LocalGateDefinition[],
-): LocalGateReport {
+export function createDryRunLocalGateReport(gates?: LocalGateDefinition[]): LocalGateReport {
 	const definitions = gates ?? getDefaultLocalGateDefinitions();
 
 	const results: LocalGateResult[] = definitions.map((gate) => ({
@@ -386,10 +381,7 @@ export function createDryRunLocalGateReport(
  * @param result - Mutable result object to update.
  * @param exitCode - Exit code from the command.
  */
-export function classifyLocalGateResult(
-	result: LocalGateResult,
-	exitCode: number | null,
-): void {
+export function classifyLocalGateResult(result: LocalGateResult, exitCode: number | null): void {
 	result.exitCode = exitCode;
 	result.status = computeGateStatus(result.kind, exitCode);
 }

@@ -14,55 +14,43 @@
 			"id": "PHASE-9-REALITY-REFRESH",
 			"title": "Reality Refresh — verify repository state before Phase 9",
 			"status": "DONE",
-			"evidencePaths": [
-				"docs/evidence/rudolph-beacon/phase-9-reality-refresh.md"
-			],
+			"evidencePaths": ["docs/evidence/rudolph-beacon/phase-9-reality-refresh.md"],
 			"confidence": 0.99
 		},
 		{
 			"id": "PHASE-9-PHASE-8-EVIDENCE-AUDIT",
 			"title": "Phase-8-Evidence-Audit — audit all 9 Phase-8 files",
 			"status": "DONE",
-			"evidencePaths": [
-				"docs/evidence/rudolph-beacon/phase-9-phase-8-evidence-audit.md"
-			],
+			"evidencePaths": ["docs/evidence/rudolph-beacon/phase-9-phase-8-evidence-audit.md"],
 			"confidence": 0.97
 		},
 		{
 			"id": "PHASE-9-COMMIT-PHASE-8-EVIDENCE",
 			"title": "Local commit of Phase-8 evidence files",
 			"status": "DONE",
-			"evidencePaths": [
-				"docs/evidence/rudolph-beacon/phase-9-gates.md"
-			],
+			"evidencePaths": ["docs/evidence/rudolph-beacon/phase-9-gates.md"],
 			"confidence": 0.99
 		},
 		{
 			"id": "PHASE-9-GATES",
 			"title": "Local Gates — pre-push verification",
 			"status": "DONE",
-			"evidencePaths": [
-				"docs/evidence/rudolph-beacon/phase-9-gates.md"
-			],
+			"evidencePaths": ["docs/evidence/rudolph-beacon/phase-9-gates.md"],
 			"confidence": 0.99
 		},
 		{
 			"id": "PHASE-9-PUSH",
 			"title": "Push to remote",
 			"status": "BLOCKED",
-			"evidencePaths": [
-				"docs/evidence/rudolph-beacon/phase-9-push-report.md"
-			],
+			"evidencePaths": ["docs/evidence/rudolph-beacon/phase-9-push-report.md"],
 			"confidence": 0.85
 		},
 		{
 			"id": "PHASE-9-PR",
 			"title": "Draft PR creation",
 			"status": "DEFERRED",
-			"evidencePaths": [
-				"docs/evidence/rudolph-beacon/phase-9-pr-report.md"
-			],
-			"confidence": 0.80
+			"evidencePaths": ["docs/evidence/rudolph-beacon/phase-9-pr-report.md"],
+			"confidence": 0.8
 		}
 	],
 	"commands": [
@@ -137,7 +125,14 @@
 	},
 	"safety": {
 		"secretsRedacted": true,
-		"blockedActions": ["push (GitHub Push Protection — false positive)", "pr_create (deferred)", "merge", "remote_ci", "full_real_mode", "force_push"],
+		"blockedActions": [
+			"push (GitHub Push Protection — false positive)",
+			"pr_create (deferred)",
+			"merge",
+			"remote_ci",
+			"full_real_mode",
+			"force_push"
+		],
 		"warnings": [
 			"GitHub Push Protection blocked push: Slack xoxb test fixture (false positive) in commit 6f65a5b",
 			"Test fixture fixed in commit e6e1db3 but old commit still in history",

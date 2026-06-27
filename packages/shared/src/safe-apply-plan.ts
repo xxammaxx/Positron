@@ -5,10 +5,7 @@
 // Pure functions only. No GitHub API calls, no shell execution,
 // no mutations, no network, no file system writes.
 
-import type {
-	ApprovalPackage,
-	ApprovalPackReport,
-} from './human-approval-pack.js';
+import type { ApprovalPackage, ApprovalPackReport } from './human-approval-pack.js';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -216,12 +213,20 @@ function collectEvidenceRefs(pkg: ApprovalPackage): string[] {
 	const refs: string[] = [];
 
 	for (const warning of pkg.warnings) {
-		if (warning.includes('docs/') || warning.includes('evidence/') || warning.includes('.opencode/')) {
+		if (
+			warning.includes('docs/') ||
+			warning.includes('evidence/') ||
+			warning.includes('.opencode/')
+		) {
 			refs.push(warning);
 		}
 	}
 	for (const blocker of pkg.blockerReasons) {
-		if (blocker.includes('docs/') || blocker.includes('evidence/') || blocker.includes('.opencode/')) {
+		if (
+			blocker.includes('docs/') ||
+			blocker.includes('evidence/') ||
+			blocker.includes('.opencode/')
+		) {
 			refs.push(blocker);
 		}
 	}
@@ -265,9 +270,7 @@ function packageToPlan(pkg: ApprovalPackage): SafeApplyPlan {
 	});
 
 	return {
-		id: planType === 'GREEN_SAFE_APPLY_PLAN'
-			? `plan-${pkg.id}`
-			: `blocked-plan-${pkg.id}`,
+		id: planType === 'GREEN_SAFE_APPLY_PLAN' ? `plan-${pkg.id}` : `blocked-plan-${pkg.id}`,
 		type: planType,
 		packageId: pkg.id,
 		title: buildPlanTitle(planType),

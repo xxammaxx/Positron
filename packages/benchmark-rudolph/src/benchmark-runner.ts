@@ -29,7 +29,12 @@ import {
 	determineConclusionStatus,
 	validateRunSummary,
 } from './evidence-contract.js';
-import { buildTraceabilityMap, validateTraceabilityMap, type TraceabilityMap, type IssueTraceEntry } from './traceability.js';
+import {
+	buildTraceabilityMap,
+	validateTraceabilityMap,
+	type TraceabilityMap,
+	type IssueTraceEntry,
+} from './traceability.js';
 
 // Re-export for convenience
 export type {
@@ -100,7 +105,9 @@ export class BenchmarkRunner {
 
 		// Gate: real mode is not supported without human approval
 		if (this.config.executionMode === 'real') {
-			warnings.push('REAL execution mode requested — requires HUMAN APPROVAL. Benchmark running as dry-run instead.');
+			warnings.push(
+				'REAL execution mode requested — requires HUMAN APPROVAL. Benchmark running as dry-run instead.',
+			);
 		}
 
 		// Execute in appropriate mode
@@ -118,10 +125,7 @@ export class BenchmarkRunner {
 		}
 
 		// Build traceability map
-		const traceability = buildTraceabilityMap(
-			this.config.benchmarkIssues,
-			issues,
-		);
+		const traceability = buildTraceabilityMap(this.config.benchmarkIssues, issues);
 
 		// Validate traceability
 		const traceErrors = validateTraceabilityMap(traceability);
@@ -359,16 +363,17 @@ export class BenchmarkRunner {
 			} else if (issue.status === 'BLOCKED') {
 				whatDoesNotWork.push(`${issue.id}: ${issue.title} (BLOCKED)`);
 			} else if (issue.status === 'PARTIAL') {
-				whatDoesNotWork.push(`${issue.id}: ${issue.title} (PARTIAL, confidence=${issue.confidence})`);
+				whatDoesNotWork.push(
+					`${issue.id}: ${issue.title} (PARTIAL, confidence=${issue.confidence})`,
+				);
 			} else {
 				whatIsUnproven.push(`${issue.id}: ${issue.title} (UNKNOWN_EVIDENCE)`);
 			}
 		}
 
 		// Calculate overall confidence
-		const totalConfidence = issues.length > 0
-			? issues.reduce((sum, i) => sum + i.confidence, 0) / issues.length
-			: 0;
+		const totalConfidence =
+			issues.length > 0 ? issues.reduce((sum, i) => sum + i.confidence, 0) / issues.length : 0;
 
 		return {
 			status,
@@ -400,9 +405,10 @@ export class BenchmarkRunner {
 			removedBlockers,
 			unchangedLimitations,
 			remainingRisks,
-			nextBestStep: remainingRisks.length > 0
-				? `Address blocked/unknown issues first: ${remainingRisks.map((r) => r.split(':')[0]).join(', ')}`
-				: 'All benchmark issues verified — extend to real mode or next benchmark',
+			nextBestStep:
+				remainingRisks.length > 0
+					? `Address blocked/unknown issues first: ${remainingRisks.map((r) => r.split(':')[0]).join(', ')}`
+					: 'All benchmark issues verified — extend to real mode or next benchmark',
 		};
 	}
 }

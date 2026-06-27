@@ -15,18 +15,14 @@
 			"id": "PHASE-7-REALITY-REFRESH",
 			"title": "Reality Refresh — verify post-Phase-6-commit state",
 			"status": "DONE",
-			"evidencePaths": [
-				"docs/evidence/rudolph-beacon/phase-7-reality-refresh.md"
-			],
+			"evidencePaths": ["docs/evidence/rudolph-beacon/phase-7-reality-refresh.md"],
 			"confidence": 0.99
 		},
 		{
 			"id": "PHASE-7-EVIDENCE-FILE-AUDIT",
 			"title": "Phase 6 Evidence File Audit — security and consistency check",
 			"status": "DONE",
-			"evidencePaths": [
-				"docs/evidence/rudolph-beacon/phase-7-evidence-file-audit.md"
-			],
+			"evidencePaths": ["docs/evidence/rudolph-beacon/phase-7-evidence-file-audit.md"],
 			"testNames": [
 				"All 8 Phase 6 files individually audited",
 				"Secret scan: CLEAN",
@@ -41,9 +37,7 @@
 			"id": "PHASE-7-COMMIT-READINESS",
 			"title": "Commit Readiness — validate evidence commit scope",
 			"status": "DONE",
-			"evidencePaths": [
-				"docs/evidence/rudolph-beacon/phase-7-commit-readiness.md"
-			],
+			"evidencePaths": ["docs/evidence/rudolph-beacon/phase-7-commit-readiness.md"],
 			"testNames": [
 				"10 GREEN_SAFE criteria checked: all PASS",
 				"Only Phase 6 evidence files in scope",
@@ -56,9 +50,7 @@
 			"id": "PHASE-7-COMMIT-EXECUTION",
 			"title": "Execute local Phase 6 evidence commit",
 			"status": "DONE",
-			"evidencePaths": [
-				"docs/evidence/rudolph-beacon/phase-7-commit-readiness.md"
-			],
+			"evidencePaths": ["docs/evidence/rudolph-beacon/phase-7-commit-readiness.md"],
 			"testNames": [
 				"Exactly 8 files staged (verified via git diff --cached --name-only)",
 				"Commit 7b637d7 created: docs(issue-279): add Phase 6 PR-readiness evidence",
@@ -81,9 +73,7 @@
 			"id": "PHASE-7-GATES",
 			"title": "Local Gates — post-commit verification",
 			"status": "DONE",
-			"evidencePaths": [
-				"docs/evidence/rudolph-beacon/phase-7-gates.md"
-			],
+			"evidencePaths": ["docs/evidence/rudolph-beacon/phase-7-gates.md"],
 			"testNames": [
 				"git diff --check: PASS",
 				"npm run build: PASS (10 projects)",
@@ -97,18 +87,14 @@
 			"id": "PHASE-7-PR-FINAL-DRAFT",
 			"title": "Final PR Draft — updated for all three commits",
 			"status": "DONE",
-			"evidencePaths": [
-				"docs/evidence/rudolph-beacon/phase-7-pr-final-draft.md"
-			],
+			"evidencePaths": ["docs/evidence/rudolph-beacon/phase-7-pr-final-draft.md"],
 			"confidence": 0.96
 		},
 		{
 			"id": "PHASE-7-OWNER-APPROVAL",
 			"title": "Owner Approval Options — three choices with recommendations",
 			"status": "DONE",
-			"evidencePaths": [
-				"docs/evidence/rudolph-beacon/phase-7-owner-approval-options.md"
-			],
+			"evidencePaths": ["docs/evidence/rudolph-beacon/phase-7-owner-approval-options.md"],
 			"confidence": 0.96
 		}
 	],

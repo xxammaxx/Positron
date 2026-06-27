@@ -51,7 +51,7 @@
 				"packages/benchmark-rudolph/src/controlled-real-probe.ts",
 				"packages/benchmark-rudolph/src/index.ts"
 			],
-			"confidence": 0.90
+			"confidence": 0.9
 		},
 		{
 			"id": "PHASE-4-COMMIT-READINESS",
@@ -61,12 +61,8 @@
 				"docs/evidence/rudolph-beacon/phase-4-commit-readiness.md",
 				"docs/evidence/rudolph-beacon/phase-4-gates.md"
 			],
-			"testNames": [
-				"Red Test 36 — Commit-Readiness checks"
-			],
-			"changedFiles": [
-				"docs/evidence/rudolph-beacon/phase-4-commit-readiness.md"
-			],
+			"testNames": ["Red Test 36 — Commit-Readiness checks"],
+			"changedFiles": ["docs/evidence/rudolph-beacon/phase-4-commit-readiness.md"],
 			"confidence": 0.95
 		}
 	],

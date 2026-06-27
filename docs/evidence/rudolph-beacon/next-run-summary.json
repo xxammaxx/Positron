@@ -1,190 +1,192 @@
 {
-  "runId": "rudolph-anschlusslauf-20260624",
-  "timestampUtc": "2026-06-24T17:00:00Z",
-  "executionMode": "fixture",
-  "benchmarkName": "rudolph-beacon",
-  "repo": {
-    "branch": "feat/issue-279-phase-1g-safe-apply-plan-20260624-135722",
-    "commitSha": "368c9c00f4b3b9a4ced9cbe0c52a501c1ce05100",
-    "status": "dirty"
-  },
-  "issues": [
-    {
-      "id": "ANSCHLUSS-001",
-      "title": "Coverage Measurement",
-      "status": "DONE",
-      "evidencePaths": [
-        "docs/evidence/rudolph-beacon/next-run-gates.md"
-      ],
-      "testNames": ["npm run test:benchmark:rudolph:coverage"],
-      "changedFiles": ["package.json"],
-      "confidence": 0.95
-    },
-    {
-      "id": "ANSCHLUSS-002",
-      "title": "Evidence Schema Validation",
-      "status": "DONE",
-      "evidencePaths": [
-        "packages/benchmark-rudolph/src/__tests__/evidence-schema-validation.test.ts",
-        "docs/evidence/rudolph-beacon/next-run-gates.md"
-      ],
-      "testNames": ["evidence-schema-validation.test.ts"],
-      "changedFiles": ["packages/benchmark-rudolph/src/__tests__/evidence-schema-validation.test.ts"],
-      "confidence": 0.95
-    },
-    {
-      "id": "ANSCHLUSS-003",
-      "title": "Red/Negative Tests Hardening",
-      "status": "DONE",
-      "evidencePaths": [
-        "packages/benchmark-rudolph/src/__tests__/red-negative-tests.test.ts",
-        "docs/evidence/rudolph-beacon/next-run-gates.md"
-      ],
-      "testNames": ["red-negative-tests.test.ts"],
-      "changedFiles": ["packages/benchmark-rudolph/src/__tests__/red-negative-tests.test.ts"],
-      "confidence": 0.90
-    },
-    {
-      "id": "ANSCHLUSS-004",
-      "title": "Real-Mode Readiness Documentation",
-      "status": "DONE",
-      "evidencePaths": [
-        "docs/benchmark/rudolph-beacon/REAL_MODE_READINESS.md"
-      ],
-      "testNames": ["Red Test 19 — Real-Mode without approval blocked"],
-      "changedFiles": ["docs/benchmark/rudolph-beacon/REAL_MODE_READINESS.md"],
-      "confidence": 0.85
-    },
-    {
-      "id": "ANSCHLUSS-005",
-      "title": "Decision Manifest",
-      "status": "DONE",
-      "evidencePaths": [
-        "docs/evidence/rudolph-beacon/decision-manifest.md"
-      ],
-      "testNames": ["Red Test 20 — YELLOW_REVIEW decision not auto-execute", "Red Test 21 — RED_HOLD never execute"],
-      "changedFiles": ["docs/evidence/rudolph-beacon/decision-manifest.md"],
-      "confidence": 0.85
-    },
-    {
-      "id": "ANSCHLUSS-006",
-      "title": "Hardened Evaluation Contract & Status Docs",
-      "status": "DONE",
-      "evidencePaths": [
-        "docs/benchmark/rudolph-beacon/POSITRON_EVALUATION_CONTRACT.md",
-        "docs/benchmark/rudolph-beacon/CAPABILITIES.md",
-        "docs/benchmark/rudolph-beacon/KNOWN_LIMITATIONS.md",
-        "docs/evidence/rudolph-beacon/RUN_REPORT.md"
-      ],
-      "testNames": ["Red Test 15 — GREEN without schema validation forbidden", "Red Test 22 — UNKNOWN not replaced by assumption"],
-      "changedFiles": [
-        "docs/benchmark/rudolph-beacon/POSITRON_EVALUATION_CONTRACT.md",
-        "docs/benchmark/rudolph-beacon/CAPABILITIES.md",
-        "docs/benchmark/rudolph-beacon/KNOWN_LIMITATIONS.md",
-        "docs/evidence/rudolph-beacon/RUN_REPORT.md"
-      ],
-      "confidence": 0.90
-    }
-  ],
-  "commands": [
-    {
-      "name": "git diff --check",
-      "command": "git diff --check",
-      "exitCode": 0,
-      "durationMs": 200
-    },
-    {
-      "name": "npm run build",
-      "command": "tsc -b packages/...",
-      "exitCode": 0,
-      "durationMs": 8000
-    },
-    {
-      "name": "npm run typecheck",
-      "command": "tsc -b --dry",
-      "exitCode": 0,
-      "durationMs": 1200
-    },
-    {
-      "name": "npm run test:benchmark:rudolph",
-      "command": "vitest run packages/benchmark-rudolph/src",
-      "exitCode": 0,
-      "durationMs": 3000
-    },
-    {
-      "name": "npm run test:benchmark:rudolph:coverage",
-      "command": "vitest run packages/benchmark-rudolph/src --coverage",
-      "exitCode": 1,
-      "durationMs": 6000
-    }
-  ],
-  "tests": {
-    "passed": 157,
-    "failed": 0,
-    "skipped": 0,
-    "redTestsCovered": [
-      "Red Test 15: GREEN ohne Evidence-Schema-Validierung ist verboten",
-      "Red Test 16: DONE ohne Evidence-Pfad ist verboten",
-      "Red Test 17: Fake-Secret in Run-Summary muss redigiert sein",
-      "Red Test 18: Coverage fehlt → Status darf nicht blind GREEN sein",
-      "Red Test 19: Real-Mode ohne Human Approval darf nicht starten",
-      "Red Test 20: YELLOW_REVIEW-Entscheidung nicht automatisch ausführen",
-      "Red Test 21: RED_HOLD-Aktion nie ausführen",
-      "Red Test 22: UNKNOWN nicht durch Annahme ersetzen"
-    ]
-  },
-  "safety": {
-    "secretsRedacted": true,
-    "blockedActions": [],
-    "warnings": [
-      "Real execution mode NOT executed (requires HUMAN APPROVAL)",
-      "Coverage: global threshold (30%) pre-existing failure — benchmark package achieves 94.66%",
-      "Schema validator not yet integrated into BenchmarkRunner (deliberate scope boundary)"
-    ]
-  },
-  "conclusion": {
-    "status": "GREEN",
-    "whatWorks": [
-      "ANSCHLUSS-001: Coverage-Messung für Benchmark-Package (94.66% line coverage)",
-      "ANSCHLUSS-002: Evidence-Schema-Validierung (32 runtime validation tests PASS)",
-      "ANSCHLUSS-003: 8 neue Red/Negative Tests (alle PASS)",
-      "ANSCHLUSS-004: Real-Mode-Readiness-Dokumentation",
-      "ANSCHLUSS-005: Decision-Manifest mit GREEN_SAFE/YELLOW_REVIEW/RED_HOLD",
-      "ANSCHLUSS-006: Gehärtete Positron-Schlussfolgerungen und Status-Dokumente"
-    ],
-    "whatDoesNotWork": [],
-    "whatIsUnproven": [
-      "Real execution mode (requires human approval)",
-      "Coverage global threshold (pre-existing configuration issue)",
-      "Schema validator not yet integrated into BenchmarkRunner"
-    ],
-    "confidence": 0.92
-  },
-  "capabilityDelta": {
-    "newCapabilities": [
-      "Coverage measurement: 94.66% line coverage for benchmark package",
-      "Runtime evidence schema validation (validateRunSummary)",
-      "8 hardened red/negative tests for policy enforcement",
-      "Real-mode readiness documentation with kill-switch overview",
-      "Decision classification: GREEN_SAFE / YELLOW_REVIEW / RED_HOLD",
-      "UNKNOWN integrity: no assumption-based upgrades without evidence"
-    ],
-    "removedBlockers": [
-      "Prior: no coverage measurement capability — NOW: measured at 94.66%",
-      "Prior: no schema validation at runtime — NOW: 32 validation tests",
-      "Prior: 14 red tests — NOW: 22 red tests"
-    ],
-    "unchangedLimitations": [
-      "Real execution mode requires human approval",
-      "Global coverage threshold pre-existing (not introduced by benchmark)",
-      "Mermaid diagram validation TOOL_GAP",
-      "GitHub Actions advisory-only (Issue #268)"
-    ],
-    "remainingRisks": [
-      "Schema validator not integrated into BenchmarkRunner (scope boundary)",
-      "determineConclusionStatus trusts status field (mitigated by schema validation)",
-      "Real mode untested (fixture/dry-run only)"
-    ],
-    "nextBestStep": "Integrate validateRunSummary into BenchmarkRunner; define coverage threshold; real-mode test after human approval"
-  }
+	"runId": "rudolph-anschlusslauf-20260624",
+	"timestampUtc": "2026-06-24T17:00:00Z",
+	"executionMode": "fixture",
+	"benchmarkName": "rudolph-beacon",
+	"repo": {
+		"branch": "feat/issue-279-phase-1g-safe-apply-plan-20260624-135722",
+		"commitSha": "368c9c00f4b3b9a4ced9cbe0c52a501c1ce05100",
+		"status": "dirty"
+	},
+	"issues": [
+		{
+			"id": "ANSCHLUSS-001",
+			"title": "Coverage Measurement",
+			"status": "DONE",
+			"evidencePaths": ["docs/evidence/rudolph-beacon/next-run-gates.md"],
+			"testNames": ["npm run test:benchmark:rudolph:coverage"],
+			"changedFiles": ["package.json"],
+			"confidence": 0.95
+		},
+		{
+			"id": "ANSCHLUSS-002",
+			"title": "Evidence Schema Validation",
+			"status": "DONE",
+			"evidencePaths": [
+				"packages/benchmark-rudolph/src/__tests__/evidence-schema-validation.test.ts",
+				"docs/evidence/rudolph-beacon/next-run-gates.md"
+			],
+			"testNames": ["evidence-schema-validation.test.ts"],
+			"changedFiles": [
+				"packages/benchmark-rudolph/src/__tests__/evidence-schema-validation.test.ts"
+			],
+			"confidence": 0.95
+		},
+		{
+			"id": "ANSCHLUSS-003",
+			"title": "Red/Negative Tests Hardening",
+			"status": "DONE",
+			"evidencePaths": [
+				"packages/benchmark-rudolph/src/__tests__/red-negative-tests.test.ts",
+				"docs/evidence/rudolph-beacon/next-run-gates.md"
+			],
+			"testNames": ["red-negative-tests.test.ts"],
+			"changedFiles": ["packages/benchmark-rudolph/src/__tests__/red-negative-tests.test.ts"],
+			"confidence": 0.9
+		},
+		{
+			"id": "ANSCHLUSS-004",
+			"title": "Real-Mode Readiness Documentation",
+			"status": "DONE",
+			"evidencePaths": ["docs/benchmark/rudolph-beacon/REAL_MODE_READINESS.md"],
+			"testNames": ["Red Test 19 — Real-Mode without approval blocked"],
+			"changedFiles": ["docs/benchmark/rudolph-beacon/REAL_MODE_READINESS.md"],
+			"confidence": 0.85
+		},
+		{
+			"id": "ANSCHLUSS-005",
+			"title": "Decision Manifest",
+			"status": "DONE",
+			"evidencePaths": ["docs/evidence/rudolph-beacon/decision-manifest.md"],
+			"testNames": [
+				"Red Test 20 — YELLOW_REVIEW decision not auto-execute",
+				"Red Test 21 — RED_HOLD never execute"
+			],
+			"changedFiles": ["docs/evidence/rudolph-beacon/decision-manifest.md"],
+			"confidence": 0.85
+		},
+		{
+			"id": "ANSCHLUSS-006",
+			"title": "Hardened Evaluation Contract & Status Docs",
+			"status": "DONE",
+			"evidencePaths": [
+				"docs/benchmark/rudolph-beacon/POSITRON_EVALUATION_CONTRACT.md",
+				"docs/benchmark/rudolph-beacon/CAPABILITIES.md",
+				"docs/benchmark/rudolph-beacon/KNOWN_LIMITATIONS.md",
+				"docs/evidence/rudolph-beacon/RUN_REPORT.md"
+			],
+			"testNames": [
+				"Red Test 15 — GREEN without schema validation forbidden",
+				"Red Test 22 — UNKNOWN not replaced by assumption"
+			],
+			"changedFiles": [
+				"docs/benchmark/rudolph-beacon/POSITRON_EVALUATION_CONTRACT.md",
+				"docs/benchmark/rudolph-beacon/CAPABILITIES.md",
+				"docs/benchmark/rudolph-beacon/KNOWN_LIMITATIONS.md",
+				"docs/evidence/rudolph-beacon/RUN_REPORT.md"
+			],
+			"confidence": 0.9
+		}
+	],
+	"commands": [
+		{
+			"name": "git diff --check",
+			"command": "git diff --check",
+			"exitCode": 0,
+			"durationMs": 200
+		},
+		{
+			"name": "npm run build",
+			"command": "tsc -b packages/...",
+			"exitCode": 0,
+			"durationMs": 8000
+		},
+		{
+			"name": "npm run typecheck",
+			"command": "tsc -b --dry",
+			"exitCode": 0,
+			"durationMs": 1200
+		},
+		{
+			"name": "npm run test:benchmark:rudolph",
+			"command": "vitest run packages/benchmark-rudolph/src",
+			"exitCode": 0,
+			"durationMs": 3000
+		},
+		{
+			"name": "npm run test:benchmark:rudolph:coverage",
+			"command": "vitest run packages/benchmark-rudolph/src --coverage",
+			"exitCode": 1,
+			"durationMs": 6000
+		}
+	],
+	"tests": {
+		"passed": 157,
+		"failed": 0,
+		"skipped": 0,
+		"redTestsCovered": [
+			"Red Test 15: GREEN ohne Evidence-Schema-Validierung ist verboten",
+			"Red Test 16: DONE ohne Evidence-Pfad ist verboten",
+			"Red Test 17: Fake-Secret in Run-Summary muss redigiert sein",
+			"Red Test 18: Coverage fehlt → Status darf nicht blind GREEN sein",
+			"Red Test 19: Real-Mode ohne Human Approval darf nicht starten",
+			"Red Test 20: YELLOW_REVIEW-Entscheidung nicht automatisch ausführen",
+			"Red Test 21: RED_HOLD-Aktion nie ausführen",
+			"Red Test 22: UNKNOWN nicht durch Annahme ersetzen"
+		]
+	},
+	"safety": {
+		"secretsRedacted": true,
+		"blockedActions": [],
+		"warnings": [
+			"Real execution mode NOT executed (requires HUMAN APPROVAL)",
+			"Coverage: global threshold (30%) pre-existing failure — benchmark package achieves 94.66%",
+			"Schema validator not yet integrated into BenchmarkRunner (deliberate scope boundary)"
+		]
+	},
+	"conclusion": {
+		"status": "GREEN",
+		"whatWorks": [
+			"ANSCHLUSS-001: Coverage-Messung für Benchmark-Package (94.66% line coverage)",
+			"ANSCHLUSS-002: Evidence-Schema-Validierung (32 runtime validation tests PASS)",
+			"ANSCHLUSS-003: 8 neue Red/Negative Tests (alle PASS)",
+			"ANSCHLUSS-004: Real-Mode-Readiness-Dokumentation",
+			"ANSCHLUSS-005: Decision-Manifest mit GREEN_SAFE/YELLOW_REVIEW/RED_HOLD",
+			"ANSCHLUSS-006: Gehärtete Positron-Schlussfolgerungen und Status-Dokumente"
+		],
+		"whatDoesNotWork": [],
+		"whatIsUnproven": [
+			"Real execution mode (requires human approval)",
+			"Coverage global threshold (pre-existing configuration issue)",
+			"Schema validator not yet integrated into BenchmarkRunner"
+		],
+		"confidence": 0.92
+	},
+	"capabilityDelta": {
+		"newCapabilities": [
+			"Coverage measurement: 94.66% line coverage for benchmark package",
+			"Runtime evidence schema validation (validateRunSummary)",
+			"8 hardened red/negative tests for policy enforcement",
+			"Real-mode readiness documentation with kill-switch overview",
+			"Decision classification: GREEN_SAFE / YELLOW_REVIEW / RED_HOLD",
+			"UNKNOWN integrity: no assumption-based upgrades without evidence"
+		],
+		"removedBlockers": [
+			"Prior: no coverage measurement capability — NOW: measured at 94.66%",
+			"Prior: no schema validation at runtime — NOW: 32 validation tests",
+			"Prior: 14 red tests — NOW: 22 red tests"
+		],
+		"unchangedLimitations": [
+			"Real execution mode requires human approval",
+			"Global coverage threshold pre-existing (not introduced by benchmark)",
+			"Mermaid diagram validation TOOL_GAP",
+			"GitHub Actions advisory-only (Issue #268)"
+		],
+		"remainingRisks": [
+			"Schema validator not integrated into BenchmarkRunner (scope boundary)",
+			"determineConclusionStatus trusts status field (mitigated by schema validation)",
+			"Real mode untested (fixture/dry-run only)"
+		],
+		"nextBestStep": "Integrate validateRunSummary into BenchmarkRunner; define coverage threshold; real-mode test after human approval"
+	}
 }

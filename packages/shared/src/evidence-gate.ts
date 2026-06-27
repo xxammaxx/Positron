@@ -5,10 +5,7 @@
 // Pure functions only. No GitHub API calls, no shell execution,
 // no mutations, no network, no file system writes.
 
-import type {
-	DecisionManifestRow,
-	DecisionManifestValidationResult,
-} from './decision-manifest.js';
+import type { DecisionManifestRow, DecisionManifestValidationResult } from './decision-manifest.js';
 import { validateDecisionManifest } from './decision-manifest.js';
 import type { GitHubContextSnapshot } from './github-context-reconciler.js';
 import { reconcileGitHubContext } from './github-context-reconciler.js';
@@ -127,8 +124,7 @@ export function createEvidenceGateReportFromRows(
 
 	const applyableRows = validation.applyableActions;
 	const blockedRows = rows.filter(
-		(row) =>
-			!(row.risk_class === 'GREEN_SAFE' && row.agent_recommendation === 'APPLY_GREEN_SAFE'),
+		(row) => !(row.risk_class === 'GREEN_SAFE' && row.agent_recommendation === 'APPLY_GREEN_SAFE'),
 	);
 
 	const status = determineStatus(validation, options?.localGateReport);

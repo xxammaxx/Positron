@@ -68,10 +68,7 @@ export function buildTraceabilityMap(
 /**
  * Build a single trace entry, enforcing evidence requirements.
  */
-function buildTraceEntry(
-	id: string,
-	result?: BenchmarkIssueResult,
-): IssueTraceEntry {
+function buildTraceEntry(id: string, result?: BenchmarkIssueResult): IssueTraceEntry {
 	const specPath = `docs/benchmark/rudolph-beacon/issues/${id}.md`;
 
 	if (!result) {
@@ -141,9 +138,10 @@ export function validateTraceabilityMap(map: TraceabilityMap): string[] {
  * Validate that issue IDs are NOT being treated as a chronological sequence.
  * Returns true if all issue statuses are independently determined (not derived from order).
  */
-export function validateIssueIndependence(
-	issues: BenchmarkIssueResult[],
-): { valid: boolean; warnings: string[] } {
+export function validateIssueIndependence(issues: BenchmarkIssueResult[]): {
+	valid: boolean;
+	warnings: string[];
+} {
 	const warnings: string[] = [];
 
 	// Check if any issue's status depends on a "previous" issue ID

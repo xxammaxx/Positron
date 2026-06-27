@@ -15,18 +15,14 @@
 			"id": "PHASE-8-REALITY-REFRESH",
 			"title": "Reality Refresh — verify repository state before Phase 8",
 			"status": "DONE",
-			"evidencePaths": [
-				"docs/evidence/rudolph-beacon/phase-8-reality-refresh.md"
-			],
+			"evidencePaths": ["docs/evidence/rudolph-beacon/phase-8-reality-refresh.md"],
 			"confidence": 0.99
 		},
 		{
 			"id": "PHASE-8-REMOTE-ACTION-CONSISTENCY-AUDIT",
 			"title": "Remote-Action-Consistency-Audit — investigate Issue #279 comment",
 			"status": "DONE",
-			"evidencePaths": [
-				"docs/evidence/rudolph-beacon/phase-8-remote-action-consistency-audit.md"
-			],
+			"evidencePaths": ["docs/evidence/rudolph-beacon/phase-8-remote-action-consistency-audit.md"],
 			"testNames": [
 				"Comment 4790756184 found on GitHub (created by xxammaxx, 2026-06-24T15:12:02Z)",
 				"Comment NOT listed in any Phase 7 local evidence file",
@@ -39,9 +35,7 @@
 			"id": "PHASE-8-PHASE-7-EVIDENCE-AUDIT",
 			"title": "Phase 7 Evidence Audit — security and consistency check",
 			"status": "DONE",
-			"evidencePaths": [
-				"docs/evidence/rudolph-beacon/phase-8-phase-7-evidence-audit.md"
-			],
+			"evidencePaths": ["docs/evidence/rudolph-beacon/phase-8-phase-7-evidence-audit.md"],
 			"testNames": [
 				"All 9 Phase 7 files individually audited",
 				"Secret scan: CLEAN (no real secrets)",
@@ -57,9 +51,7 @@
 			"id": "PHASE-8-GATES",
 			"title": "Local Gates — post-evidence-audit verification",
 			"status": "DONE",
-			"evidencePaths": [
-				"docs/evidence/rudolph-beacon/phase-8-gates.md"
-			],
+			"evidencePaths": ["docs/evidence/rudolph-beacon/phase-8-gates.md"],
 			"testNames": [
 				"git diff --check: PASS",
 				"npm run build: PASS (10 projects)",
@@ -74,9 +66,7 @@
 			"id": "PHASE-8-COMMIT-EXECUTION",
 			"title": "Phase 7 Evidence Local Commit",
 			"status": "PENDING",
-			"evidencePaths": [
-				"docs/evidence/rudolph-beacon/phase-8-gates.md"
-			],
+			"evidencePaths": ["docs/evidence/rudolph-beacon/phase-8-gates.md"],
 			"testNames": [
 				"APPROVE LOCAL COMMIT PHASE 7 EVIDENCE ONLY: YES",
 				"REMOTE_ACTION_CONSISTENCY: COMMENT_REFERENCE_ONLY",
@@ -90,18 +80,14 @@
 			"id": "PHASE-8-PR-FINAL-DRAFT",
 			"title": "Final PR Draft — updated for Phase 8 audit findings",
 			"status": "DONE",
-			"evidencePaths": [
-				"docs/evidence/rudolph-beacon/phase-8-pr-final-draft.md"
-			],
+			"evidencePaths": ["docs/evidence/rudolph-beacon/phase-8-pr-final-draft.md"],
 			"confidence": 0.96
 		},
 		{
 			"id": "PHASE-8-OWNER-APPROVAL",
 			"title": "Owner Approval Options — four options including Remote-Action resolution",
 			"status": "DONE",
-			"evidencePaths": [
-				"docs/evidence/rudolph-beacon/phase-8-owner-approval-options.md"
-			],
+			"evidencePaths": ["docs/evidence/rudolph-beacon/phase-8-owner-approval-options.md"],
 			"confidence": 0.96
 		}
 	],

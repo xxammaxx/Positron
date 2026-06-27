@@ -1,183 +1,173 @@
 {
-  "runId": "phase-3-validator-integration-20260624",
-  "timestampUtc": "2026-06-24T15:42:00Z",
-  "executionMode": "fixture",
-  "benchmarkName": "rudolph-beacon",
-  "repo": {
-    "branch": "feat/issue-279-phase-1g-safe-apply-plan-20260624-135722",
-    "commitSha": "368c9c00f4b3b9a4ced9cbe0c52a501c1ce05100",
-    "status": "dirty"
-  },
-  "issues": [
-    {
-      "id": "PHASE3-001",
-      "title": "validateRunSummary() in BenchmarkRunner.execute() integrieren",
-      "status": "DONE",
-      "evidencePaths": [
-        "packages/benchmark-rudolph/src/benchmark-runner.ts",
-        "packages/benchmark-rudolph/src/__tests__/red-negative-tests.test.ts",
-        "packages/benchmark-rudolph/src/__tests__/benchmark-runner.test.ts"
-      ],
-      "testNames": [
-        "Red Test 23: Runner validates Run-Summary before return",
-        "Red Test 24: Invalid Run-Summary cannot become GREEN",
-        "Red Test 25: DONE without evidence caught by Runner integration"
-      ],
-      "changedFiles": [
-        "packages/benchmark-rudolph/src/benchmark-runner.ts",
-        "packages/benchmark-rudolph/src/evidence-contract.ts",
-        "packages/benchmark-rudolph/src/index.ts"
-      ],
-      "confidence": 0.95
-    },
-    {
-      "id": "PHASE3-002",
-      "title": "Schlussfolgerungslogik härten (determineConclusionStatus evidence-aware)",
-      "status": "DONE",
-      "evidencePaths": [
-        "packages/benchmark-rudolph/src/evidence-contract.ts",
-        "packages/benchmark-rudolph/src/__tests__/evidence-contract.test.ts"
-      ],
-      "testNames": [
-        "Red Test 15: valid GREEN requires all DONE issues have evidence",
-        "Red Test 24: determineConclusionStatus returns YELLOW for DONE-without-evidence"
-      ],
-      "changedFiles": [
-        "packages/benchmark-rudolph/src/evidence-contract.ts"
-      ],
-      "confidence": 0.95
-    },
-    {
-      "id": "PHASE3-003",
-      "title": "Coverage-Policy benchmark-spezifisch entscheiden",
-      "status": "DONE",
-      "evidencePaths": [
-        "docs/benchmark/rudolph-beacon/COVERAGE_POLICY.md",
-        "docs/evidence/rudolph-beacon/phase-3-gates.md"
-      ],
-      "testNames": [
-        "Red Test 27: Coverage exit code 1 not misclassified",
-        "Red Test 28: Missing coverage reduces confidence"
-      ],
-      "changedFiles": [
-        "docs/benchmark/rudolph-beacon/COVERAGE_POLICY.md"
-      ],
-      "confidence": 0.90
-    },
-    {
-      "id": "PHASE3-004",
-      "title": "Issue-279-Anbindung ergänzen",
-      "status": "DONE",
-      "evidencePaths": [
-        "docs/benchmark/rudolph-beacon/ISSUE_279_ALIGNMENT.md"
-      ],
-      "testNames": [],
-      "changedFiles": [
-        "docs/benchmark/rudolph-beacon/ISSUE_279_ALIGNMENT.md"
-      ],
-      "confidence": 0.85
-    },
-    {
-      "id": "PHASE3-005",
-      "title": "Evidence-Dateien für Phase 3 erzeugen",
-      "status": "DONE",
-      "evidencePaths": [
-        "docs/evidence/rudolph-beacon/phase-3-reality-refresh.md",
-        "docs/evidence/rudolph-beacon/phase-3-preflight.md",
-        "docs/evidence/rudolph-beacon/phase-3-gates.md",
-        "docs/evidence/rudolph-beacon/phase-3-summary.json",
-        "docs/evidence/rudolph-beacon/phase-3-report.md"
-      ],
-      "testNames": [],
-      "changedFiles": [
-        "docs/evidence/rudolph-beacon/phase-3-*.md",
-        "docs/evidence/rudolph-beacon/phase-3-summary.json"
-      ],
-      "confidence": 0.90
-    }
-  ],
-  "commands": [
-    {
-      "name": "npm run build",
-      "command": "tsc -b packages/...",
-      "exitCode": 0,
-      "durationMs": 8500
-    },
-    {
-      "name": "npm run typecheck",
-      "command": "tsc -b --dry",
-      "exitCode": 0,
-      "durationMs": 1200
-    },
-    {
-      "name": "npm run test:benchmark:rudolph",
-      "command": "vitest run packages/benchmark-rudolph/src",
-      "exitCode": 0,
-      "durationMs": 2400
-    },
-    {
-      "name": "npm run test:benchmark:rudolph:coverage",
-      "command": "vitest run packages/benchmark-rudolph/src --coverage",
-      "exitCode": 1,
-      "durationMs": 3800
-    }
-  ],
-  "tests": {
-    "passed": 171,
-    "failed": 0,
-    "skipped": 0,
-    "redTestsCovered": [
-      "Red Test 1-28: All 28 Red Tests PASS"
-    ]
-  },
-  "safety": {
-    "secretsRedacted": true,
-    "blockedActions": [],
-    "warnings": [
-      "Coverage exit code 1 is PRE-EXISTING global threshold (6.9% global lines) — NOT benchmark fault",
-      "Benchmark package line coverage estimated ~94% (above 85% minimum)"
-    ]
-  },
-  "conclusion": {
-    "status": "GREEN",
-    "whatWorks": [
-      "PHASE3-001: validateRunSummary() in BenchmarkRunner.execute() integriert — jede Summary vor Rückgabe validiert",
-      "PHASE3-002: determineConclusionStatus() evidence-aware gehärtet — DONE ohne Evidence = YELLOW",
-      "PHASE3-003: Coverage-Policy benchmark-spezifisch (85% Minimum, Exit Code 1 als PRE-EXISTING klassifiziert)",
-      "PHASE3-004: Issue-279-Alignment dokumentiert — Rudolph Beacon als Replacement-Validierungsumgebung",
-      "PHASE3-005: Phase 3 Evidence-Dokumente vollständig erstellt"
-    ],
-    "whatDoesNotWork": [],
-    "whatIsUnproven": [
-      "Real-Mode-Validierung (Human Approval erforderlich)",
-      "Mermaid-Diagramm-Validierung (TOOL_GAP)"
-    ],
-    "confidence": 0.93
-  },
-  "capabilityDelta": {
-    "newCapabilities": [
-      "validateRunSummary() in BenchmarkRunner.execute() integriert — automatische Schema-Validierung jeder Run-Summary",
-      "determineConclusionStatus() evidence-aware — DONE ohne Evidence-Pfade wird als YELLOW klassifiziert",
-      "buildConclusion() traceability-aware — Traceability-Fehler verhindern GREEN",
-      "Benchmark-spezifische Coverage-Policy (85% Line Minimum)",
-      "Issue-279-Alignment-Dokumentation — Rudolph Beacon als Replacement-Pfad-Validierung",
-      "14 neue Red Tests (23-28) für Validator-Integration, Schema, Coverage, Secrets",
-      "171 Tests total (28 Red Tests) — alle PASS"
-    ],
-    "removedBlockers": [
-      "validateRunSummary() Lücke geschlossen — existierte nur im Test, jetzt im Runner integriert",
-      "determineConclusionStatus() Gap (DONE ohne Evidence → GREEN) geschlossen",
-      "Fehlende Coverage-Policy — jetzt dokumentiert"
-    ],
-    "unchangedLimitations": [
-      "Real-Mode erfordert Human Approval",
-      "Mermaid-Diagramm-Validierung TOOL_GAP",
-      "Globaler Coverage-Threshold PRE-EXISTING (nicht durch Benchmark eingeführt)"
-    ],
-    "remainingRisks": [
-      "Real-Mode-Validierung ungetestet",
-      "Benchmark-Package-Coverage nur geschätzt (~94%), nicht exakt gemessen aus Coverage-Report extrahiert"
-    ],
-    "nextBestStep": "Real-Mode-Test nach Human Approval; Mermaid-Validierung evaluieren"
-  }
+	"runId": "phase-3-validator-integration-20260624",
+	"timestampUtc": "2026-06-24T15:42:00Z",
+	"executionMode": "fixture",
+	"benchmarkName": "rudolph-beacon",
+	"repo": {
+		"branch": "feat/issue-279-phase-1g-safe-apply-plan-20260624-135722",
+		"commitSha": "368c9c00f4b3b9a4ced9cbe0c52a501c1ce05100",
+		"status": "dirty"
+	},
+	"issues": [
+		{
+			"id": "PHASE3-001",
+			"title": "validateRunSummary() in BenchmarkRunner.execute() integrieren",
+			"status": "DONE",
+			"evidencePaths": [
+				"packages/benchmark-rudolph/src/benchmark-runner.ts",
+				"packages/benchmark-rudolph/src/__tests__/red-negative-tests.test.ts",
+				"packages/benchmark-rudolph/src/__tests__/benchmark-runner.test.ts"
+			],
+			"testNames": [
+				"Red Test 23: Runner validates Run-Summary before return",
+				"Red Test 24: Invalid Run-Summary cannot become GREEN",
+				"Red Test 25: DONE without evidence caught by Runner integration"
+			],
+			"changedFiles": [
+				"packages/benchmark-rudolph/src/benchmark-runner.ts",
+				"packages/benchmark-rudolph/src/evidence-contract.ts",
+				"packages/benchmark-rudolph/src/index.ts"
+			],
+			"confidence": 0.95
+		},
+		{
+			"id": "PHASE3-002",
+			"title": "Schlussfolgerungslogik härten (determineConclusionStatus evidence-aware)",
+			"status": "DONE",
+			"evidencePaths": [
+				"packages/benchmark-rudolph/src/evidence-contract.ts",
+				"packages/benchmark-rudolph/src/__tests__/evidence-contract.test.ts"
+			],
+			"testNames": [
+				"Red Test 15: valid GREEN requires all DONE issues have evidence",
+				"Red Test 24: determineConclusionStatus returns YELLOW for DONE-without-evidence"
+			],
+			"changedFiles": ["packages/benchmark-rudolph/src/evidence-contract.ts"],
+			"confidence": 0.95
+		},
+		{
+			"id": "PHASE3-003",
+			"title": "Coverage-Policy benchmark-spezifisch entscheiden",
+			"status": "DONE",
+			"evidencePaths": [
+				"docs/benchmark/rudolph-beacon/COVERAGE_POLICY.md",
+				"docs/evidence/rudolph-beacon/phase-3-gates.md"
+			],
+			"testNames": [
+				"Red Test 27: Coverage exit code 1 not misclassified",
+				"Red Test 28: Missing coverage reduces confidence"
+			],
+			"changedFiles": ["docs/benchmark/rudolph-beacon/COVERAGE_POLICY.md"],
+			"confidence": 0.9
+		},
+		{
+			"id": "PHASE3-004",
+			"title": "Issue-279-Anbindung ergänzen",
+			"status": "DONE",
+			"evidencePaths": ["docs/benchmark/rudolph-beacon/ISSUE_279_ALIGNMENT.md"],
+			"testNames": [],
+			"changedFiles": ["docs/benchmark/rudolph-beacon/ISSUE_279_ALIGNMENT.md"],
+			"confidence": 0.85
+		},
+		{
+			"id": "PHASE3-005",
+			"title": "Evidence-Dateien für Phase 3 erzeugen",
+			"status": "DONE",
+			"evidencePaths": [
+				"docs/evidence/rudolph-beacon/phase-3-reality-refresh.md",
+				"docs/evidence/rudolph-beacon/phase-3-preflight.md",
+				"docs/evidence/rudolph-beacon/phase-3-gates.md",
+				"docs/evidence/rudolph-beacon/phase-3-summary.json",
+				"docs/evidence/rudolph-beacon/phase-3-report.md"
+			],
+			"testNames": [],
+			"changedFiles": [
+				"docs/evidence/rudolph-beacon/phase-3-*.md",
+				"docs/evidence/rudolph-beacon/phase-3-summary.json"
+			],
+			"confidence": 0.9
+		}
+	],
+	"commands": [
+		{
+			"name": "npm run build",
+			"command": "tsc -b packages/...",
+			"exitCode": 0,
+			"durationMs": 8500
+		},
+		{
+			"name": "npm run typecheck",
+			"command": "tsc -b --dry",
+			"exitCode": 0,
+			"durationMs": 1200
+		},
+		{
+			"name": "npm run test:benchmark:rudolph",
+			"command": "vitest run packages/benchmark-rudolph/src",
+			"exitCode": 0,
+			"durationMs": 2400
+		},
+		{
+			"name": "npm run test:benchmark:rudolph:coverage",
+			"command": "vitest run packages/benchmark-rudolph/src --coverage",
+			"exitCode": 1,
+			"durationMs": 3800
+		}
+	],
+	"tests": {
+		"passed": 171,
+		"failed": 0,
+		"skipped": 0,
+		"redTestsCovered": ["Red Test 1-28: All 28 Red Tests PASS"]
+	},
+	"safety": {
+		"secretsRedacted": true,
+		"blockedActions": [],
+		"warnings": [
+			"Coverage exit code 1 is PRE-EXISTING global threshold (6.9% global lines) — NOT benchmark fault",
+			"Benchmark package line coverage estimated ~94% (above 85% minimum)"
+		]
+	},
+	"conclusion": {
+		"status": "GREEN",
+		"whatWorks": [
+			"PHASE3-001: validateRunSummary() in BenchmarkRunner.execute() integriert — jede Summary vor Rückgabe validiert",
+			"PHASE3-002: determineConclusionStatus() evidence-aware gehärtet — DONE ohne Evidence = YELLOW",
+			"PHASE3-003: Coverage-Policy benchmark-spezifisch (85% Minimum, Exit Code 1 als PRE-EXISTING klassifiziert)",
+			"PHASE3-004: Issue-279-Alignment dokumentiert — Rudolph Beacon als Replacement-Validierungsumgebung",
+			"PHASE3-005: Phase 3 Evidence-Dokumente vollständig erstellt"
+		],
+		"whatDoesNotWork": [],
+		"whatIsUnproven": [
+			"Real-Mode-Validierung (Human Approval erforderlich)",
+			"Mermaid-Diagramm-Validierung (TOOL_GAP)"
+		],
+		"confidence": 0.93
+	},
+	"capabilityDelta": {
+		"newCapabilities": [
+			"validateRunSummary() in BenchmarkRunner.execute() integriert — automatische Schema-Validierung jeder Run-Summary",
+			"determineConclusionStatus() evidence-aware — DONE ohne Evidence-Pfade wird als YELLOW klassifiziert",
+			"buildConclusion() traceability-aware — Traceability-Fehler verhindern GREEN",
+			"Benchmark-spezifische Coverage-Policy (85% Line Minimum)",
+			"Issue-279-Alignment-Dokumentation — Rudolph Beacon als Replacement-Pfad-Validierung",
+			"14 neue Red Tests (23-28) für Validator-Integration, Schema, Coverage, Secrets",
+			"171 Tests total (28 Red Tests) — alle PASS"
+		],
+		"removedBlockers": [
+			"validateRunSummary() Lücke geschlossen — existierte nur im Test, jetzt im Runner integriert",
+			"determineConclusionStatus() Gap (DONE ohne Evidence → GREEN) geschlossen",
+			"Fehlende Coverage-Policy — jetzt dokumentiert"
+		],
+		"unchangedLimitations": [
+			"Real-Mode erfordert Human Approval",
+			"Mermaid-Diagramm-Validierung TOOL_GAP",
+			"Globaler Coverage-Threshold PRE-EXISTING (nicht durch Benchmark eingeführt)"
+		],
+		"remainingRisks": [
+			"Real-Mode-Validierung ungetestet",
+			"Benchmark-Package-Coverage nur geschätzt (~94%), nicht exakt gemessen aus Coverage-Report extrahiert"
+		],
+		"nextBestStep": "Real-Mode-Test nach Human Approval; Mermaid-Validierung evaluieren"
+	}
 }

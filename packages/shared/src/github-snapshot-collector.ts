@@ -56,7 +56,12 @@ function extractLabels(labels: unknown): string[] | undefined {
 	for (const item of labels) {
 		if (typeof item === 'string') {
 			result.push(item);
-		} else if (item !== null && typeof item === 'object' && 'name' in item && typeof (item as { name: unknown }).name === 'string') {
+		} else if (
+			item !== null &&
+			typeof item === 'object' &&
+			'name' in item &&
+			typeof (item as { name: unknown }).name === 'string'
+		) {
 			result.push((item as { name: string }).name);
 		}
 	}
@@ -67,9 +72,11 @@ function extractLabels(labels: unknown): string[] | undefined {
  * Determine if review findings are accessible and count actionable ones.
  * Reviews from external AI reviewers that mention "Actionable comments:" are counted.
  */
-function extractReviewFindings(
-	enrichment: GhPrEnrichment | undefined,
-): { reviewFindingCount?: number; actionableFindingCount?: number; findingsAccessible?: boolean } {
+function extractReviewFindings(enrichment: GhPrEnrichment | undefined): {
+	reviewFindingCount?: number;
+	actionableFindingCount?: number;
+	findingsAccessible?: boolean;
+} {
 	if (!enrichment || !Array.isArray(enrichment.reviews)) {
 		return { findingsAccessible: undefined };
 	}

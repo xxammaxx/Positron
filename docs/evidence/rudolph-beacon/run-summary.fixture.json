@@ -1,161 +1,157 @@
 {
-  "runId": "rudolph-fixture-20260624",
-  "timestampUtc": "2026-06-24T14:30:00Z",
-  "executionMode": "fixture",
-  "benchmarkName": "rudolph-beacon",
-  "repo": {
-    "branch": "feat/issue-279-phase-1g-safe-apply-plan-20260624-135722",
-    "commitSha": "368c9c00f4b3b9a4ced9cbe0c52a501c1ce05100",
-    "status": "clean"
-  },
-  "issues": [
-    {
-      "id": "BENCH-001",
-      "title": "Domain Baseline",
-      "status": "DONE",
-      "evidencePaths": [
-        "docs/evidence/rudolph-beacon/reality-refresh.md",
-        "docs/evidence/rudolph-beacon/RUN_REPORT.md"
-      ],
-      "testNames": ["beacon-domain.test.ts"],
-      "changedFiles": ["packages/benchmark-rudolph/src/beacon-domain.ts"],
-      "confidence": 0.95
-    },
-    {
-      "id": "BENCH-002",
-      "title": "Deterministic Scan Simulator",
-      "status": "DONE",
-      "evidencePaths": ["docs/evidence/rudolph-beacon/RUN_REPORT.md"],
-      "testNames": ["beacon-fixtures.test.ts"],
-      "changedFiles": ["packages/benchmark-rudolph/src/beacon-fixtures.ts"],
-      "confidence": 0.90
-    },
-    {
-      "id": "BENCH-003",
-      "title": "Evidence Contract",
-      "status": "DONE",
-      "evidencePaths": [
-        "docs/benchmark/rudolph-beacon/POSITRON_EVALUATION_CONTRACT.md",
-        "docs/evidence/rudolph-beacon/RUN_REPORT.md"
-      ],
-      "testNames": ["evidence-contract.test.ts"],
-      "changedFiles": ["packages/benchmark-rudolph/src/evidence-contract.ts"],
-      "confidence": 0.90
-    },
-    {
-      "id": "BENCH-004",
-      "title": "Traceability / Loop-Prevention",
-      "status": "DONE",
-      "evidencePaths": [
-        "docs/benchmark/rudolph-beacon/TRACEABILITY_CONTRACT.md",
-        "docs/benchmark/rudolph-beacon/traceability-map.json"
-      ],
-      "testNames": ["traceability.test.ts"],
-      "changedFiles": ["packages/benchmark-rudolph/src/traceability.ts"],
-      "confidence": 0.85
-    },
-    {
-      "id": "BENCH-005",
-      "title": "Dry-Run Safety",
-      "status": "DONE",
-      "evidencePaths": [
-        "docs/evidence/rudolph-beacon/run-summary.dry-run.json"
-      ],
-      "testNames": ["benchmark-runner.test.ts"],
-      "changedFiles": ["packages/benchmark-rudolph/src/benchmark-runner.ts"],
-      "confidence": 0.90
-    }
-  ],
-  "commands": [
-    {
-      "name": "npm run build",
-      "command": "tsc -b packages/... packages/benchmark-rudolph ...",
-      "exitCode": 0,
-      "durationMs": 8500,
-      "stdoutPath": null,
-      "stderrPath": null
-    },
-    {
-      "name": "npm run typecheck",
-      "command": "tsc -b --dry",
-      "exitCode": 0,
-      "durationMs": 1200,
-      "stdoutPath": null,
-      "stderrPath": null
-    },
-    {
-      "name": "npm run test:benchmark:rudolph",
-      "command": "vitest run packages/benchmark-rudolph/src",
-      "exitCode": 0,
-      "durationMs": 2700,
-      "stdoutPath": null,
-      "stderrPath": null
-    }
-  ],
-  "tests": {
-    "passed": 91,
-    "failed": 0,
-    "skipped": 0,
-    "redTestsCovered": [
-      "Red Test 1: Battery 19% → RED",
-      "Red Test 2: Battery 20% NOT RED",
-      "Red Test 3: RSSI -91 → RED",
-      "Red Test 4: RSSI -90 NOT RED",
-      "Red Test 5: Stale → RED",
-      "Red Test 6: Same seed = identical result",
-      "Red Test 7: Unknown beacon → error",
-      "Red Test 8: Evidence contains executionMode",
-      "Red Test 9: No fake secrets in evidence",
-      "Red Test 10: Missing evidence → UNKNOWN_EVIDENCE",
-      "Red Test 11: DONE without evidence forbidden",
-      "Red Test 12: Dry-run blocks push/PR/merge",
-      "Red Test 13: Conclusion NOT GREEN without evidence",
-      "Red Test 14: Issue IDs NOT chronological"
-    ]
-  },
-  "safety": {
-    "secretsRedacted": true,
-    "blockedActions": [],
-    "warnings": []
-  },
-  "conclusion": {
-    "status": "GREEN",
-    "whatWorks": [
-      "BENCH-001: Domain Baseline — beacon status classification at all boundary values",
-      "BENCH-002: Deterministic Scan Simulator — seed-based reproducibility proven",
-      "BENCH-003: Evidence Contract — schema, secret redaction, conclusion logic operational",
-      "BENCH-004: Traceability / Loop-Prevention — evidence enforcement active",
-      "BENCH-005: Dry-Run Safety — push/PR/merge/worktree correctly blocked"
-    ],
-    "whatDoesNotWork": [],
-    "whatIsUnproven": [
-      "Real execution mode (requires human approval — not testable in fixture/dry-run)"
-    ],
-    "confidence": 0.89
-  },
-  "capabilityDelta": {
-    "newCapabilities": [
-      "Deterministic beacon domain model with boundary-value testing",
-      "Seed-based deterministic scan simulator for reproducible testing",
-      "Machine-readable benchmark evidence contract (RudolphBenchmarkRunSummary)",
-      "Traceability map with evidence enforcement (no DONE without evidence)",
-      "Dry-run safety validation integrated with OpenCodeDryRunAgent",
-      "BenchmarkRunner wiring existing Fixture and Dry-Run agents into unified flow",
-      "91 benchmark tests passing (5 test files)"
-    ],
-    "removedBlockers": [
-      "No prior benchmark capability existed — all capabilities are new"
-    ],
-    "unchangedLimitations": [
-      "Real execution mode requires human approval (Positron policy)",
-      "GitHub Actions remains advisory-only (Issue #268)",
-      "apps/web test failures are pre-existing (not affected by benchmark)"
-    ],
-    "remainingRisks": [
-      "Real mode untested — risk of gap between fixture/dry-run and real agent behavior",
-      "Coverage threshold for benchmark package not yet measured",
-      "Mermaid diagram validation is TOOL_GAP — no local validator available"
-    ],
-    "nextBestStep": "Extend BENCH-003 with real-mode evidence after human approval; measure benchmark package coverage"
-  }
+	"runId": "rudolph-fixture-20260624",
+	"timestampUtc": "2026-06-24T14:30:00Z",
+	"executionMode": "fixture",
+	"benchmarkName": "rudolph-beacon",
+	"repo": {
+		"branch": "feat/issue-279-phase-1g-safe-apply-plan-20260624-135722",
+		"commitSha": "368c9c00f4b3b9a4ced9cbe0c52a501c1ce05100",
+		"status": "clean"
+	},
+	"issues": [
+		{
+			"id": "BENCH-001",
+			"title": "Domain Baseline",
+			"status": "DONE",
+			"evidencePaths": [
+				"docs/evidence/rudolph-beacon/reality-refresh.md",
+				"docs/evidence/rudolph-beacon/RUN_REPORT.md"
+			],
+			"testNames": ["beacon-domain.test.ts"],
+			"changedFiles": ["packages/benchmark-rudolph/src/beacon-domain.ts"],
+			"confidence": 0.95
+		},
+		{
+			"id": "BENCH-002",
+			"title": "Deterministic Scan Simulator",
+			"status": "DONE",
+			"evidencePaths": ["docs/evidence/rudolph-beacon/RUN_REPORT.md"],
+			"testNames": ["beacon-fixtures.test.ts"],
+			"changedFiles": ["packages/benchmark-rudolph/src/beacon-fixtures.ts"],
+			"confidence": 0.9
+		},
+		{
+			"id": "BENCH-003",
+			"title": "Evidence Contract",
+			"status": "DONE",
+			"evidencePaths": [
+				"docs/benchmark/rudolph-beacon/POSITRON_EVALUATION_CONTRACT.md",
+				"docs/evidence/rudolph-beacon/RUN_REPORT.md"
+			],
+			"testNames": ["evidence-contract.test.ts"],
+			"changedFiles": ["packages/benchmark-rudolph/src/evidence-contract.ts"],
+			"confidence": 0.9
+		},
+		{
+			"id": "BENCH-004",
+			"title": "Traceability / Loop-Prevention",
+			"status": "DONE",
+			"evidencePaths": [
+				"docs/benchmark/rudolph-beacon/TRACEABILITY_CONTRACT.md",
+				"docs/benchmark/rudolph-beacon/traceability-map.json"
+			],
+			"testNames": ["traceability.test.ts"],
+			"changedFiles": ["packages/benchmark-rudolph/src/traceability.ts"],
+			"confidence": 0.85
+		},
+		{
+			"id": "BENCH-005",
+			"title": "Dry-Run Safety",
+			"status": "DONE",
+			"evidencePaths": ["docs/evidence/rudolph-beacon/run-summary.dry-run.json"],
+			"testNames": ["benchmark-runner.test.ts"],
+			"changedFiles": ["packages/benchmark-rudolph/src/benchmark-runner.ts"],
+			"confidence": 0.9
+		}
+	],
+	"commands": [
+		{
+			"name": "npm run build",
+			"command": "tsc -b packages/... packages/benchmark-rudolph ...",
+			"exitCode": 0,
+			"durationMs": 8500,
+			"stdoutPath": null,
+			"stderrPath": null
+		},
+		{
+			"name": "npm run typecheck",
+			"command": "tsc -b --dry",
+			"exitCode": 0,
+			"durationMs": 1200,
+			"stdoutPath": null,
+			"stderrPath": null
+		},
+		{
+			"name": "npm run test:benchmark:rudolph",
+			"command": "vitest run packages/benchmark-rudolph/src",
+			"exitCode": 0,
+			"durationMs": 2700,
+			"stdoutPath": null,
+			"stderrPath": null
+		}
+	],
+	"tests": {
+		"passed": 91,
+		"failed": 0,
+		"skipped": 0,
+		"redTestsCovered": [
+			"Red Test 1: Battery 19% → RED",
+			"Red Test 2: Battery 20% NOT RED",
+			"Red Test 3: RSSI -91 → RED",
+			"Red Test 4: RSSI -90 NOT RED",
+			"Red Test 5: Stale → RED",
+			"Red Test 6: Same seed = identical result",
+			"Red Test 7: Unknown beacon → error",
+			"Red Test 8: Evidence contains executionMode",
+			"Red Test 9: No fake secrets in evidence",
+			"Red Test 10: Missing evidence → UNKNOWN_EVIDENCE",
+			"Red Test 11: DONE without evidence forbidden",
+			"Red Test 12: Dry-run blocks push/PR/merge",
+			"Red Test 13: Conclusion NOT GREEN without evidence",
+			"Red Test 14: Issue IDs NOT chronological"
+		]
+	},
+	"safety": {
+		"secretsRedacted": true,
+		"blockedActions": [],
+		"warnings": []
+	},
+	"conclusion": {
+		"status": "GREEN",
+		"whatWorks": [
+			"BENCH-001: Domain Baseline — beacon status classification at all boundary values",
+			"BENCH-002: Deterministic Scan Simulator — seed-based reproducibility proven",
+			"BENCH-003: Evidence Contract — schema, secret redaction, conclusion logic operational",
+			"BENCH-004: Traceability / Loop-Prevention — evidence enforcement active",
+			"BENCH-005: Dry-Run Safety — push/PR/merge/worktree correctly blocked"
+		],
+		"whatDoesNotWork": [],
+		"whatIsUnproven": [
+			"Real execution mode (requires human approval — not testable in fixture/dry-run)"
+		],
+		"confidence": 0.89
+	},
+	"capabilityDelta": {
+		"newCapabilities": [
+			"Deterministic beacon domain model with boundary-value testing",
+			"Seed-based deterministic scan simulator for reproducible testing",
+			"Machine-readable benchmark evidence contract (RudolphBenchmarkRunSummary)",
+			"Traceability map with evidence enforcement (no DONE without evidence)",
+			"Dry-run safety validation integrated with OpenCodeDryRunAgent",
+			"BenchmarkRunner wiring existing Fixture and Dry-Run agents into unified flow",
+			"91 benchmark tests passing (5 test files)"
+		],
+		"removedBlockers": ["No prior benchmark capability existed — all capabilities are new"],
+		"unchangedLimitations": [
+			"Real execution mode requires human approval (Positron policy)",
+			"GitHub Actions remains advisory-only (Issue #268)",
+			"apps/web test failures are pre-existing (not affected by benchmark)"
+		],
+		"remainingRisks": [
+			"Real mode untested — risk of gap between fixture/dry-run and real agent behavior",
+			"Coverage threshold for benchmark package not yet measured",
+			"Mermaid diagram validation is TOOL_GAP — no local validator available"
+		],
+		"nextBestStep": "Extend BENCH-003 with real-mode evidence after human approval; measure benchmark package coverage"
+	}
 }

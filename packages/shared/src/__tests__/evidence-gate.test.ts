@@ -3,18 +3,13 @@
 // All tests use inline fixtures. No GitHub API calls, no network.
 
 import { describe, expect, test } from 'vitest';
-import type {
-	DecisionManifestRow,
-} from '../decision-manifest.js';
+import type { DecisionManifestRow } from '../decision-manifest.js';
 import type {
 	GitHubContextSnapshot,
 	GitHubPullRequestSnapshot,
 	GitHubIssueSnapshot,
 } from '../github-context-reconciler.js';
-import type {
-	LocalGateReport,
-	LocalGateResult,
-} from '../local-gate-runner.js';
+import type { LocalGateReport, LocalGateResult } from '../local-gate-runner.js';
 import {
 	createEvidenceGateReportFromRows,
 	createEvidenceGateReportFromGitHubContext,
@@ -59,10 +54,23 @@ function toolGapFixture(): DecisionManifestRow[] {
 function repoSnapshotFixture(): GitHubContextSnapshot {
 	const prs: GitHubPullRequestSnapshot[] = [
 		{ number: 291, title: 'feat: collector', state: 'MERGED' },
-		{ number: 218, title: 'feat: gate approve', state: 'OPEN', mergeable: 'MERGEABLE', reviewFindingCount: 9, actionableFindingCount: 2, findingsAccessible: true },
+		{
+			number: 218,
+			title: 'feat: gate approve',
+			state: 'OPEN',
+			mergeable: 'MERGEABLE',
+			reviewFindingCount: 9,
+			actionableFindingCount: 2,
+			findingsAccessible: true,
+		},
 	];
 	const issues: GitHubIssueSnapshot[] = [
-		{ number: 229, title: 'Rebuild architecture chain', state: 'OPEN', labels: ['architecture', 'epic'] },
+		{
+			number: 229,
+			title: 'Rebuild architecture chain',
+			state: 'OPEN',
+			labels: ['architecture', 'epic'],
+		},
 		{ number: 268, title: 'CI Recovery', state: 'OPEN' },
 		{ number: 279, title: 'Replacement: rebuild', state: 'OPEN', labels: ['architecture', 'epic'] },
 	];
@@ -285,9 +293,36 @@ describe('Evidence Gate — Local Gate Integration', () => {
 			failed: 0,
 			skipped: 0,
 			results: [
-				{ id: 'build', label: 'Build', kind: 'required', command: 'npm', args: ['run', 'build'], status: 'PASS', exitCode: 0, durationMs: 2000 },
-				{ id: 'typecheck', label: 'Typecheck', kind: 'required', command: 'npm', args: ['run', 'typecheck'], status: 'PASS', exitCode: 0, durationMs: 1500 },
-				{ id: 'test', label: 'Test', kind: 'required', command: 'npm', args: ['test'], status: 'PASS', exitCode: 0, durationMs: 5000 },
+				{
+					id: 'build',
+					label: 'Build',
+					kind: 'required',
+					command: 'npm',
+					args: ['run', 'build'],
+					status: 'PASS',
+					exitCode: 0,
+					durationMs: 2000,
+				},
+				{
+					id: 'typecheck',
+					label: 'Typecheck',
+					kind: 'required',
+					command: 'npm',
+					args: ['run', 'typecheck'],
+					status: 'PASS',
+					exitCode: 0,
+					durationMs: 1500,
+				},
+				{
+					id: 'test',
+					label: 'Test',
+					kind: 'required',
+					command: 'npm',
+					args: ['test'],
+					status: 'PASS',
+					exitCode: 0,
+					durationMs: 5000,
+				},
 			] as LocalGateResult[],
 		};
 	}
@@ -302,9 +337,37 @@ describe('Evidence Gate — Local Gate Integration', () => {
 			failed: 1,
 			skipped: 0,
 			results: [
-				{ id: 'build', label: 'Build', kind: 'required', command: 'npm', args: ['run', 'build'], status: 'PASS', exitCode: 0, durationMs: 2000 },
-				{ id: 'typecheck', label: 'Typecheck', kind: 'required', command: 'npm', args: ['run', 'typecheck'], status: 'FAIL', exitCode: 2, durationMs: 1500, stderrSnippet: 'Found 3 type errors.' },
-				{ id: 'test', label: 'Test', kind: 'required', command: 'npm', args: ['test'], status: 'PASS', exitCode: 0, durationMs: 5000 },
+				{
+					id: 'build',
+					label: 'Build',
+					kind: 'required',
+					command: 'npm',
+					args: ['run', 'build'],
+					status: 'PASS',
+					exitCode: 0,
+					durationMs: 2000,
+				},
+				{
+					id: 'typecheck',
+					label: 'Typecheck',
+					kind: 'required',
+					command: 'npm',
+					args: ['run', 'typecheck'],
+					status: 'FAIL',
+					exitCode: 2,
+					durationMs: 1500,
+					stderrSnippet: 'Found 3 type errors.',
+				},
+				{
+					id: 'test',
+					label: 'Test',
+					kind: 'required',
+					command: 'npm',
+					args: ['test'],
+					status: 'PASS',
+					exitCode: 0,
+					durationMs: 5000,
+				},
 			] as LocalGateResult[],
 		};
 	}
@@ -319,10 +382,47 @@ describe('Evidence Gate — Local Gate Integration', () => {
 			failed: 0,
 			skipped: 0,
 			results: [
-				{ id: 'build', label: 'Build', kind: 'required', command: 'npm', args: ['run', 'build'], status: 'PASS', exitCode: 0, durationMs: 2000 },
-				{ id: 'typecheck', label: 'Typecheck', kind: 'required', command: 'npm', args: ['run', 'typecheck'], status: 'PASS', exitCode: 0, durationMs: 1500 },
-				{ id: 'test', label: 'Test', kind: 'required', command: 'npm', args: ['test'], status: 'PASS', exitCode: 0, durationMs: 5000 },
-				{ id: 'biome-check', label: 'Biome Check', kind: 'advisory', command: 'npx', args: ['biome', 'check', '.'], status: 'WARN', exitCode: 1, durationMs: 3000, stderrSnippet: 'Lint backlog: 478 errors' },
+				{
+					id: 'build',
+					label: 'Build',
+					kind: 'required',
+					command: 'npm',
+					args: ['run', 'build'],
+					status: 'PASS',
+					exitCode: 0,
+					durationMs: 2000,
+				},
+				{
+					id: 'typecheck',
+					label: 'Typecheck',
+					kind: 'required',
+					command: 'npm',
+					args: ['run', 'typecheck'],
+					status: 'PASS',
+					exitCode: 0,
+					durationMs: 1500,
+				},
+				{
+					id: 'test',
+					label: 'Test',
+					kind: 'required',
+					command: 'npm',
+					args: ['test'],
+					status: 'PASS',
+					exitCode: 0,
+					durationMs: 5000,
+				},
+				{
+					id: 'biome-check',
+					label: 'Biome Check',
+					kind: 'advisory',
+					command: 'npx',
+					args: ['biome', 'check', '.'],
+					status: 'WARN',
+					exitCode: 1,
+					durationMs: 3000,
+					stderrSnippet: 'Lint backlog: 478 errors',
+				},
 			] as LocalGateResult[],
 		};
 	}

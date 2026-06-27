@@ -29,8 +29,7 @@ function makeEvidenceGateReport(
 		(r) => r.risk_class === 'GREEN_SAFE' && r.agent_recommendation === 'APPLY_GREEN_SAFE',
 	);
 	const blocked = rows.filter(
-		(r) =>
-			!(r.risk_class === 'GREEN_SAFE' && r.agent_recommendation === 'APPLY_GREEN_SAFE'),
+		(r) => !(r.risk_class === 'GREEN_SAFE' && r.agent_recommendation === 'APPLY_GREEN_SAFE'),
 	);
 
 	const riskClassCounts: Record<string, number> = {};
@@ -80,6 +79,7 @@ function makeEvidenceGateReport(
 // ---------------------------------------------------------------------------
 
 describe('Human Approval Pack Generator', () => {
+	// biome-ignore format: typeof import() type syntax breaks when line-wrapped — TypeScript requires single-line form
 	let createHumanApprovalPackReport: typeof import('../human-approval-pack.js').createHumanApprovalPackReport;
 
 	beforeAll(async () => {
@@ -117,9 +117,7 @@ describe('Human Approval Pack Generator', () => {
 	});
 
 	it('3. blocks GREEN_SAFE + DO_NOT_APPLY from applyable package', () => {
-		const rows = [
-			makeRow('g1', 'GREEN_SAFE', 'DO_NOT_APPLY'),
-		];
+		const rows = [makeRow('g1', 'GREEN_SAFE', 'DO_NOT_APPLY')];
 		const report = makeEvidenceGateReport(rows);
 
 		const pack = createHumanApprovalPackReport(report);
@@ -197,9 +195,7 @@ describe('Human Approval Pack Generator', () => {
 	});
 
 	it('9. local required gate failure blocks GREEN apply package', () => {
-		const rows = [
-			makeRow('g1', 'GREEN_SAFE', 'APPLY_GREEN_SAFE'),
-		];
+		const rows = [makeRow('g1', 'GREEN_SAFE', 'APPLY_GREEN_SAFE')];
 		const report = makeEvidenceGateReport(rows, {
 			localGateReport: {
 				status: 'FAIL',
@@ -234,9 +230,7 @@ describe('Human Approval Pack Generator', () => {
 	});
 
 	it('10. advisory gate warning does not block package but adds warning', () => {
-		const rows = [
-			makeRow('g1', 'GREEN_SAFE', 'APPLY_GREEN_SAFE'),
-		];
+		const rows = [makeRow('g1', 'GREEN_SAFE', 'APPLY_GREEN_SAFE')];
 		const report = makeEvidenceGateReport(rows, {
 			localGateReport: {
 				status: 'WARN',
@@ -300,9 +294,7 @@ describe('Human Approval Pack Generator', () => {
 	});
 
 	it('13. JSON serialization is stable', () => {
-		const rows = [
-			makeRow('g1', 'GREEN_SAFE', 'APPLY_GREEN_SAFE'),
-		];
+		const rows = [makeRow('g1', 'GREEN_SAFE', 'APPLY_GREEN_SAFE')];
 		const report = makeEvidenceGateReport(rows);
 
 		const pack = createHumanApprovalPackReport(report);
@@ -328,15 +320,13 @@ describe('Human Approval Pack Generator', () => {
 
 	it('15. PR #218-like fixture becomes YELLOW_REVIEW package', () => {
 		// Simulate PR #218: MERGEABLE but with review findings
-		const rows = [
-			makeRow('pr-218', 'YELLOW_REVIEW', 'REVIEW_REQUIRED'),
-		];
+		const rows = [makeRow('pr-218', 'YELLOW_REVIEW', 'REVIEW_REQUIRED')];
 		const report = makeEvidenceGateReport(rows);
 
 		const pack = createHumanApprovalPackReport(report);
 
-		const yellowPackage = pack.packages.find((p) =>
-			p.type === 'YELLOW_REVIEW_PACKAGE' && p.rowIds.includes('pr-218'),
+		const yellowPackage = pack.packages.find(
+			(p) => p.type === 'YELLOW_REVIEW_PACKAGE' && p.rowIds.includes('pr-218'),
 		);
 		expect(yellowPackage).toBeDefined();
 		expect(yellowPackage!.applyable).toBe(false);
@@ -344,24 +334,20 @@ describe('Human Approval Pack Generator', () => {
 	});
 
 	it('16. Issue #279-like fixture becomes DEFER_TO_279 package', () => {
-		const rows = [
-			makeRow('issue-279', 'DEFER_TO_279', 'DEFER'),
-		];
+		const rows = [makeRow('issue-279', 'DEFER_TO_279', 'DEFER')];
 		const report = makeEvidenceGateReport(rows);
 
 		const pack = createHumanApprovalPackReport(report);
 
-		const deferPackage = pack.packages.find((p) =>
-			p.type === 'DEFER_TO_279_PACKAGE' && p.rowIds.includes('issue-279'),
+		const deferPackage = pack.packages.find(
+			(p) => p.type === 'DEFER_TO_279_PACKAGE' && p.rowIds.includes('issue-279'),
 		);
 		expect(deferPackage).toBeDefined();
 		expect(deferPackage!.status).toBe('DEFER');
 	});
 
 	it('17. no action execution fields exist in packages', () => {
-		const rows = [
-			makeRow('g1', 'GREEN_SAFE', 'APPLY_GREEN_SAFE'),
-		];
+		const rows = [makeRow('g1', 'GREEN_SAFE', 'APPLY_GREEN_SAFE')];
 		const report = makeEvidenceGateReport(rows);
 
 		const pack = createHumanApprovalPackReport(report);
@@ -371,10 +357,7 @@ describe('Human Approval Pack Generator', () => {
 			const keys = Object.keys(pkg);
 			const executeKeys = keys.filter(
 				(k) =>
-					k.includes('execute') ||
-					k.includes('apply') ||
-					k.includes('run') ||
-					k.includes('mutate'),
+					k.includes('execute') || k.includes('apply') || k.includes('run') || k.includes('mutate'),
 			);
 			// 'applyable' is allowed — it's a read-only flag, not an action
 			const nonApplyableExecuteKeys = executeKeys.filter((k) => k !== 'applyable');
@@ -400,10 +383,7 @@ describe('Human Approval Pack Generator', () => {
 
 		// Sum of all package types should equal total packages
 		const sum =
-			pack.applyablePackages +
-			pack.reviewPackages +
-			pack.holdPackages +
-			pack.deferredPackages;
+			pack.applyablePackages + pack.reviewPackages + pack.holdPackages + pack.deferredPackages;
 		// totalPackages includes TOOL_GAP_PACKAGE which isn't in these categories
 		expect(pack.totalPackages).toBeGreaterThanOrEqual(sum);
 	});

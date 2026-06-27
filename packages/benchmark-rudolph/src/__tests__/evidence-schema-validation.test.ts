@@ -54,7 +54,7 @@ function createValidSummary(): RudolphBenchmarkRunSummary {
 				evidencePaths: ['evidence/test2.json'],
 				testNames: ['beacon-fixtures.test.ts'],
 				changedFiles: ['src/beacon-fixtures.ts'],
-				confidence: 0.90,
+				confidence: 0.9,
 			},
 		],
 		commands: [

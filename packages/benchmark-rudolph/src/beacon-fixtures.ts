@@ -176,7 +176,8 @@ export function simulateBeaconScan(
 	const notFound: string[] = [];
 
 	// Determine which beacons to scan
-	const idsToScan = requestedIds && requestedIds.length > 0 ? requestedIds : KNOWN_BEACONS.map((b) => b.id);
+	const idsToScan =
+		requestedIds && requestedIds.length > 0 ? requestedIds : KNOWN_BEACONS.map((b) => b.id);
 
 	// Look up beacons
 	const entries: BeaconScanEntry[] = [];

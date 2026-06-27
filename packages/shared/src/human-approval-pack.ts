@@ -203,10 +203,7 @@ function isBlockedByLocalGates(report: EvidenceGateReport): boolean {
 
 	// Check individual required gate results
 	for (const result of lg.results) {
-		if (
-			(result.kind === 'required' || result.kind === 'format') &&
-			result.status === 'FAIL'
-		) {
+		if ((result.kind === 'required' || result.kind === 'format') && result.status === 'FAIL') {
 			return true;
 		}
 	}
@@ -230,9 +227,7 @@ function collectLocalGateWarnings(report: EvidenceGateReport): string[] {
 				`Local gate "${result.label}" (${result.kind}) warned: exit code ${result.exitCode}`,
 			);
 		} else if (result.status === 'FAIL' && result.kind === 'advisory') {
-			warnings.push(
-				`Local gate "${result.label}" (advisory) failed: exit code ${result.exitCode}`,
-			);
+			warnings.push(`Local gate "${result.label}" (advisory) failed: exit code ${result.exitCode}`);
 		}
 	}
 
@@ -247,7 +242,9 @@ function collectLocalGateWarnings(report: EvidenceGateReport): string[] {
  * Group rows by their effective package type.
  * UNKNOWN and TOOL_GAP are merged into a single TOOL_GAP_PACKAGE.
  */
-function groupRowsByPackageType(report: EvidenceGateReport): Map<ApprovalPackageType, typeof report.applyableRows> {
+function groupRowsByPackageType(
+	report: EvidenceGateReport,
+): Map<ApprovalPackageType, typeof report.applyableRows> {
 	const groups = new Map<ApprovalPackageType, typeof report.applyableRows>();
 
 	// Process ALL rows (both applyable and blocked)
@@ -283,9 +280,7 @@ function groupRowsByPackageType(report: EvidenceGateReport): Map<ApprovalPackage
  * @param report - EvidenceGateReport from the Evidence Gate.
  * @returns ApprovalPackReport with owner decision packages.
  */
-export function createHumanApprovalPackReport(
-	report: EvidenceGateReport,
-): ApprovalPackReport {
+export function createHumanApprovalPackReport(report: EvidenceGateReport): ApprovalPackReport {
 	const groups = groupRowsByPackageType(report);
 	const blockedByLocalGates = isBlockedByLocalGates(report);
 	const localGateWarnings = collectLocalGateWarnings(report);
@@ -323,16 +318,12 @@ export function createHumanApprovalPackReport(
 		if (pkgType === 'GREEN_SAFE_PACKAGE') {
 			// GREEN_SAFE_PACKAGE is applyable only if ALL rows are GREEN_SAFE + APPLY_GREEN_SAFE
 			const allApplyable = rows.every(
-				(r) =>
-					r.risk_class === 'GREEN_SAFE' &&
-					r.agent_recommendation === 'APPLY_GREEN_SAFE',
+				(r) => r.risk_class === 'GREEN_SAFE' && r.agent_recommendation === 'APPLY_GREEN_SAFE',
 			);
 
 			if (!allApplyable) {
 				const nonApplyable = rows.filter(
-					(r) =>
-						!(r.risk_class === 'GREEN_SAFE' &&
-							r.agent_recommendation === 'APPLY_GREEN_SAFE'),
+					(r) => !(r.risk_class === 'GREEN_SAFE' && r.agent_recommendation === 'APPLY_GREEN_SAFE'),
 				);
 				blockerReasons.push(
 					`${nonApplyable.length} row(s) are GREEN_SAFE but not APPLY_GREEN_SAFE (recommendation: ${[...new Set(nonApplyable.map((r) => r.agent_recommendation))].join(', ')})`,
@@ -396,15 +387,9 @@ export function createHumanApprovalPackReport(
 
 	// Count packages by type
 	const applyablePackages = packages.filter((p) => p.applyable).length;
-	const reviewPackages = packages.filter(
-		(p) => p.type === 'YELLOW_REVIEW_PACKAGE',
-	).length;
-	const holdPackages = packages.filter(
-		(p) => p.type === 'RED_HOLD_PACKAGE',
-	).length;
-	const deferredPackages = packages.filter(
-		(p) => p.type === 'DEFER_TO_279_PACKAGE',
-	).length;
+	const reviewPackages = packages.filter((p) => p.type === 'YELLOW_REVIEW_PACKAGE').length;
+	const holdPackages = packages.filter((p) => p.type === 'RED_HOLD_PACKAGE').length;
+	const deferredPackages = packages.filter((p) => p.type === 'DEFER_TO_279_PACKAGE').length;
 
 	// Overall status
 	let overallStatus: ApprovalPackReport['status'] = 'PASS';

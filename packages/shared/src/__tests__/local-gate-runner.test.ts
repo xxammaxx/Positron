@@ -26,7 +26,13 @@ import {
 
 /** A fake command runner that returns pre-configured results. */
 function fakeRunner(exitCode: number, stdout: string, stderr: string, durationMs: number) {
-	return async () => ({ exitCode, stdout, stderr, durationMs, error: exitCode === null ? 'command not found' : undefined });
+	return async () => ({
+		exitCode,
+		stdout,
+		stderr,
+		durationMs,
+		error: exitCode === null ? 'command not found' : undefined,
+	});
 }
 
 /** Build a LocalGateResult manually for assertion tests. */
@@ -376,7 +382,13 @@ describe('Local Gate Runner', () => {
 
 	test('local-gates-dry-run with custom gates', () => {
 		const customGates: LocalGateDefinition[] = [
-			{ id: 'custom-1', label: 'Custom 1', kind: 'required', command: 'npm', args: ['run', 'custom'] },
+			{
+				id: 'custom-1',
+				label: 'Custom 1',
+				kind: 'required',
+				command: 'npm',
+				args: ['run', 'custom'],
+			},
 		];
 		const report = createDryRunLocalGateReport(customGates);
 		expect(report.total).toBe(1);
@@ -429,7 +441,13 @@ describe('Local Gate Runner', () => {
 			{ id: 'g1', label: 'Git Diff', kind: 'required', command: 'git', args: ['diff', '--check'] },
 			{ id: 'g2', label: 'Build', kind: 'required', command: 'npm', args: ['run', 'build'] },
 			{ id: 'g3', label: 'Test', kind: 'required', command: 'npm', args: ['test'] },
-			{ id: 'g4', label: 'Biome Format', kind: 'format', command: 'npx', args: ['biome', 'format', '.'] },
+			{
+				id: 'g4',
+				label: 'Biome Format',
+				kind: 'format',
+				command: 'npx',
+				args: ['biome', 'format', '.'],
+			},
 		];
 		for (const gate of safeGates) {
 			const errors = validateLocalGateDefinition(gate);

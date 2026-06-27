@@ -18,10 +18,10 @@ import { spawnSync } from 'node:child_process';
 // Exit code contract
 // ---------------------------------------------------------------------------
 const EXIT = {
-	OK: 0,                 // valid report generated, no validation errors
-	VALIDATION_ERROR: 1,   // validation errors or invalid input
-	USAGE_ERROR: 2,        // CLI usage error
-	SAFETY_VIOLATION: 3,   // prohibited command/path/safety violation
+	OK: 0, // valid report generated, no validation errors
+	VALIDATION_ERROR: 1, // validation errors or invalid input
+	USAGE_ERROR: 2, // CLI usage error
+	SAFETY_VIOLATION: 3, // prohibited command/path/safety violation
 };
 
 // ---------------------------------------------------------------------------
@@ -81,14 +81,14 @@ function parseArgs() {
 	const options = {
 		dryRun: false,
 		repo: 'xxammaxx/Positron',
-		snapshot: null,   // path to existing snapshot JSON file
-		output: null,      // path to write report JSON
-		format: 'text',    // 'text' or 'json'
+		snapshot: null, // path to existing snapshot JSON file
+		output: null, // path to write report JSON
+		format: 'text', // 'text' or 'json'
 		help: false,
-		includeLocalGates: false,      // Phase 1E
-		localGatesDryRun: false,        // Phase 1E
-		approvalPack: false,            // Phase 1F
-		safeApplyPlan: false,           // Phase 1G
+		includeLocalGates: false, // Phase 1E
+		localGatesDryRun: false, // Phase 1E
+		approvalPack: false, // Phase 1F
+		safeApplyPlan: false, // Phase 1G
 	};
 
 	for (let i = 0; i < args.length; i++) {
@@ -132,7 +132,7 @@ function parseArgs() {
 	return options;
 }
 
-	function printHelp() {
+function printHelp() {
 	console.log(`
 Positron Evidence Gate CLI (Issue #279 Phase 1D+1E+1F+1G)
 
@@ -229,10 +229,38 @@ function buildDryRunSnapshot() {
 			},
 		],
 		issues: [
-			{ number: 279, title: 'Replacement: rebuild Issue #229 architecture chain on current main', state: 'OPEN', labels: ['architecture', 'epic', 'enhancement', 'infrastructure', 'priority: high', 'tooling'] },
-			{ number: 268, title: 'CI Recovery: diagnose and repair systemic Quality Gates / Issue Verification failures', state: 'OPEN', labels: ['bug', 'infrastructure', 'priority: high'] },
-			{ number: 229, title: 'MCP/OpenCode Provider Bootstrap', state: 'OPEN', labels: ['architecture', 'epic', 'enhancement'] },
-			{ number: 215, title: 'Safety: Integrate Stop/Ask Policy via GATE_APPROVE', state: 'OPEN', labels: ['architecture', 'enhancement'] },
+			{
+				number: 279,
+				title: 'Replacement: rebuild Issue #229 architecture chain on current main',
+				state: 'OPEN',
+				labels: [
+					'architecture',
+					'epic',
+					'enhancement',
+					'infrastructure',
+					'priority: high',
+					'tooling',
+				],
+			},
+			{
+				number: 268,
+				title:
+					'CI Recovery: diagnose and repair systemic Quality Gates / Issue Verification failures',
+				state: 'OPEN',
+				labels: ['bug', 'infrastructure', 'priority: high'],
+			},
+			{
+				number: 229,
+				title: 'MCP/OpenCode Provider Bootstrap',
+				state: 'OPEN',
+				labels: ['architecture', 'epic', 'enhancement'],
+			},
+			{
+				number: 215,
+				title: 'Safety: Integrate Stop/Ask Policy via GATE_APPROVE',
+				state: 'OPEN',
+				labels: ['architecture', 'enhancement'],
+			},
 		],
 	};
 }
@@ -242,10 +270,7 @@ function buildDryRunSnapshot() {
  */
 function collectLiveSnapshot(options) {
 	const collectorScript = 'scripts/collect-github-context.mjs';
-	const collectorArgs = [
-		collectorScript,
-		'--repo', options.repo,
-	];
+	const collectorArgs = [collectorScript, '--repo', options.repo];
 
 	// Build an intermediate output path
 	const tempDir = '.local-release/evidence-gate';
@@ -265,7 +290,9 @@ function collectLiveSnapshot(options) {
 		throw new Error(`Snapshot collector failed: ${result.error.message}`);
 	}
 	if (result.status !== 0) {
-		throw new Error(`Snapshot collector exited ${result.status}: ${result.stderr?.trim() ?? 'unknown error'}`);
+		throw new Error(
+			`Snapshot collector exited ${result.status}: ${result.stderr?.trim() ?? 'unknown error'}`,
+		);
 	}
 
 	// Load the collected snapshot
@@ -294,11 +321,17 @@ function printApprovalPackReport(approvalPackReport) {
 
 	for (const pkg of approvalPackReport.packages) {
 		const icon =
-			pkg.type === 'GREEN_SAFE_PACKAGE' ? '🟢' :
-			pkg.type === 'YELLOW_REVIEW_PACKAGE' ? '🟡' :
-			pkg.type === 'RED_HOLD_PACKAGE' ? '🔴' :
-			pkg.type === 'TOOL_GAP_PACKAGE' ? '🔧' :
-			pkg.type === 'DEFER_TO_279_PACKAGE' ? '⏸' : '❓';
+			pkg.type === 'GREEN_SAFE_PACKAGE'
+				? '🟢'
+				: pkg.type === 'YELLOW_REVIEW_PACKAGE'
+					? '🟡'
+					: pkg.type === 'RED_HOLD_PACKAGE'
+						? '🔴'
+						: pkg.type === 'TOOL_GAP_PACKAGE'
+							? '🔧'
+							: pkg.type === 'DEFER_TO_279_PACKAGE'
+								? '⏸'
+								: '❓';
 
 		const applyIcon = pkg.applyable ? '✅' : '⛔';
 		console.log(`  ${icon} ${pkg.type} ${applyIcon}`);
@@ -350,7 +383,9 @@ function printSafeApplyPlanReport(safeApplyPlanReport) {
 	console.log('───────────────────────────────────────────────');
 	console.log(`  Status:              ${safeApplyPlanReport.status}`);
 	console.log(`  Total Plans:         ${safeApplyPlanReport.totalPlans}`);
-	console.log(`  Executable Plans:    ${safeApplyPlanReport.executablePlans} (always 0 — non-executing)`);
+	console.log(
+		`  Executable Plans:    ${safeApplyPlanReport.executablePlans} (always 0 — non-executing)`,
+	);
 	console.log(`  Blocked Plans:       ${safeApplyPlanReport.blockedPlans}`);
 	console.log(`  Review Plans:        ${safeApplyPlanReport.reviewPlans}`);
 	console.log(`  Hold Plans:          ${safeApplyPlanReport.holdPlans}`);
@@ -359,13 +394,21 @@ function printSafeApplyPlanReport(safeApplyPlanReport) {
 
 	for (const plan of safeApplyPlanReport.plans) {
 		const icon =
-			plan.type === 'GREEN_SAFE_APPLY_PLAN' ? '🟢' :
-			plan.type === 'YELLOW_REVIEW_PLAN' ? '🟡' :
-			plan.type === 'RED_HOLD_PLAN' ? '🔴' :
-			plan.type === 'TOOL_GAP_PLAN' ? '🔧' :
-			plan.type === 'DEFER_TO_279_PLAN' ? '⏸' :
-			plan.type === 'BLOCKED_PLAN' ? '🚫' :
-			plan.type === 'NO_ACTION_PLAN' ? '⭕' : '❓';
+			plan.type === 'GREEN_SAFE_APPLY_PLAN'
+				? '🟢'
+				: plan.type === 'YELLOW_REVIEW_PLAN'
+					? '🟡'
+					: plan.type === 'RED_HOLD_PLAN'
+						? '🔴'
+						: plan.type === 'TOOL_GAP_PLAN'
+							? '🔧'
+							: plan.type === 'DEFER_TO_279_PLAN'
+								? '⏸'
+								: plan.type === 'BLOCKED_PLAN'
+									? '🚫'
+									: plan.type === 'NO_ACTION_PLAN'
+										? '⭕'
+										: '❓';
 
 		const execIcon = '⛔ NON-EXECUTING';
 		console.log(`  ${icon} ${plan.type} ${execIcon}`);
@@ -377,7 +420,9 @@ function printSafeApplyPlanReport(safeApplyPlanReport) {
 		console.log(`     Actions: ${plan.actions.length}`);
 
 		for (const action of plan.actions) {
-			console.log(`       - ${action.id} | executable=${action.executable} | blocked=${action.blocked}`);
+			console.log(
+				`       - ${action.id} | executable=${action.executable} | blocked=${action.blocked}`,
+			);
 			if (action.approvalPhrase) {
 				console.log(`         Approval: ${action.approvalPhrase}`);
 			}
@@ -430,11 +475,18 @@ function printReport(report) {
 	console.log('  Risk Class Counts:');
 	for (const [rc, count] of Object.entries(report.riskClassCounts)) {
 		if (count > 0) {
-			const icon = rc === 'GREEN_SAFE' ? '🟢' :
-				rc === 'YELLOW_REVIEW' ? '🟡' :
-				rc === 'RED_HOLD' ? '🔴' :
-				rc === 'TOOL_GAP' ? '🔧' :
-				rc === 'DEFER_TO_279' ? '⏸' : '❓';
+			const icon =
+				rc === 'GREEN_SAFE'
+					? '🟢'
+					: rc === 'YELLOW_REVIEW'
+						? '🟡'
+						: rc === 'RED_HOLD'
+							? '🔴'
+							: rc === 'TOOL_GAP'
+								? '🔧'
+								: rc === 'DEFER_TO_279'
+									? '⏸'
+									: '❓';
 			console.log(`    ${icon} ${rc}: ${count}`);
 		}
 	}
@@ -485,10 +537,16 @@ function printReport(report) {
 		console.log(`    Skipped: ${lg.skipped}`);
 		console.log('');
 		for (const r of lg.results) {
-			const icon = r.status === 'PASS' ? '✅' :
-				r.status === 'WARN' ? '⚠️' :
-				r.status === 'FAIL' ? '❌' :
-				r.status === 'SKIPPED' ? '⏭️' : '❓';
+			const icon =
+				r.status === 'PASS'
+					? '✅'
+					: r.status === 'WARN'
+						? '⚠️'
+						: r.status === 'FAIL'
+							? '❌'
+							: r.status === 'SKIPPED'
+								? '⏭️'
+								: '❓';
 			console.log(`    ${icon} ${r.label} (${r.kind}) — ${r.status} (${r.durationMs}ms)`);
 			if (r.exitCode !== null) {
 				console.log(`       exit=${r.exitCode}`);
@@ -770,7 +828,7 @@ async function main() {
 			if (options.includeLocalGates) {
 				console.log(`  Local gates: ${options.localGatesDryRun ? 'simulated (dry-run)' : 'live'}`);
 			}
-	if (options.approvalPack || options.safeApplyPlan) {
+			if (options.approvalPack || options.safeApplyPlan) {
 				console.log(`  Approval pack: enabled`);
 			}
 			if (options.safeApplyPlan) {
@@ -820,16 +878,24 @@ async function main() {
 
 		// Print gate results
 		for (const r of localGateReport.results) {
-			const icon = r.status === 'PASS' ? 'PASS' :
-				r.status === 'WARN' ? 'WARN' :
-				r.status === 'FAIL' ? 'FAIL' :
-				r.status === 'SKIPPED' ? 'SKIP' : '??';
+			const icon =
+				r.status === 'PASS'
+					? 'PASS'
+					: r.status === 'WARN'
+						? 'WARN'
+						: r.status === 'FAIL'
+							? 'FAIL'
+							: r.status === 'SKIPPED'
+								? 'SKIP'
+								: '??';
 			console.log(`  [${icon}] ${r.label} (${r.durationMs}ms)`);
 			if (r.error) {
 				console.log(`        Error: ${r.error}`);
 			}
 		}
-		console.log(`  Summary: ${localGateReport.passed} passed, ${localGateReport.warned} warned, ${localGateReport.failed} failed, ${localGateReport.skipped} skipped`);
+		console.log(
+			`  Summary: ${localGateReport.passed} passed, ${localGateReport.warned} warned, ${localGateReport.failed} failed, ${localGateReport.skipped} skipped`,
+		);
 		console.log(`  Verdict: ${localGateReport.status}`);
 
 		// Regenerate report with local gate results using proper API (Phase 1E+1F)
@@ -852,7 +918,9 @@ async function main() {
 		try {
 			approvalPackReport = approvalPackMod.createHumanApprovalPackReport(report);
 			console.log(`  Generated ${approvalPackReport.totalPackages} package(s).`);
-			console.log(`  Applyable: ${approvalPackReport.applyablePackages}, Review: ${approvalPackReport.reviewPackages}, Hold: ${approvalPackReport.holdPackages}, Deferred: ${approvalPackReport.deferredPackages}`);
+			console.log(
+				`  Applyable: ${approvalPackReport.applyablePackages}, Review: ${approvalPackReport.reviewPackages}, Hold: ${approvalPackReport.holdPackages}, Deferred: ${approvalPackReport.deferredPackages}`,
+			);
 
 			// Attach approval pack to the report for JSON output
 			report.approvalPackReport = approvalPackReport;
@@ -866,7 +934,9 @@ async function main() {
 	let safeApplyPlanReport = null;
 	if (options.safeApplyPlan && safeApplyPlanMod) {
 		if (!approvalPackReport) {
-			console.error('Error: --safe-apply-plan requires --approval-pack. Generating approval pack first...');
+			console.error(
+				'Error: --safe-apply-plan requires --approval-pack. Generating approval pack first...',
+			);
 			// Try to generate approval pack on the fly if not already done
 			if (approvalPackMod) {
 				try {
@@ -888,8 +958,12 @@ async function main() {
 		try {
 			safeApplyPlanReport = safeApplyPlanMod.createSafeApplyPlanReport(approvalPackReport);
 			console.log(`  Generated ${safeApplyPlanReport.totalPlans} plan(s).`);
-			console.log(`  Executable plans: ${safeApplyPlanReport.executablePlans} (always 0 — non-executing)`);
-			console.log(`  Blocked: ${safeApplyPlanReport.blockedPlans}, Review: ${safeApplyPlanReport.reviewPlans}, Hold: ${safeApplyPlanReport.holdPlans}, Deferred: ${safeApplyPlanReport.deferredPlans}`);
+			console.log(
+				`  Executable plans: ${safeApplyPlanReport.executablePlans} (always 0 — non-executing)`,
+			);
+			console.log(
+				`  Blocked: ${safeApplyPlanReport.blockedPlans}, Review: ${safeApplyPlanReport.reviewPlans}, Hold: ${safeApplyPlanReport.holdPlans}, Deferred: ${safeApplyPlanReport.deferredPlans}`,
+			);
 
 			// Attach safe apply plan to the report for JSON output
 			report.safeApplyPlanReport = safeApplyPlanReport;
@@ -938,7 +1012,9 @@ async function main() {
 
 	// Determine exit code
 	if (report.validation.errors.length > 0) {
-		console.error(`Exiting with code ${EXIT.VALIDATION_ERROR}: ${report.validation.errors.length} validation error(s)`);
+		console.error(
+			`Exiting with code ${EXIT.VALIDATION_ERROR}: ${report.validation.errors.length} validation error(s)`,
+		);
 		process.exit(EXIT.VALIDATION_ERROR);
 	}
 

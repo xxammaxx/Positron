@@ -43,9 +43,7 @@ describe('buildTraceabilityMap', () => {
 
 	it('maps spec paths correctly', () => {
 		const map = buildTraceabilityMap(issueDefs, []);
-		expect(map.issues['BENCH-001']!.spec).toBe(
-			'docs/benchmark/rudolph-beacon/issues/BENCH-001.md',
-		);
+		expect(map.issues['BENCH-001']!.spec).toBe('docs/benchmark/rudolph-beacon/issues/BENCH-001.md');
 	});
 
 	it('DONE with empty evidence is downgraded to UNKNOWN_EVIDENCE', () => {
@@ -164,7 +162,12 @@ describe('Red Test 14 — Issue IDs are NOT chronological', () => {
 
 	it('independence validation passes even with mixed statuses', () => {
 		const results: BenchmarkIssueResult[] = [
-			{ ...createIssueResult('BENCH-001', 'Test 1'), status: 'DONE', evidencePaths: ['e1.json'], confidence: 0.9 },
+			{
+				...createIssueResult('BENCH-001', 'Test 1'),
+				status: 'DONE',
+				evidencePaths: ['e1.json'],
+				confidence: 0.9,
+			},
 			createIssueResult('BENCH-002', 'Test 2'), // UNKNOWN_EVIDENCE
 			{ ...createIssueResult('BENCH-003', 'Test 3'), status: 'BLOCKED' },
 		];

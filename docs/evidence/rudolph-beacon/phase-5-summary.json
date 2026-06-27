@@ -31,26 +31,19 @@
 				"validateRunSummary — multiple errors aggregated (1 test)",
 				"validateRunSummary — edge cases (4 tests)"
 			],
-			"changedFiles": [
-				"packages/benchmark-rudolph/src/__tests__/evidence-contract.test.ts"
-			],
+			"changedFiles": ["packages/benchmark-rudolph/src/__tests__/evidence-contract.test.ts"],
 			"confidence": 0.97
 		},
 		{
 			"id": "PHASE-5-GITIGNORE",
 			"title": "Gitignore Decision: Root evidence/ Exclusion",
 			"status": "DONE",
-			"evidencePaths": [
-				"docs/evidence/rudolph-beacon/phase-5-gitignore-decision.md",
-				".gitignore"
-			],
+			"evidencePaths": ["docs/evidence/rudolph-beacon/phase-5-gitignore-decision.md", ".gitignore"],
 			"testNames": [
 				"git ls-files --others --exclude-standard (evidence/ excluded)",
 				"docs/evidence/rudolph-beacon/ still tracked"
 			],
-			"changedFiles": [
-				".gitignore"
-			],
+			"changedFiles": [".gitignore"],
 			"confidence": 0.95
 		},
 		{
