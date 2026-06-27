@@ -22,6 +22,10 @@ npm test
 
 GitHub Actions is advisory-only and tracked separately in Issue [#268](https://github.com/xxammaxx/Positron/issues/268).
 
+## Label Convention
+
+See [docs/governance/LABELS.md](docs/governance/LABELS.md) for the label taxonomy, priority model, approval rules, and AI autonomy boundaries.
+
 ## Pull Request Rules
 
 - Keep PRs small and scoped.
