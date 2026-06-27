@@ -1,11 +1,16 @@
 // Built-in Tool Tests: repo.*
 // Issue #219 — T-011
 
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { repoGetDiffHandler, repoListFilesHandler, repoReadFileHandler } from '../../tools/repo.js';
 import type { ToolCall } from '../../types.js';
 
 // ─── Helpers ─────────────────────────────────────────────────────────
+
+// repo.test.ts is at packages/tool-gateway/src/__tests__/tools/repo.test.ts
+// Going up 5 levels reaches the repo root
+const REPO_ROOT = path.resolve(__dirname, '..', '..', '..', '..', '..');
 
 function makeCall(overrides: Partial<ToolCall> = {}): ToolCall {
 	return {
@@ -14,7 +19,7 @@ function makeCall(overrides: Partial<ToolCall> = {}): ToolCall {
 		runId: 'run-test',
 		phase: 'IMPLEMENT',
 		autonomyLevel: 2,
-		workspaceRoot: process.cwd(),
+		workspaceRoot: REPO_ROOT,
 		...overrides,
 	};
 }
