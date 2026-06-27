@@ -68,6 +68,7 @@ These must not be applied, popped, or dropped without explicit human instruction
 
 ## Active Limitations (Post-Closeout)
 
+<!-- positron:auto-generated:start active-limitations -->
 | Item | Status | Issue |
 |------|--------|-------|
 | E2E tracing lifecycle flake | Open | #304 |
@@ -83,9 +84,11 @@ These must not be applied, popped, or dropped without explicit human instruction
 | api-overview #229 endpoint expansion | Separate issue | #251 |
 | Remote CI reactivation | Requires explicit approval | — |
 | CHANGELOG v0.2.0/v0.3.0 | Being created | #307 |
+<!-- positron:auto-generated:end active-limitations -->
 
 ## Resolved Limitations (Reference)
 
+<!-- positron:auto-generated:start resolved-limitations -->
 | Item | Resolution |
 |------|-----------|
 | #268 CI zero-step infrastructure | Resolved via PR #296; CI advisory-only policy retained |
@@ -94,4 +97,5 @@ These must not be applied, popped, or dropped without explicit human instruction
 | #298 Biome JSON formatting | Resolved and CLOSED |
 | #299 Windows module resolution | Resolved and CLOSED |
 | apps/web JSX/TSX test failures | Resolved (all 196 web tests pass) |
+<!-- positron:auto-generated:end resolved-limitations -->
 | CodeRabbit automation | Decommissioned (internal), external pending owner |

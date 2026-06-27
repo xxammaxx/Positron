@@ -23,4 +23,5 @@ export * from './evidence-gate.js';
 export * from './local-gate-runner.js';
 export * from './human-approval-pack.js';
 export * from './safe-apply-plan.js';
+export * from './evidence-portfolio/index.js';
 //# sourceMappingURL=index.js.map
