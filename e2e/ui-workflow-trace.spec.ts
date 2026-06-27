@@ -44,14 +44,17 @@ test.describe('UI Workflow Trace & Network Proof', () => {
 	test.describe.configure({ mode: 'serial', timeout: 300_000 });
 
 	test('Full workflow: Blueprint → Demo Run → Run Detail → DONE', async ({ browser }) => {
-		// Create a dedicated context with tracing and video enabled
+		// Create a dedicated context with tracing and video enabled.
+		// Wrapped in try/finally to guarantee cleanup — prevents browser
+		// resource leaks between retries that cause retry2 failures.
 		const context: BrowserContext = await browser.newContext({
 			recordVideo: { dir: ARTIFACT_DIR, size: { width: 1280, height: 720 } },
 		});
 
-		await context.tracing.start({ screenshots: true, snapshots: true });
+		try {
+			await context.tracing.start({ screenshots: true, snapshots: true });
 
-		const page: Page = await context.newPage();
+			const page: Page = await context.newPage();
 
 		// ── Capture console output ──────────────────────────
 		page.on('console', (msg) => {
@@ -312,7 +315,9 @@ test.describe('UI Workflow Trace & Network Proof', () => {
 			);
 		});
 
-		// Close context to finalize video
+	} finally {
+		// Close context to finalize video — guaranteed even on test failure
 		await context.close();
+	}
 	});
 });

@@ -97,13 +97,12 @@ export class DeterministicFixtureAgent {
 	 * @returns EvidenceReport with executionMode='fixture'
 	 */
 	async execute(scenario: string, input: OpenCodeRunInput): Promise<EvidenceReport> {
-		const startTime = Date.now();
-
 		const fixture = this.fixtures.get(scenario);
 		if (!fixture) {
 			return this.buildReport(input.runId, {
 				status: 'failed',
-				durationMs: Date.now() - startTime,
+				// Deterministic: missing fixture takes no measurable time
+				durationMs: 0,
 				summary: `Fixture scenario "${scenario}" not found`,
 				simulatedActions: [],
 			});
@@ -112,10 +111,18 @@ export class DeterministicFixtureAgent {
 		// Map fixture phases to simulated actions
 		const simulatedActions = fixture.phases.map((p) => p.phase);
 
+		// Deterministic duration: sum of all phase durations from fixture data.
+		// Fixture durations are fixed values (e.g., 10ms, 150ms), ensuring
+		// same input → same output with no Date.now() variance.
+		const totalDuration = fixture.phases.reduce(
+			(sum, p) => sum + (p.result.durationMs || 0),
+			0,
+		);
+
 		// Build evidence report — deterministic from fixture data
 		const report = this.buildReport(input.runId, {
 			status: 'success',
-			durationMs: Date.now() - startTime,
+			durationMs: totalDuration,
 			summary: `Fixture "${scenario}" executed: ${fixture.phases.length} phase(s) simulated`,
 			simulatedActions,
 		});
