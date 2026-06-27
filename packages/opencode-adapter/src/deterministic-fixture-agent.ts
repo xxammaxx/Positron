@@ -114,10 +114,7 @@ export class DeterministicFixtureAgent {
 		// Deterministic duration: sum of all phase durations from fixture data.
 		// Fixture durations are fixed values (e.g., 10ms, 150ms), ensuring
 		// same input → same output with no Date.now() variance.
-		const totalDuration = fixture.phases.reduce(
-			(sum, p) => sum + (p.result.durationMs || 0),
-			0,
-		);
+		const totalDuration = fixture.phases.reduce((sum, p) => sum + (p.result.durationMs || 0), 0);
 
 		// Build evidence report — deterministic from fixture data
 		const report = this.buildReport(input.runId, {
