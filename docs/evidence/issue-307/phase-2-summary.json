@@ -1,0 +1,65 @@
+{
+  "issue": 307,
+  "phase": 2,
+  "title": "[SAFE] Docs: Sync all status docs with post-closeout reality — Final Audit and Merge",
+  "risk": "GREEN_SAFE",
+  "type": "documentation",
+  "status": "COMPLETE",
+  "confidence": 0.99,
+  "timestamp": "2026-06-27T13:58:00Z",
+  "branch_pre_merge": "docs/issue-307-docs-reality-sync",
+  "head_pre_merge": "d817e621451c136119defa0f7c13fa097ac10112",
+  "merge_commit": "abe11e68a9de1e626c900e1fdca242c8379bb9d1",
+  "merged_at": "2026-06-27T11:53:59Z",
+  "phases": {
+    "phase_1_implement": "COMPLETE",
+    "phase_2_audit_and_merge": "COMPLETE"
+  },
+  "gates": {
+    "git_diff_check": "PASS",
+    "npm_build": "PASS",
+    "npm_typecheck": "PASS",
+    "npm_test": "1571_1571_PASS"
+  },
+  "classifications": {
+    "reality_status": "CURRENT",
+    "pr_scope": "CLEAN_DOCS_ONLY",
+    "doc_consistency": "CLEAN",
+    "phase_1_evidence": "CLEAN",
+    "local_gates": "GREEN",
+    "merge_readiness": "YES",
+    "merge_status": "SUCCESS",
+    "issue_status": "CLOSED"
+  },
+  "phase_2_evidence": [
+    "docs/evidence/issue-307/phase-2-reality-refresh.md",
+    "docs/evidence/issue-307/phase-2-pr-scope-audit.md",
+    "docs/evidence/issue-307/phase-2-doc-consistency-audit.md",
+    "docs/evidence/issue-307/phase-2-evidence-audit.md",
+    "docs/evidence/issue-307/phase-2-final-gates.md",
+    "docs/evidence/issue-307/phase-2-merge-readiness.md",
+    "docs/evidence/issue-307/phase-2-merge-report.md",
+    "docs/evidence/issue-307/phase-2-post-merge-sync.md",
+    "docs/evidence/issue-307/phase-2-issue-status-report.md",
+    "docs/evidence/issue-307/phase-2-summary.json",
+    "docs/evidence/issue-307/phase-2-report.md",
+    "docs/evidence/issue-307/phase-2-reviewer-report.md"
+  ],
+  "non_scope_verified": [
+    "no_code_changes",
+    "no_workflow_changes",
+    "no_manual_ci",
+    "no_coderabbit_reactivation",
+    "no_secrets",
+    "no_pr_218_changes",
+    "no_pr_chain_230_242_changes",
+    "no_branch_deletion",
+    "no_force_push",
+    "no_auto_merge",
+    "no_admin_merge",
+    "no_vollautonomie_claim"
+  ],
+  "issue_307_closed": true,
+  "pr_310_merged": true,
+  "branch_preserved": true
+}
