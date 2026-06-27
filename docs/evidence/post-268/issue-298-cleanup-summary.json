@@ -101,8 +101,6 @@
 		"docs/evidence/post-268/issue-298-cleanup-pr-report.md"
 	],
 	"owner_approval": "APPROVE FIX REMAINING POST-298 BIOME EVIDENCE FORMAT WARNING",
-	"risks": [
-		"Pre-existing Phase 2 format finding remains (YELLOW_PREEXISTING, not in scope)"
-	],
+	"risks": ["Pre-existing Phase 2 format finding remains (YELLOW_PREEXISTING, not in scope)"],
 	"next_step": "Commit, push, create Draft PR"
 }
