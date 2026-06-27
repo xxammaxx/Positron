@@ -1,0 +1,41 @@
+{
+  "discovery_run": {
+    "timestamp": "2026-06-27T11:16:00Z",
+    "repo": "xxammaxx/Positron",
+    "branch": "main",
+    "commit": "69c78c8f7dbdd9e51c647767ff27e0c60b286a5e",
+    "reality_status": "CURRENT",
+    "doc_reality_status": "PARTIAL_DRIFT"
+  },
+  "issues_audit": {
+    "open_issues_read": 14,
+    "closed_issues_read": 91,
+    "key_open_tracks": ["#304", "#251", "#250", "#249", "#248", "#247", "#246", "#245", "#244", "#243", "#229", "#224", "#215", "#211"],
+    "key_closed_tracks": ["#268", "#279", "#297", "#298", "#299", "#263", "#205", "#253", "#254", "#252"]
+  },
+  "created_issues": {
+    "status": "CREATED",
+    "count": 4,
+    "issues": [
+      {"number": 305, "title": "Evidence Portfolio: Automate post-run capability and limitation updates", "risk": "GREEN_SAFE", "priority": "P2"},
+      {"number": 306, "title": "Backlog Hygiene: Define milestones, normalize labels, and add issue type taxonomy", "risk": "GREEN_SAFE", "priority": "P2"},
+      {"number": 307, "title": "Docs: Sync all status docs, README, API overview, changelog, and evidence index", "risk": "GREEN_SAFE", "priority": "P2"},
+      {"number": 308, "title": "Validation: Supervised Full Real Mode pilot with combined approval gates", "risk": "YELLOW_VALIDATE", "priority": "P1"}
+    ]
+  },
+  "not_created_reason": {
+    "covered_by_existing": 14,
+    "owner_action_only": 1,
+    "yellow_review_comment_on_existing": 2,
+    "merged_into_created": 1
+  },
+  "gaps_found": 6,
+  "gaps_covered_by_existing": 2,
+  "gaps_created": 4,
+  "next_build_recommendation": "#307 (Docs Sync) or #304 (E2E Tracing Fix)",
+  "roadmap_levels": {
+    "level_1_green_safe": 7,
+    "level_2_yellow_validate": 7,
+    "level_3_red_hold": 4
+  }
+}
