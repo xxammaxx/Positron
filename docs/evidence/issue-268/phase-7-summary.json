@@ -1,75 +1,87 @@
 {
-  "phase": 7,
-  "issue": 268,
-  "title": "Final Gates und Merge von PR #296",
-  "branch_master": "positron/issue-268-ci-recovery-5step",
-  "branch_main": "main",
-  "head_commit_pre_merge": "8bc52533432361a3ee2b6411896ea11bb7d1d088",
-  "merge_commit_sha": "c5fe4ff913f35cf8e47ee0fa16a3382b4c741944",
-  "completed_at": "2026-06-27T04:15:00Z",
-  "pr_number": 296,
-  "pr_url": "https://github.com/xxammaxx/Positron/pull/296",
-  "assessment": {
-    "reality_status": "CURRENT",
-    "workflow_audit_status": "CLEAN",
-    "biome_status": "FORMAT_ONLY",
-    "local_gates_status": "GREEN",
-    "remote_ci_status": "RED_ADVISORY",
-    "merge_readiness": "YES",
-    "pr_ready_executed": true,
-    "merge_status": "SUCCESS",
-    "post_merge_sync": "CURRENT",
-    "issue_268_status": "LEFT_OPEN_INFRA_TRACKER"
-  },
-  "local_gates": {
-    "git_diff_check": { "exit_code": 0, "status": "PASS" },
-    "biome_format": { "exit_code": 0, "files_checked": 448, "fixes_applied": 0, "status": "PASS" },
-    "build": { "exit_code": 0, "projects_built": 10, "status": "PASS" },
-    "typecheck": { "exit_code": 0, "projects": 10, "status": "PASS" },
-    "vitest_core": { "test_files": 64, "tests": 1375, "passed": 1375, "failed": 0, "status": "PASS" },
-    "vitest_web": { "test_files": 8, "tests": 196, "passed": 196, "failed": 0, "status": "PASS" },
-    "npm_test_total": { "test_files": 72, "tests": 1571, "passed": 1571, "failed": 0, "status": "PASS" }
-  },
-  "merge_details": {
-    "method": "merge",
-    "branch_deleted": false,
-    "auto_merge": false,
-    "manual_ci_triggered": false,
-    "force_push": false,
-    "admin_merge": false,
-    "issue_closed": false
-  },
-  "findings": [
-    "PR #296 merged successfully with merge commit c5fe4ff",
-    "All 7 final local gates pass — GREEN",
-    "Workflow audit confirms minimal permissions, safe triggers",
-    "Biome format audit confirms FORMAT_ONLY — no semantic changes",
-    "Remote CI failures are platform-level (zero-step/runner/billing) — not PR-related",
-    "Issue #268 remains OPEN as infrastructure tracker for zero-step/platform issue",
-    "Feature branch NOT deleted"
-  ],
-  "not_touched": [
-    "CodeRabbit (not re-activated)",
-    "PR #218 (not touched)",
-    "PR chain #230-#242 (not touched)",
-    "GitHub CI manual trigger (NOT executed)",
-    "Auto-merge (NOT enabled)",
-    "Force push (NOT used)",
-    "Admin merge (NOT used)",
-    "Secrets (not read or exposed)",
-    ".env contents (not displayed)",
-    "Stashes (not applied/popped/deleted)"
-  ],
-  "risks": [
-    "Remote CI zero-step/runner/billing issue NOT resolved — GitHub platform problem",
-    "GitHub Actions remain advisory-only",
-    "Workflow changes CANNOT be validated against live GitHub Actions until platform issue resolved",
-    "3 CI checks still fail (build-and-test, e2e-playwright, tool-gateway-windows) — not caused by PR changes"
-  ],
-  "next_steps": [
-    "Issue #268 remains open for infrastructure/platform tracking",
-    "If runner/quota issue resolves: manual CI trigger can validate workflow changes live",
-    "Owner may update issue title to reflect remaining infrastructure scope",
-    "CodeRabbit re-activation requires separate issue and approval"
-  ]
+	"phase": 7,
+	"issue": 268,
+	"title": "Final Gates und Merge von PR #296",
+	"branch_master": "positron/issue-268-ci-recovery-5step",
+	"branch_main": "main",
+	"head_commit_pre_merge": "8bc52533432361a3ee2b6411896ea11bb7d1d088",
+	"merge_commit_sha": "c5fe4ff913f35cf8e47ee0fa16a3382b4c741944",
+	"completed_at": "2026-06-27T04:15:00Z",
+	"pr_number": 296,
+	"pr_url": "https://github.com/xxammaxx/Positron/pull/296",
+	"assessment": {
+		"reality_status": "CURRENT",
+		"workflow_audit_status": "CLEAN",
+		"biome_status": "FORMAT_ONLY",
+		"local_gates_status": "GREEN",
+		"remote_ci_status": "RED_ADVISORY",
+		"merge_readiness": "YES",
+		"pr_ready_executed": true,
+		"merge_status": "SUCCESS",
+		"post_merge_sync": "CURRENT",
+		"issue_268_status": "LEFT_OPEN_INFRA_TRACKER"
+	},
+	"local_gates": {
+		"git_diff_check": { "exit_code": 0, "status": "PASS" },
+		"biome_format": { "exit_code": 0, "files_checked": 448, "fixes_applied": 0, "status": "PASS" },
+		"build": { "exit_code": 0, "projects_built": 10, "status": "PASS" },
+		"typecheck": { "exit_code": 0, "projects": 10, "status": "PASS" },
+		"vitest_core": {
+			"test_files": 64,
+			"tests": 1375,
+			"passed": 1375,
+			"failed": 0,
+			"status": "PASS"
+		},
+		"vitest_web": { "test_files": 8, "tests": 196, "passed": 196, "failed": 0, "status": "PASS" },
+		"npm_test_total": {
+			"test_files": 72,
+			"tests": 1571,
+			"passed": 1571,
+			"failed": 0,
+			"status": "PASS"
+		}
+	},
+	"merge_details": {
+		"method": "merge",
+		"branch_deleted": false,
+		"auto_merge": false,
+		"manual_ci_triggered": false,
+		"force_push": false,
+		"admin_merge": false,
+		"issue_closed": false
+	},
+	"findings": [
+		"PR #296 merged successfully with merge commit c5fe4ff",
+		"All 7 final local gates pass — GREEN",
+		"Workflow audit confirms minimal permissions, safe triggers",
+		"Biome format audit confirms FORMAT_ONLY — no semantic changes",
+		"Remote CI failures are platform-level (zero-step/runner/billing) — not PR-related",
+		"Issue #268 remains OPEN as infrastructure tracker for zero-step/platform issue",
+		"Feature branch NOT deleted"
+	],
+	"not_touched": [
+		"CodeRabbit (not re-activated)",
+		"PR #218 (not touched)",
+		"PR chain #230-#242 (not touched)",
+		"GitHub CI manual trigger (NOT executed)",
+		"Auto-merge (NOT enabled)",
+		"Force push (NOT used)",
+		"Admin merge (NOT used)",
+		"Secrets (not read or exposed)",
+		".env contents (not displayed)",
+		"Stashes (not applied/popped/deleted)"
+	],
+	"risks": [
+		"Remote CI zero-step/runner/billing issue NOT resolved — GitHub platform problem",
+		"GitHub Actions remain advisory-only",
+		"Workflow changes CANNOT be validated against live GitHub Actions until platform issue resolved",
+		"3 CI checks still fail (build-and-test, e2e-playwright, tool-gateway-windows) — not caused by PR changes"
+	],
+	"next_steps": [
+		"Issue #268 remains open for infrastructure/platform tracking",
+		"If runner/quota issue resolves: manual CI trigger can validate workflow changes live",
+		"Owner may update issue title to reflect remaining infrastructure scope",
+		"CodeRabbit re-activation requires separate issue and approval"
+	]
 }
