@@ -119,6 +119,7 @@ Project closeout state as of the latest local verification on main (post PR #309
 
 ## Evidence References
 
+<!-- positron:auto-generated:start evidence-refs -->
 | Issue/PR | Description | Status |
 |----------|-------------|--------|
 | #263 / #264 / #265 | Deterministic OpenCode dry-run agents | Merged |
@@ -139,6 +140,7 @@ Project closeout state as of the latest local verification on main (post PR #309
 | #306 | Backlog Hygiene | OPEN |
 | #307 | Docs Reality Sync | OPEN |
 | #308 | Full Real Mode Pilot | OPEN |
+<!-- positron:auto-generated:end evidence-refs -->
 
 ## Test Breakdown
 
