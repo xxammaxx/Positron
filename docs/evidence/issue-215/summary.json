@@ -1,0 +1,42 @@
+{
+  "issue": 215,
+  "pr": 218,
+  "title": "Safety: Integrate Stop/Ask Policy via GATE_APPROVE runtime hook",
+  "status": "CLOSED",
+  "closed_at": "2026-06-28T06:22:35Z",
+  "merge_commit": "676dd2c9b76456b4c0f14a38f99b701571c314f6",
+  "audit_date": "2026-06-28",
+  "findings": {
+    "reality": "STALE",
+    "scope": "CLEAN_ISSUE_215_ONLY",
+    "staleness": "NEEDS_UPDATE",
+    "implementation": "CLEAN",
+    "tests": "CLEAN",
+    "docs": "CLEAN",
+    "security": "CLEAN",
+    "gates": "GREEN",
+    "merge_readiness": "YES",
+    "merge_status": "SUCCESS",
+    "issue_status": "CLOSED"
+  },
+  "tests": {
+    "stop_ask_policy": 64,
+    "gate_approve": 33,
+    "total": 97,
+    "passed": 97,
+    "failed": 0
+  },
+  "files_changed": 7,
+  "prohibited_actions_verified": [
+    "no_real_mode",
+    "no_workflow_changes",
+    "no_manual_ci",
+    "no_coderabbit",
+    "no_secrets",
+    "no_244_245_246_contamination",
+    "no_force_push",
+    "no_branch_deletion"
+  ],
+  "blockers_remaining": [244, 245, 246],
+  "next_recommended": 244
+}
