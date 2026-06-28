@@ -1,0 +1,45 @@
+{
+  "phase": 2,
+  "issue": 244,
+  "title": "Runtime Workspace Cleanup for GitWorkspaceAdapter — Merge Audit",
+  "status": "MERGED",
+  "branch": "feat/issue-244-runtime-workspace-cleanup",
+  "pr": 314,
+  "merge_sha": "502667613445427988f361e8b455ece3aae7af89",
+  "merged_at": "2026-06-28T09:24:00Z",
+  "timestamp": "2026-06-28T11:30:00+02:00",
+  "agent": "issue-orchestrator",
+  "classifications": {
+    "reality": "CURRENT",
+    "scope": "CLEAN_ISSUE_244_ONLY",
+    "staleness": "CURRENT",
+    "implementation": "CLEAN",
+    "tests": "CLEAN",
+    "security": "CLEAN",
+    "phase_1_evidence": "CLEAN",
+    "local_gates": "GREEN",
+    "merge_readiness": "YES",
+    "merge_status": "SUCCESS",
+    "issue_244_status": "CLOSED"
+  },
+  "tests": {
+    "targeted": "28/28 PASS",
+    "full_suite": "1730/1730 PASS",
+    "regressions": 0
+  },
+  "non_scope": {
+    "issue_245": "NOT_TOUCHED",
+    "issue_246": "NOT_TOUCHED",
+    "issue_308": "NOT_STARTED",
+    "real_mode": "NOT_EXECUTED",
+    "workflows": "NOT_CHANGED",
+    "manual_ci": "NOT_TRIGGERED",
+    "ui": "NOT_MODIFIED",
+    "code_rabbit": "DECOMMISSIONED",
+    "pr_218": "NOT_TOUCHED",
+    "pr_chain_230_242": "NOT_TOUCHED",
+    "secrets": "NONE_EXPOSED"
+  },
+  "next_recommended": 245,
+  "remaining_blockers_for_308": [245, 246]
+}
