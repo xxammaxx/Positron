@@ -436,4 +436,108 @@ describe('GatewayService', () => {
 			expect(output).not.toMatch(/ghp_[a-zA-Z0-9]{36}/);
 		});
 	});
+
+	describe('Gate 9: Audit enforcement', () => {
+		it('should block when requiresAuditLog is true and no onAudit callback', async () => {
+			const def = makeDefinition({
+				id: 'test.audit_blocked',
+				riskLevel: 'write',
+				requiresAuditLog: true,
+			});
+
+			registry.register(
+				def,
+				async (_c: ToolCall): Promise<ToolResult> => ({ success: true, output: 'ok' }),
+			);
+
+			const result = await gateway.execute(makeCall({ toolId: 'test.audit_blocked' }));
+
+			expect(result.success).toBe(false);
+			expect(result.blockedReason).toContain(BLOCK_REASONS.AUDIT_LOG_MISSING);
+		});
+
+		it('should allow when requiresAuditLog is true and onAudit succeeds', async () => {
+			const def = makeDefinition({
+				id: 'test.audit_allowed',
+				riskLevel: 'write',
+				requiresAuditLog: true,
+			});
+
+			registry.register(
+				def,
+				async (_c: ToolCall): Promise<ToolResult> => ({ success: true, output: 'ok' }),
+			);
+
+			gateway.onAudit = async (_call: ToolCall): Promise<string> => 'evt-001';
+
+			const result = await gateway.execute(makeCall({ toolId: 'test.audit_allowed' }));
+
+			expect(result.success).toBe(true);
+			expect(result.evidenceEventId).toBe('evt-001');
+		});
+
+		it('should block when onAudit throws', async () => {
+			const def = makeDefinition({
+				id: 'test.audit_throw',
+				riskLevel: 'write',
+				requiresAuditLog: true,
+			});
+
+			registry.register(
+				def,
+				async (_c: ToolCall): Promise<ToolResult> => ({ success: true, output: 'ok' }),
+			);
+
+			gateway.onAudit = async (_call: ToolCall): Promise<string> => {
+				throw new Error('Audit storage failure');
+			};
+
+			const result = await gateway.execute(makeCall({ toolId: 'test.audit_throw' }));
+
+			expect(result.success).toBe(false);
+			expect(result.blockedReason).toContain(BLOCK_REASONS.AUDIT_LOG_MISSING);
+			expect(result.blockedReason).toContain('Audit storage failure');
+		});
+
+		it('should NOT block when requiresAuditLog is not set', async () => {
+			const def = makeDefinition({
+				id: 'test.no_audit',
+				riskLevel: 'write',
+				// requiresAuditLog not set
+			});
+
+			registry.register(
+				def,
+				async (_c: ToolCall): Promise<ToolResult> => ({ success: true, output: 'ok' }),
+			);
+
+			const result = await gateway.execute(makeCall({ toolId: 'test.no_audit' }));
+
+			// Should pass through audit gate and succeed
+			expect(result.success).toBe(true);
+		});
+
+		it('should NOT reach audit gate when earlier gate blocks (disabled gateway)', async () => {
+			gateway.updateConfig({ enabled: false });
+
+			const def = makeDefinition({
+				id: 'test.disabled_audit',
+				riskLevel: 'write',
+				requiresAuditLog: true,
+			});
+
+			registry.register(
+				def,
+				async (_c: ToolCall): Promise<ToolResult> => ({ success: true, output: 'ok' }),
+			);
+
+			gateway.onAudit = async (_call: ToolCall): Promise<string> => 'evt-never-called';
+
+			const result = await gateway.execute(makeCall({ toolId: 'test.disabled_audit' }));
+
+			expect(result.success).toBe(false);
+			expect(result.blockedReason).toContain(BLOCK_REASONS.GATEWAY_DISABLED);
+			expect(result.blockedReason).not.toContain(BLOCK_REASONS.AUDIT_LOG_MISSING);
+		});
+	});
 });

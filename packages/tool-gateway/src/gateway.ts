@@ -51,6 +51,15 @@ export class GatewayService {
 	public onEvidence: ((call: ToolCall, result: TimedResult) => Promise<string>) | null = null;
 
 	/**
+	 * Optional pre-execution audit callback.
+	 * Called BEFORE tool execution when requiresAuditLog is true.
+	 * Returns an evidence event ID string.
+	 * Throws if audit/evidence write fails.
+	 * Set by the server integration layer.
+	 */
+	public onAudit: ((call: ToolCall) => Promise<string>) | null = null;
+
+	/**
 	 * Optional approval check callback.
 	 * If set, called when a tool requires approval.
 	 * Should return true if approved, false if denied.
@@ -141,11 +150,36 @@ export class GatewayService {
 				}
 			}
 
-			// Gate 8: Egress check
-			if (this.config.enforceEgress) {
-				const egressResult = this.validateEgress(call, def);
-				if (!egressResult.ok) {
-					return blocked(BLOCK_REASONS.EGRESS_BLOCKED, egressResult.error);
+		// Gate 8: Egress check
+		if (this.config.enforceEgress) {
+			const egressResult = this.validateEgress(call, def);
+			if (!egressResult.ok) {
+				return blocked(BLOCK_REASONS.EGRESS_BLOCKED, egressResult.error);
+			}
+		}
+
+			// Gate 9: Audit enforcement (requiresAuditLog)
+			// MUST come after all other gates so sealed/default-deny remains stronger.
+			// If the tool definition requires audit logging, we enforce that an
+			// audit/evidence sink is available and that it writes successfully
+			// BEFORE the tool executes.
+			let auditEvidenceId: string | undefined;
+
+			if (def.requiresAuditLog === true) {
+				if (!this.onAudit) {
+					return blocked(
+						BLOCK_REASONS.AUDIT_LOG_MISSING,
+						`Tool "${call.toolId}" requires audit log but no audit callback is configured`,
+					);
+				}
+
+				try {
+					auditEvidenceId = await this.onAudit(call);
+				} catch (auditError) {
+					return blocked(
+						BLOCK_REASONS.AUDIT_LOG_MISSING,
+						`Tool "${call.toolId}" audit log write failed: ${auditError instanceof Error ? auditError.message : String(auditError)}`,
+					);
 				}
 			}
 
@@ -161,6 +195,7 @@ export class GatewayService {
 			const timedResult: TimedResult = {
 				...result,
 				durationMs,
+				evidenceEventId: auditEvidenceId,
 			};
 
 			// Post-execution: secret redaction
@@ -168,7 +203,8 @@ export class GatewayService {
 				timedResult.output = this.redactOutput(timedResult.output);
 			}
 
-			// Generate evidence event
+			// Generate evidence event (post-execution)
+			// May override the pre-execution audit evidence ID
 			if (this.onEvidence) {
 				timedResult.evidenceEventId = await this.onEvidence(call, timedResult);
 			}

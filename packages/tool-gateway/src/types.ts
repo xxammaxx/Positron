@@ -74,6 +74,8 @@ export interface ToolDefinition {
 	egressPolicy: EgressPolicy;
 	/** Evidence configuration */
 	evidenceRequirements: EvidenceConfig;
+	/** Whether this tool requires a pre-execution audit log entry */
+	requiresAuditLog?: boolean;
 }
 
 /**
@@ -173,6 +175,7 @@ export const BLOCK_REASONS = {
 	GATEWAY_DISABLED: 'GATEWAY_DISABLED',
 	TOOL_EXECUTION_ERROR: 'TOOL_EXECUTION_ERROR',
 	SCANNER_BLOCKED: 'SCANNER_BLOCKED',
+	AUDIT_LOG_MISSING: 'AUDIT_LOG_MISSING',
 	UNKNOWN: 'UNKNOWN',
 } as const;
 
