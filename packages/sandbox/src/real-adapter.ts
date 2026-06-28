@@ -19,6 +19,26 @@ import { validatePath, validateRemoteUrl } from './paths.js';
  * Führt echte Git-Operationen via child_process aus.
  */
 export class RealGitWorkspaceAdapter implements GitWorkspaceAdapter {
+	/**
+	 * In-process lock tracking: workspacePath → ownerRunId.
+	 *
+	 * Issue #244 Limitation: This lock is PROCESS-SCOPED only.
+	 * It protects against concurrent access within a single Positron server process.
+	 * It does NOT protect against multi-process or cluster deployments.
+	 *
+	 * For multi-process safety, a persistent lock store (e.g., lockfile with PID,
+	 * SQLite advisory lock, or Redis lock) is required.
+	 * See follow-up issue for persistent workspace lock store.
+	 */
+	private locks = new Map<string, string>();
+	/** Workspace root for boundary validation */
+	private workspaceRoot: string;
+
+	constructor() {
+		this.workspaceRoot =
+			process.env['POSITRON_WORKSPACE_ROOT'] ??
+			path.join(process.cwd(), '.positron', 'workspaces');
+	}
 	async prepareWorkspace(input: PrepareWorkspaceInput): Promise<PreparedWorkspace> {
 		const { repository, issueNumber, issueTitle, runId, baseBranch } = input;
 		validateRemoteUrl(repository.remoteUrl);
@@ -237,5 +257,113 @@ export class RealGitWorkspaceAdapter implements GitWorkspaceAdapter {
 		}
 
 		return { pushed: true, ref: `${remoteName}/${branch}` };
+	}
+
+	// ── Issue #244: Workspace Lifecycle ──
+
+	/**
+	 * Validates a workspace path is within the workspace root boundary.
+	 * Blocks empty, root, and path-traversal paths.
+	 */
+	private validateWorkspaceBoundary(workspacePath: string): { ok: boolean; reason?: string } {
+		if (!workspacePath || workspacePath.trim() === '') {
+			return { ok: false, reason: 'Rejected: empty workspace path' };
+		}
+		const resolved = path.resolve(workspacePath);
+		// Block root and near-root paths
+		const rootResolved = path.resolve('/');
+		if (resolved === rootResolved) {
+			return { ok: false, reason: 'Rejected: root path is not a valid workspace' };
+		}
+		// Block paths that are not under the workspace root
+		const normalizedRoot = path.resolve(this.workspaceRoot);
+		if (!resolved.startsWith(normalizedRoot)) {
+			return {
+				ok: false,
+				reason: `Rejected: path "${workspacePath}" is outside workspace root`,
+			};
+		}
+		// Block path traversal patterns
+		const normalized = path.normalize(workspacePath);
+		if (normalized.includes('..')) {
+			return {
+				ok: false,
+				reason: `Rejected: path traversal detected in "${workspacePath}"`,
+			};
+		}
+		return { ok: true };
+	}
+
+	async destroyWorkspace(workspacePath: string): Promise<{ destroyed: boolean; reason?: string }> {
+		const boundary = this.validateWorkspaceBoundary(workspacePath);
+		if (!boundary.ok) {
+			return { destroyed: false, reason: boundary.reason };
+		}
+		const resolved = path.resolve(workspacePath);
+		// Idempotent: workspace already gone
+		if (!fs.existsSync(resolved)) {
+			this.locks.delete(workspacePath);
+			return { destroyed: true, reason: 'Workspace already removed (idempotent)' };
+		}
+		try {
+			fs.rmSync(resolved, { recursive: true, force: true });
+			this.locks.delete(workspacePath);
+			return { destroyed: true };
+		} catch (err) {
+			const msg = err instanceof Error ? err.message : String(err);
+			return { destroyed: false, reason: `Failed to destroy workspace: ${msg}` };
+		}
+	}
+
+	async lockWorkspace(
+		workspacePath: string,
+		ownerRunId: string,
+	): Promise<{ locked: boolean; reason?: string }> {
+		if (!workspacePath || !ownerRunId) {
+			return { locked: false, reason: 'Workspace path and ownerRunId are required' };
+		}
+		const existingOwner = this.locks.get(workspacePath);
+		if (existingOwner) {
+			if (existingOwner === ownerRunId) {
+				return { locked: true, reason: 'Already locked by same owner (idempotent)' };
+			}
+			return {
+				locked: false,
+				reason: `Workspace already locked by run "${existingOwner}"`,
+			};
+		}
+		this.locks.set(workspacePath, ownerRunId);
+		return { locked: true };
+	}
+
+	async unlockWorkspace(
+		workspacePath: string,
+		ownerRunId: string,
+	): Promise<{ unlocked: boolean; reason?: string }> {
+		if (!workspacePath || !ownerRunId) {
+			return { unlocked: false, reason: 'Workspace path and ownerRunId are required' };
+		}
+		const existingOwner = this.locks.get(workspacePath);
+		if (!existingOwner) {
+			return { unlocked: true, reason: 'Not locked (idempotent)' };
+		}
+		if (existingOwner !== ownerRunId) {
+			return {
+				unlocked: false,
+				reason: `Cannot unlock: workspace owned by "${existingOwner}", not "${ownerRunId}"`,
+			};
+		}
+		this.locks.delete(workspacePath);
+		return { unlocked: true };
+	}
+
+	async isLocked(
+		workspacePath: string,
+	): Promise<{ locked: boolean; ownerRunId?: string }> {
+		const owner = this.locks.get(workspacePath);
+		if (owner) {
+			return { locked: true, ownerRunId: owner };
+		}
+		return { locked: false };
 	}
 }

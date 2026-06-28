@@ -76,11 +76,11 @@ export const VALID_TRANSITIONS: Readonly<Record<Phase, readonly Phase[]>> = {
 	COMMIT: ['PR_CREATE', 'FAILED_BLOCKED'],
 	PR_CREATE: ['MERGE', 'DONE', 'FAILED_BLOCKED'],
 	MERGE: ['DONE'],
-	DONE: [],
+	DONE: ['CLEANUP'],
 	FAILED: [],
 	FAILED_TRANSIENT: ['REPO_SYNC', 'WEB_RESEARCH', 'SPECIFY', 'TEST'],
-	FAILED_BLOCKED: [],
-	FAILED_UNSAFE: [],
+	FAILED_BLOCKED: ['CLEANUP'],
+	FAILED_UNSAFE: ['CLEANUP'],
 	BLOCKED_PUSH: [],
 	BLOCKED_MERGE: [],
 	GATE_APPROVE: ['COMMIT', 'MERGE', 'DONE'],
@@ -177,6 +177,52 @@ export function markFailed(
 	};
 
 	return { ok: true, run: newRun, event };
+}
+
+/**
+ * Issue #244: Workspace cleanup callback type.
+ * Called when the state machine transitions to CLEANUP phase.
+ */
+export type WorkspaceCleanupFn = (
+	workspacePath: string,
+	runId: string,
+) => Promise<{ cleaned: boolean; reason?: string }>;
+
+/**
+ * Issue #244: Registered workspace cleanup function.
+ */
+let workspaceCleanupFn: WorkspaceCleanupFn | null = null;
+
+/**
+ * Issue #244: Register a workspace cleanup function.
+ */
+export function registerWorkspaceCleanup(fn: WorkspaceCleanupFn): void {
+	workspaceCleanupFn = fn;
+}
+
+/**
+ * Issue #244: Get current workspace cleanup function (for testing).
+ */
+export function getWorkspaceCleanupFn(): WorkspaceCleanupFn | null {
+	return workspaceCleanupFn;
+}
+
+/**
+ * Issue #244: Run workspace cleanup. Called on CLEANUP transition.
+ */
+export async function runCleanup(run: RunState): Promise<{ cleaned: boolean; reason?: string }> {
+	if (!run.workspacePath) {
+		return { cleaned: true, reason: 'No workspace path to clean up' };
+	}
+	if (!workspaceCleanupFn) {
+		return { cleaned: false, reason: 'No workspace cleanup function registered' };
+	}
+	try {
+		return await workspaceCleanupFn(run.workspacePath, run.id);
+	} catch (err) {
+		const msg = err instanceof Error ? err.message : String(err);
+		return { cleaned: false, reason: `Cleanup failed: ${msg}` };
+	}
 }
 
 /**
@@ -293,10 +339,15 @@ export function resumeFromEvents(
 
 /**
  * Prüft ob eine Phase terminal ist (keine weiteren Übergänge).
+ * DONE, FAILED_BLOCKED, and FAILED_UNSAFE are terminal even though
+ * they may transition to CLEANUP (automatic post-processing).
  */
 export function isTerminalPhase(phase: Phase): boolean {
 	const allowed = VALID_TRANSITIONS[phase];
-	return !allowed || allowed.length === 0;
+	if (!allowed || allowed.length === 0) return true;
+	// DONE/FAILED_BLOCKED/FAILED_UNSAFE → CLEANUP only - still terminal
+	if (allowed.length === 1 && allowed[0] === 'CLEANUP') return true;
+	return false;
 }
 
 /**

@@ -10,7 +10,7 @@ import {
 } from '@positron/github-adapter';
 import type { GitHubAdapter } from '@positron/github-adapter';
 import { FakeOpenCodeAdapter, RealOpenCodeAdapter } from '@positron/opencode-adapter';
-import { openDatabase } from '@positron/run-state';
+import { openDatabase, registerWorkspaceCleanup } from '@positron/run-state';
 import type { RunState } from '@positron/run-state';
 import { FakeGitWorkspaceAdapter, RealGitWorkspaceAdapter } from '@positron/sandbox';
 import type { GitWorkspaceAdapter } from '@positron/sandbox';
@@ -58,11 +58,19 @@ function resolveGitHubAdapter(): GitHubAdapter {
 }
 
 function resolveWorkspaceAdapter(): GitWorkspaceAdapter {
+	let adapter: GitWorkspaceAdapter;
 	if (process.env['POSITRON_WORKSPACE_ROOT']) {
 		console.log('[Worker] RealGitWorkspaceAdapter aktiviert');
-		return new RealGitWorkspaceAdapter();
+		adapter = new RealGitWorkspaceAdapter();
+	} else {
+		adapter = new FakeGitWorkspaceAdapter();
 	}
-	return new FakeGitWorkspaceAdapter();
+	// Issue #244: Register workspace cleanup function
+	registerWorkspaceCleanup(async (workspacePath: string, _runId: string) => {
+		const result = await adapter.destroyWorkspace(workspacePath);
+		return { cleaned: result.destroyed, reason: result.reason };
+	});
+	return adapter;
 }
 
 function resolveSpeckitAdapter(): SpecKitAdapter {

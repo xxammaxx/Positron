@@ -467,7 +467,9 @@ describe('isTerminalPhase() contract', () => {
 
 	it('is consistent with VALID_TRANSITIONS', () => {
 		for (const [phase, targets] of Object.entries(VALID_TRANSITIONS)) {
-			const isTerminal = targets.length === 0;
+			// #244: Phases with only CLEANUP transition are still terminal
+			const onlyCleanup = targets.length === 1 && targets[0] === 'CLEANUP';
+			const isTerminal = targets.length === 0 || onlyCleanup;
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			expect(isTerminalPhase(phase as any)).toBe(isTerminal);
 		}

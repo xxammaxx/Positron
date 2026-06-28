@@ -20,5 +20,14 @@ export {
 	resumeFromEvents,
 	isTerminalPhase,
 	isFailurePhase,
+	registerWorkspaceCleanup,
+	runCleanup,
+	getWorkspaceCleanupFn,
 } from './state-machine.js';
-export type { RunState, RunEventData, RunStore, TransitionResult } from './state-machine.js';
+export type {
+	RunState,
+	RunEventData,
+	RunStore,
+	TransitionResult,
+	WorkspaceCleanupFn,
+} from './state-machine.js';
