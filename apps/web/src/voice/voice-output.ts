@@ -3,9 +3,9 @@
 // Rate-Limit 1/3s, Deduplizierung, max 200 Zeichen.
 
 import type { RunEvent } from '../types.js';
+import { cleanForSpeech } from './redact-for-speech.js';
 import type { VoiceEventType } from './voice-settings.js';
 import { loadVoiceSettings } from './voice-settings.js';
-import { cleanForSpeech } from './redact-for-speech.js';
 
 // ── Rate Limiter (module-level state) ──
 let lastSpeakTime = 0;

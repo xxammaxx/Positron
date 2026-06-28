@@ -1,0 +1,15 @@
+flowchart TD
+    A[OpenCode Adapter Layer] --> B[RealOpenCodeAdapter]
+    A --> C[DeterministicFixtureAgent]
+    A --> D[OpenCodeDryRunAgent]
+    C --> E[Fixture Inputs]
+    C --> F[Deterministic Evidence]
+    D --> G[Safety Classification]
+    G --> G1[Simulated Reads]
+    G --> G2[Blocked Writes]
+    G --> G3[Reported Info]
+    D --> H[EvidenceReport]
+    B --> I[Real CLI Execution]
+    H --> J[Local Review Gates]
+    F --> J
+    I --> J

@@ -1,0 +1,54 @@
+{
+	"phase": 10,
+	"phase_name": "Safe Branch Cleanup nach CI-Recovery-Merge",
+	"timestamp": "2026-06-27T12:25:00Z",
+	"issue": 268,
+	"issue_title": "CI Infrastructure Tracker: GitHub Actions zero-step / runner / quota platform issue",
+	"branch": "main",
+	"head_before": "60133eb24f08ce795ee1ee5766d0c6ac9c99f019",
+	"head_after": "60133eb24f08ce795ee1ee5766d0c6ac9c99f019",
+	"status": "YELLOW_PREEXISTING",
+	"confidence": 0.99,
+	"classifications": {
+		"ISSUE_268_PHASE_10_REALITY_STATUS": "CURRENT",
+		"MAIN_SYNC_STATUS": "SUCCESS",
+		"ISSUE_268_BRANCH_CLEANUP_READY": "YES",
+		"BRANCH_CLEANUP_STATUS": "DELETED_PARTIAL",
+		"ISSUE_268_PHASE_10_GATES": "YELLOW_PREEXISTING",
+		"ISSUE_268_STATUS": "LEFT_OPEN_INFRA_TRACKER"
+	},
+	"branches": {
+		"positron/issue-268-ci-recovery-5step": "SAFE_DELETE",
+		"positron/issue-268-ci-recovery-step1-lf-normalize": "SAFE_DELETE"
+	},
+	"deleted_remote": [
+		"positron/issue-268-ci-recovery-5step",
+		"positron/issue-268-ci-recovery-step1-lf-normalize"
+	],
+	"deleted_local": ["positron/issue-268-ci-recovery-5step"],
+	"retained_local": ["positron/issue-268-ci-recovery-step1-lf-normalize"],
+	"retained_reason": "git branch -d refused — not a formal ancestor of main. Functionally obsolete. -D prohibited per policy.",
+	"gates": {
+		"build": { "exit_code": 0, "result": "PASS" },
+		"typecheck": { "exit_code": 0, "result": "PASS" },
+		"test": { "exit_code": 0, "result": "PASS", "test_files": 8, "tests": 196 },
+		"biome_format": { "exit_code": 1, "result": "YELLOW_PREEXISTING" }
+	},
+	"operations_prevented": [
+		"git branch -D",
+		"git push --force",
+		"gh workflow run",
+		"gh run rerun",
+		"Issue #268 closure",
+		"CodeRabbit re-activation",
+		"PR #218 modification",
+		"PR chain #230-#242 modification"
+	],
+	"issue_268_state": "OPEN",
+	"pr_296_state": "MERGED",
+	"remote_ci": "advisory-only",
+	"coderabbit": "decommissioned",
+	"working_tree": "CLEAN",
+	"secrets_check": "NO_WARNINGS",
+	"owner_approval": "APPROVE DELETE ISSUE 268 CI RECOVERY FEATURE BRANCHES"
+}

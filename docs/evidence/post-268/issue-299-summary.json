@@ -1,0 +1,51 @@
+{
+  "issue": 299,
+  "title": "Post-268: Fix Windows runner module resolution",
+  "status": "FIXED",
+  "classification": "GREEN",
+  "confidence": 0.95,
+  "timestamp": "2026-06-27T08:59:00Z",
+  "agent": "issue-orchestrator",
+  "errors": [
+    {
+      "id": "ERR_MODULE_NOT_FOUND",
+      "module": "./decision-manifest.js",
+      "source": "packages/shared/dist/index.js",
+      "root_cause": "BUILD_GAP: CI lacks npm run build step; .gitignore blocks dist/ commits",
+      "fix": "Added npm run build step to tool-gateway-windows CI job",
+      "file": ".github/workflows/quality-gates.yml",
+      "status": "FIXED"
+    },
+    {
+      "id": "ASSERTION_ERROR",
+      "test": "repo.test.ts:82 should list files in a subdirectory",
+      "root_cause": "CWD_DEPENDENCY: workspaceRoot defaulted to process.cwd()",
+      "fix": "Replaced process.cwd() with computed REPO_ROOT constant",
+      "file": "packages/tool-gateway/src/__tests__/tools/repo.test.ts",
+      "status": "FIXED"
+    }
+  ],
+  "files_changed": [
+    ".github/workflows/quality-gates.yml",
+    "packages/tool-gateway/src/__tests__/tools/repo.test.ts"
+  ],
+  "local_gates": {
+    "build": "PASS",
+    "typecheck": "PASS",
+    "test_root": "PASS (1571 tests)",
+    "test_package_dir": "PASS (153 tests)",
+    "diff_check": "PASS"
+  },
+  "os_context": "WINDOWS_LOCAL",
+  "remote_validation": "REQUIRED",
+  "risks": ["CI workflow change needs remote execution to confirm ERR_MODULE_NOT_FOUND resolution"],
+  "non_scope": [
+    "No workflow restructuring",
+    "No manual CI trigger",
+    "No CodeRabbit reactivation",
+    "No PR #218 or #230-#242 chain",
+    "No test deletion",
+    "No assertion weakening",
+    "No merge"
+  ]
+}

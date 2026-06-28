@@ -16,4 +16,12 @@ export * from './opencode-errors.js';
 export * from './live-e2e.js';
 export * from './queue/types.js';
 export * from './secret-manager.js';
+export * from './decision-manifest.js';
+export * from './github-context-reconciler.js';
+export * from './github-snapshot-collector.js';
+export * from './evidence-gate.js';
+export * from './local-gate-runner.js';
+export * from './human-approval-pack.js';
+export * from './safe-apply-plan.js';
+export * from './evidence-portfolio/index.js';
 //# sourceMappingURL=index.js.map

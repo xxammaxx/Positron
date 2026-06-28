@@ -1,7 +1,7 @@
 // Positron — Run State Datenbank-Konstanten
 
-import path from 'node:path';
 import os from 'node:os';
+import path from 'node:path';
 
 /** Standard-Pfad zur SQLite-Datenbank */
 export const POSITRON_DB_PATH = path.join(os.homedir(), '.positron', 'positron.db');
@@ -17,7 +17,7 @@ export const MAX_RUNS = 1000;
 
 /** SQLite PRAGMA-Einstellungen */
 export const PRAGMA_SETTINGS = {
-  journalMode: 'WAL',
-  foreignKeys: 'ON',
-  busyTimeout: DB_TIMEOUT_MS,
+	journalMode: 'WAL',
+	foreignKeys: 'ON',
+	busyTimeout: DB_TIMEOUT_MS,
 } as const;

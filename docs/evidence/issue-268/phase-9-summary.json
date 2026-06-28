@@ -1,0 +1,131 @@
+{
+	"phase": 9,
+	"issue": 268,
+	"title": "Infrastruktur-Tracker Finalisierung, Branch-Cleanup-Optionen und CI-Quota-Handoff",
+	"branch": "main",
+	"head_commit": "fb829bac8a4319c51fecdd1c700c16675ca185dd",
+	"completed_at": "2026-06-27T06:50:00Z",
+	"pr_number": 296,
+	"pr_url": "https://github.com/xxammaxx/Positron/pull/296",
+	"assessment": {
+		"reality_status": "CURRENT",
+		"pr_296_status": "MERGED",
+		"issue_268_status": "OPEN_AS_INFRA_TRACKER",
+		"tracker_update_status": "UPDATED",
+		"branch_cleanup_ready": "YES",
+		"github_actions_owner_check_status": "DOCUMENTED",
+		"local_gates_status": "YELLOW_PREEXISTING",
+		"evidence_commit_executed": false,
+		"evidence_commit_sha": "PENDING",
+		"push_to_main": "PENDING"
+	},
+	"local_gates": {
+		"git_status": { "exit_code": 0, "status": "PASS" },
+		"biome_format": {
+			"exit_code": 1,
+			"files_checked": 450,
+			"errors": 3,
+			"status": "YELLOW_PREEXISTING"
+		},
+		"build": { "exit_code": 0, "projects_built": 10, "status": "PASS" },
+		"typecheck": { "exit_code": 0, "projects": 10, "status": "PASS" },
+		"vitest_core": {
+			"test_files": 64,
+			"tests": 1375,
+			"passed": 1375,
+			"failed": 0,
+			"status": "PASS"
+		},
+		"vitest_web": { "test_files": 8, "tests": 196, "passed": 196, "failed": 0, "status": "PASS" },
+		"npm_test_total": {
+			"test_files": 72,
+			"tests": 1571,
+			"passed": 1571,
+			"failed": 0,
+			"status": "PASS"
+		}
+	},
+	"issue_268_tracker": {
+		"title_before": "CI Recovery: diagnose and repair systemic Quality Gates / Issue Verification failures",
+		"title_after": "CI Infrastructure Tracker: GitHub Actions zero-step / runner / quota platform issue",
+		"comment_posted": true,
+		"comment_url": "https://github.com/xxammaxx/Positron/issues/268#issuecomment-4815251132",
+		"issue_closed": false
+	},
+	"branch_cleanup_audit": {
+		"branch_1": {
+			"name": "positron/issue-268-ci-recovery-5step",
+			"exists_local": true,
+			"exists_remote": true,
+			"fully_in_main": true,
+			"unmerged_commits": false,
+			"safe_to_delete": true
+		},
+		"branch_2": {
+			"name": "positron/issue-268-ci-recovery-step1-lf-normalize",
+			"exists_local": true,
+			"exists_remote": true,
+			"fully_in_main": false,
+			"unmerged_commits": true,
+			"content_in_main": true,
+			"safe_to_delete": true,
+			"note": "Commit 8d2d08d is not an ancestor of main, but its content (.gitattributes + LF normalization) is present via 5step merge"
+		}
+	},
+	"remote_ci": {
+		"manual_ci_triggered": false,
+		"ci_status": "ADVISORY_ONLY",
+		"failing_jobs": ["build-and-test", "e2e-playwright", "tool-gateway-windows"],
+		"probable_cause": "zero-step / runner / quota / billing platform issue"
+	},
+	"workflow_fixes_on_main": {
+		"fix_a_lf_normalization": true,
+		"fix_b_permissions_block": true,
+		"fix_c_verify_issues_repair": true,
+		"fix_d_build_before_stryker": true,
+		"fix_e_redis_for_playwright": true
+	},
+	"findings": [
+		"PR #296 is merged on main (merge commit c5fe4ff)",
+		"All workflow Fixes A-E are on main",
+		"Issue #268 title updated to CI Infrastructure Tracker",
+		"Issue #268 comment posted documenting tracker status",
+		"Both CI recovery feature branches are safe to delete",
+		"GitHub Actions owner checklist documented",
+		"All 1571 tests pass — GREEN",
+		"Biome format exit 1 is YELLOW_PREEXISTING (3 JSON indentation warnings)",
+		"No manual CI triggered per owner directive",
+		"No branches deleted",
+		"No force push used"
+	],
+	"not_touched": [
+		"Issue #268 (NOT closed — updated and left open)",
+		"CodeRabbit (NOT reactivated — remains decommissioned)",
+		"PR #218 (NOT touched)",
+		"PR chain #230-#242 (NOT touched)",
+		"GitHub CI manual trigger (NOT executed)",
+		"Force push (NOT used)",
+		"Feature branch deletion (NOT executed)",
+		"Secrets (NOT read or exposed)",
+		".env contents (NOT displayed)",
+		"Stashes (NOT applied/popped/deleted)",
+		"New workflow changes (NOT made)",
+		"New feature development (NOT done)"
+	],
+	"risks": [
+		"Remote CI build-and-test, e2e-playwright, tool-gateway-windows still fail — GitHub platform issue",
+		"Workflow Fixes B, D, E cannot be validated live until runner/quota resolves",
+		"GitHub Actions remains advisory-only per CI Policy v1",
+		"CodeRabbit reactivation requires separate issue and approval",
+		"Phase 6/7/8 JSON indentation issues remain (cosmetic, non-blocking)"
+	],
+	"owner_next_steps": [
+		"Review Phase 9 evidence in docs/evidence/issue-268/",
+		"Check GitHub Actions billing/quota in Settings > Billing & plans",
+		"Decide on Option A (observe), B (branch cleanup), C (CI validation), D (close issue)",
+		"For branch cleanup: issue 'APPROVE DELETE ISSUE 268 CI RECOVERY FEATURE BRANCHES'",
+		"For CI validation: issue 'APPROVE USE GITHUB CI FOR THIS RUN'",
+		"For issue close: issue 'APPROVE CLOSE ISSUE 268 AFTER CI VALIDATION'"
+	],
+	"recommendation": "Option A — Continue observing. No urgent action needed. Branch cleanup and CI validation are optional follow-ups."
+}

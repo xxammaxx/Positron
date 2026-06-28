@@ -1,13 +1,13 @@
 # Positron — Evidence-Gated AI Agent for Autonomous GitHub Issue Resolution
 
-[![Version](https://img.shields.io/badge/version-v0.2.0-blue.svg)](https://github.com/xxammaxx/Positron/releases)
-[![Tests](https://img.shields.io/badge/tests-107%20passing-brightgreen.svg)](https://github.com/xxammaxx/Positron/actions)
-[![E2E](https://img.shields.io/badge/e2e-17%20passing-brightgreen.svg)](https://github.com/xxammaxx/Positron/actions)
+[![Version](https://img.shields.io/badge/version-v0.3.0-blue.svg)](https://github.com/xxammaxx/Positron/releases)
+[![Tests](https://img.shields.io/badge/tests-1571%20passing-brightgreen.svg)](https://github.com/xxammaxx/Positron/actions)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/docker-ready-2496ED?logo=docker)](https://github.com/xxammaxx/Positron)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite)](https://vitejs.dev/)
+[![Vite](https://img.shields.io/badge/Vite-5.4-646CFF?logo=vite)](https://vitejs.dev/)
+[![Node.js](https://img.shields.io/badge/Node.js-24-339933?logo=node.js)](https://nodejs.org/)
 
 **Positron** is an evidence-gated AI agent execution system for GitHub Issues. It runs a **28-phase pipeline** (QUEUED → CLAIMED → SPECIFY → PLAN → TASKS → IMPLEMENT → REVIEW → MERGE → DONE → CLEANUP) where every phase produces verifiable artifacts. A happy-path run progresses through ~17 execution phases. Each step is auditable, replayable, and gated by evidence requirements.
 
@@ -51,6 +51,8 @@ npm run dev:web
 # → http://localhost:5173
 # Note: Without Redis, the worker queue falls back to inline execution.
 ```
+
+> **Windows users:** See the [Windows Local Installer Guide](docs/install/windows-local-installer.md) for a one-command setup with PowerShell scripts.
 
 ### Local Development (with Redis + Worker)
 
@@ -125,13 +127,12 @@ All settings via environment variables or `apps/server/.env`:
 ## Tests
 
 ```bash
-npx vitest run                  # 107 unit/integration tests
-cd apps/web && npx vitest run   # 58 frontend tests
-npx playwright test             # 17 E2E tests
-./scripts/dogfood-test.sh       # Full dogfood pipeline test
+npx vitest run                  # 1375 core/package tests (64 test files)
+cd apps/web && npx vitest run   # 196 frontend tests (8 test files, JSX/TSX resolved)
+npx playwright test             # E2E tests (advisory-only, see Issue #304)
 ```
 
-All 107 tests pass. Full E2E workflow proof documented in `docs/release/ui-workflow-proof/`.
+Core/packages: **1375/1375 passing** (64 test files). Web: **196/196 passing** (8 test files). **Total: 1571/1571**. See [Current Project Status](#current-project-status) for the latest local gate results.
 
 ---
 
@@ -169,27 +170,64 @@ Positron/
 
 | Layer | Technology |
 |-------|-----------|
-| **Runtime** | Node.js 22, TypeScript 5.7 |
-| **Frontend** | React 18, Vite 6, Tailwind CSS 3 |
+| **Runtime** | Node.js 24, TypeScript 5.9 |
+| **Frontend** | React 18, Vite 5.4, Tailwind CSS 3 |
 | **Backend** | Express 4, SQLite (better-sqlite3) |
 | **State Machine** | Custom pipeline engine (28 phases) |
 | **E2E Testing** | Playwright 1.60 |
-| **Unit Testing** | Vitest 4 |
+| **Unit Testing** | Vitest 4.1 (core) / 1.6 (web) |
 | **Container** | Docker + docker-compose |
 
 ---
 
-## Dogfood Results (v0.2.0)
+## Dogfood Results (v0.1.0+)
 
 Positron successfully completed a **full dogfood run** on its own repository:
 
 - **28-Phase State Machine**: Happy path (CLAIMED → DONE) completed in **13.7 seconds**
-- **107 Tests**: All green
+- **1571 Tests**: All green (core + apps/web)
+- **Rudolph Beacon Benchmark**: Controlled real-mode probe with safety gate validation ([#279](https://github.com/xxammaxx/Positron/issues/279))
+- **CI Recovery**: Workflow configuration repaired ([#268](https://github.com/xxammaxx/Positron/issues/268), [#296](https://github.com/xxammaxx/Positron/pull/296))
 - **SSE Live Updates**: Dashboard + Event Timeline functional
 - **PR Auto-Creation**: Blocked by Kill-Switch as configured
 - **Evidence Trail**: Complete with screenshots, logs, test results
 
 > Full proof: `docs/release/ui-workflow-proof-report.md`
+
+---
+
+## Current Project Status
+
+Positron currently uses **local gates as the source of truth** for merge decisions.
+
+### Mandatory local gates
+
+- `git diff --check`
+- `npx biome format .`
+- `npm run build`
+- `npm run typecheck`
+- `npm test` — **1571/1571 passing** (72 test files)
+
+### Known limitations
+
+- **GitHub Actions**: advisory-only (workflows restored via [#268](https://github.com/xxammaxx/Positron/issues/268), remote CI not primary truth).
+- **`npx biome check .`**: lint backlog with known warnings/errors — triaged separately.
+- **E2E tests**: tracing lifecycle instability ([#304](https://github.com/xxammaxx/Positron/issues/304)); advisory-only.
+- **Full Real Mode**: Not yet productively validated ([#308](https://github.com/xxammaxx/Positron/issues/308)).
+
+### See also
+
+- [CONTRIBUTING.md](CONTRIBUTING.md)
+- [SECURITY.md](SECURITY.md)
+- [CHANGELOG.md](CHANGELOG.md)
+- [`docs/status/current-capabilities.md`](docs/status/current-capabilities.md)
+- [`docs/status/known-limitations.md`](docs/status/known-limitations.md)
+- [`docs/architecture/local-ci-flow.mmd`](docs/architecture/local-ci-flow.mmd)
+- [`docs/architecture/evidence-flow.mmd`](docs/architecture/evidence-flow.mmd)
+- [`docs/architecture/agent-flow.mmd`](docs/architecture/agent-flow.mmd)
+- [`docs/architecture/ki-solution-system-map.mmd`](docs/architecture/ki-solution-system-map.mmd)
+- [`docs/architecture/ki-solution-decision-flow.mmd`](docs/architecture/ki-solution-decision-flow.mmd)
+- [`docs/specs/issue-279-phase-0.md`](docs/specs/issue-279-phase-0.md) — KI-Lösung Architecture Spec
 
 ---
 

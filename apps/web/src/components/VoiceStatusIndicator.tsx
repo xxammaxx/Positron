@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { getLastSpoken, isSpeechSupported } from '../voice/voice-output.js';
 import { loadVoiceSettings, toggleVoiceEnabled } from '../voice/voice-settings.js';
-import { isSpeechSupported, getLastSpoken } from '../voice/voice-output.js';
 
 export default function VoiceStatusIndicator(): React.ReactElement {
 	const supported = isSpeechSupported();
@@ -16,8 +16,7 @@ export default function VoiceStatusIndicator(): React.ReactElement {
 			setEnabled(settings.enabled);
 			const last = getLastSpoken();
 			if (last) {
-				const preview =
-					last.text.length > 40 ? last.text.slice(0, 37) + '…' : last.text;
+				const preview = last.text.length > 40 ? last.text.slice(0, 37) + '…' : last.text;
 				setLastSpokenPreview(preview);
 			}
 		}, 2000);

@@ -10,7 +10,7 @@ The 7-Layer Testing & Verification Framework established a comprehensive quality
 
 | Layer | Description | Status | Issue |
 |-------|-------------|--------|-------|
-| **L1** | AI Code Review (CodeRabbit) | ✅ Configured | #165 |
+| **L1** | AI Code Review (CodeRabbit) | ~~✅ Configured~~ (decommissioned Phase 17, 2026-06-26) | #165 |
 | **L2a** | Semgrep + CodeQL | ✅ CI jobs active | #165 |
 | **L2b** | Biome Format + Lint | ✅ Replaced ESLint | QA-002, QA-003 |
 | **L2c** | SonarQube Quality Gate | 📋 Deferred | #169 |
@@ -25,7 +25,7 @@ The 7-Layer Testing & Verification Framework established a comprehensive quality
 ## What Was Implemented (5 layers)
 
 ### L1 — AI Code Review
-- `.coderabbit.yaml` configured
+- ~~`.coderabbit.yaml` configured~~ (decommissioned Phase 17, 2026-06-26 — external GitHub App removed, config not present in repo)
 - PR evidence template
 
 ### L2a/b — Static Analysis

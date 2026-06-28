@@ -7,6 +7,10 @@ on:
     branches: [main, master, develop]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  actions: write
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -36,6 +40,32 @@ jobs:
 
       - name: Unit Tests
         run: npm test
+
+  # ── #223: Tool Gateway Windows Path Tests (non-blocking) ──────
+  # Runs path traversal tests on Windows to validate cross-platform
+  # path separator handling (backslash vs forward slash).
+  tool-gateway-windows:
+    runs-on: windows-latest
+    timeout-minutes: 5
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build dependencies
+        run: npm run build
+
+      - name: Run Tool Gateway tests
+        run: npx vitest run
+        working-directory: packages/tool-gateway
 
   observability-config-check:
     runs-on: ubuntu-latest
@@ -89,6 +119,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build packages (required for Stryker)
+        run: npm run build
+
       - name: Ensure test results directory
         run: mkdir -p test-results
 
@@ -123,6 +156,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build packages (required for Stryker)
+        run: npm run build
+
       - name: Ensure test results directory
         run: mkdir -p test-results
 
@@ -147,6 +183,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     continue-on-error: true
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
 

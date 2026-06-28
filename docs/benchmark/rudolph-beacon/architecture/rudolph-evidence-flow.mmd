@@ -1,0 +1,27 @@
+sequenceDiagram
+    participant BM as BenchmarkRunner
+    participant DFA as DeterministicFixtureAgent
+    participant DRA as OpenCodeDryRunAgent
+    participant EC as EvidenceContract
+    participant FS as FileSystem (.positron/evidence/)
+
+    BM->>BM: Check executionMode
+
+    alt fixture mode
+        BM->>DFA: execute(scenario, input)
+        DFA->>DFA: Look up fixture in Map
+        DFA-->>BM: EvidenceReport (status, simulatedActions)
+        BM->>EC: determineConclusionStatus(issues)
+        BM->>FS: Write run-summary.fixture.json
+    else dry-run mode
+        BM->>DRA: analyzeActions(plannedActions, input)
+        DRA->>DRA: Check kill switches
+        DRA->>DRA: classifyOperation() per action
+        DRA-->>BM: EvidenceReport (simulated, blocked, reported)
+        BM->>EC: Build BenchmarkIssueResult per issue
+        BM->>FS: Write run-summary.dry-run.json
+    end
+
+    BM->>BM: Build conclusion (GREEN/YELLOW/RED/UNKNOWN)
+    BM->>BM: Build capabilityDelta
+    BM-->>Caller: RudolphBenchmarkRunSummary

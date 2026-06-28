@@ -1,17 +1,17 @@
+import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
-import { describe, expect, test, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import VoiceControls from '../components/VoiceControls.js';
-import VoiceStatusIndicator from '../components/VoiceStatusIndicator.js';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import VoiceControls from '../components/VoiceControls';
+import VoiceStatusIndicator from '../components/VoiceStatusIndicator';
+import type { LogLevel, Phase, RunEvent } from '../types';
 import {
+	getLastSpoken,
+	resetRateLimitForTest,
+	resetVoiceState,
 	speakEvent,
 	speakTest,
-	resetVoiceState,
-	resetRateLimitForTest,
-	getLastSpoken,
-} from '../voice/voice-output.js';
-import { saveVoiceSettings, DEFAULT_VOICE_SETTINGS } from '../voice/voice-settings.js';
-import type { RunEvent, Phase, LogLevel } from '../types.js';
+} from '../voice/voice-output';
+import { DEFAULT_VOICE_SETTINGS, saveVoiceSettings } from '../voice/voice-settings';
 
 // ── Mocks ──
 const mockSpeak = vi.fn();
@@ -328,7 +328,17 @@ describe('SSE / RunEvent Regression', () => {
 	});
 
 	test('all speakable phases trigger speech, silent phases do not', () => {
-		const speakable: Phase[] = ['QUEUED', 'DONE', 'FAILED', 'FAILED_TRANSIENT', 'FAILED_BLOCKED', 'BLOCKED_MERGE', 'BLOCKED_PUSH', 'GATE_APPROVE', 'GATE_REVISE'];
+		const speakable: Phase[] = [
+			'QUEUED',
+			'DONE',
+			'FAILED',
+			'FAILED_TRANSIENT',
+			'FAILED_BLOCKED',
+			'BLOCKED_MERGE',
+			'BLOCKED_PUSH',
+			'GATE_APPROVE',
+			'GATE_REVISE',
+		];
 		let callCount = 0;
 		for (const phase of speakable) {
 			resetVoiceState();

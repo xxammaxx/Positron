@@ -1,10 +1,10 @@
-import { describe, expect, test, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
+	DEFAULT_VOICE_SETTINGS,
+	type VoiceSettings,
 	loadVoiceSettings,
 	saveVoiceSettings,
 	toggleVoiceEnabled,
-	DEFAULT_VOICE_SETTINGS,
-	type VoiceSettings,
 } from '../voice-settings.js';
 
 // Mock localStorage
@@ -118,9 +118,7 @@ describe('voice-settings', () => {
 				throw new Error('QuotaExceeded');
 			}),
 		});
-		expect(() =>
-			saveVoiceSettings(DEFAULT_VOICE_SETTINGS),
-		).not.toThrow();
+		expect(() => saveVoiceSettings(DEFAULT_VOICE_SETTINGS)).not.toThrow();
 	});
 
 	test('loadVoiceSettings returns deep-cloned defaults (no shared references)', () => {

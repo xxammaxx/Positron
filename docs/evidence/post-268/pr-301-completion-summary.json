@@ -1,0 +1,107 @@
+{
+	"pr": 301,
+	"title": "PR #301 Completion: Post-298 Biome Cleanup Phase 2 — Final Fix and Merge",
+	"timestamp": "2026-06-27T09:38:00Z",
+	"agent": "issue-orchestrator",
+	"branch_before": "fix/post-298-biome-evidence-json",
+	"branch_after": "main",
+	"head_before": "02596ada1b1175e11e1359a9beaa1a20891f2504",
+	"head_after": "6d54c1849200f8a76c554def49cca70ffda063fc",
+	"status": "GREEN",
+	"confidence": 0.99,
+	"classifications": {
+		"PR_301_COMPLETION_REALITY_STATUS": "CURRENT",
+		"PR_301_BRANCH_STATUS": "READY",
+		"PR_301_COMPLETION_FIX_STATUS": "FORMAT_ONLY",
+		"PR_301_COMPLETION_GATES": "YELLOW_PREEXISTING",
+		"PR_301_FINAL_AUDIT_STATUS": "CLEAN_FORMAT_ONLY",
+		"PR_301_MERGE_STATUS": "SUCCESS"
+	},
+	"fix_applied": {
+		"files_formatted": 2,
+		"file_1": "docs/evidence/post-268/issue-298-phase-2-summary.json",
+		"file_2": "docs/evidence/post-268/issue-298-cleanup-summary.json",
+		"change_type": "whitespace-only Biome formatting",
+		"semantic_changes": 0
+	},
+	"pr_details": {
+		"number": 301,
+		"url": "https://github.com/xxammaxx/Positron/pull/301",
+		"state": "MERGED",
+		"merged_at": "2026-06-27T07:28:58Z",
+		"merge_commit_sha": "6d54c1849200f8a76c554def49cca70ffda063fc",
+		"merge_method": "merge",
+		"branch_deleted": false,
+		"auto_merge": false,
+		"admin_merge": false
+	},
+	"local_gates": {
+		"biome_format_target": {
+			"exit_code": 0,
+			"files": 2,
+			"status": "PASS"
+		},
+		"biome_format_docs": {
+			"exit_code": 0,
+			"files_checked": 32,
+			"errors": 0,
+			"status": "PASS"
+		},
+		"build": {
+			"exit_code": 0,
+			"projects_built": 10,
+			"status": "PASS"
+		},
+		"typecheck": {
+			"exit_code": 0,
+			"projects": 10,
+			"status": "PASS"
+		},
+		"npm_test": {
+			"tests": 1375,
+			"passed": 1374,
+			"failed": 1,
+			"failing_test": "deterministic-fixture-agent (durationMs variance, pre-existing flake)",
+			"status": "YELLOW_PREEXISTING"
+		}
+	},
+	"diff_summary": {
+		"files_changed": 2,
+		"lines_added": 15,
+		"lines_removed": 5,
+		"format_only": true
+	},
+	"not_touched": [
+		".github/workflows/*",
+		"biome.json",
+		".editorconfig",
+		"Functional code (0 files)",
+		"PR #218",
+		"PR chain #230-#242",
+		"Secrets",
+		".env contents",
+		"CodeRabbit (NOT reactivated)",
+		"Manual CI (NOT triggered)",
+		"Auto-Merge (NOT enabled)",
+		"Admin-Merge (NOT used)",
+		"Force Push (NOT used)",
+		"Branch Deletion (NOT executed)",
+		"Stashes (NOT applied/popped/deleted)"
+	],
+	"owner_approval": "APPROVE COMPLETE AND MERGE PR 301 POST-298 BIOME CLEANUP",
+	"risks": [],
+	"evidence_artifacts": [
+		"docs/evidence/post-268/pr-301-completion-reality-refresh.md",
+		"docs/evidence/post-268/pr-301-completion-branch-preflight.md",
+		"docs/evidence/post-268/pr-301-completion-format-fix-report.md",
+		"docs/evidence/post-268/pr-301-completion-gates.md",
+		"docs/evidence/post-268/pr-301-completion-push-report.md",
+		"docs/evidence/post-268/pr-301-completion-final-pr-audit.md",
+		"docs/evidence/post-268/pr-301-completion-merge-report.md",
+		"docs/evidence/post-268/pr-301-completion-post-merge-sync.md",
+		"docs/evidence/post-268/pr-301-completion-summary.json",
+		"docs/evidence/post-268/pr-301-completion-report.md",
+		"docs/evidence/post-268/pr-301-completion-reviewer-report.md"
+	],
+	"next_step": "Evidence commit on main"
+}

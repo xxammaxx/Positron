@@ -1,21 +1,21 @@
 // Positron — Sandbox Adapter Interface
 
 import type {
-  GitWorkspaceAdapter,
-  GitWorkspaceRef,
-  PrepareWorkspaceInput,
-  PreparedWorkspace,
-  GitStatusSummary,
-  GitDiffSummary,
-  PushOptions,
+	GitDiffSummary,
+	GitStatusSummary,
+	GitWorkspaceAdapter,
+	GitWorkspaceRef,
+	PrepareWorkspaceInput,
+	PreparedWorkspace,
+	PushOptions,
 } from '@positron/shared';
 
 export type {
-  GitWorkspaceAdapter,
-  GitWorkspaceRef,
-  PrepareWorkspaceInput,
-  PreparedWorkspace,
-  GitStatusSummary,
-  GitDiffSummary,
-  PushOptions,
+	GitWorkspaceAdapter,
+	GitWorkspaceRef,
+	PrepareWorkspaceInput,
+	PreparedWorkspace,
+	GitStatusSummary,
+	GitDiffSummary,
+	PushOptions,
 };

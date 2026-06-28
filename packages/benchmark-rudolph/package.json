@@ -1,0 +1,25 @@
+{
+	"name": "@positron/benchmark-rudolph",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"files": ["dist"],
+	"main": "./dist/index.js",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"default": "./dist/index.js"
+		}
+	},
+	"types": "./dist/index.d.ts",
+	"scripts": {
+		"build": "tsc -b",
+		"test": "vitest run",
+		"typecheck": "tsc -b --pretty false"
+	},
+	"devDependencies": {
+		"typescript": "^5.4.0",
+		"vitest": "^4.0.0"
+	}
+}

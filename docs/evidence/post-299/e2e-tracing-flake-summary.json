@@ -1,0 +1,71 @@
+{
+  "timestamp": "2026-06-27T10:36:00Z",
+  "agent": "issue-orchestrator",
+  "run_type": "triage",
+  "scope": "Post-299 E2E Tracing Flake",
+  "results": {
+    "reality_refresh": {
+      "status": "CURRENT",
+      "branch": "main",
+      "local_head": "3257cf3ea4b8bb974ffea7f089d984c426d45315",
+      "remote_head": "3257cf3ea4b8bb974ffea7f089d984c426d45315",
+      "working_tree": "clean",
+      "issue_268": "CLOSED",
+      "issue_297": "CLOSED",
+      "issue_298": "CLOSED",
+      "issue_299": "CLOSED",
+      "pr_303": "MERGED"
+    },
+    "ci_triage": {
+      "failure_class": "TRACE_LIFECYCLE",
+      "triage_status": "CONFIRMED",
+      "error": "tracing.start: Tracing has been already started",
+      "file": "e2e/ui-workflow-trace.spec.ts",
+      "line": 55,
+      "test": "UI Workflow Trace & Network Proof > Full workflow: Blueprint > Demo Run > Run Detail > DONE",
+      "root_cause": "Playwright global trace: 'retain-on-failure' config auto-starts tracing, conflicting with explicit context.tracing.start() in test",
+      "secondary_issue": "context.tracing.stop() in try block (Step 13), not in finally",
+      "independent_from_297": true,
+      "independent_from_299": true
+    },
+    "existing_issues": {
+      "issue_plan": "CREATE_NEW",
+      "matching_open_issues": 0,
+      "irrelevant_open_issues": ["#211", "#229"],
+      "closed_tracing_issues": ["#171", "#129", "#165"]
+    },
+    "followup_issue": {
+      "issue_status": "CREATED",
+      "issue_number": 304,
+      "title": "Post-299: Stabilize Playwright tracing lifecycle in E2E tests",
+      "url": "https://github.com/xxammaxx/Positron/issues/304",
+      "labels": ["bug", "testing", "qa", "approval:not-required"],
+      "risk": "YELLOW_VALIDATE"
+    },
+    "local_gates": {
+      "status": "GREEN",
+      "build": "PASS",
+      "typecheck": "PASS",
+      "test": "PASS (1375 root + 196 web = 1571 total)",
+      "manual_ci": "NOT_TRIGGERED"
+    },
+    "next_run": {
+      "recommended_fix": "E2E_TRACING_LIFECYCLE",
+      "preferred_approach": "Remove explicit tracing calls from test, rely on global config",
+      "fix_prompt": "docs/evidence/post-299/e2e-tracing-flake-next-prompt.md"
+    }
+  },
+  "prohibited_actions_verified": {
+    "no_code_changes": true,
+    "no_workflow_changes": true,
+    "no_test_deletion": true,
+    "no_assertion_weakening": true,
+    "no_manual_ci": true,
+    "no_merge": true,
+    "no_force_push": true,
+    "no_secrets": true,
+    "no_coderabbit_reactivation": true,
+    "no_pr_218_action": true,
+    "no_old_pr_chain_action": true
+  }
+}

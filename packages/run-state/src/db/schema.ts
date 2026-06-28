@@ -106,5 +106,5 @@ CREATE INDEX IF NOT EXISTS idx_repositories_owner_name ON repositories(owner, na
  * Führt alle Datenbank-Migrationen aus.
  */
 export function applyMigrations(db: Database.Database): void {
-  db.exec(SCHEMA_V1);
+	db.exec(SCHEMA_V1);
 }

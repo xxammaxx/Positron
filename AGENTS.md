@@ -13,6 +13,20 @@
 9. Stoppe nach 3 erfolglosen Fix-Schleifen.
 10. Hole Genehmigung für gefährliche Befehle ein.
 
+## Workspace Root Rule
+
+```text
+C:\Positron ist der einzige normale Projektarbeitsort.
+
+Keine neuen Schwesterordner neben C:\Positron:
+- kein C:\Positron-clean-*
+- kein C:\Positron-main-ci-*
+- kein ..\Positron-*
+
+Worktree-Isolation nur nach expliziter Human Approval und ausschließlich
+unter C:\Positron\.agent-worktrees\.
+```
+
 ## GitHub Source of Truth
 
 Jede relevante Entscheidung, jeder Fehler, jedes Testergebnis und jeder Auslieferungsschritt muss im aktiven GitHub-Issue oder PR zusammengefasst werden.

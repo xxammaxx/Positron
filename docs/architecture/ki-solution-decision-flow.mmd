@@ -1,0 +1,46 @@
+flowchart TD
+    START([Start: Reality Refresh]) --> FETCH[git fetch --all --prune<br/>gh issue view / gh pr view]
+    FETCH --> RECON[GitHub Context Reconciler<br/>Live-State lesen]
+
+    RECON --> CLASSIFY{Risk Classification}
+
+    CLASSIFY -->|GREEN_SAFE| GREEN[GREEN_SAFE<br/>No action needed]
+    CLASSIFY -->|YELLOW_REVIEW| YELLOW[YELLOW_REVIEW<br/>Human Approval required]
+    CLASSIFY -->|RED_HOLD| RED[RED_HOLD<br/>STOP — no automatic action]
+    CLASSIFY -->|TOOL_GAP| TOOL[TOOL_GAP<br/>Cannot read data]
+    CLASSIFY -->|DEFER_TO_279| DEFER[DEFER_TO_279<br/>Deferred to Issue #279]
+    CLASSIFY -->|UNKNOWN| UNK[UNKNOWN<br/>Manual analysis needed]
+
+    GREEN --> NOOP[DO_NOT_APPLY / NO_ACTION<br/>Execute zero actions]
+    NOOP --> DONE_GREEN([Done: No changes])
+
+    YELLOW --> LOCAL[Run Local Gates]
+    LOCAL --> DIFF[git diff --check]
+    DIFF --> FORMAT[npx biome format .]
+    FORMAT --> BUILD[npm run build]
+    BUILD --> TC[npm run typecheck]
+    TC --> TEST[npm test]
+    TEST --> WEBTEST[npm test --workspace apps/web]
+
+    WEBTEST --> GATES_PASS{All gates PASS?}
+    GATES_PASS -->|Yes| EVIDENCE[Create Evidence Handoff]
+    GATES_PASS -->|No| STOP_FAIL([STOP: Fix gates first])
+
+    EVIDENCE --> HUMAN_APPROVAL{Human Approval?}
+    HUMAN_APPROVAL -->|APPROVED| ACTION[Execute allowed action<br/>Merge/Close/Defer]
+    HUMAN_APPROVAL -->|DENIED| STOP_DENIED([STOP: Human denied])
+
+    ACTION --> COMMENT[Post GitHub Comment]
+    COMMENT --> DONE_ACTION([Done: Action executed])
+
+    RED --> RED_COMMENT[Document: RED_HOLD — not touched]
+    RED_COMMENT --> DONE_RED([Done: Red Hold documented])
+
+    TOOL --> TOOL_COMMENT[Document: TOOL_GAP]
+    TOOL_COMMENT --> DONE_TOOL([Done: Tool gap documented])
+
+    DEFER --> DEFER_COMMENT[Document: DEFER_TO_279]
+    DEFER_COMMENT --> DONE_DEFER([Done: Deferred documented])
+
+    UNK --> UNK_COMMENT[Document: UNKNOWN — manual review]
+    UNK_COMMENT --> DONE_UNK([Done: Unknown documented])

@@ -1,0 +1,96 @@
+{
+	"runId": "rudolph-dryrun-20260624",
+	"timestampUtc": "2026-06-24T14:30:00Z",
+	"executionMode": "dry-run",
+	"benchmarkName": "rudolph-beacon",
+	"repo": {
+		"branch": "feat/issue-279-phase-1g-safe-apply-plan-20260624-135722",
+		"commitSha": "368c9c00f4b3b9a4ced9cbe0c52a501c1ce05100",
+		"status": "clean"
+	},
+	"issues": [
+		{
+			"id": "BENCH-005",
+			"title": "Dry-Run Safety",
+			"status": "DONE",
+			"evidencePaths": [".positron/evidence/rudolph-dryrun-20260624-dryrun.json"],
+			"testNames": ["benchmark-runner.test.ts"],
+			"changedFiles": ["packages/benchmark-rudolph/src/benchmark-runner.ts"],
+			"confidence": 0.9
+		}
+	],
+	"commands": [
+		{
+			"name": "dry-run-analysis",
+			"command": "OpenCodeDryRunAgent.analyzeActions(12 actions)",
+			"exitCode": 0,
+			"durationMs": 15
+		}
+	],
+	"tests": {
+		"passed": 1,
+		"failed": 0,
+		"skipped": 0,
+		"redTestsCovered": ["Red Test 12: Dry-run blocks push/PR/merge"]
+	},
+	"safety": {
+		"secretsRedacted": true,
+		"blockedActions": [
+			{
+				"operation": "write file",
+				"reason": "Blocked: File write outside controlled path is prohibited in dry-run"
+			},
+			{
+				"operation": "git push",
+				"reason": "POSITRON_ENABLE_PUSH is not set to \"true\" — push would be blocked"
+			},
+			{
+				"operation": "gh pr create",
+				"reason": "Blocked: Pull request creation is prohibited in dry-run"
+			},
+			{
+				"operation": "git merge",
+				"reason": "POSITRON_MERGE_KILL_SWITCH is active — merge/branch-delete would be blocked"
+			},
+			{
+				"operation": "git worktree add",
+				"reason": "Blocked: Worktree creation is prohibited in dry-run"
+			},
+			{
+				"operation": "npm install",
+				"reason": "Blocked: Package installation/publishing is prohibited in dry-run"
+			},
+			{
+				"operation": "git commit",
+				"reason": "Blocked: Git commit is prohibited in dry-run"
+			}
+		],
+		"warnings": [
+			"POSITRON_MERGE_KILL_SWITCH is active — merge would be blocked",
+			"POSITRON_ENABLE_PUSH is not set to \"true\" — push would be blocked"
+		]
+	},
+	"conclusion": {
+		"status": "GREEN",
+		"whatWorks": [
+			"BENCH-005: Dry-run correctly blocks git push, gh pr create, git merge, git worktree add, npm install, git commit",
+			"BENCH-005: Read-only operations (git status, npm test, gh issue view, git log) correctly simulated",
+			"BENCH-005: Controlled-path writes (.positron/evidence/) correctly simulated"
+		],
+		"whatDoesNotWork": [],
+		"whatIsUnproven": [
+			"Real mode: whether real agent respects same safety constraints as dry-run agent"
+		],
+		"confidence": 0.9
+	},
+	"capabilityDelta": {
+		"newCapabilities": [
+			"Dry-run safety gates verified against OpenCodeDryRunAgent",
+			"Kill switches (POSITRON_ENABLE_PUSH, POSITRON_MERGE_KILL_SWITCH) confirmed active"
+		],
+		"removedBlockers": [],
+		"unchangedLimitations": [],
+		"remainingRisks": ["Real mode safety depends on operational environment variables"],
+		"nextBestStep": "Validate dry-run safety with real agent in controlled environment (human approval required)"
+	}
+}

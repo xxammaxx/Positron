@@ -18,12 +18,12 @@ let _db: Database.Database | null = null;
  * Must be called once after the database has been opened.
  */
 export function initSignalsDb(db: Database.Database): void {
-  _db = db;
+	_db = db;
 }
 
 function getDb(): Database.Database {
-  if (!_db) throw new Error('Signals DB not initialised. Call initSignalsDb() first.');
-  return _db;
+	if (!_db) throw new Error('Signals DB not initialised. Call initSignalsDb() first.');
+	return _db;
 }
 
 /**
@@ -33,8 +33,8 @@ function getDb(): Database.Database {
  * the same (runId, signal) pair simply updates `target_phase` and `created_at`.
  */
 export function setRunSignal(runId: string, signal: string, targetPhase?: string): void {
-  const db = getDb();
-  db.prepare(`
+	const db = getDb();
+	db.prepare(`
     INSERT OR REPLACE INTO run_signals (run_id, signal, target_phase, created_at)
     VALUES (?, ?, ?, datetime('now'))
   `).run(runId, signal, targetPhase ?? null);
@@ -44,8 +44,8 @@ export function setRunSignal(runId: string, signal: string, targetPhase?: string
  * Remove a specific signal for a run.
  */
 export function clearRunSignal(runId: string, signal: string): void {
-  const db = getDb();
-  db.prepare('DELETE FROM run_signals WHERE run_id = ? AND signal = ?').run(runId, signal);
+	const db = getDb();
+	db.prepare('DELETE FROM run_signals WHERE run_id = ? AND signal = ?').run(runId, signal);
 }
 
 /**
@@ -58,28 +58,32 @@ export function clearRunSignal(runId: string, signal: string): void {
  * `null` when no signal is set.
  */
 export function checkRunSignal(runId: string, phase?: string): string | null {
-  const db = getDb();
+	const db = getDb();
 
-  let row: { signal: string; target_phase: string | null } | undefined;
+	let row: { signal: string; target_phase: string | null } | undefined;
 
-  if (phase) {
-    row = db.prepare(`
+	if (phase) {
+		row = db
+			.prepare(`
       SELECT signal, target_phase FROM run_signals
       WHERE run_id = ?
         AND (target_phase = ? OR target_phase IS NULL)
       ORDER BY created_at DESC
       LIMIT 1
-    `).get(runId, phase) as { signal: string; target_phase: string | null } | undefined;
-  } else {
-    row = db.prepare(`
+    `)
+			.get(runId, phase) as { signal: string; target_phase: string | null } | undefined;
+	} else {
+		row = db
+			.prepare(`
       SELECT signal, target_phase FROM run_signals
       WHERE run_id = ?
       ORDER BY created_at DESC
       LIMIT 1
-    `).get(runId) as { signal: string; target_phase: string | null } | undefined;
-  }
+    `)
+			.get(runId) as { signal: string; target_phase: string | null } | undefined;
+	}
 
-  return row?.signal ?? null;
+	return row?.signal ?? null;
 }
 
 /**
@@ -87,13 +91,15 @@ export function checkRunSignal(runId: string, phase?: string): string | null {
  * Returns `null` when no RESUME signal with a target_phase exists for the run.
  */
 export function getResumePhaseTarget(runId: string): string | null {
-  const db = getDb();
-  const row = db.prepare(`
+	const db = getDb();
+	const row = db
+		.prepare(`
     SELECT target_phase FROM run_signals
     WHERE run_id = ? AND signal = 'RESUME' AND target_phase IS NOT NULL
     ORDER BY created_at DESC
     LIMIT 1
-  `).get(runId) as { target_phase: string } | undefined;
+  `)
+		.get(runId) as { target_phase: string } | undefined;
 
-  return row?.target_phase ?? null;
+	return row?.target_phase ?? null;
 }

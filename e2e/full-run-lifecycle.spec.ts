@@ -39,19 +39,19 @@
  * | B      | Optional    | E2E-Test ist neu; optional bis stabile CI-Runs |
  */
 
-import { test, expect } from "@playwright/test";
+import { expect, test } from '@playwright/test';
 
-const BACKEND_URL = "http://localhost:3000";
-const FRONTEND_URL = "http://localhost:5173";
+const BACKEND_URL = 'http://localhost:3000';
+const FRONTEND_URL = 'http://localhost:5173';
 
-test.describe("Full Run Lifecycle E2E (QA-028)", () => {
-	test.describe.configure({ mode: "serial" });
+test.describe('Full Run Lifecycle E2E (QA-028)', () => {
+	test.describe.configure({ mode: 'serial' });
 
 	const consoleErrors: string[] = [];
 
 	test.beforeEach(async ({ page }) => {
-		page.on("console", (msg) => {
-			if (msg.type() === "error") consoleErrors.push(msg.text());
+		page.on('console', (msg) => {
+			if (msg.type() === 'error') consoleErrors.push(msg.text());
 		});
 	});
 
@@ -70,47 +70,45 @@ test.describe("Full Run Lifecycle E2E (QA-028)", () => {
 	 * | 7       | Navigation zu allen Seiten           | Dashboard, Runs, Evidence, Settings ok     |
 	 * | 8       | Backend Health final pruefen         | /api/health = ok                           |
 	 */
-	test("Run lifecycle UI validation — full QUEUED→DONE", async ({ page }) => {
+	test('Run lifecycle UI validation — full QUEUED→DONE', async ({ page }) => {
 		let runId: string | null = null;
 
 		// ── Step 1: Dashboard loads ──────────────────────────────
-		await test.step("S01: Dashboard loads", async () => {
+		await test.step('S01: Dashboard loads', async () => {
 			await page.goto(FRONTEND_URL, {
-				waitUntil: "domcontentloaded",
+				waitUntil: 'domcontentloaded',
 				timeout: 30_000,
 			});
-			await expect(
-				page.getByRole("heading", { name: "Dashboard" }),
-			).toBeVisible({ timeout: 10_000 });
-			await expect(page.getByRole("main")).toBeVisible({
+			await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible({
 				timeout: 10_000,
 			});
-			await expect(page.getByRole("button", { name: "+ New Run" })).toBeVisible(
-				{ timeout: 10_000 },
-			);
+			await expect(page.getByRole('main')).toBeVisible({
+				timeout: 10_000,
+			});
+			await expect(page.getByRole('button', { name: '+ New Run' })).toBeVisible({
+				timeout: 10_000,
+			});
 		});
 
 		// ── Step 2-3: Open modal, fill URL, start run ─────────
-		await test.step("S02: Create run via New Run modal", async () => {
-			await page.getByRole("button", { name: "+ New Run" }).click();
-			await expect(page.getByRole("button", { name: "Start Run" })).toBeVisible(
-				{ timeout: 5_000 },
-			);
+		await test.step('S02: Create run via New Run modal', async () => {
+			await page.getByRole('button', { name: '+ New Run' }).click();
+			await expect(page.getByRole('button', { name: 'Start Run' })).toBeVisible({ timeout: 5_000 });
 
 			await page
-				.getByPlaceholder("https://github.com/owner/repo/issues/123")
-				.fill("https://github.com/test-owner/test-repo/issues/1");
+				.getByPlaceholder('https://github.com/owner/repo/issues/123')
+				.fill('https://github.com/test-owner/test-repo/issues/1');
 
-			await page.getByRole("button", { name: "Start Run" }).click();
+			await page.getByRole('button', { name: 'Start Run' }).click();
 			await page.waitForURL(/\/runs\/[\w-]+/, { timeout: 15_000 });
 
 			const match = page.url().match(/\/runs\/([\w-]+)/);
 			runId = match ? match[1] : null;
-			expect(runId, "Run ID should be extracted from URL").toBeTruthy();
+			expect(runId, 'Run ID should be extracted from URL').toBeTruthy();
 		});
 
 		// ── Step 4: Run detail page verification ──────────────
-		await test.step("S03: Run detail page loads", async () => {
+		await test.step('S03: Run detail page loads', async () => {
 			await page.waitForTimeout(2_000);
 
 			// Phase pipeline visible
@@ -119,21 +117,19 @@ test.describe("Full Run Lifecycle E2E (QA-028)", () => {
 			});
 
 			// Run heading visible: "Run {id.slice(0,8)}"
-			await expect(page.locator("h1").filter({ hasText: /Run\s/ })).toBeVisible(
-				{ timeout: 10_000 },
-			);
+			await expect(page.locator('h1').filter({ hasText: /Run\s/ })).toBeVisible({
+				timeout: 10_000,
+			});
 
 			// Verify a phase badge is shown (QUEUED or any phase)
-			await expect(
-				page.locator('[aria-label="Pipeline phases"]'),
-			).toBeVisible();
+			await expect(page.locator('[aria-label="Pipeline phases"]')).toBeVisible();
 		});
 
 		// ── Step 5: Wait for DONE via API polling ────────────
 		// QA-029: Pipeline regression fixed — inline fallback completes
 		// synchronously within the POST response. The run is already DONE
 		// by the time we navigate to the detail page.
-		await test.step("S04: Verify DONE via API", async () => {
+		await test.step('S04: Verify DONE via API', async () => {
 			expect(runId).toBeTruthy();
 			await expect
 				.poll(
@@ -149,11 +145,11 @@ test.describe("Full Run Lifecycle E2E (QA-028)", () => {
 						message: `Run ${runId} should reach DONE phase`,
 					},
 				)
-				.toBe("DONE");
+				.toBe('DONE');
 		});
 
 		// ── Step 6: UI DONE verification ─────────────────────
-		await test.step("S05: UI shows DONE status", async () => {
+		await test.step('S05: UI shows DONE status', async () => {
 			// Reload to ensure fresh UI state
 			await page.reload();
 			await page.waitForTimeout(1_000);
@@ -170,46 +166,46 @@ test.describe("Full Run Lifecycle E2E (QA-028)", () => {
 		});
 
 		// ── Step 7: Regression — all pages reachable ────────
-		await test.step("S06: All pages remain functional", async () => {
+		await test.step('S06: All pages remain functional', async () => {
 			// Dashboard
 			await page.goto(FRONTEND_URL, {
-				waitUntil: "domcontentloaded",
+				waitUntil: 'domcontentloaded',
 				timeout: 15_000,
 			});
-			await expect(
-				page.getByRole("heading", { name: "Dashboard" }),
-			).toBeVisible({ timeout: 10_000 });
+			await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible({
+				timeout: 10_000,
+			});
 
 			// Runs page
-			await page.getByRole("link", { name: "Runs", exact: true }).click();
+			await page.getByRole('link', { name: 'Runs', exact: true }).click();
 			await page.waitForURL(/\/runs/, { timeout: 10_000 });
-			await expect(page.getByRole("heading", { name: "Runs" })).toBeVisible({
+			await expect(page.getByRole('heading', { name: 'Runs' })).toBeVisible({
 				timeout: 10_000,
 			});
 
 			// Evidence page
-			await page.getByRole("link", { name: "Evidence" }).click();
+			await page.getByRole('link', { name: 'Evidence' }).click();
 			await page.waitForURL(/\/evidence/, { timeout: 10_000 });
-			await expect(page.getByRole("heading", { name: "Evidence" })).toBeVisible(
-				{ timeout: 10_000 },
-			);
+			await expect(page.getByRole('heading', { name: 'Evidence' })).toBeVisible({
+				timeout: 10_000,
+			});
 
 			// Settings page
-			await page.getByRole("link", { name: "Settings" }).click();
+			await page.getByRole('link', { name: 'Settings' }).click();
 			await page.waitForURL(/\/settings/, { timeout: 10_000 });
-			await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible(
-				{ timeout: 10_000 },
-			);
+			await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible({
+				timeout: 10_000,
+			});
 		});
 
 		// ── Step 8: Backend health final check ──────────────
-		await test.step("S07: Backend health remains stable", async () => {
+		await test.step('S07: Backend health remains stable', async () => {
 			const healthRes = await fetch(`${BACKEND_URL}/api/health`);
 			expect(healthRes.ok).toBe(true);
 			const healthData = (await healthRes.json()) as {
 				status: string;
 			};
-			expect(healthData.status).toBe("ok");
+			expect(healthData.status).toBe('ok');
 
 			const runsRes = await fetch(`${BACKEND_URL}/api/runs`);
 			expect(runsRes.ok).toBe(true);
@@ -222,13 +218,10 @@ test.describe("Full Run Lifecycle E2E (QA-028)", () => {
 	});
 
 	// ── Console error check ─────────────────────────────────
-	test("No critical console errors during lifecycle", () => {
+	test('No critical console errors during lifecycle', () => {
 		const critical = consoleErrors.filter(
-			(e) =>
-				!e.includes("favicon") &&
-				!e.includes("404") &&
-				!e.includes("net::ERR_"),
+			(e) => !e.includes('favicon') && !e.includes('404') && !e.includes('net::ERR_'),
 		);
-		expect(critical.length, `Console errors: ${critical.join("; ")}`).toBe(0);
+		expect(critical.length, `Console errors: ${critical.join('; ')}`).toBe(0);
 	});
 });

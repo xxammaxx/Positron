@@ -1,0 +1,85 @@
+{
+  "issue": 306,
+  "title": "[SAFE] Backlog Hygiene: Define milestones, normalize labels, and add issue type taxonomy",
+  "phase": 2,
+  "phase_description": "Final Audit und Merge von PR #311",
+  "branch_before": "docs/issue-306-backlog-hygiene",
+  "head_before": "b79dea7cd2e1340901acdce00889ca8181b6994e",
+  "branch_after": "main",
+  "head_after": "f16309ce7b676fb1cd46209cdf68cd1762b11b33",
+  "timestamp": "2026-06-27T15:30:00+02:00",
+  "pr": {
+    "number": 311,
+    "title": "docs(issue-306): add backlog hygiene taxonomy and templates",
+    "state": "MERGED",
+    "merge_sha": "f16309ce7b676fb1cd46209cdf68cd1762b11b33",
+    "merge_strategy": "merge",
+    "merged_by": "xxammaxx",
+    "merged_at": "2026-06-27T13:28:28Z",
+    "branch_deleted": false,
+    "files_changed": 18,
+    "additions": 1369,
+    "deletions": 0
+  },
+  "status": {
+    "reality_refresh": "CURRENT",
+    "pr_scope": "CLEAN_GOVERNANCE_ONLY",
+    "milestone": "CLEAN",
+    "label": "CLEAN",
+    "template": "CLEAN",
+    "phase_1_evidence": "CLEAN",
+    "local_gates": "GREEN",
+    "merge_readiness": "YES",
+    "merge_status": "SUCCESS",
+    "issue_closure": "CLOSED",
+    "post_merge_sync": "SUCCESS"
+  },
+  "milestones_live": [
+    {"number": 1, "title": "v0.3.0 Current", "open_issues": 0, "closed_issues": 0},
+    {"number": 2, "title": "Backlog", "open_issues": 0, "closed_issues": 0},
+    {"number": 3, "title": "v0.4.0 Next", "open_issues": 0, "closed_issues": 0}
+  ],
+  "labels_live": 79,
+  "labels_deleted": 0,
+  "type_labels_confirmed": [
+    "type:bug",
+    "type:feature",
+    "type:docs",
+    "type:infra",
+    "type:research",
+    "type:validation",
+    "type:architecture",
+    "type:technical-debt"
+  ],
+  "templates_confirmed": [
+    "documentation_update.md",
+    "research_validation.md",
+    "architecture_decision.md",
+    "technical_debt.md"
+  ],
+  "tests": {
+    "files": 64,
+    "passed": 1375,
+    "failed": 0,
+    "duration_seconds": 37.68
+  },
+  "constraints_enforced": {
+    "no_code_changes": true,
+    "no_workflow_changes": true,
+    "no_manual_ci": true,
+    "no_coderabbit_reactivation": true,
+    "no_secrets": true,
+    "no_pr_218_touch": true,
+    "no_pr_chain_230_242_touch": true,
+    "no_label_deletion": true,
+    "no_bulk_relabeling": true,
+    "no_milestone_assignment_to_existing_issues": true,
+    "no_force_push": true,
+    "no_rebase": true,
+    "no_branch_deletion": true,
+    "no_auto_merge": true,
+    "no_admin_merge": true
+  },
+  "overall_status": "GREEN",
+  "confidence": 0.99
+}

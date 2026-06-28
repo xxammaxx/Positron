@@ -1,0 +1,21 @@
+flowchart TD
+    A[Developer / OpenCode Run] --> B[Reality Refresh]
+    B --> C[Local Gates]
+    C --> C1[git diff --check]
+    C --> C2[npx biome format .]
+    C --> C3[npm run build]
+    C --> C4[npm run typecheck]
+    C --> C5[npm test]
+    C --> C6[npx biome check . advisory]
+    C1 --> D{Mandatory gates pass?}
+    C2 --> D
+    C3 --> D
+    C4 --> D
+    C5 --> D
+    C6 -. advisory .-> E[Lint Backlog]
+    D -->|yes| F[PR Review / Human Approval]
+    D -->|no| G[Stop / Evidence Handoff]
+    F --> H[Merge if explicitly approved]
+    H --> I[Evidence Comment / Issue Close]
+    J[GitHub Actions] -. advisory only .-> F
+    J -. tracked by .-> K[Issue #268]

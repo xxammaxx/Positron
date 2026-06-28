@@ -1,0 +1,48 @@
+{
+  "issue": 307,
+  "title": "[SAFE] Docs: Sync all status docs, README, API overview, changelog, and evidence index with post-closeout reality",
+  "risk": "GREEN_SAFE",
+  "type": "documentation",
+  "status": "COMPLETE",
+  "confidence": 0.99,
+  "timestamp": "2026-06-27T13:45:00Z",
+  "branch": "docs/issue-307-docs-reality-sync",
+  "head_before": "1c9c5c4",
+  "gates": {
+    "git_diff_check": "PASS",
+    "npm_build": "PASS",
+    "npm_typecheck": "PASS",
+    "npm_test": "PRE_VERIFIED_1571"
+  },
+  "consistency": "CLEAN",
+  "files_changed": [
+    "README.md",
+    "docs/status/current-capabilities.md",
+    "docs/status/known-limitations.md",
+    "docs/status/evidence-index.md",
+    "docs/architecture/api-overview.md",
+    "docs/changelog/v0.2.0.md",
+    "docs/changelog/v0.3.0.md"
+  ],
+  "evidence_artifacts": [
+    "docs/evidence/issue-307/reality-refresh.md",
+    "docs/evidence/issue-307/docs-inventory.md",
+    "docs/evidence/issue-307/status-reality-map.md",
+    "docs/evidence/issue-307/update-report.md",
+    "docs/evidence/issue-307/consistency-audit.md",
+    "docs/evidence/issue-307/gates.md",
+    "docs/evidence/issue-307/summary.json",
+    "docs/evidence/issue-307/report.md",
+    "docs/evidence/issue-307/reviewer-report.md"
+  ],
+  "non_scope_verified": [
+    "no_code_changes",
+    "no_workflow_changes",
+    "no_manual_ci",
+    "no_coderabbit",
+    "no_secrets",
+    "no_pr_218",
+    "no_pr_chain_230_242",
+    "no_vollautonomie_claim"
+  ]
+}

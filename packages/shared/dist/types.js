@@ -36,11 +36,18 @@ export function isValidPhase(value) {
 }
 /** Prüft ob eine Phase terminal ist */
 export function isTerminalPhase(phase) {
-    return phase === 'DONE' || phase === 'FAILED' || phase === 'FAILED_BLOCKED' || phase === 'FAILED_UNSAFE' || phase === 'CLEANUP';
+    return (phase === 'DONE' ||
+        phase === 'FAILED' ||
+        phase === 'FAILED_BLOCKED' ||
+        phase === 'FAILED_UNSAFE' ||
+        phase === 'CLEANUP');
 }
 /** Prüft ob eine Phase ein Fehlerzustand ist */
 export function isFailurePhase(phase) {
-    return phase === 'FAILED_TRANSIENT' || phase === 'FAILED_BLOCKED' || phase === 'FAILED_UNSAFE' || phase === 'FAILED';
+    return (phase === 'FAILED_TRANSIENT' ||
+        phase === 'FAILED_BLOCKED' ||
+        phase === 'FAILED_UNSAFE' ||
+        phase === 'FAILED');
 }
 /**
  * Runtime-Validator: Wandelt String in Phase um.

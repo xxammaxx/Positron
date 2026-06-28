@@ -35,16 +35,16 @@ describe('types', () => {
     test('ALL_PHASES enthält QUEUED', () => {
         expect(ALL_PHASES).toContain('QUEUED');
     });
-    test('isValidPhase(\'QUEUED\') ist true', () => {
+    test("isValidPhase('QUEUED') ist true", () => {
         expect(isValidPhase('QUEUED')).toBe(true);
     });
-    test('isValidPhase(\'INVALID\') ist false', () => {
+    test("isValidPhase('INVALID') ist false", () => {
         expect(isValidPhase('INVALID')).toBe(false);
     });
-    test('isTerminalPhase(\'DONE\') ist true', () => {
+    test("isTerminalPhase('DONE') ist true", () => {
         expect(isTerminalPhase('DONE')).toBe(true);
     });
-    test('isTerminalPhase(\'QUEUED\') ist false', () => {
+    test("isTerminalPhase('QUEUED') ist false", () => {
         expect(isTerminalPhase('QUEUED')).toBe(false);
     });
 });
