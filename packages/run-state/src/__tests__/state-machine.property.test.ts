@@ -43,14 +43,24 @@ const ALL_PHASES: Phase[] = Object.keys(VALID_TRANSITIONS) as Phase[];
 /** Arbitrary: any valid phase */
 const phaseArb = fc.constantFrom(...ALL_PHASES);
 
-/** Arbitrary: non-terminal phase (has at least one outgoing transition) */
+/** Arbitrary: non-terminal phase (has at least one non-CLEANUP outgoing transition) */
 const nonTerminalPhaseArb = fc.constantFrom(
-	...ALL_PHASES.filter((p) => (VALID_TRANSITIONS[p] as readonly Phase[]).length > 0),
+	...ALL_PHASES.filter((p) => {
+		const targets = VALID_TRANSITIONS[p] as readonly Phase[];
+		// #244: Phases that only go to CLEANUP are terminal
+		return targets.some((t) => t !== 'CLEANUP');
+	}),
 );
 
-/** Arbitrary: terminal phase (no outgoing transitions) */
+/** Arbitrary: terminal phase (no outgoing transitions, or only to CLEANUP) */
 const terminalPhaseArb = fc.constantFrom(
-	...ALL_PHASES.filter((p) => (VALID_TRANSITIONS[p] as readonly Phase[]).length === 0),
+	...ALL_PHASES.filter((p) => {
+		const targets = VALID_TRANSITIONS[p] as readonly Phase[];
+		// #244: Phases with only CLEANUP transition are still terminal
+		if (targets.length === 0) return true;
+		if (targets.length === 1 && targets[0] === 'CLEANUP') return true;
+		return false;
+	}),
 );
 
 /** Arbitrary: failure phase */
@@ -262,9 +272,11 @@ describe('Invariant 2: Terminal phases', () => {
 		);
 	});
 
-	it('terminal phases cannot transition to any phase via canTransition', () => {
+	it('terminal phases cannot transition to any non-CLEANUP phase', () => {
 		fc.assert(
 			fc.property(terminalPhaseArb, phaseArb, (terminal: Phase, target: Phase) => {
+				// #244: CLEANUP is the only valid transition from terminal phases
+				if (target === 'CLEANUP') return;
 				expect(canTransition(terminal, target)).toBe(false);
 			}),
 			{ numRuns: 1000 },

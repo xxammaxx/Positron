@@ -287,6 +287,20 @@ export interface GitWorkspaceAdapter {
 	validateWorkspacePath(workspacePath: string): Promise<void>;
 	commit(workspacePath: string, message: string): Promise<{ sha: string }>;
 	push(options: PushOptions): Promise<{ pushed: boolean; ref: string }>;
+	/** Issue #244: Destroy workspace directory after run completes or fails. */
+	destroyWorkspace(workspacePath: string): Promise<{ destroyed: boolean; reason?: string }>;
+	/** Issue #244: Acquire advisory lock on workspace to prevent parallel access. */
+	lockWorkspace(
+		workspacePath: string,
+		ownerRunId: string,
+	): Promise<{ locked: boolean; reason?: string }>;
+	/** Issue #244: Release advisory lock on workspace. */
+	unlockWorkspace(
+		workspacePath: string,
+		ownerRunId: string,
+	): Promise<{ unlocked: boolean; reason?: string }>;
+	/** Issue #244: Check if workspace is currently locked. */
+	isLocked(workspacePath: string): Promise<{ locked: boolean; ownerRunId?: string }>;
 }
 
 // Sync / Evidence Interfaces

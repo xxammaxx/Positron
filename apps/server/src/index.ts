@@ -50,6 +50,8 @@ import {
 	resumeFromEvents,
 	retry,
 	transition,
+	registerWorkspaceCleanup,
+	runCleanup,
 } from '@positron/run-state';
 import type { RunEventData, RunState } from '@positron/run-state';
 import { FakeGitWorkspaceAdapter, RealGitWorkspaceAdapter } from '@positron/sandbox';
@@ -185,16 +187,24 @@ let db: Database.Database | null = null;
 // Env-Vars: POSITRON_WORKSPACE_ROOT, POSITRON_SPECKIT_MODE, POSITRON_OPENCODE_MODE
 // Default: Fake-Adapter für Development, Real-Adapter für Production mit Warnung
 function resolveWorkspaceAdapter(): GitWorkspaceAdapter {
+	let adapter: GitWorkspaceAdapter;
 	if (process.env['POSITRON_WORKSPACE_ROOT']) {
 		log.info('RealGitWorkspaceAdapter aktiviert (POSITRON_WORKSPACE_ROOT gesetzt)');
-		return new RealGitWorkspaceAdapter();
+		adapter = new RealGitWorkspaceAdapter();
+	} else {
+		if (process.env.NODE_ENV === 'production') {
+			log.warn(
+				'PRODUCTION: POSITRON_WORKSPACE_ROOT nicht gesetzt — FakeGitWorkspaceAdapter verwendet!',
+			);
+		}
+		adapter = new FakeGitWorkspaceAdapter();
 	}
-	if (process.env.NODE_ENV === 'production') {
-		log.warn(
-			'PRODUCTION: POSITRON_WORKSPACE_ROOT nicht gesetzt — FakeGitWorkspaceAdapter verwendet!',
-		);
-	}
-	return new FakeGitWorkspaceAdapter();
+	// Issue #244: Register workspace cleanup function
+	registerWorkspaceCleanup(async (workspacePath: string, _runId: string) => {
+		const result = await adapter.destroyWorkspace(workspacePath);
+		return { cleaned: result.destroyed, reason: result.reason };
+	});
+	return adapter;
 }
 
 function resolveSpeckitAdapter(): SpecKitAdapter {
@@ -1821,6 +1831,19 @@ async function runFullPipeline(
 				status: next.status,
 				branch: next.branch,
 			});
+			// Issue #244: Run workspace cleanup on terminal phase
+			runCleanup(next)
+				.then((cleanupResult) => {
+					if (!cleanupResult.cleaned) {
+						log.warn(`Workspace cleanup: ${cleanupResult.reason ?? 'unknown'}`, { runId: next.id });
+					}
+				})
+				.catch((err) => {
+					log.error(
+						`Workspace cleanup error: ${err instanceof Error ? err.message : String(err)}`,
+						{ runId: next.id },
+					);
+				});
 			return next;
 		}
 		current = next;
@@ -1852,6 +1875,19 @@ async function runFullPipeline(
 		phase: result.run.phase,
 		status: result.run.status,
 	});
+	// Issue #244: Run workspace cleanup on timeout/terminal
+	runCleanup(result.run)
+		.then((cleanupResult) => {
+			if (!cleanupResult.cleaned) {
+				log.warn(`Workspace cleanup: ${cleanupResult.reason ?? 'unknown'}`, { runId: result.run.id });
+			}
+		})
+		.catch((err) => {
+			log.error(
+				`Workspace cleanup error: ${err instanceof Error ? err.message : String(err)}`,
+				{ runId: result.run.id },
+			);
+		});
 	return result.run;
 }
 

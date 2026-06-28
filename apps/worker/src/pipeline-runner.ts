@@ -13,7 +13,7 @@ import type {
 	GitHubStatusSyncInput,
 	GitHubStatusSyncResult,
 } from '@positron/github-adapter';
-import { createRun, markFailed, transition } from '@positron/run-state';
+import { createRun, markFailed, transition, runCleanup } from '@positron/run-state';
 import type { RunEventData, RunState } from '@positron/run-state';
 import { TestCommandDetector, TestRunner } from '@positron/sandbox';
 import type { GitWorkspaceAdapter } from '@positron/sandbox';
@@ -1440,6 +1440,19 @@ export async function runPipeline(run: RunState, deps: PipelineDeps): Promise<Ru
 				}
 			}
 			saveRunToDb(next, deps);
+			// Issue #244: Run workspace cleanup on terminal phase
+			runCleanup(next)
+				.then((cleanupResult) => {
+					if (!cleanupResult.cleaned) {
+						console.warn(`[Worker] Workspace cleanup: ${cleanupResult.reason ?? 'unknown'}`, { runId: next.id });
+					}
+				})
+				.catch((err) => {
+					console.error(
+						`[Worker] Workspace cleanup error: ${err instanceof Error ? err.message : String(err)}`,
+						{ runId: next.id },
+					);
+				});
 			return next;
 		}
 		current = next;
@@ -1468,5 +1481,18 @@ export async function runPipeline(run: RunState, deps: PipelineDeps): Promise<Ru
 		);
 	}
 	saveRunToDb(result.run, deps);
+	// Issue #244: Run workspace cleanup on timeout/terminal
+	runCleanup(result.run)
+		.then((cleanupResult) => {
+			if (!cleanupResult.cleaned) {
+				console.warn(`[Worker] Workspace cleanup: ${cleanupResult.reason ?? 'unknown'}`, { runId: result.run.id });
+			}
+		})
+		.catch((err) => {
+			console.error(
+				`[Worker] Workspace cleanup error: ${err instanceof Error ? err.message : String(err)}`,
+				{ runId: result.run.id },
+			);
+		});
 	return result.run;
 }
