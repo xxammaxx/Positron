@@ -190,6 +190,16 @@ export function scanToolDefinition(definition: ToolDefinition): ScanResult {
 		);
 	}
 
+	// 4. Recommend requiresAuditLog for write/destructive tools
+	if (
+		(definition.riskLevel === 'write' || definition.riskLevel === 'destructive') &&
+		definition.requiresAuditLog !== true
+	) {
+		warnings.push(
+			`Tool "${definition.id}" has risk level "${definition.riskLevel}" but does not require audit logging — consider setting requiresAuditLog: true`,
+		);
+	}
+
 	return {
 		passed: !blocked,
 		warnings,
