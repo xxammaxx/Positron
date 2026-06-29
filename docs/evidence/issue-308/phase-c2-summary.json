@@ -1,0 +1,60 @@
+{
+  "issue": "308",
+  "phase": "C2",
+  "runId": "issue-308-phase-c2-20260629-102721",
+  "timestamp": "2026-06-29T10:32:00+02:00",
+  "classifications": {
+    "ISSUE_308_PHASE_C2_REALITY_STATUS": "CURRENT",
+    "PHASE_C2_OWNER_APPROVAL_STATUS": "VERIFIED",
+    "PHASE_C2_OS_SHELL_STATUS": "READY",
+    "PHASE_C2_KILL_SWITCH_STATUS": "READY",
+    "PHASE_C2_TEMP_WORKSPACE_PLAN_STATUS": "READY",
+    "PHASE_C2_PROBE_EXECUTION_STATUS": "CONTROLLED_LOCAL_TEMP_PROBE_PASSED",
+    "PHASE_C2_AUDIT_EVIDENCE_STATUS": "CLEAN",
+    "PHASE_C2_CLEANUP_STATUS": "CLEAN_WITH_PREEXISTING_ARTIFACTS",
+    "PHASE_C2_SAFETY_STATUS": "CLEAN",
+    "ISSUE_308_PHASE_C2_LOCAL_GATES": "GREEN",
+    "ISSUE_308_PHASE_C2_DECISION": "CONTROLLED_LOCAL_TEMP_PROBE_PASSED"
+  },
+  "testResults": {
+    "mainSuite": { "files": 71, "tests": 1640, "failures": 0 },
+    "webSuite": { "files": 8, "tests": 196, "failures": 0 },
+    "total": { "files": 79, "tests": 1836, "failures": 0 },
+    "gates": {
+      "gitDiffCheck": "PASS",
+      "npmBuild": "PASS",
+      "npmTypecheck": "PASS",
+      "npmTest": "PASS"
+    }
+  },
+  "probeDetails": {
+    "tempRoot": "C:\\Users\\xxammaxx\\AppData\\Local\\Temp\\issue-308-phase-c2-20260629-102721",
+    "outsideRepo": true,
+    "filesCreated": ["workspace/probe.txt", "audit-log.jsonl", "probe-result.json"],
+    "cleanupStatus": "DELETED",
+    "blockedActions": ["git push", "gh pr create", "gh pr merge", "gh issue edit", "gh workflow run", "Real Mode"]
+  },
+  "safety": {
+    "noFullRealMode": true,
+    "noSupervisedRealRun": true,
+    "noProductionRepoUsage": true,
+    "noGitHubWrites": true,
+    "noPush": true,
+    "noPR": true,
+    "noMerge": true,
+    "noWorkflowChanges": true,
+    "noManualCI": true,
+    "noSecrets": true,
+    "noEnvContents": true,
+    "noCodeRabbit": true,
+    "noBypasses": true
+  },
+  "branch": "main",
+  "localHead": "141f9f55a3d46df747855537e18532c7f80bc487",
+  "remoteMain": "141f9f55a3d46df747855537e18532c7f80bc487",
+  "pr319Merged": true,
+  "pr319MergeCommit": "a9ef7c5166c4edb14abfa22b0778989556f2e39d",
+  "nextPrompt": "POSITRON NEXT RUN — Issue #308 Phase C3: Post-Probe Readiness and Blocker Split",
+  "ownerApprovalRequired": "APPROVE ISSUE 308 PHASE C3 POST-PROBE READINESS ONLY",
+  "scope": "CONTROLLED_LOCAL_TEMP_WORKSPACE_PROBE_ONLY"
+}
