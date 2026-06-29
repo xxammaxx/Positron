@@ -1,0 +1,94 @@
+{
+  "issue": "308",
+  "phase": "C3b",
+  "runId": "issue-308-phase-c3b-20260629-113800",
+  "timestamp": "2026-06-29T11:38:00+02:00",
+  "mode": "FINAL_AUDIT_AND_MERGE",
+  "ownerApproval": "APPROVE MERGE ISSUE 308 PHASE C3 PR 327 AFTER FINAL AUDIT",
+  "classifications": {
+    "ISSUE_308_PHASE_C3B_REALITY_STATUS": "CURRENT",
+    "PR_327_SCOPE_STATUS": "CLEAN_PHASE_C3_EVIDENCE_ONLY",
+    "ISSUE_308_PHASE_C3_EVIDENCE_STATUS": "CLEAN",
+    "ISSUE_308_PHASE_C3B_DECISION_AUDIT_STATUS": "CLEAN",
+    "ISSUE_308_PHASE_C3B_SAFETY_STATUS": "CLEAN",
+    "ISSUE_308_PHASE_C3B_LOCAL_GATES": "GREEN",
+    "PR_327_MERGE_READY": "YES",
+    "PR_READY_EXECUTED": "YES",
+    "PR_327_MERGE_STATUS": "SUCCESS",
+    "ISSUE_308_STATUS": "LEFT_OPEN"
+  },
+  "prDetails": {
+    "prNumber": 327,
+    "mergeCommit": "cfe3fef19f26aca5b13038f7203841af69df489c",
+    "mergedAt": "2026-06-29T09:43:38Z",
+    "mergeMethod": "standard-merge",
+    "deleteBranch": false,
+    "filesChanged": 14,
+    "insertions": 1363,
+    "deletions": 0
+  },
+  "testResults": {
+    "mainSuite": { "files": 71, "tests": 1640, "failures": 0 },
+    "webSuite": { "files": 8, "tests": 196, "failures": 0 },
+    "total": { "files": 79, "tests": 1836, "failures": 0 },
+    "gates": {
+      "gitDiffCheck": "PASS",
+      "npmBuild": "PASS",
+      "npmTypecheck": "PASS",
+      "npmTest": "PASS"
+    }
+  },
+  "safety": {
+    "noNewProbe": true,
+    "noFullRealMode": true,
+    "noSupervisedRealRun": true,
+    "noRealModeEnv": true,
+    "noRealExternalTools": true,
+    "noGitHubWritesThroughPipeline": true,
+    "noProductionRepoProbe": true,
+    "noWorkflowChanges": true,
+    "noManualCI": true,
+    "noCodeRabbitReview": true,
+    "noSecrets": true,
+    "noEnvContents": true,
+    "noAutoMerge": true,
+    "noAdminMerge": true,
+    "noSquashMerge": true,
+    "noRebaseMerge": true,
+    "noForcePush": true,
+    "noBranchDeletion": true,
+    "noStashApply": true,
+    "noBypasses": true,
+    "ownerAuthorizedMerge": true
+  },
+  "preMergeMainHead": "c5015a3b352f5d00b12e7b9c0d3e4bb2a71b4ac6",
+  "postMergeMainHead": "cfe3fef19f26aca5b13038f7203841af69df489c",
+  "issue308Comment": "https://github.com/xxammaxx/Positron/issues/308#issuecomment-4831083272",
+  "evidenceFiles": [
+    "docs/evidence/issue-308/phase-c3b-reality-refresh.md",
+    "docs/evidence/issue-308/phase-c3b-pr-scope-audit.md",
+    "docs/evidence/issue-308/phase-c3b-evidence-audit.md",
+    "docs/evidence/issue-308/phase-c3b-decision-audit.md",
+    "docs/evidence/issue-308/phase-c3b-safety-audit.md",
+    "docs/evidence/issue-308/phase-c3b-final-gates.md",
+    "docs/evidence/issue-308/phase-c3b-merge-readiness.md",
+    "docs/evidence/issue-308/phase-c3b-merge-report.md",
+    "docs/evidence/issue-308/phase-c3b-post-merge-sync.md",
+    "docs/evidence/issue-308/phase-c3b-issue-status-report.md",
+    "docs/evidence/issue-308/phase-c3b-next-issue-322-prompt.md",
+    "docs/evidence/issue-308/phase-c3b-summary.json",
+    "docs/evidence/issue-308/phase-c3b-report.md",
+    "docs/evidence/issue-308/phase-c3b-reviewer-report.md"
+  ],
+  "nextBuildCandidate": "Issue #322 — Wire ToolGateway onAudit into server/worker runtime",
+  "nextBuildPrompt": "docs/evidence/issue-308/phase-c3b-next-issue-322-prompt.md",
+  "blockersToPhaseD": [
+    { "issue": 322, "description": "onAudit Server/Worker Wiring", "severity": "CRITICAL" }
+  ],
+  "ownerActionsRecommended": [
+    "APPROVE ISSUE 322 ONAUDIT SERVER WIRING",
+    "CLOSE PR #313 as obsolete",
+    "REMOVE CodeRabbit external GitHub App (Issue #326)",
+    "ADD labels to Issues #321-#326"
+  ]
+}
