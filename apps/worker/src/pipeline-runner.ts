@@ -33,6 +33,7 @@ import type {
 	RepositoryConfig,
 	SpecKitAdapter,
 } from '@positron/shared';
+import type { GatewayService } from '@positron/tool-gateway';
 import Database from 'better-sqlite3';
 
 // ---------------------------------------------------------------------------
@@ -47,6 +48,8 @@ export interface PipelineDeps {
 	opencode: OpenCodeAdapter;
 	github: GitHubAdapter;
 	syncService?: GitHubStatusSyncService;
+	/** Issue #322: Optional gateway service for tool audit enforcement */
+	gateway?: GatewayService;
 }
 
 // ---------------------------------------------------------------------------

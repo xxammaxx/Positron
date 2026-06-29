@@ -63,6 +63,11 @@ import type { GitWorkspaceAdapter } from '@positron/sandbox';
 import { TestCommandDetector, TestRunner } from '@positron/sandbox';
 import type { TestReport } from '@positron/sandbox';
 import {
+	GatewayService,
+	ToolRegistry,
+	createAuditSink,
+} from '@positron/tool-gateway';
+import {
 	MAX_FIX_LOOPS,
 	buildRemoteUrl,
 	createRunId,
@@ -2314,6 +2319,17 @@ export function createApp(options: ServerOptions = {}) {
 	// In fake/dry-run mode, all gates pass. In real mode (#308),
 	// these will be replaced with actual evaluators.
 	registerFakeGateEvaluators();
+
+	// ── Issue #322: Wire ToolGateway onAudit into server runtime ──
+	// Creates a GatewayService with audit sink for audit-required tool calls.
+	// The onAudit callback writes pre-execution audit entries to a local
+	// JSONL file. Audit failures are fail-closed via Gate 9.
+	const toolRegistry = new ToolRegistry();
+	const gateway = new GatewayService(toolRegistry, { enabled: true });
+	gateway.onAudit = createAuditSink({
+		runId: 'server-runtime',
+		source: 'server',
+	});
 
 	// ── QA-011: Metrics-decorated OpenCode adapter ──
 	// Wraps the adapter to record telemetry without modifying adapter code.

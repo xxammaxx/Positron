@@ -26,6 +26,11 @@ import {
 import type { RepositoryConfig } from '@positron/shared';
 import type { OpenCodeAdapter, SpecKitAdapter } from '@positron/shared';
 import { FakeSpecKitAdapter, RealSpecKitAdapter } from '@positron/speckit-adapter';
+import {
+	GatewayService,
+	ToolRegistry,
+	createAuditSink,
+} from '@positron/tool-gateway';
 import { type Job, Queue, Worker } from 'bullmq';
 import { type PipelineDeps, runPipeline } from './pipeline-runner.js';
 
@@ -109,6 +114,14 @@ const syncService = new GitHubStatusSyncService(github);
 // Issue #246: Register fake gate evaluators for worker pipeline
 registerFakeGateEvaluators();
 
+// ── Issue #322: Wire ToolGateway onAudit into worker runtime ──
+const workerToolRegistry = new ToolRegistry();
+const workerGateway = new GatewayService(workerToolRegistry, { enabled: true });
+workerGateway.onAudit = createAuditSink({
+	runId: 'worker-runtime',
+	source: 'worker',
+});
+
 // ---------------------------------------------------------------------------
 // BullMQ Worker
 // ---------------------------------------------------------------------------
@@ -152,6 +165,7 @@ const worker = new Worker<PipelineJobData, PipelineJobResult>(
 			opencode,
 			github,
 			syncService,
+			gateway: workerGateway,
 		};
 
 		// Run the pipeline

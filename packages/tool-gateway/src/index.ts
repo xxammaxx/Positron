@@ -35,6 +35,10 @@ export { scanToolDefinition } from './scanner.js';
 // ─── Gateway ─────────────────────────────────────────────────────────
 export { GatewayService } from './gateway.js';
 
+// ─── Audit Sink ──────────────────────────────────────────────────────
+export { createAuditSink, createBlockedAuditEntry, hashAuditEntry } from './audit-sink.js';
+export type { AuditSinkOptions, AuditEntry } from './audit-sink.js';
+
 // ─── MCP Adapter ─────────────────────────────────────────────────────
 export {
 	MCPAdapter,
