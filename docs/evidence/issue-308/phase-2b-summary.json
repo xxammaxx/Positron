@@ -1,0 +1,105 @@
+{
+  "meta": {
+    "issue": 308,
+    "phase": "phase-2b-merge-audit",
+    "generated": "2026-06-29T08:20:00+02:00",
+    "mode": "FINAL_AUDIT_AND_MERGE",
+    "real_mode": false,
+    "branch": "docs/issue-308-readiness-recheck",
+    "commit": "a32b22e75f86a9566975966d2ede7467458a1630"
+  },
+  "classifications": {
+    "ISSUE_308_PHASE_2B_REALITY_STATUS": "CURRENT",
+    "PR_317_SCOPE_STATUS": "CLEAN_EVIDENCE_ONLY",
+    "ISSUE_308_PHASE_2_EVIDENCE_STATUS": "CLEAN",
+    "ISSUE_308_PHASE_2B_LOCAL_GATES": "GREEN",
+    "PR_317_MERGE_READY": "YES",
+    "PR_317_MERGE_STATUS": "SUCCESS",
+    "POST_MERGE_SYNC_STATUS": "SUCCESS",
+    "ISSUE_308_STATUS": "LEFT_OPEN"
+  },
+  "pr_317": {
+    "number": 317,
+    "state": "MERGED",
+    "merged_at": "2026-06-29T06:23:06Z",
+    "merge_commit": "9167c481a641ec24b2f2253fa5bb58e09bb8d97d",
+    "was_draft": true,
+    "mergeable": "MERGEABLE",
+    "mergeStateStatus": "UNSTABLE",
+    "headRefName": "docs/issue-308-readiness-recheck",
+    "headRefOid": "a32b22e75f86a9566975966d2ede7467458a1630",
+    "baseRefName": "main",
+    "baseRefOid": "00fecb8ad522cc636e4a71d4c450e6fa18349623",
+    "files_changed": 12,
+    "insertions": 1370,
+    "branch_deleted": false
+  },
+  "gates": {
+    "git_diff_check": "PASS",
+    "npm_run_build": "PASS",
+    "npm_run_typecheck": "PASS",
+    "npm_test_packages": "PASS (1597/1597)",
+    "npm_test_web": "PASS (196/196)",
+    "npm_test_total": "PASS (1793/1793)"
+  },
+  "ci_advisory": {
+    "build_and_test": "FAILURE",
+    "e2e_playwright": "FAILURE",
+    "other_checks": "SUCCESS",
+    "relevance": "ADVISORY_ONLY per CONTRIBUTING.md Issue #268",
+    "blocks_merge": false
+  },
+  "scope": {
+    "total_files": 12,
+    "code_files": 0,
+    "config_files": 0,
+    "workflow_files": 0,
+    "evidence_files": 12,
+    "secrets_found": 0,
+    "env_files": 0,
+    "real_mode_files": 0
+  },
+  "blockers": {
+    "215": {"state": "CLOSED", "verified": true},
+    "244": {"state": "CLOSED", "verified": true},
+    "245": {"state": "CLOSED", "verified": true, "limitation": "server onAudit not wired"},
+    "246": {"state": "CLOSED", "verified": true, "limitation": "pre_run/pre_push not wired, raw MERGE->DONE"}
+  },
+  "phase_b_readiness": {
+    "decision": "READY_FOR_PHASE_B_FAKE_GATE_ASSEMBLY",
+    "real_mode_required": false,
+    "fake_adapters_available": true,
+    "fake_evaluators_available": true,
+    "dry_run_available": true,
+    "owner_approval_needed": true,
+    "approval_string": "APPROVE ISSUE 308 PHASE B FAKE GATE ASSEMBLY ONLY"
+  },
+  "artifacts_phase_2": [
+    "docs/evidence/issue-308/phase-2-reality-refresh.md",
+    "docs/evidence/issue-308/phase-2-blocker-closure-audit.md",
+    "docs/evidence/issue-308/phase-2-runtime-safety-discovery.md",
+    "docs/evidence/issue-308/phase-2-scope-reinterpretation.md",
+    "docs/evidence/issue-308/phase-2-real-mode-risk-audit.md",
+    "docs/evidence/issue-308/phase-2-integration-test-readiness.md",
+    "docs/evidence/issue-308/phase-2-gates.md",
+    "docs/evidence/issue-308/phase-2-readiness-decision.md",
+    "docs/evidence/issue-308/phase-2-next-prompt.md",
+    "docs/evidence/issue-308/phase-2-summary.json",
+    "docs/evidence/issue-308/phase-2-report.md",
+    "docs/evidence/issue-308/phase-2-reviewer-report.md"
+  ],
+  "artifacts_phase_2b": [
+    "docs/evidence/issue-308/phase-2b-reality-refresh.md",
+    "docs/evidence/issue-308/phase-2b-pr-scope-audit.md",
+    "docs/evidence/issue-308/phase-2b-evidence-audit.md",
+    "docs/evidence/issue-308/phase-2b-final-gates.md",
+    "docs/evidence/issue-308/phase-2b-merge-readiness.md",
+    "docs/evidence/issue-308/phase-2b-merge-report.md",
+    "docs/evidence/issue-308/phase-2b-post-merge-sync.md",
+    "docs/evidence/issue-308/phase-2b-issue-status-report.md",
+    "docs/evidence/issue-308/phase-2b-next-phase-b-prompt.md",
+    "docs/evidence/issue-308/phase-2b-summary.json",
+    "docs/evidence/issue-308/phase-2b-report.md",
+    "docs/evidence/issue-308/phase-2b-reviewer-report.md"
+  ]
+}
