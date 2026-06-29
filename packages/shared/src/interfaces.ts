@@ -2,7 +2,7 @@
 // ACHTUNG: Duplikate mit speckit-types.ts und opencode-types.ts vermeiden!
 // Adapter-Interfaces und deren Input/Result-Typen sind in den dedizierten Type-Dateien.
 
-import type { AutonomyLevel, EventLevel, Phase, RunStatus } from './types.js';
+import type { AutonomyLevel, EventLevel, GateType, Phase, RunStatus } from './types.js';
 
 /** Ergebnis eines einzelnen Test-Kommandos */
 export interface TestCommandExecutionResult {
@@ -365,4 +365,23 @@ export interface FileChange {
 	status: 'added' | 'modified' | 'deleted';
 	additions: number;
 	deletions: number;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Gate Evaluation Context — Issue #246
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Kontext, der an Gate-Evaluatoren übergeben wird */
+export interface GateEvaluationContext {
+	runId: string;
+	/** Aktuelle Phase vor der Transition */
+	phase: Phase;
+	/** Ziel-Phase nach der Transition */
+	targetPhase: Phase;
+	/** Pfade zu Evidence-Artefakten */
+	evidencePaths?: string[];
+	/** Request-ID (optional, für Korrelation) */
+	requestId?: string;
+	/** Welche GateTypes werden ausgewertet */
+	gateTypes: GateType[];
 }

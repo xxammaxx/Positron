@@ -177,3 +177,53 @@ export function safeJsonParse(s: string | null): Record<string, unknown> | null 
 		return null;
 	}
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GateType Layers — Issue #246 Runtime Enforcement
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * GateType bestimmt, WANN ein Gate in der Pipeline ausgewertet wird.
+ * Issue #246: Diese Typen werden zur Laufzeit vor Transitionen enforced.
+ */
+export type GateType =
+	| 'pre_run'
+	| 'pre_write'
+	| 'pre_push'
+	| 'pre_pr'
+	| 'pre_merge'
+	| 'evidence_required'
+	| 'security'
+	| 'human_approval';
+
+/** Alle GateTypes als konstantes Array */
+export const ALL_GATE_TYPES: readonly GateType[] = [
+	'pre_run',
+	'pre_write',
+	'pre_push',
+	'pre_pr',
+	'pre_merge',
+	'evidence_required',
+	'security',
+	'human_approval',
+] as const;
+
+/** Ergebnis der Auswertung eines einzelnen Gates */
+export interface GateResult {
+	gateType: GateType;
+	passed: boolean;
+	message: string;
+	/** Wenn true, MUSS die Transition blockiert werden */
+	blocking: boolean;
+	/** Optionale Evidence (z. B. Pfade zu Artefakten) */
+	evidence?: Record<string, unknown>;
+}
+
+/** Ergebnis der Auswertung aller Gates für eine Transition */
+export interface GateLayerResult {
+	allPassed: boolean;
+	results: GateResult[];
+	blockingFailures: GateResult[];
+	warnings: GateResult[];
+	summary: string;
+}

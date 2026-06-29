@@ -1,0 +1,46 @@
+{
+  "issue": 246,
+  "title": "Enforce GateType Layers in Pipeline Loop",
+  "branch": "feat/issue-246-gatetype-layer-enforcement",
+  "status": "IMPLEMENTED",
+  "timestamp": "2026-06-29T07:37:00Z",
+  "classifications": {
+    "reality_refresh": "CURRENT",
+    "pr_255_salvage": "USE_AS_REFERENCE_ONLY",
+    "discovery": "COMPLETE",
+    "design": "GREEN_SAFE",
+    "implementation": "IMPLEMENTED",
+    "tests": "GREEN",
+    "security": "CLEAN",
+    "scope": "CLEAN_ISSUE_246_ONLY",
+    "local_gates": "GREEN",
+    "docs": "NOT_NEEDED"
+  },
+  "tests": {
+    "new_tests": 38,
+    "total_tests": 1597,
+    "passed": 1597,
+    "failed": 0
+  },
+  "files_created": [
+    "packages/run-state/src/gate-evaluator.ts",
+    "packages/run-state/src/__tests__/gate-enforcement.test.ts",
+    "docs/evidence/issue-246/*"
+  ],
+  "files_modified": [
+    "packages/shared/src/types.ts",
+    "packages/shared/src/interfaces.ts",
+    "packages/run-state/src/index.ts",
+    "apps/server/src/index.ts",
+    "apps/worker/src/index.ts",
+    "apps/worker/src/pipeline-runner.ts"
+  ],
+  "non_scope": [
+    "No #308 Real Mode",
+    "No UI changes",
+    "No workflow changes",
+    "No manual CI",
+    "No CodeRabbit",
+    "No merge"
+  ]
+}

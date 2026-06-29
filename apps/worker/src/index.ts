@@ -10,7 +10,7 @@ import {
 } from '@positron/github-adapter';
 import type { GitHubAdapter } from '@positron/github-adapter';
 import { FakeOpenCodeAdapter, RealOpenCodeAdapter } from '@positron/opencode-adapter';
-import { openDatabase, registerWorkspaceCleanup } from '@positron/run-state';
+import { openDatabase, registerWorkspaceCleanup, registerFakeGateEvaluators } from '@positron/run-state';
 import type { RunState } from '@positron/run-state';
 import { FakeGitWorkspaceAdapter, RealGitWorkspaceAdapter } from '@positron/sandbox';
 import type { GitWorkspaceAdapter } from '@positron/sandbox';
@@ -105,6 +105,9 @@ const speckit = resolveSpeckitAdapter();
 const opencode = resolveOpencodeAdapter();
 const repository = resolveRepositoryConfig();
 const syncService = new GitHubStatusSyncService(github);
+
+// Issue #246: Register fake gate evaluators for worker pipeline
+registerFakeGateEvaluators();
 
 // ---------------------------------------------------------------------------
 // BullMQ Worker

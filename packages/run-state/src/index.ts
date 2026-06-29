@@ -31,3 +31,18 @@ export type {
 	TransitionResult,
 	WorkspaceCleanupFn,
 } from './state-machine.js';
+
+// ─── Issue #246: GateType Layers Runtime Enforcement ───
+export {
+	registerGateEvaluator,
+	clearGateEvaluators,
+	hasGateEvaluator,
+	gateEvaluatorCount,
+	evaluateGates,
+	tryTransitionWithGates,
+	getRequiredGates,
+	phaseRequiresGates,
+	PHASE_GATE_REQUIREMENTS,
+	registerFakeGateEvaluators,
+} from './gate-evaluator.js';
+export type { GateEvaluatorFn, GatedTransitionResult } from './gate-evaluator.js';

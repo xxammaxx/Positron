@@ -13,7 +13,7 @@ import type {
 	GitHubStatusSyncInput,
 	GitHubStatusSyncResult,
 } from '@positron/github-adapter';
-import { createRun, markFailed, transition, runCleanup } from '@positron/run-state';
+import { createRun, markFailed, transition, runCleanup, tryTransitionWithGates, phaseRequiresGates, getRequiredGates } from '@positron/run-state';
 import type { RunEventData, RunState } from '@positron/run-state';
 import { TestCommandDetector, TestRunner } from '@positron/sandbox';
 import type { GitWorkspaceAdapter } from '@positron/sandbox';
@@ -27,6 +27,7 @@ import {
 } from '@positron/shared';
 import type {
 	EventLevel,
+	GateEvaluationContext,
 	OpenCodeAdapter,
 	Phase,
 	RepositoryConfig,
@@ -818,7 +819,17 @@ async function executePhase(run: RunState, deps: PipelineDeps): Promise<RunState
 		case 'VERIFY':
 			current.branch =
 				current.branch ?? generateBranchName(current.issueNumber, `run-${current.id.slice(0, 8)}`);
-			result = transition(current, 'COMMIT', 'Verified, commit ready');
+			if (phaseRequiresGates('COMMIT')) {
+				const gateCtx: GateEvaluationContext = {
+					runId: current.id,
+					phase: current.phase,
+					targetPhase: 'COMMIT',
+					gateTypes: getRequiredGates('COMMIT'),
+				};
+				result = tryTransitionWithGates(current, 'COMMIT', 'Verified, commit ready', 'INFO', null, gateCtx);
+			} else {
+				result = transition(current, 'COMMIT', 'Verified, commit ready');
+			}
 			break;
 		case 'COMMIT': {
 			const branch =
@@ -861,7 +872,17 @@ async function executePhase(run: RunState, deps: PipelineDeps): Promise<RunState
 				}
 
 				const summary = `Committed: ${commitResult.sha.slice(0, 7)}${pushResult} (${changeSummary})`;
+			if (phaseRequiresGates('PR_CREATE')) {
+				const gateCtx: GateEvaluationContext = {
+					runId: current.id,
+					phase: current.phase,
+					targetPhase: 'PR_CREATE',
+					gateTypes: getRequiredGates('PR_CREATE'),
+				};
+				result = tryTransitionWithGates(current, 'PR_CREATE', summary, 'INFO', null, gateCtx);
+			} else {
 				result = transition(current, 'PR_CREATE', summary, 'INFO');
+			}
 			} catch (err) {
 				storeEvent(
 					{
@@ -942,7 +963,17 @@ async function executePhase(run: RunState, deps: PipelineDeps): Promise<RunState
 					}
 				}
 
+				if (phaseRequiresGates('MERGE')) {
+				const gateCtx: GateEvaluationContext = {
+					runId: current.id,
+					phase: current.phase,
+					targetPhase: 'MERGE',
+					gateTypes: getRequiredGates('MERGE'),
+				};
+				result = tryTransitionWithGates(current, 'MERGE', `PR #${pr.number} created: ${pr.htmlUrl}`, 'INFO', null, gateCtx);
+			} else {
 				result = transition(current, 'MERGE', `PR #${pr.number} created: ${pr.htmlUrl}`, 'INFO');
+			}
 			} catch (err) {
 				storeEvent(
 					{
