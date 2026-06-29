@@ -1,4 +1,4 @@
-import type { Phase, RunStatus, AutonomyLevel, EventLevel } from './types.js';
+import type { AutonomyLevel, EventLevel, GateType, Phase, RunStatus } from './types.js';
 /** Ergebnis eines einzelnen Test-Kommandos */
 export interface TestCommandExecutionResult {
     command: string;
@@ -266,6 +266,26 @@ export interface GitWorkspaceAdapter {
         pushed: boolean;
         ref: string;
     }>;
+    /** Issue #244: Destroy workspace directory after run completes or fails. */
+    destroyWorkspace(workspacePath: string): Promise<{
+        destroyed: boolean;
+        reason?: string;
+    }>;
+    /** Issue #244: Acquire advisory lock on workspace to prevent parallel access. */
+    lockWorkspace(workspacePath: string, ownerRunId: string): Promise<{
+        locked: boolean;
+        reason?: string;
+    }>;
+    /** Issue #244: Release advisory lock on workspace. */
+    unlockWorkspace(workspacePath: string, ownerRunId: string): Promise<{
+        unlocked: boolean;
+        reason?: string;
+    }>;
+    /** Issue #244: Check if workspace is currently locked. */
+    isLocked(workspacePath: string): Promise<{
+        locked: boolean;
+        ownerRunId?: string;
+    }>;
 }
 export interface EvidenceItem {
     kind: string;
@@ -324,5 +344,19 @@ export interface FileChange {
     status: 'added' | 'modified' | 'deleted';
     additions: number;
     deletions: number;
+}
+/** Kontext, der an Gate-Evaluatoren übergeben wird */
+export interface GateEvaluationContext {
+    runId: string;
+    /** Aktuelle Phase vor der Transition */
+    phase: Phase;
+    /** Ziel-Phase nach der Transition */
+    targetPhase: Phase;
+    /** Pfade zu Evidence-Artefakten */
+    evidencePaths?: string[];
+    /** Request-ID (optional, für Korrelation) */
+    requestId?: string;
+    /** Welche GateTypes werden ausgewertet */
+    gateTypes: GateType[];
 }
 //# sourceMappingURL=interfaces.d.ts.map
