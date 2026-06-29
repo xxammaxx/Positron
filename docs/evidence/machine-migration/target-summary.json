@@ -1,0 +1,32 @@
+{
+  "status": "GREEN_READY_TO_CONTINUE",
+  "repo": "xxammaxx/Positron",
+  "target_machine_role": "new_builder_linux_mint",
+  "os": "Linux Mint 22.1 (Xia)",
+  "shell": "/bin/bash",
+  "branch": "main",
+  "local_head": "2198bc99e44b3742bc8c2dfd5491c815ac306eb6",
+  "remote_main_head": "2198bc99e44b3742bc8c2dfd5491c815ac306eb6",
+  "clone_status": "CLEAN_FRESH_CLONE",
+  "toolchain_status": "READY",
+  "dependency_status": "GREEN",
+  "local_gates": "GREEN",
+  "secret_env_status": "CLEAN",
+  "linux_mint_env_status": "READY",
+  "source_handoff_evidence_status": "MISSING",
+  "open_prs_to_review": [
+    {"number": 329, "title": "docs(issue-308): reassess Phase D readiness after onAudit wiring", "draft": true, "mergeable": "MERGEABLE"},
+    {"number": 313, "title": "docs(issue-308): add supervised real-mode readiness audit", "draft": true, "mergeable": "MERGEABLE", "assessment": "LIKELY_OBSOLETE"}
+  ],
+  "issues_to_review": [
+    {"number": 308, "title": "[RESEARCH] Supervised Full Real Mode pilot", "state": "OPEN", "phase": "Phase D readiness recheck completed"},
+    {"number": 322, "title": "Wire ToolGateway onAudit into runtime", "state": "OPEN", "closure_recommended": true},
+    {"number": 326, "title": "Owner Action: Remove/disable CodeRabbit", "state": "OPEN"},
+    {"number": 325, "title": "Cleanup: dist artifacts", "state": "OPEN"},
+    {"number": 324, "title": "Evaluate workspace lock", "state": "OPEN"},
+    {"number": 323, "title": "Decide pre_run/pre_push GateType", "state": "OPEN"},
+    {"number": 321, "title": "Gate MERGE->DONE with evidence_required", "state": "OPEN"}
+  ],
+  "next_recommended_action": "Review PR #329 -> Merge/Keep Draft -> Close #322 -> Close #313 -> Prepare Phase D Approval Package",
+  "confidence": 0.95
+}
