@@ -1,0 +1,48 @@
+{
+  "status": "GREEN_COMPLETED",
+  "repo": "xxammaxx/Positron",
+  "machine": "linux_mint_target",
+  "pr_330_status": "MERGED",
+  "merge_sha": "19c7e105cc6e83f0ad8424e1380c5fc7d572435d",
+  "local_head": "19c7e105cc6e83f0ad8424e1380c5fc7d572435d",
+  "remote_main_head": "19c7e105cc6e83f0ad8424e1380c5fc7d572435d",
+  "takeover_verified": true,
+  "old_machine_canonical": false,
+  "github_source_of_truth": true,
+  "local_gates": "GREEN",
+  "secret_env_status": "CLEAN",
+  "next_recommended_action": "Review PR #329 and prepare Issue #308 Phase D Approval Package",
+  "gates_detail": {
+    "reality_refresh": "CURRENT",
+    "pr_330_scope": "CLEAN_MIGRATION_EVIDENCE_ONLY",
+    "migration_evidence": "CLEAN",
+    "linux_mint_takeover": "VERIFIED",
+    "secret_env": "CLEAN",
+    "local_gates": "GREEN",
+    "merge_readiness": "YES",
+    "merge_result": "SUCCESS",
+    "post_merge_sync": "SYNCED"
+  },
+  "test_summary": {
+    "total": 1858,
+    "passed": 1858,
+    "failed": 0,
+    "flaky_pre_existing": 1,
+    "gate_assembly": "43/43"
+  },
+  "environment": {
+    "os": "Linux Mint 22.1 (Xia)",
+    "kernel": "6.8.0-124-generic",
+    "arch": "x86_64",
+    "node": "v22.22.0",
+    "npm": "10.9.4",
+    "git": "2.43.0",
+    "gh": "2.45.0",
+    "shell": "/bin/bash",
+    "disk_free": "133GB",
+    "ram_total": "15GB",
+    "cpu_cores": 16
+  },
+  "confidence": 0.98,
+  "timestamp": "2026-06-29T16:18:00+02:00"
+}
