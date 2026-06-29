@@ -1,0 +1,80 @@
+{
+  "phase": "C2a",
+  "title": "Issue #308 Phase C2a Final Audit and Merge",
+  "generated": "2026-06-29T10:55:00+02:00",
+  "mode": "Final Audit + Merge — NO Phase C2 Probe",
+  "issue": {
+    "number": 308,
+    "state": "OPEN",
+    "pr_merged": {
+      "number": 319,
+      "state": "MERGED",
+      "mergeSha": "a9ef7c5166c4edb14abfa22b0778989556f2e39d",
+      "mergedAt": "2026-06-29T08:01:00Z",
+      "url": "https://github.com/xxammaxx/Positron/pull/319"
+    }
+  },
+  "classifications": {
+    "phase_c2a_reality_status": "CURRENT",
+    "pr_319_scope_status": "CLEAN_PHASE_C_EVIDENCE_ONLY",
+    "phase_c_evidence_status": "CLEAN",
+    "phase_c_readiness_decision_audit": "CLEAN_WITH_REPHRASE",
+    "phase_c2a_safety_status": "CLEAN",
+    "phase_c2a_local_gates": "GREEN",
+    "pr_319_merge_ready": "YES",
+    "pr_319_merge_status": "SUCCESS",
+    "post_merge_sync_status": "SUCCESS",
+    "issue_308_status": "LEFT_OPEN",
+    "phase_c2a_next_prompt": "READY_FOR_OWNER_APPROVAL"
+  },
+  "gates": {
+    "diff_check": { "exit": 0, "result": "PASS" },
+    "build": { "exit": 0, "result": "PASS" },
+    "typecheck": { "exit": 0, "result": "PASS" },
+    "tests": { "exit": 0, "result": "PASS", "details": "1836/1836" }
+  },
+  "safety": {
+    "controlled_real_run_executed": false,
+    "full_real_mode_executed": false,
+    "real_mode_env_set": false,
+    "external_tools_executed": false,
+    "github_writes_via_pipeline": false,
+    "production_repo_usage": false,
+    "phase_c2_probe_executed": false,
+    "workflows_modified": false,
+    "manual_ci_triggered": false,
+    "coderabbit_used": false,
+    "secrets_exposed": false,
+    "env_contents_read": false,
+    "force_push": false,
+    "yolo_used": false,
+    "gate_bypass": false,
+    "audit_bypass": false,
+    "cleanup_bypass": false
+  },
+  "merge": {
+    "pr_number": 319,
+    "method": "standard-merge",
+    "branch_deleted": false,
+    "merge_commit_sha": "a9ef7c5166c4edb14abfa22b0778989556f2e39d",
+    "main_head_post_merge": "a9ef7c5166c4edb14abfa22b0778989556f2e39d"
+  },
+  "decision_refined": "READY_FOR_CONTROLLED_LOCAL_TEMP_WORKSPACE_PROBE_WITH_OWNER_APPROVAL",
+  "confidence": 1.00,
+  "evidence_files": [
+    "phase-c2a-reality-refresh.md",
+    "phase-c2a-pr-scope-audit.md",
+    "phase-c2a-evidence-audit.md",
+    "phase-c2a-readiness-decision-audit.md",
+    "phase-c2a-safety-audit.md",
+    "phase-c2a-final-gates.md",
+    "phase-c2a-merge-readiness.md",
+    "phase-c2a-merge-report.md",
+    "phase-c2a-post-merge-sync.md",
+    "phase-c2a-issue-status-report.md",
+    "phase-c2a-next-controlled-local-probe-prompt.md",
+    "phase-c2a-summary.json",
+    "phase-c2a-report.md",
+    "phase-c2a-reviewer-report.md"
+  ]
+}
