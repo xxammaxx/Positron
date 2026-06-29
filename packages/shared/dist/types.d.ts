@@ -31,4 +31,29 @@ export declare function parseRunStatus(value: string): RunStatus;
 export declare const PHASE_LABELS: Record<Phase, string>;
 /** Safe JSON.parse — gibt null statt Fehler bei ungültigem JSON */
 export declare function safeJsonParse(s: string | null): Record<string, unknown> | null;
+/**
+ * GateType bestimmt, WANN ein Gate in der Pipeline ausgewertet wird.
+ * Issue #246: Diese Typen werden zur Laufzeit vor Transitionen enforced.
+ */
+export type GateType = 'pre_run' | 'pre_write' | 'pre_push' | 'pre_pr' | 'pre_merge' | 'evidence_required' | 'security' | 'human_approval';
+/** Alle GateTypes als konstantes Array */
+export declare const ALL_GATE_TYPES: readonly GateType[];
+/** Ergebnis der Auswertung eines einzelnen Gates */
+export interface GateResult {
+    gateType: GateType;
+    passed: boolean;
+    message: string;
+    /** Wenn true, MUSS die Transition blockiert werden */
+    blocking: boolean;
+    /** Optionale Evidence (z. B. Pfade zu Artefakten) */
+    evidence?: Record<string, unknown>;
+}
+/** Ergebnis der Auswertung aller Gates für eine Transition */
+export interface GateLayerResult {
+    allPassed: boolean;
+    results: GateResult[];
+    blockingFailures: GateResult[];
+    warnings: GateResult[];
+    summary: string;
+}
 //# sourceMappingURL=types.d.ts.map

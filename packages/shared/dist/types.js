@@ -108,4 +108,15 @@ export function safeJsonParse(s) {
         return null;
     }
 }
+/** Alle GateTypes als konstantes Array */
+export const ALL_GATE_TYPES = [
+    'pre_run',
+    'pre_write',
+    'pre_push',
+    'pre_pr',
+    'pre_merge',
+    'evidence_required',
+    'security',
+    'human_approval',
+];
 //# sourceMappingURL=types.js.map
