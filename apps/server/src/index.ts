@@ -1555,6 +1555,80 @@ async function executePhase(
 			}
 			break;
 		}
+		case 'GATE_APPROVE': {
+			// ── Issue #332: Wire gateApproveAction() into server runtime ──
+			// Uses extracted handleGateApprove adapter for testability.
+			// Evaluates the Stop/Ask policy and routes the 6 decision outcomes.
+			//
+			// Safety invariants:
+			// - Non-ALLOW never proceeds to COMMIT/MERGE
+			// - Exception / missing input → fail closed
+			// - Existing Gate 9 / onAudit behavior is not weakened
+
+			try {
+				const { handleGateApprove } = await import('./gate-approve-handler.js');
+				const { outcome, events } = handleGateApprove(current);
+
+				// Store all events produced by gate evaluation
+				for (const ev of events) {
+					storeEvent({
+						id: createRunId(),
+						runId: current.id,
+						phase: ev.phase,
+						level: ev.level,
+						message: ev.message,
+						payload: ev.payload,
+						createdAt: new Date().toISOString(),
+					});
+				}
+
+				switch (outcome.kind) {
+					case 'TRANSITION':
+						result = transition(
+							current,
+							outcome.to,
+							outcome.message,
+							'GATE',
+							outcome.payload,
+						);
+						break;
+
+					case 'FAILED_BLOCKED':
+						result = markFailed(current, 'FAILED_BLOCKED', outcome.message);
+						break;
+
+					case 'STAY':
+						storeEvent({
+							id: createRunId(),
+							runId: current.id,
+							phase: 'GATE_APPROVE',
+							level: 'HUMAN',
+							message: outcome.message,
+							payload: { requiredEvidence: outcome.message },
+							createdAt: new Date().toISOString(),
+						});
+						return current;
+				}
+			} catch (err) {
+				// Exception in gate evaluation → fail closed
+				const errMsg = err instanceof Error ? err.message : String(err);
+				storeEvent({
+					id: createRunId(),
+					runId: current.id,
+					phase: 'GATE_APPROVE',
+					level: 'ERROR',
+					message: `GATE_APPROVE evaluation failed: ${errMsg}`,
+					payload: null,
+					createdAt: new Date().toISOString(),
+				});
+				result = markFailed(
+					current,
+					'FAILED_BLOCKED',
+					`GATE_APPROVE exception: ${errMsg.slice(0, 200)}`,
+				);
+			}
+			break;
+		}
 		default:
 			return current; // terminal
 	}
