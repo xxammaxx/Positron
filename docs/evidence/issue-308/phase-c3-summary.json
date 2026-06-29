@@ -1,0 +1,77 @@
+{
+  "issue": "308",
+  "phase": "C3",
+  "runId": "issue-308-phase-c3-20260629-112500",
+  "timestamp": "2026-06-29T11:25:00+02:00",
+  "mode": "POST-PROBE_READINESS_AUDIT_ONLY",
+  "classifications": {
+    "ISSUE_308_PHASE_C3_REALITY_STATUS": "CURRENT",
+    "ISSUE_308_PHASE_C3_EVIDENCE_INTAKE_STATUS": "CLEAN",
+    "ISSUE_308_PHASE_C3_LIMITATION_STATUS": "COMPLETE",
+    "ISSUE_308_PHASE_C3_DEDUPE_STATUS": "CLEAN",
+    "ISSUE_308_PHASE_C3_FOLLOWUP_STATUS": "NO_NEW_ISSUES_NEEDED",
+    "PR_313_DECISION_RECOMMENDATION": "CLOSE_AS_OBSOLETE",
+    "CODERABBIT_EXTERNAL_NOISE_STATUS": "NON_GATE_EXTERNAL_NOISE",
+    "ISSUE_308_PHASE_D_READINESS": "NOT_READY_FOLLOWUPS_REQUIRED",
+    "ISSUE_308_PHASE_C3_LOCAL_GATES": "GREEN",
+    "ISSUE_308_PHASE_C3_DECISION": "NOT_READY_EXISTING_BLOCKERS"
+  },
+  "testResults": {
+    "mainSuite": { "files": 71, "tests": 1640, "failures": 0 },
+    "webSuite": { "files": 8, "tests": 196, "failures": 0 },
+    "total": { "files": 79, "tests": 1836, "failures": 0 },
+    "gates": {
+      "gitDiffCheck": "PASS",
+      "npmBuild": "PASS",
+      "npmTypecheck": "PASS",
+      "npmTest": "PASS"
+    }
+  },
+  "limitations": [
+    { "id": "L1", "description": "onAudit Server/Worker wiring missing", "issue": 322, "risk": "YELLOW_VALIDATE" },
+    { "id": "L2", "description": "pre_run/pre_push not productively wired", "issue": 323, "risk": "GREEN_SAFE/YELLOW_VALIDATE" },
+    { "id": "L3", "description": "MERGE→DONE raw transition", "issue": 321, "risk": "YELLOW_VALIDATE" },
+    { "id": "L4", "description": "Process-scoped workspace lock", "issue": 324, "risk": "YELLOW_VALIDATE" },
+    { "id": "L5", "description": "Pre-existing dist artifacts", "issue": 325, "risk": "GREEN_SAFE" },
+    { "id": "L6", "description": "PR #313 stale/obsolete", "issue": null, "risk": "OWNER_ACTION_ONLY" },
+    { "id": "L7", "description": "CodeRabbit external app noise", "issue": 326, "risk": "OWNER_ACTION_ONLY" }
+  ],
+  "followupIssues": [321, 322, 323, 324, 325, 326],
+  "newIssuesCreated": 0,
+  "safety": {
+    "noNewProbe": true,
+    "noFullRealMode": true,
+    "noSupervisedRealRun": true,
+    "noRealModeEnv": true,
+    "noRealExternalTools": true,
+    "noGitHubWritesThroughPipeline": true,
+    "noProductionRepoProbe": true,
+    "noWorkflowChanges": true,
+    "noManualCI": true,
+    "noCodeRabbitReview": true,
+    "noSecrets": true,
+    "noEnvContents": true,
+    "noPush": true,
+    "noPR": true,
+    "noMerge": true,
+    "noForcePush": true,
+    "noBranchDeletion": true,
+    "noStashApply": true,
+    "noBypasses": true
+  },
+  "branch": "main",
+  "localHead": "c5015a3b352f5d00b12e7b9c0d3e4bb2a71b4ac6",
+  "remoteMain": "c5015a3b352f5d00b12e7b9c0d3e4bb2a71b4ac6",
+  "pr320Merged": true,
+  "pr320MergeCommit": "c2ca9a32bcaf3767bdc31b83af4990ec530d174c",
+  "pr313Stale": true,
+  "coderabbitExternal": "NON_GATE_EXTERNAL_NOISE",
+  "nextPrompt": "POSITRON NEXT RUN — Issue #322: Wire ToolGateway onAudit into server/worker runtime",
+  "ownerApprovalRequired": "APPROVE ISSUE 322 ONAUDIT SERVER WIRING ONLY",
+  "ownerActionsRecommended": [
+    "CLOSE PR #313 as obsolete",
+    "REMOVE CodeRabbit external GitHub App (Issue #326)",
+    "ADD labels to Issues #321-#326"
+  ],
+  "scope": "POST-PROBE_READINESS_AUDIT_AND_BLOCKER_SPLIT_ONLY"
+}
