@@ -52,6 +52,10 @@ import {
 	transition,
 	registerWorkspaceCleanup,
 	runCleanup,
+	tryTransitionWithGates,
+	phaseRequiresGates,
+	getRequiredGates,
+	registerFakeGateEvaluators,
 } from '@positron/run-state';
 import type { RunEventData, RunState } from '@positron/run-state';
 import { FakeGitWorkspaceAdapter, RealGitWorkspaceAdapter } from '@positron/sandbox';
@@ -70,7 +74,7 @@ import {
 	safeJsonParse,
 } from '@positron/shared';
 import { SecretManager } from '@positron/shared';
-import type { EventLevel, Phase, RunStatus } from '@positron/shared';
+import type { EventLevel, GateEvaluationContext, GateType, Phase, RunStatus } from '@positron/shared';
 import type {
 	OpenCodeAdapter,
 	OpenCodeRunInput,
@@ -1050,7 +1054,17 @@ async function executePhase(
 		case 'VERIFY':
 			current.branch =
 				current.branch ?? generateBranchName(current.issueNumber, `run-${current.id.slice(0, 8)}`);
-			result = transition(current, 'COMMIT', 'Verified, commit ready');
+			if (phaseRequiresGates('COMMIT')) {
+				const gateContext: GateEvaluationContext = {
+					runId: current.id,
+					phase: current.phase,
+					targetPhase: 'COMMIT',
+					gateTypes: getRequiredGates('COMMIT'),
+				};
+				result = tryTransitionWithGates(current, 'COMMIT', 'Verified, commit ready', 'INFO', null, gateContext);
+			} else {
+				result = transition(current, 'COMMIT', 'Verified, commit ready');
+			}
 			break;
 		case 'COMMIT': {
 			const branch =
@@ -1101,7 +1115,17 @@ async function executePhase(
 				}
 
 				const summary = `Committed: ${commitResult.sha.slice(0, 7)}${pushResult} (${changeSummary})`;
+			if (phaseRequiresGates('PR_CREATE')) {
+				const gateContext: GateEvaluationContext = {
+					runId: current.id,
+					phase: current.phase,
+					targetPhase: 'PR_CREATE',
+					gateTypes: getRequiredGates('PR_CREATE'),
+				};
+				result = tryTransitionWithGates(current, 'PR_CREATE', summary, 'INFO', null, gateContext);
+			} else {
 				result = transition(current, 'PR_CREATE', summary, 'INFO');
+			}
 			} catch (err) {
 				storeEvent({
 					id: createRunId(),
@@ -1205,7 +1229,17 @@ async function executePhase(
 					}
 				}
 
+				if (phaseRequiresGates('MERGE')) {
+				const gateContext: GateEvaluationContext = {
+					runId: current.id,
+					phase: current.phase,
+					targetPhase: 'MERGE',
+					gateTypes: getRequiredGates('MERGE'),
+				};
+				result = tryTransitionWithGates(current, 'MERGE', `PR #${pr.number} created: ${pr.htmlUrl}`, 'INFO', null, gateContext);
+			} else {
 				result = transition(current, 'MERGE', `PR #${pr.number} created: ${pr.htmlUrl}`, 'INFO');
+			}
 			} catch (err) {
 				storeEvent({
 					id: createRunId(),
@@ -2275,6 +2309,11 @@ export function createApp(options: ServerOptions = {}) {
 	const activeSpecKitAdapter = resolveSpecKitAdapter(options.speckitAdapter);
 	const activeOpenCodeAdapter = resolveOpenCodeAdapter(options.opencodeAdapter);
 	const syncService = new GitHubStatusSyncService(github);
+
+	// Issue #246: Register fake gate evaluators (explicit, not implicit).
+	// In fake/dry-run mode, all gates pass. In real mode (#308),
+	// these will be replaced with actual evaluators.
+	registerFakeGateEvaluators();
 
 	// ── QA-011: Metrics-decorated OpenCode adapter ──
 	// Wraps the adapter to record telemetry without modifying adapter code.
