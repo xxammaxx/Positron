@@ -1,0 +1,56 @@
+{
+  "meta": {
+    "issue": 308,
+    "phase": "phase-2-readiness-recheck",
+    "generated": "2026-06-29T08:15:00+02:00",
+    "mode": "READ_ONLY_RECHECK",
+    "real_mode": false,
+    "branch": "main",
+    "commit": "00fecb8ad522cc636e4a71d4c450e6fa18349623"
+  },
+  "classifications": {
+    "ISSUE_308_PHASE_2_REALITY_STATUS": "CURRENT",
+    "ISSUE_308_BLOCKER_CLOSURE_STATUS": "CLOSED_WITH_LIMITATIONS",
+    "ISSUE_308_RUNTIME_SAFETY_STATUS": "READY_WITH_LIMITATIONS",
+    "ISSUE_308_SCOPE_STATUS": "READY_FOR_PHASE_B",
+    "REAL_MODE_RISK_STATUS": "BLOCKED_BY_DEFAULT",
+    "ISSUE_308_INTEGRATION_TEST_READINESS": "READY_FOR_FAKE_GATE_ASSEMBLY",
+    "ISSUE_308_PHASE_2_LOCAL_GATES": "GREEN",
+    "ISSUE_308_READINESS_DECISION": "READY_FOR_PHASE_B_FAKE_GATE_ASSEMBLY"
+  },
+  "blockers": {
+    "215": { "status": "CLOSED", "code_verified": true, "tests": 97, "limitations": "minimal" },
+    "244": { "status": "CLOSED", "code_verified": true, "tests": 28, "limitations": "process-scoped lock" },
+    "245": { "status": "CLOSED", "code_verified": true, "tests": 31, "limitations": "server onAudit not wired" },
+    "246": { "status": "CLOSED", "code_verified": true, "tests": 38, "limitations": "pre_run/pre_push not wired, raw MERGE→DONE" }
+  },
+  "gates": {
+    "git_diff_check": "PASS",
+    "npm_run_build": "PASS",
+    "npm_run_typecheck": "PASS",
+    "npm_test": "PASS (1793/1793)"
+  },
+  "kill_switches": {
+    "active_guardrails": 30,
+    "real_mode_default": "BLOCKED",
+    "push_default": "BLOCKED",
+    "merge_default": "BLOCKED",
+    "audit_fail": "CLOSED",
+    "missing_evaluator": "BLOCKED",
+    "bypass_vectors_found": 0
+  },
+  "artifacts": [
+    "docs/evidence/issue-308/phase-2-reality-refresh.md",
+    "docs/evidence/issue-308/phase-2-blocker-closure-audit.md",
+    "docs/evidence/issue-308/phase-2-runtime-safety-discovery.md",
+    "docs/evidence/issue-308/phase-2-scope-reinterpretation.md",
+    "docs/evidence/issue-308/phase-2-real-mode-risk-audit.md",
+    "docs/evidence/issue-308/phase-2-integration-test-readiness.md",
+    "docs/evidence/issue-308/phase-2-gates.md",
+    "docs/evidence/issue-308/phase-2-readiness-decision.md",
+    "docs/evidence/issue-308/phase-2-next-prompt.md",
+    "docs/evidence/issue-308/phase-2-summary.json",
+    "docs/evidence/issue-308/phase-2-report.md",
+    "docs/evidence/issue-308/phase-2-reviewer-report.md"
+  ]
+}
