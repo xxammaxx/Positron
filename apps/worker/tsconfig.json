@@ -12,6 +12,7 @@
 		{ "path": "../../packages/github-adapter" },
 		{ "path": "../../packages/sandbox" },
 		{ "path": "../../packages/speckit-adapter" },
-		{ "path": "../../packages/opencode-adapter" }
+		{ "path": "../../packages/opencode-adapter" },
+		{ "path": "../../packages/tool-gateway" }
 	]
 }
