@@ -322,10 +322,12 @@ describe('Audit Enforcement (Issue #245)', () => {
 			};
 
 			// Call without required 'name' field
-			const result = await gateway.execute(makeCall({
-				toolId: 'test.schema_fail',
-				arguments: {},
-			}));
+			const result = await gateway.execute(
+				makeCall({
+					toolId: 'test.schema_fail',
+					arguments: {},
+				}),
+			);
 
 			expect(result.success).toBe(false);
 			expect(result.blockedReason).toContain(BLOCK_REASONS.SCHEMA_VALIDATION_FAILED);
@@ -352,12 +354,14 @@ describe('Audit Enforcement (Issue #245)', () => {
 				return 'evt-captured-001';
 			};
 
-			await gateway.execute(makeCall({
-				toolId: 'test.capture_call',
-				runId: 'run-capture-42',
-				phase: 'IMPLEMENT',
-				autonomyLevel: 2,
-			}));
+			await gateway.execute(
+				makeCall({
+					toolId: 'test.capture_call',
+					runId: 'run-capture-42',
+					phase: 'IMPLEMENT',
+					autonomyLevel: 2,
+				}),
+			);
 
 			expect(capturedCall).not.toBeNull();
 			expect(capturedCall!.toolId).toBe('test.capture_call');
@@ -378,10 +382,12 @@ describe('Audit Enforcement (Issue #245)', () => {
 				throw new Error('Disk full');
 			};
 
-			const result = await gateway.execute(makeCall({
-				toolId: 'test.secret_args',
-				arguments: { apiKey: 'sk-secret-12345', password: 'hunter2' },
-			}));
+			const result = await gateway.execute(
+				makeCall({
+					toolId: 'test.secret_args',
+					arguments: { apiKey: 'sk-secret-12345', password: 'hunter2' },
+				}),
+			);
 
 			expect(result.success).toBe(false);
 			expect(result.blockedReason).toContain('Disk full');
@@ -442,10 +448,13 @@ describe('Audit Enforcement (Issue #245)', () => {
 				requiresAuditLog: true,
 			});
 
-			registry.register(def, async (_c: ToolCall): Promise<ToolResult> => ({
-				success: true,
-				output: 'result data',
-			}));
+			registry.register(
+				def,
+				async (_c: ToolCall): Promise<ToolResult> => ({
+					success: true,
+					output: 'result data',
+				}),
+			);
 
 			gateway.onAudit = async (_call: ToolCall): Promise<string> => {
 				return 'evt-pre-audit';

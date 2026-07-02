@@ -88,11 +88,7 @@ describe('markdown-utils', () => {
 		});
 
 		it('detects malformed block (start without end)', () => {
-			const lines = [
-				START_BLOCK('backlog'),
-				'| issue | title |',
-				'No end marker here',
-			];
+			const lines = [START_BLOCK('backlog'), '| issue | title |', 'No end marker here'];
 			const blocks = findMarkerBlocks(lines);
 			expect(blocks).toHaveLength(1);
 			const b2 = blocks[0]!;
@@ -197,7 +193,9 @@ describe('markdown-utils', () => {
 		});
 
 		it('detects by first column match', () => {
-			expect(rowExists(['| #305 | Portfolio Auto-Update |'], '| #305 | Different desc |')).toBe(true);
+			expect(rowExists(['| #305 | Portfolio Auto-Update |'], '| #305 | Different desc |')).toBe(
+				true,
+			);
 		});
 	});
 
@@ -273,11 +271,10 @@ describe('planEvidencePortfolioUpdate', () => {
 			].join('\n');
 			writeFile(workspace, 'docs/status/current-capabilities.md', capContent);
 
-			const result = planEvidencePortfolioUpdate(
-				makeInput(),
-				workspace,
-				{ enabled: true, requireMarkers: true },
-			);
+			const result = planEvidencePortfolioUpdate(makeInput(), workspace, {
+				enabled: true,
+				requireMarkers: true,
+			});
 
 			expect(result.conflicts).toHaveLength(0);
 			expect(result.changedFiles).toContain('docs/status/current-capabilities.md');
@@ -328,10 +325,7 @@ describe('planEvidencePortfolioUpdate', () => {
 			const result = planEvidencePortfolioUpdate(
 				makeInput({
 					targetFiles: ['evidence-index'],
-					evidencePaths: [
-						'docs/evidence/test-run/report.md',
-						'docs/evidence/test-run/gates.md',
-					],
+					evidencePaths: ['docs/evidence/test-run/report.md', 'docs/evidence/test-run/gates.md'],
 				}),
 				workspace,
 				{ enabled: true, requireMarkers: true },
@@ -358,11 +352,10 @@ describe('planEvidencePortfolioUpdate', () => {
 			].join('\n');
 			writeFile(workspace, 'docs/status/current-capabilities.md', capContent);
 
-			planEvidencePortfolioUpdate(
-				makeInput({ apply: true }),
-				workspace,
-				{ enabled: true, requireMarkers: true },
-			);
+			planEvidencePortfolioUpdate(makeInput({ apply: true }), workspace, {
+				enabled: true,
+				requireMarkers: true,
+			});
 
 			const updated = fs.readFileSync(
 				path.join(workspace, 'docs/status/current-capabilities.md'),
@@ -376,11 +369,10 @@ describe('planEvidencePortfolioUpdate', () => {
 
 	describe('Unit Test 5: Missing evidence paths block GREEN update', () => {
 		it('blocks update when no evidence', () => {
-			const result = planEvidencePortfolioUpdate(
-				makeInput({ evidencePaths: [] }),
-				workspace,
-				{ enabled: true, minEvidencePaths: 1 },
-			);
+			const result = planEvidencePortfolioUpdate(makeInput({ evidencePaths: [] }), workspace, {
+				enabled: true,
+				minEvidencePaths: 1,
+			});
 
 			expect(result.applied).toBe(false);
 			expect(result.conflicts.length).toBeGreaterThan(0);
@@ -427,18 +419,15 @@ describe('planEvidencePortfolioUpdate', () => {
 
 	describe('Unit Test 7: Missing markers produce warning not crash', () => {
 		it('with requireMarkers=true, missing marker produces conflict', () => {
-			const capContent = [
-				'# Capabilities',
-				'No markers at all.',
-				'| just | a | table |',
-			].join('\n');
+			const capContent = ['# Capabilities', 'No markers at all.', '| just | a | table |'].join(
+				'\n',
+			);
 			writeFile(workspace, 'docs/status/current-capabilities.md', capContent);
 
-			const result = planEvidencePortfolioUpdate(
-				makeInput(),
-				workspace,
-				{ enabled: true, requireMarkers: true },
-			);
+			const result = planEvidencePortfolioUpdate(makeInput(), workspace, {
+				enabled: true,
+				requireMarkers: true,
+			});
 
 			expect(result.conflicts.length).toBeGreaterThan(0);
 			expect(result.conflicts[0]).toContain('not found');
@@ -448,11 +437,10 @@ describe('planEvidencePortfolioUpdate', () => {
 			const capContent = '# No markers here.';
 			writeFile(workspace, 'docs/status/current-capabilities.md', capContent);
 
-			const result = planEvidencePortfolioUpdate(
-				makeInput(),
-				workspace,
-				{ enabled: true, requireMarkers: false },
-			);
+			const result = planEvidencePortfolioUpdate(makeInput(), workspace, {
+				enabled: true,
+				requireMarkers: false,
+			});
 
 			expect(result.warnings.length).toBeGreaterThan(0);
 			expect(result.skippedFiles).toContain('docs/status/current-capabilities.md');
@@ -469,11 +457,10 @@ describe('planEvidencePortfolioUpdate', () => {
 			].join('\n');
 			writeFile(workspace, 'docs/status/current-capabilities.md', capContent);
 
-			const result = planEvidencePortfolioUpdate(
-				makeInput({ status: 'RED' }),
-				workspace,
-				{ enabled: true, minimumStatus: 'GREEN' },
-			);
+			const result = planEvidencePortfolioUpdate(makeInput({ status: 'RED' }), workspace, {
+				enabled: true,
+				minimumStatus: 'GREEN',
+			});
 
 			expect(result.conflicts.length).toBeGreaterThan(0);
 			expect(result.conflicts[0]).toContain('below minimum');
@@ -522,10 +509,7 @@ describe('planEvidencePortfolioUpdate', () => {
 			const input: PortfolioUpdateInput = {
 				runId: 'fake-integration-01',
 				status: 'GREEN',
-				evidencePaths: [
-					'docs/evidence/fake-run/report.md',
-					'docs/evidence/fake-run/gates.md',
-				],
+				evidencePaths: ['docs/evidence/fake-run/report.md', 'docs/evidence/fake-run/gates.md'],
 				capabilities: ['Fake capability A', 'Fake capability B'],
 				limitations: ['Fake limitation X'],
 				completedIssues: [305],
@@ -583,11 +567,10 @@ describe('planEvidencePortfolioUpdate', () => {
 			].join('\n');
 			writeFile(workspace, 'docs/status/current-capabilities.md', capContent);
 
-			const result = planEvidencePortfolioUpdate(
-				makeInput({ apply: true }),
-				workspace,
-				{ enabled: false, requireMarkers: true },
-			);
+			const result = planEvidencePortfolioUpdate(makeInput({ apply: true }), workspace, {
+				enabled: false,
+				requireMarkers: true,
+			});
 
 			expect(result.conflicts.length).toBeGreaterThan(0);
 			expect(result.conflicts[0]).toContain('disabled');
@@ -645,8 +628,7 @@ describe('planEvidencePortfolioUpdate', () => {
 			fs.writeFileSync(tmpFile, JSON.stringify(summary), 'utf-8');
 
 			// Import directly — extractPortfolioUpdateFromRunSummary is already imported
-			const extracted =
-				extractPortfolioUpdateFromRunSummary(tmpFile);
+			const extracted = extractPortfolioUpdateFromRunSummary(tmpFile);
 
 			expect(extracted).not.toBeNull();
 			expect(extracted!.status).toBe('GREEN');
@@ -658,11 +640,10 @@ describe('planEvidencePortfolioUpdate', () => {
 
 	describe('Path traversal protection', () => {
 		it('rejects paths outside workspace root', () => {
-			const result = planEvidencePortfolioUpdate(
-				makeInput(),
-				workspace,
-				{ enabled: true, requireMarkers: true },
-			);
+			const result = planEvidencePortfolioUpdate(makeInput(), workspace, {
+				enabled: true,
+				requireMarkers: true,
+			});
 			// Should still work for valid paths — path traversal tested separately
 			expect(result).toBeDefined();
 		});

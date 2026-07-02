@@ -150,13 +150,13 @@ export class GatewayService {
 				}
 			}
 
-		// Gate 8: Egress check
-		if (this.config.enforceEgress) {
-			const egressResult = this.validateEgress(call, def);
-			if (!egressResult.ok) {
-				return blocked(BLOCK_REASONS.EGRESS_BLOCKED, egressResult.error);
+			// Gate 8: Egress check
+			if (this.config.enforceEgress) {
+				const egressResult = this.validateEgress(call, def);
+				if (!egressResult.ok) {
+					return blocked(BLOCK_REASONS.EGRESS_BLOCKED, egressResult.error);
+				}
 			}
-		}
 
 			// Gate 9: Audit enforcement (requiresAuditLog)
 			// MUST come after all other gates so sealed/default-deny remains stronger.

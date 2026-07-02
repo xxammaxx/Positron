@@ -62,11 +62,7 @@ import { FakeGitWorkspaceAdapter, RealGitWorkspaceAdapter } from '@positron/sand
 import type { GitWorkspaceAdapter } from '@positron/sandbox';
 import { TestCommandDetector, TestRunner } from '@positron/sandbox';
 import type { TestReport } from '@positron/sandbox';
-import {
-	GatewayService,
-	ToolRegistry,
-	createAuditSink,
-} from '@positron/tool-gateway';
+import { GatewayService, ToolRegistry, createAuditSink } from '@positron/tool-gateway';
 import {
 	MAX_FIX_LOOPS,
 	buildRemoteUrl,
@@ -79,7 +75,13 @@ import {
 	safeJsonParse,
 } from '@positron/shared';
 import { SecretManager } from '@positron/shared';
-import type { EventLevel, GateEvaluationContext, GateType, Phase, RunStatus } from '@positron/shared';
+import type {
+	EventLevel,
+	GateEvaluationContext,
+	GateType,
+	Phase,
+	RunStatus,
+} from '@positron/shared';
 import type {
 	OpenCodeAdapter,
 	OpenCodeRunInput,
@@ -1066,7 +1068,14 @@ async function executePhase(
 					targetPhase: 'COMMIT',
 					gateTypes: getRequiredGates('COMMIT'),
 				};
-				result = tryTransitionWithGates(current, 'COMMIT', 'Verified, commit ready', 'INFO', null, gateContext);
+				result = tryTransitionWithGates(
+					current,
+					'COMMIT',
+					'Verified, commit ready',
+					'INFO',
+					null,
+					gateContext,
+				);
 			} else {
 				result = transition(current, 'COMMIT', 'Verified, commit ready');
 			}
@@ -1120,17 +1129,17 @@ async function executePhase(
 				}
 
 				const summary = `Committed: ${commitResult.sha.slice(0, 7)}${pushResult} (${changeSummary})`;
-			if (phaseRequiresGates('PR_CREATE')) {
-				const gateContext: GateEvaluationContext = {
-					runId: current.id,
-					phase: current.phase,
-					targetPhase: 'PR_CREATE',
-					gateTypes: getRequiredGates('PR_CREATE'),
-				};
-				result = tryTransitionWithGates(current, 'PR_CREATE', summary, 'INFO', null, gateContext);
-			} else {
-				result = transition(current, 'PR_CREATE', summary, 'INFO');
-			}
+				if (phaseRequiresGates('PR_CREATE')) {
+					const gateContext: GateEvaluationContext = {
+						runId: current.id,
+						phase: current.phase,
+						targetPhase: 'PR_CREATE',
+						gateTypes: getRequiredGates('PR_CREATE'),
+					};
+					result = tryTransitionWithGates(current, 'PR_CREATE', summary, 'INFO', null, gateContext);
+				} else {
+					result = transition(current, 'PR_CREATE', summary, 'INFO');
+				}
 			} catch (err) {
 				storeEvent({
 					id: createRunId(),
@@ -1235,16 +1244,23 @@ async function executePhase(
 				}
 
 				if (phaseRequiresGates('MERGE')) {
-				const gateContext: GateEvaluationContext = {
-					runId: current.id,
-					phase: current.phase,
-					targetPhase: 'MERGE',
-					gateTypes: getRequiredGates('MERGE'),
-				};
-				result = tryTransitionWithGates(current, 'MERGE', `PR #${pr.number} created: ${pr.htmlUrl}`, 'INFO', null, gateContext);
-			} else {
-				result = transition(current, 'MERGE', `PR #${pr.number} created: ${pr.htmlUrl}`, 'INFO');
-			}
+					const gateContext: GateEvaluationContext = {
+						runId: current.id,
+						phase: current.phase,
+						targetPhase: 'MERGE',
+						gateTypes: getRequiredGates('MERGE'),
+					};
+					result = tryTransitionWithGates(
+						current,
+						'MERGE',
+						`PR #${pr.number} created: ${pr.htmlUrl}`,
+						'INFO',
+						null,
+						gateContext,
+					);
+				} else {
+					result = transition(current, 'MERGE', `PR #${pr.number} created: ${pr.htmlUrl}`, 'INFO');
+				}
 			} catch (err) {
 				storeEvent({
 					id: createRunId(),
@@ -1280,7 +1296,14 @@ async function executePhase(
 			// Branch
 			const branch = current.branch;
 			if (!branch) {
-				result = tryTransitionWithGates(current, 'DONE', 'Merge skipped (no branch)', 'INFO', null, doneGateCtx);
+				result = tryTransitionWithGates(
+					current,
+					'DONE',
+					'Merge skipped (no branch)',
+					'INFO',
+					null,
+					doneGateCtx,
+				);
 				break;
 			}
 
@@ -1299,7 +1322,14 @@ async function executePhase(
 			}
 
 			if (!pr) {
-				result = tryTransitionWithGates(current, 'DONE', 'Merge skipped (no open PR found)', 'INFO', null, doneGateCtx);
+				result = tryTransitionWithGates(
+					current,
+					'DONE',
+					'Merge skipped (no open PR found)',
+					'INFO',
+					null,
+					doneGateCtx,
+				);
 				break;
 			}
 
@@ -1573,7 +1603,14 @@ async function executePhase(
 					payload: null,
 					createdAt: new Date().toISOString(),
 				});
-				result = tryTransitionWithGates(current, 'DONE', `Merge failed: ${String(err).slice(0, 100)}`, 'WARN', null, doneGateCtx);
+				result = tryTransitionWithGates(
+					current,
+					'DONE',
+					`Merge failed: ${String(err).slice(0, 100)}`,
+					'WARN',
+					null,
+					doneGateCtx,
+				);
 			}
 			break;
 		}
@@ -1606,13 +1643,7 @@ async function executePhase(
 
 				switch (outcome.kind) {
 					case 'TRANSITION':
-						result = transition(
-							current,
-							outcome.to,
-							outcome.message,
-							'GATE',
-							outcome.payload,
-						);
+						result = transition(current, outcome.to, outcome.message, 'GATE', outcome.payload);
 						break;
 
 					case 'FAILED_BLOCKED':
@@ -2014,14 +2045,15 @@ async function runFullPipeline(
 	runCleanup(result.run)
 		.then((cleanupResult) => {
 			if (!cleanupResult.cleaned) {
-				log.warn(`Workspace cleanup: ${cleanupResult.reason ?? 'unknown'}`, { runId: result.run.id });
+				log.warn(`Workspace cleanup: ${cleanupResult.reason ?? 'unknown'}`, {
+					runId: result.run.id,
+				});
 			}
 		})
 		.catch((err) => {
-			log.error(
-				`Workspace cleanup error: ${err instanceof Error ? err.message : String(err)}`,
-				{ runId: result.run.id },
-			);
+			log.error(`Workspace cleanup error: ${err instanceof Error ? err.message : String(err)}`, {
+				runId: result.run.id,
+			});
 		});
 	return result.run;
 }

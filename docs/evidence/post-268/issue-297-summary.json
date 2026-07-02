@@ -1,65 +1,65 @@
 {
-  "issue": "297",
-  "title": "Post-268: Stabilize flaky Playwright E2E test",
-  "timestamp": "2026-06-27T09:47:00+02:00",
-  "status": {
-    "reality": "CURRENT",
-    "scope": "MULTIPLE_FLAKES",
-    "reproduction_unit": "REPRODUCED",
-    "reproduction_e2e": "NOT_REPRODUCED_LOCAL",
-    "root_cause": "IDENTIFIED",
-    "fix_plan": "GREEN_SAFE",
-    "fix": "IMPLEMENTED",
-    "stability_unit": "STABLE_CONFIRMED",
-    "stability_e2e": "IMPROVED_NOT_PROVEN",
-    "local_gates": "GREEN"
-  },
-  "changes": [
-    {
-      "file": "packages/opencode-adapter/src/deterministic-fixture-agent.ts",
-      "description": "Replaced Date.now() duration with deterministic fixture phase sum",
-      "flakes_fixed": "durationMs variance (20% flake rate → 0%)"
-    },
-    {
-      "file": "e2e/ui-workflow-trace.spec.ts",
-      "description": "Added try/finally for guaranteed browser context cleanup",
-      "flakes_fixed": "retry2 context.newPage() failure (E2E)"
-    }
-  ],
-  "tests": {
-    "total": 1571,
-    "passed": 1571,
-    "failed": 0,
-    "flake_reproduced": true,
-    "flake_fixed": true,
-    "stability_runs": 10,
-    "stability_passes": 10
-  },
-  "gates": {
-    "build": "PASS",
-    "typecheck": "PASS",
-    "test": "PASS",
-    "diff_check": "PASS",
-    "secrets": "PASS",
-    "workflows": "UNCHANGED"
-  },
-  "follow_ups": [
-    {
-      "description": "Create separate issue for durationMs flake (fixed in this run, but need tracking)",
-      "status": "PENDING"
-    },
-    {
-      "description": "Verify E2E fix in CI when next run is triggered",
-      "status": "PENDING"
-    }
-  ],
-  "not_touched": [
-    "PR #218",
-    "PR chain #230-#242",
-    "CodeRabbit configuration",
-    "CI workflows",
-    "Manual CI trigger",
-    "Force push",
-    ".env files"
-  ]
+	"issue": "297",
+	"title": "Post-268: Stabilize flaky Playwright E2E test",
+	"timestamp": "2026-06-27T09:47:00+02:00",
+	"status": {
+		"reality": "CURRENT",
+		"scope": "MULTIPLE_FLAKES",
+		"reproduction_unit": "REPRODUCED",
+		"reproduction_e2e": "NOT_REPRODUCED_LOCAL",
+		"root_cause": "IDENTIFIED",
+		"fix_plan": "GREEN_SAFE",
+		"fix": "IMPLEMENTED",
+		"stability_unit": "STABLE_CONFIRMED",
+		"stability_e2e": "IMPROVED_NOT_PROVEN",
+		"local_gates": "GREEN"
+	},
+	"changes": [
+		{
+			"file": "packages/opencode-adapter/src/deterministic-fixture-agent.ts",
+			"description": "Replaced Date.now() duration with deterministic fixture phase sum",
+			"flakes_fixed": "durationMs variance (20% flake rate → 0%)"
+		},
+		{
+			"file": "e2e/ui-workflow-trace.spec.ts",
+			"description": "Added try/finally for guaranteed browser context cleanup",
+			"flakes_fixed": "retry2 context.newPage() failure (E2E)"
+		}
+	],
+	"tests": {
+		"total": 1571,
+		"passed": 1571,
+		"failed": 0,
+		"flake_reproduced": true,
+		"flake_fixed": true,
+		"stability_runs": 10,
+		"stability_passes": 10
+	},
+	"gates": {
+		"build": "PASS",
+		"typecheck": "PASS",
+		"test": "PASS",
+		"diff_check": "PASS",
+		"secrets": "PASS",
+		"workflows": "UNCHANGED"
+	},
+	"follow_ups": [
+		{
+			"description": "Create separate issue for durationMs flake (fixed in this run, but need tracking)",
+			"status": "PENDING"
+		},
+		{
+			"description": "Verify E2E fix in CI when next run is triggered",
+			"status": "PENDING"
+		}
+	],
+	"not_touched": [
+		"PR #218",
+		"PR chain #230-#242",
+		"CodeRabbit configuration",
+		"CI workflows",
+		"Manual CI trigger",
+		"Force push",
+		".env files"
+	]
 }

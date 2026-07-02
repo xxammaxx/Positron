@@ -1,82 +1,80 @@
 {
-  "runId": "issue-305-evidency-portfolio-auto-update",
-  "timestampUtc": "2026-06-27T19:15:00Z",
-  "executionMode": "fake",
-  "issue": {
-    "number": 305,
-    "title": "Evidence Portfolio: Automate post-run capability and limitation updates",
-    "status": "OPEN",
-    "labels": ["enhancement", "architecture", "P2"]
-  },
-  "repo": {
-    "branch": "main",
-    "commitSha": "98010380cbeeb0127b558bf82a16cbbaf42d7328",
-    "status": "clean"
-  },
-  "tests": {
-    "total": 1605,
-    "passed": 1605,
-    "failed": 0,
-    "files": 73,
-    "newTests": 34
-  },
-  "implementation": {
-    "status": "IMPLEMENTED",
-    "module": "packages/shared/src/evidence-portfolio/",
-    "newFiles": 5,
-    "modifiedFiles": 4,
-    "evidenceFiles": 12
-  },
-  "gates": {
-    "gitDiffCheck": "PASS",
-    "build": "PASS",
-    "typecheck": "PASS",
-    "tests": "PASS (1605/1605)"
-  },
-  "consistency": {
-    "status": "CLEAN",
-    "realMode": false,
-    "uiChanges": false,
-    "workflowChanges": false,
-    "secretExposure": false,
-    "manualSectionsPreserved": true
-  },
-  "conclusion": {
-    "status": "GREEN",
-    "whatWorks": [
-      "Evidence-gated portfolio update planning",
-      "Automatic capability/limitation/evidence-index updates",
-      "Manual section protection via marker blocks",
-      "Deduplication and conflict detection",
-      "Feature flag for optional enablement",
-      "34 unit + integration tests passing"
-    ],
-    "whatDoesNotWork": [],
-    "whatIsUnproven": [
-      "Integration with runFullPipeline (future work)",
-      "Real run with live evidence (out of scope)"
-    ],
-    "confidence": 0.95
-  },
-  "capabilityDelta": {
-    "newCapabilities": [
-      "Automated Living Evidence Portfolio updates",
-      "Evidence-gated post-run documentation refresh",
-      "Manual section protection with marker blocks",
-      "Feature-flagged portfolio auto-update"
-    ],
-    "removedBlockers": [
-      "Manual-only portfolio maintenance (#253 was one-time)"
-    ],
-    "unchangedLimitations": [
-      "Full Real Mode not productively validated (#308)",
-      "E2E Playwright tracing flake (#304)",
-      "Biome lint backlog"
-    ],
-    "remainingRisks": [
-      "Integration with runFullPipeline not yet implemented",
-      "Real-run evidence auto-update not tested"
-    ],
-    "nextBestStep": "Draft PR → Owner review → merge → then integrate with runFullPipeline"
-  }
+	"runId": "issue-305-evidency-portfolio-auto-update",
+	"timestampUtc": "2026-06-27T19:15:00Z",
+	"executionMode": "fake",
+	"issue": {
+		"number": 305,
+		"title": "Evidence Portfolio: Automate post-run capability and limitation updates",
+		"status": "OPEN",
+		"labels": ["enhancement", "architecture", "P2"]
+	},
+	"repo": {
+		"branch": "main",
+		"commitSha": "98010380cbeeb0127b558bf82a16cbbaf42d7328",
+		"status": "clean"
+	},
+	"tests": {
+		"total": 1605,
+		"passed": 1605,
+		"failed": 0,
+		"files": 73,
+		"newTests": 34
+	},
+	"implementation": {
+		"status": "IMPLEMENTED",
+		"module": "packages/shared/src/evidence-portfolio/",
+		"newFiles": 5,
+		"modifiedFiles": 4,
+		"evidenceFiles": 12
+	},
+	"gates": {
+		"gitDiffCheck": "PASS",
+		"build": "PASS",
+		"typecheck": "PASS",
+		"tests": "PASS (1605/1605)"
+	},
+	"consistency": {
+		"status": "CLEAN",
+		"realMode": false,
+		"uiChanges": false,
+		"workflowChanges": false,
+		"secretExposure": false,
+		"manualSectionsPreserved": true
+	},
+	"conclusion": {
+		"status": "GREEN",
+		"whatWorks": [
+			"Evidence-gated portfolio update planning",
+			"Automatic capability/limitation/evidence-index updates",
+			"Manual section protection via marker blocks",
+			"Deduplication and conflict detection",
+			"Feature flag for optional enablement",
+			"34 unit + integration tests passing"
+		],
+		"whatDoesNotWork": [],
+		"whatIsUnproven": [
+			"Integration with runFullPipeline (future work)",
+			"Real run with live evidence (out of scope)"
+		],
+		"confidence": 0.95
+	},
+	"capabilityDelta": {
+		"newCapabilities": [
+			"Automated Living Evidence Portfolio updates",
+			"Evidence-gated post-run documentation refresh",
+			"Manual section protection with marker blocks",
+			"Feature-flagged portfolio auto-update"
+		],
+		"removedBlockers": ["Manual-only portfolio maintenance (#253 was one-time)"],
+		"unchangedLimitations": [
+			"Full Real Mode not productively validated (#308)",
+			"E2E Playwright tracing flake (#304)",
+			"Biome lint backlog"
+		],
+		"remainingRisks": [
+			"Integration with runFullPipeline not yet implemented",
+			"Real-run evidence auto-update not tested"
+		],
+		"nextBestStep": "Draft PR → Owner review → merge → then integrate with runFullPipeline"
+	}
 }

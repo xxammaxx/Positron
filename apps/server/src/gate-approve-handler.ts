@@ -54,9 +54,7 @@ export function handleGateApprove(
 	// Strip gate boilerplate to extract meaningful action context.
 	// Patterns like "Human approval required before <PHASE>: <rest>"
 	// are trimmed to just "<rest>" for policy evaluation.
-	const strippedContext = lastErr
-		.replace(/^(Human|Gate)\s+.*?:\s*/i, '')
-		.trim();
+	const strippedContext = lastErr.replace(/^(Human|Gate)\s+.*?:\s*/i, '').trim();
 
 	// Build a descriptive action that Stop/Ask policy patterns can match.
 	// Pipeline-specific actions:

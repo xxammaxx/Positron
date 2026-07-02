@@ -1,88 +1,84 @@
 {
-  "run": {
-    "issue": 322,
-    "branch": "feat/issue-322-onaudit-server-wiring",
-    "commit": "8dd33364edae763d79a6a788fe2788e05a1a4ee8",
-    "pr": "https://github.com/xxammaxx/Positron/pull/328",
-    "pr_number": 328,
-    "timestamp": "2026-06-29T11:15:00Z",
-    "duration_approx": "14 minutes"
-  },
-  "status": {
-    "overall": "GREEN",
-    "confidence": 0.95,
-    "implementation": "IMPLEMENTED",
-    "tests": "GREEN",
-    "security": "CLEAN",
-    "scope": "CLEAN_ISSUE_322_ONLY",
-    "local_gates": "GREEN",
-    "docs": "DEFERRED_POST_MERGE"
-  },
-  "tests": {
-    "new": 22,
-    "total": 1858,
-    "passed": 1858,
-    "failed": 0,
-    "existing_245_tests": "ALL_GREEN"
-  },
-  "evidence": {
-    "directory": "docs/evidence/issue-322/",
-    "files": [
-      "reality-refresh.md",
-      "issue-intake.md",
-      "audit-enforcement-discovery.md",
-      "server-worker-runtime-discovery.md",
-      "design-plan.md",
-      "implementation-report.md",
-      "test-report.md",
-      "security-audit.md",
-      "scope-audit.md",
-      "gates.md",
-      "docs-update-report.md",
-      "summary.json",
-      "report.md",
-      "reviewer-report.md",
-      "next-step-recommendation.md"
-    ]
-  },
-  "changed_files": {
-    "source": [
-      "packages/tool-gateway/src/audit-sink.ts",
-      "packages/tool-gateway/src/index.ts",
-      "apps/server/src/index.ts",
-      "apps/worker/src/index.ts",
-      "apps/worker/src/pipeline-runner.ts"
-    ],
-    "config": [
-      "apps/server/package.json",
-      "apps/server/tsconfig.json",
-      "apps/worker/package.json",
-      "apps/worker/tsconfig.json"
-    ],
-    "test": [
-      "packages/tool-gateway/src/__tests__/audit-sink.test.ts"
-    ],
-    "evidence": [
-      "docs/evidence/issue-322/*"
-    ]
-  },
-  "non_scope_respected": [
-    "No Full Real Mode",
-    "No Supervised Real Run",
-    "No Phase D probe",
-    "No production repo probe",
-    "No GitHub writes through pipeline",
-    "No workflow changes",
-    "No manual CI",
-    "No CodeRabbit review",
-    "No secrets or .env contents",
-    "No PR #313 action",
-    "No #321/#323/#324/#325/#326 implementation"
-  ],
-  "risks": [
-    "GatewayService is wired but no tools are routed through it yet — this is infrastructure preparation",
-    "Worker PipelineDeps.gateway is optional — worker still functions without it",
-    "Post-merge documentation update needed for known-limitations.md"
-  ],
-  "next_step": "Owner review → Merge PR #328 → Re-assess #308 Phase D readiness"
+	"run": {
+		"issue": 322,
+		"branch": "feat/issue-322-onaudit-server-wiring",
+		"commit": "8dd33364edae763d79a6a788fe2788e05a1a4ee8",
+		"pr": "https://github.com/xxammaxx/Positron/pull/328",
+		"pr_number": 328,
+		"timestamp": "2026-06-29T11:15:00Z",
+		"duration_approx": "14 minutes"
+	},
+	"status": {
+		"overall": "GREEN",
+		"confidence": 0.95,
+		"implementation": "IMPLEMENTED",
+		"tests": "GREEN",
+		"security": "CLEAN",
+		"scope": "CLEAN_ISSUE_322_ONLY",
+		"local_gates": "GREEN",
+		"docs": "DEFERRED_POST_MERGE"
+	},
+	"tests": {
+		"new": 22,
+		"total": 1858,
+		"passed": 1858,
+		"failed": 0,
+		"existing_245_tests": "ALL_GREEN"
+	},
+	"evidence": {
+		"directory": "docs/evidence/issue-322/",
+		"files": [
+			"reality-refresh.md",
+			"issue-intake.md",
+			"audit-enforcement-discovery.md",
+			"server-worker-runtime-discovery.md",
+			"design-plan.md",
+			"implementation-report.md",
+			"test-report.md",
+			"security-audit.md",
+			"scope-audit.md",
+			"gates.md",
+			"docs-update-report.md",
+			"summary.json",
+			"report.md",
+			"reviewer-report.md",
+			"next-step-recommendation.md"
+		]
+	},
+	"changed_files": {
+		"source": [
+			"packages/tool-gateway/src/audit-sink.ts",
+			"packages/tool-gateway/src/index.ts",
+			"apps/server/src/index.ts",
+			"apps/worker/src/index.ts",
+			"apps/worker/src/pipeline-runner.ts"
+		],
+		"config": [
+			"apps/server/package.json",
+			"apps/server/tsconfig.json",
+			"apps/worker/package.json",
+			"apps/worker/tsconfig.json"
+		],
+		"test": ["packages/tool-gateway/src/__tests__/audit-sink.test.ts"],
+		"evidence": ["docs/evidence/issue-322/*"]
+	},
+	"non_scope_respected": [
+		"No Full Real Mode",
+		"No Supervised Real Run",
+		"No Phase D probe",
+		"No production repo probe",
+		"No GitHub writes through pipeline",
+		"No workflow changes",
+		"No manual CI",
+		"No CodeRabbit review",
+		"No secrets or .env contents",
+		"No PR #313 action",
+		"No #321/#323/#324/#325/#326 implementation"
+	],
+	"risks": [
+		"GatewayService is wired but no tools are routed through it yet — this is infrastructure preparation",
+		"Worker PipelineDeps.gateway is optional — worker still functions without it",
+		"Post-merge documentation update needed for known-limitations.md"
+	],
+	"next_step": "Owner review → Merge PR #328 → Re-assess #308 Phase D readiness"
 }

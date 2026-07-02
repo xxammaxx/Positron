@@ -1,83 +1,81 @@
 {
-  "issue": 306,
-  "title": "[SAFE] Backlog Hygiene: Define milestones, normalize labels, and add issue type taxonomy",
-  "branch": "main",
-  "head_before": "82059c13d58d96e1e2b066143b2f178c4a601447",
-  "timestamp": "2026-06-27T14:14:41+02:00",
-  "status": {
-    "reality_refresh": "CURRENT",
-    "milestone": "CREATED_OR_EXISTS",
-    "label_audit": "COMPLETE",
-    "label_creation": "CREATED",
-    "template": "CREATED",
-    "readme_badge": "NOT_NEEDED",
-    "deprecated_labels": "DOCUMENTED",
-    "consistency": "CLEAN",
-    "local_gates": "GREEN"
-  },
-  "milestones_created": [
-    {"number": 1, "title": "v0.3.0 Current", "open_issues": 0, "closed_issues": 0},
-    {"number": 2, "title": "Backlog", "open_issues": 0, "closed_issues": 0},
-    {"number": 3, "title": "v0.4.0 Next", "open_issues": 0, "closed_issues": 0}
-  ],
-  "labels_created": [
-    "type:bug",
-    "type:feature",
-    "type:docs",
-    "type:infra",
-    "type:research",
-    "type:validation",
-    "type:architecture",
-    "type:technical-debt"
-  ],
-  "labels_before": 71,
-  "labels_after": 79,
-  "labels_deleted": 0,
-  "templates_created": [
-    "documentation_update.md",
-    "research_validation.md",
-    "architecture_decision.md",
-    "technical_debt.md"
-  ],
-  "files_created": [
-    "docs/evidence/issue-306/reality-refresh.md",
-    "docs/evidence/issue-306/milestone-audit.md",
-    "docs/evidence/issue-306/label-audit.md",
-    "docs/evidence/issue-306/label-creation-report.md",
-    "docs/evidence/issue-306/template-report.md",
-    "docs/evidence/issue-306/readme-badge-audit.md",
-    "docs/evidence/issue-306/deprecated-label-decision-package.md",
-    "docs/evidence/issue-306/consistency-audit.md",
-    "docs/evidence/issue-306/gates.md",
-    "docs/evidence/issue-306/summary.json",
-    "docs/governance/LABELS.md",
-    ".github/ISSUE_TEMPLATE/documentation_update.md",
-    ".github/ISSUE_TEMPLATE/research_validation.md",
-    ".github/ISSUE_TEMPLATE/architecture_decision.md",
-    ".github/ISSUE_TEMPLATE/technical_debt.md"
-  ],
-  "files_modified": [
-    "CONTRIBUTING.md"
-  ],
-  "tests": {
-    "files": 64,
-    "passed": 1375,
-    "failed": 0,
-    "duration_seconds": 22.21
-  },
-  "constraints_enforced": {
-    "no_code_changes": true,
-    "no_workflow_changes": true,
-    "no_manual_ci": true,
-    "no_merge": true,
-    "no_coderabbit_reactivation": true,
-    "no_secrets": true,
-    "no_pr_218_touch": true,
-    "no_pr_chain_230_242_touch": true,
-    "no_label_deletion": true,
-    "no_bulk_relabeling": true,
-    "no_milestone_assignment_to_existing_issues": true
-  },
-  "overall_status": "GREEN",
-  "confidence": 0.98
+	"issue": 306,
+	"title": "[SAFE] Backlog Hygiene: Define milestones, normalize labels, and add issue type taxonomy",
+	"branch": "main",
+	"head_before": "82059c13d58d96e1e2b066143b2f178c4a601447",
+	"timestamp": "2026-06-27T14:14:41+02:00",
+	"status": {
+		"reality_refresh": "CURRENT",
+		"milestone": "CREATED_OR_EXISTS",
+		"label_audit": "COMPLETE",
+		"label_creation": "CREATED",
+		"template": "CREATED",
+		"readme_badge": "NOT_NEEDED",
+		"deprecated_labels": "DOCUMENTED",
+		"consistency": "CLEAN",
+		"local_gates": "GREEN"
+	},
+	"milestones_created": [
+		{ "number": 1, "title": "v0.3.0 Current", "open_issues": 0, "closed_issues": 0 },
+		{ "number": 2, "title": "Backlog", "open_issues": 0, "closed_issues": 0 },
+		{ "number": 3, "title": "v0.4.0 Next", "open_issues": 0, "closed_issues": 0 }
+	],
+	"labels_created": [
+		"type:bug",
+		"type:feature",
+		"type:docs",
+		"type:infra",
+		"type:research",
+		"type:validation",
+		"type:architecture",
+		"type:technical-debt"
+	],
+	"labels_before": 71,
+	"labels_after": 79,
+	"labels_deleted": 0,
+	"templates_created": [
+		"documentation_update.md",
+		"research_validation.md",
+		"architecture_decision.md",
+		"technical_debt.md"
+	],
+	"files_created": [
+		"docs/evidence/issue-306/reality-refresh.md",
+		"docs/evidence/issue-306/milestone-audit.md",
+		"docs/evidence/issue-306/label-audit.md",
+		"docs/evidence/issue-306/label-creation-report.md",
+		"docs/evidence/issue-306/template-report.md",
+		"docs/evidence/issue-306/readme-badge-audit.md",
+		"docs/evidence/issue-306/deprecated-label-decision-package.md",
+		"docs/evidence/issue-306/consistency-audit.md",
+		"docs/evidence/issue-306/gates.md",
+		"docs/evidence/issue-306/summary.json",
+		"docs/governance/LABELS.md",
+		".github/ISSUE_TEMPLATE/documentation_update.md",
+		".github/ISSUE_TEMPLATE/research_validation.md",
+		".github/ISSUE_TEMPLATE/architecture_decision.md",
+		".github/ISSUE_TEMPLATE/technical_debt.md"
+	],
+	"files_modified": ["CONTRIBUTING.md"],
+	"tests": {
+		"files": 64,
+		"passed": 1375,
+		"failed": 0,
+		"duration_seconds": 22.21
+	},
+	"constraints_enforced": {
+		"no_code_changes": true,
+		"no_workflow_changes": true,
+		"no_manual_ci": true,
+		"no_merge": true,
+		"no_coderabbit_reactivation": true,
+		"no_secrets": true,
+		"no_pr_218_touch": true,
+		"no_pr_chain_230_242_touch": true,
+		"no_label_deletion": true,
+		"no_bulk_relabeling": true,
+		"no_milestone_assignment_to_existing_issues": true
+	},
+	"overall_status": "GREEN",
+	"confidence": 0.98
 }

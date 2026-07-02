@@ -1,29 +1,29 @@
 {
-  "issue": 244,
-  "title": "Runtime Workspace Cleanup for GitWorkspaceAdapter",
-  "status": "IMPLEMENTED",
-  "branch": "feat/issue-244-runtime-workspace-cleanup",
-  "commit": "5cc1dda",
-  "pr": "https://github.com/xxammaxx/Positron/pull/314",
-  "timestamp": "2026-06-28T11:06:00+02:00",
-  "agent": "issue-orchestrator",
-  "artifacts": {
-    "reality_refresh": "CURRENT",
-    "pr_255_salvage": "USE_AS_REFERENCE_ONLY",
-    "discovery": "PARTIAL",
-    "design": "GREEN_SAFE",
-    "implementation": "IMPLEMENTED",
-    "tests": "GREEN",
-    "security": "CLEAN",
-    "scope": "CLEAN_ISSUE_244_ONLY",
-    "local_gates": "GREEN",
-    "docs": "NOT_NEEDED"
-  },
-  "files_changed": 11,
-  "tests": {
-    "targeted": "28/28 PASS",
-    "full_suite": "1534/1534 PASS",
-    "regressions": 0
-  },
-  "next_recommended": 245
+	"issue": 244,
+	"title": "Runtime Workspace Cleanup for GitWorkspaceAdapter",
+	"status": "IMPLEMENTED",
+	"branch": "feat/issue-244-runtime-workspace-cleanup",
+	"commit": "5cc1dda",
+	"pr": "https://github.com/xxammaxx/Positron/pull/314",
+	"timestamp": "2026-06-28T11:06:00+02:00",
+	"agent": "issue-orchestrator",
+	"artifacts": {
+		"reality_refresh": "CURRENT",
+		"pr_255_salvage": "USE_AS_REFERENCE_ONLY",
+		"discovery": "PARTIAL",
+		"design": "GREEN_SAFE",
+		"implementation": "IMPLEMENTED",
+		"tests": "GREEN",
+		"security": "CLEAN",
+		"scope": "CLEAN_ISSUE_244_ONLY",
+		"local_gates": "GREEN",
+		"docs": "NOT_NEEDED"
+	},
+	"files_changed": 11,
+	"tests": {
+		"targeted": "28/28 PASS",
+		"full_suite": "1534/1534 PASS",
+		"regressions": 0
+	},
+	"next_recommended": 245
 }

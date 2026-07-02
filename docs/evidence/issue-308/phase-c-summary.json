@@ -1,64 +1,64 @@
 {
-  "phase": "C",
-  "title": "Issue #308 Phase C Readiness Recheck",
-  "generated": "2026-06-29T10:00:00+02:00",
-  "mode": "Readiness Recheck — NO Real Mode",
-  "issue": {
-    "number": 308,
-    "state": "OPEN",
-    "pr": {
-      "number": 318,
-      "state": "MERGED",
-      "mergeSha": "9461fa12f9295a14b0a3221836a4a8c383b46125"
-    }
-  },
-  "classifications": {
-    "reality_status": "CURRENT",
-    "evidence_intake_status": "COMPLETE",
-    "onaudit_server_wiring": "MISSING",
-    "pre_run_pre_push_wiring": "NOT_APPLICABLE_WITH_REASON",
-    "merge_done_transition": "ACCEPTABLE_FOR_NO_MERGE_PROBE",
-    "real_mode_kill_switch": "READY",
-    "external_tool_sandbox": "READY_FOR_CONTROLLED_PROBE",
-    "rollback_cleanup": "READY_WITH_LIMITATIONS",
-    "controlled_probe_scope": "SAFE_PROPOSAL_READY",
-    "readiness_decision": "READY_FOR_CONTROLLED_REAL_PROBE_WITH_OWNER_APPROVAL",
-    "followup_issues": "NOT_NEEDED",
-    "local_gates": "GREEN"
-  },
-  "gates": {
-    "diff_check": { "exit": 0, "result": "PASS" },
-    "build": { "exit": 0, "result": "PASS" },
-    "typecheck": { "exit": 0, "result": "PASS" },
-    "tests": { "exit": 0, "result": "PASS", "details": "1836/1836" }
-  },
-  "safety": {
-    "real_mode_executed": false,
-    "env_secrets_read": false,
-    "external_tools_executed": false,
-    "github_writes_performed": false,
-    "merge_performed": false,
-    "workflows_triggered": false,
-    "coderabbit_used": false
-  },
-  "confidence": 0.90,
-  "decision": "READY_FOR_CONTROLLED_REAL_PROBE_WITH_OWNER_APPROVAL",
-  "evidence_files": [
-    "phase-c-reality-refresh.md",
-    "phase-c-phase-b-evidence-intake.md",
-    "phase-c-onaudit-server-wiring-audit.md",
-    "phase-c-pre-run-pre-push-audit.md",
-    "phase-c-merge-done-transition-audit.md",
-    "phase-c-real-mode-kill-switch-audit.md",
-    "phase-c-external-tool-sandbox-audit.md",
-    "phase-c-rollback-cleanup-audit.md",
-    "phase-c-controlled-probe-scope-proposal.md",
-    "phase-c-readiness-decision.md",
-    "phase-c-followup-issues.md",
-    "phase-c-gates.md",
-    "phase-c-next-prompt.md",
-    "phase-c-summary.json",
-    "phase-c-report.md",
-    "phase-c-reviewer-report.md"
-  ]
+	"phase": "C",
+	"title": "Issue #308 Phase C Readiness Recheck",
+	"generated": "2026-06-29T10:00:00+02:00",
+	"mode": "Readiness Recheck — NO Real Mode",
+	"issue": {
+		"number": 308,
+		"state": "OPEN",
+		"pr": {
+			"number": 318,
+			"state": "MERGED",
+			"mergeSha": "9461fa12f9295a14b0a3221836a4a8c383b46125"
+		}
+	},
+	"classifications": {
+		"reality_status": "CURRENT",
+		"evidence_intake_status": "COMPLETE",
+		"onaudit_server_wiring": "MISSING",
+		"pre_run_pre_push_wiring": "NOT_APPLICABLE_WITH_REASON",
+		"merge_done_transition": "ACCEPTABLE_FOR_NO_MERGE_PROBE",
+		"real_mode_kill_switch": "READY",
+		"external_tool_sandbox": "READY_FOR_CONTROLLED_PROBE",
+		"rollback_cleanup": "READY_WITH_LIMITATIONS",
+		"controlled_probe_scope": "SAFE_PROPOSAL_READY",
+		"readiness_decision": "READY_FOR_CONTROLLED_REAL_PROBE_WITH_OWNER_APPROVAL",
+		"followup_issues": "NOT_NEEDED",
+		"local_gates": "GREEN"
+	},
+	"gates": {
+		"diff_check": { "exit": 0, "result": "PASS" },
+		"build": { "exit": 0, "result": "PASS" },
+		"typecheck": { "exit": 0, "result": "PASS" },
+		"tests": { "exit": 0, "result": "PASS", "details": "1836/1836" }
+	},
+	"safety": {
+		"real_mode_executed": false,
+		"env_secrets_read": false,
+		"external_tools_executed": false,
+		"github_writes_performed": false,
+		"merge_performed": false,
+		"workflows_triggered": false,
+		"coderabbit_used": false
+	},
+	"confidence": 0.9,
+	"decision": "READY_FOR_CONTROLLED_REAL_PROBE_WITH_OWNER_APPROVAL",
+	"evidence_files": [
+		"phase-c-reality-refresh.md",
+		"phase-c-phase-b-evidence-intake.md",
+		"phase-c-onaudit-server-wiring-audit.md",
+		"phase-c-pre-run-pre-push-audit.md",
+		"phase-c-merge-done-transition-audit.md",
+		"phase-c-real-mode-kill-switch-audit.md",
+		"phase-c-external-tool-sandbox-audit.md",
+		"phase-c-rollback-cleanup-audit.md",
+		"phase-c-controlled-probe-scope-proposal.md",
+		"phase-c-readiness-decision.md",
+		"phase-c-followup-issues.md",
+		"phase-c-gates.md",
+		"phase-c-next-prompt.md",
+		"phase-c-summary.json",
+		"phase-c-report.md",
+		"phase-c-reviewer-report.md"
+	]
 }

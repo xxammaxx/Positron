@@ -488,7 +488,14 @@ describe('GATE_APPROVE Integration — structural integrity', () => {
 	it('decision is always a valid StopAskDecision', async () => {
 		const { gateApproveAction } = await import('../gate-approve.js');
 
-		const validDecisions = ['ALLOW', 'DENY', 'ASK_HUMAN', 'REQUIRE_DRY_RUN', 'REQUIRE_BACKUP', 'REQUIRE_REVIEW'];
+		const validDecisions = [
+			'ALLOW',
+			'DENY',
+			'ASK_HUMAN',
+			'REQUIRE_DRY_RUN',
+			'REQUIRE_BACKUP',
+			'REQUIRE_REVIEW',
+		];
 
 		const actions = [
 			'read file',

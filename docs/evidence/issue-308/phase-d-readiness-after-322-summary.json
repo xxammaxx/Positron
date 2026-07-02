@@ -1,110 +1,114 @@
 {
-  "meta": {
-    "generated": "2026-06-29T14:06:00+02:00",
-    "session": "Issue #308 Phase D Readiness Recheck After #322",
-    "approval": "APPROVE ISSUE 308 PHASE D READINESS RECHECK AFTER 322 ONLY",
-    "mode": "READ-ONLY RECHECK — NO PROBE, NO REAL MODE, NO GITHUB WRITES",
-    "confidence": 0.95,
-    "status": "COMPLETE"
-  },
-  "git": {
-    "branch": "docs/issue-308-phase-d-readiness-after-322",
-    "head": "2198bc99e44b3742bc8c2dfd5491c815ac306eb6",
-    "remote_main": "2198bc99e44b3742bc8c2dfd5491c815ac306eb6",
-    "sync": "SYNCED",
-    "working_tree": "CLEAN"
-  },
-  "classifications": {
-    "ISSUE_308_PHASE_D_RECHECK_REALITY_STATUS": "CURRENT",
-    "ISSUE_322_POST_MERGE_STATUS": "VERIFIED",
-    "ISSUE_322_CLOSURE_RECOMMENDATION": "CLOSE_WITH_OWNER_APPROVAL",
-    "PHASE_D_LIMITED_SCOPE_STATUS": "PROPOSED_SAFE_PACKAGE",
-    "ISSUE_321_PHASE_D_IMPACT": "NOT_BLOCKING_IF_NO_MERGE",
-    "ISSUE_323_PHASE_D_IMPACT": "NOT_BLOCKING_IF_NO_PUSH",
-    "ISSUE_324_PHASE_D_IMPACT": "NOT_BLOCKING_SINGLE_PROCESS",
-    "ISSUE_325_PHASE_D_IMPACT": "NOT_BLOCKING_IF_UNTOUCHED",
-    "ISSUE_326_PHASE_D_IMPACT": "NON_GATE_OWNER_ACTION",
-    "PR_313_DECISION": "CLOSE_AS_OBSOLETE_WITH_OWNER_APPROVAL",
-    "PHASE_D_KILL_SWITCH_STATUS": "SAFE_DEFAULTS",
-    "ISSUE_308_PHASE_D_RECHECK_LOCAL_GATES": "YELLOW_PREEXISTING",
-    "ISSUE_308_PHASE_D_READINESS_AFTER_322": "READY_FOR_LIMITED_PHASE_D_APPROVAL_PACKAGE"
-  },
-  "tests": {
-    "total": 1858,
-    "passed": 1858,
-    "failed": 0,
-    "build": "YELLOW (5 pre-existing errors, not from #322)",
-    "typecheck": "PASS (dry-run up to date)",
-    "diff_check": "PASS"
-  },
-  "issues": {
-    "308": { "state": "OPEN", "status": "Phase D recheck complete" },
-    "322": { "state": "OPEN", "recommendation": "CLOSE" },
-    "321": { "state": "OPEN", "impact": "NOT_BLOCKING_IF_NO_MERGE" },
-    "323": { "state": "OPEN", "impact": "NOT_BLOCKING_IF_NO_PUSH" },
-    "324": { "state": "OPEN", "impact": "NOT_BLOCKING_SINGLE_PROCESS" },
-    "325": { "state": "OPEN", "impact": "NOT_BLOCKING_IF_UNTOUCHED" },
-    "326": { "state": "OPEN", "impact": "NON_GATE_OWNER_ACTION" }
-  },
-  "prs": {
-    "328": { "state": "MERGED", "merge_commit": "d6534ae", "branch": "feat/issue-322-onaudit-server-wiring" },
-    "313": { "state": "OPEN", "draft": true, "recommendation": "CLOSE_AS_OBSOLETE" }
-  },
-  "safety": {
-    "real_mode": "BLOCKED",
-    "push": "BLOCKED",
-    "merge": "BLOCKED",
-    "human_approval": "REQUIRED",
-    "bypass_vectors": "NONE",
-    "kill_switch_env": "SAFE_DEFAULTS",
-    "secrets_exposed": "NONE",
-    "env_contents": "NONE",
-    "code_rabbit": "NON_GATE_EXTERNAL_NOISE"
-  },
-  "scope_compliance": {
-    "no_phase_d_probe": true,
-    "no_full_real_mode": true,
-    "no_supervised_real_run": true,
-    "no_real_mode_env": true,
-    "no_real_external_tools": true,
-    "no_github_writes_through_pipeline": true,
-    "no_production_repo_probe": true,
-    "no_workflow_changes": true,
-    "no_manual_ci": true,
-    "no_code_rabbit_reactivation": true,
-    "no_merge": true,
-    "no_force_push": true,
-    "no_branch_deletion": true,
-    "no_secrets": true,
-    "no_env_contents": true,
-    "no_pr_313_action": true,
-    "no_issue_closure_without_approval": true,
-    "no_321_323_324_325_326_implementation": true
-  },
-  "evidence_files": [
-    "phase-d-readiness-after-322-reality-refresh.md",
-    "phase-d-readiness-after-322-verification.md",
-    "phase-d-readiness-after-322-closure-decision.md",
-    "phase-d-limited-scope-proposal.md",
-    "phase-d-issue-321-assessment.md",
-    "phase-d-issue-323-assessment.md",
-    "phase-d-issue-324-assessment.md",
-    "phase-d-issue-325-assessment.md",
-    "phase-d-issue-326-assessment.md",
-    "phase-d-pr-313-decision.md",
-    "phase-d-kill-switch-env-audit.md",
-    "phase-d-readiness-after-322-gates.md",
-    "phase-d-readiness-after-322-decision.md",
-    "phase-d-limited-approval-package-draft.md",
-    "phase-d-followup-action-plan.md",
-    "phase-d-readiness-after-322-summary.json",
-    "phase-d-readiness-after-322-report.md",
-    "phase-d-readiness-after-322-reviewer-report.md"
-  ],
-  "owner_approvals_needed": [
-    "APPROVE CLOSE ISSUE 322 AS COMPLETED",
-    "APPROVE CLOSE OBSOLETE PR 313",
-    "APPROVE ISSUE 308 PHASE D APPROVAL PACKAGE ONLY"
-  ],
-  "next_build_candidate": "Phase D Approval Package Finalization"
+	"meta": {
+		"generated": "2026-06-29T14:06:00+02:00",
+		"session": "Issue #308 Phase D Readiness Recheck After #322",
+		"approval": "APPROVE ISSUE 308 PHASE D READINESS RECHECK AFTER 322 ONLY",
+		"mode": "READ-ONLY RECHECK — NO PROBE, NO REAL MODE, NO GITHUB WRITES",
+		"confidence": 0.95,
+		"status": "COMPLETE"
+	},
+	"git": {
+		"branch": "docs/issue-308-phase-d-readiness-after-322",
+		"head": "2198bc99e44b3742bc8c2dfd5491c815ac306eb6",
+		"remote_main": "2198bc99e44b3742bc8c2dfd5491c815ac306eb6",
+		"sync": "SYNCED",
+		"working_tree": "CLEAN"
+	},
+	"classifications": {
+		"ISSUE_308_PHASE_D_RECHECK_REALITY_STATUS": "CURRENT",
+		"ISSUE_322_POST_MERGE_STATUS": "VERIFIED",
+		"ISSUE_322_CLOSURE_RECOMMENDATION": "CLOSE_WITH_OWNER_APPROVAL",
+		"PHASE_D_LIMITED_SCOPE_STATUS": "PROPOSED_SAFE_PACKAGE",
+		"ISSUE_321_PHASE_D_IMPACT": "NOT_BLOCKING_IF_NO_MERGE",
+		"ISSUE_323_PHASE_D_IMPACT": "NOT_BLOCKING_IF_NO_PUSH",
+		"ISSUE_324_PHASE_D_IMPACT": "NOT_BLOCKING_SINGLE_PROCESS",
+		"ISSUE_325_PHASE_D_IMPACT": "NOT_BLOCKING_IF_UNTOUCHED",
+		"ISSUE_326_PHASE_D_IMPACT": "NON_GATE_OWNER_ACTION",
+		"PR_313_DECISION": "CLOSE_AS_OBSOLETE_WITH_OWNER_APPROVAL",
+		"PHASE_D_KILL_SWITCH_STATUS": "SAFE_DEFAULTS",
+		"ISSUE_308_PHASE_D_RECHECK_LOCAL_GATES": "YELLOW_PREEXISTING",
+		"ISSUE_308_PHASE_D_READINESS_AFTER_322": "READY_FOR_LIMITED_PHASE_D_APPROVAL_PACKAGE"
+	},
+	"tests": {
+		"total": 1858,
+		"passed": 1858,
+		"failed": 0,
+		"build": "YELLOW (5 pre-existing errors, not from #322)",
+		"typecheck": "PASS (dry-run up to date)",
+		"diff_check": "PASS"
+	},
+	"issues": {
+		"308": { "state": "OPEN", "status": "Phase D recheck complete" },
+		"322": { "state": "OPEN", "recommendation": "CLOSE" },
+		"321": { "state": "OPEN", "impact": "NOT_BLOCKING_IF_NO_MERGE" },
+		"323": { "state": "OPEN", "impact": "NOT_BLOCKING_IF_NO_PUSH" },
+		"324": { "state": "OPEN", "impact": "NOT_BLOCKING_SINGLE_PROCESS" },
+		"325": { "state": "OPEN", "impact": "NOT_BLOCKING_IF_UNTOUCHED" },
+		"326": { "state": "OPEN", "impact": "NON_GATE_OWNER_ACTION" }
+	},
+	"prs": {
+		"328": {
+			"state": "MERGED",
+			"merge_commit": "d6534ae",
+			"branch": "feat/issue-322-onaudit-server-wiring"
+		},
+		"313": { "state": "OPEN", "draft": true, "recommendation": "CLOSE_AS_OBSOLETE" }
+	},
+	"safety": {
+		"real_mode": "BLOCKED",
+		"push": "BLOCKED",
+		"merge": "BLOCKED",
+		"human_approval": "REQUIRED",
+		"bypass_vectors": "NONE",
+		"kill_switch_env": "SAFE_DEFAULTS",
+		"secrets_exposed": "NONE",
+		"env_contents": "NONE",
+		"code_rabbit": "NON_GATE_EXTERNAL_NOISE"
+	},
+	"scope_compliance": {
+		"no_phase_d_probe": true,
+		"no_full_real_mode": true,
+		"no_supervised_real_run": true,
+		"no_real_mode_env": true,
+		"no_real_external_tools": true,
+		"no_github_writes_through_pipeline": true,
+		"no_production_repo_probe": true,
+		"no_workflow_changes": true,
+		"no_manual_ci": true,
+		"no_code_rabbit_reactivation": true,
+		"no_merge": true,
+		"no_force_push": true,
+		"no_branch_deletion": true,
+		"no_secrets": true,
+		"no_env_contents": true,
+		"no_pr_313_action": true,
+		"no_issue_closure_without_approval": true,
+		"no_321_323_324_325_326_implementation": true
+	},
+	"evidence_files": [
+		"phase-d-readiness-after-322-reality-refresh.md",
+		"phase-d-readiness-after-322-verification.md",
+		"phase-d-readiness-after-322-closure-decision.md",
+		"phase-d-limited-scope-proposal.md",
+		"phase-d-issue-321-assessment.md",
+		"phase-d-issue-323-assessment.md",
+		"phase-d-issue-324-assessment.md",
+		"phase-d-issue-325-assessment.md",
+		"phase-d-issue-326-assessment.md",
+		"phase-d-pr-313-decision.md",
+		"phase-d-kill-switch-env-audit.md",
+		"phase-d-readiness-after-322-gates.md",
+		"phase-d-readiness-after-322-decision.md",
+		"phase-d-limited-approval-package-draft.md",
+		"phase-d-followup-action-plan.md",
+		"phase-d-readiness-after-322-summary.json",
+		"phase-d-readiness-after-322-report.md",
+		"phase-d-readiness-after-322-reviewer-report.md"
+	],
+	"owner_approvals_needed": [
+		"APPROVE CLOSE ISSUE 322 AS COMPLETED",
+		"APPROVE CLOSE OBSOLETE PR 313",
+		"APPROVE ISSUE 308 PHASE D APPROVAL PACKAGE ONLY"
+	],
+	"next_build_candidate": "Phase D Approval Package Finalization"
 }

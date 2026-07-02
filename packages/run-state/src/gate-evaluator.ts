@@ -121,9 +121,7 @@ export function evaluateGates(
 		summaryParts.push(`All ${results.length} gate(s) passed`);
 	} else {
 		const failList = blockingFailures.map((f) => f.gateType).join(', ');
-		summaryParts.push(
-			`${blockingFailures.length}/${results.length} gate(s) failed: ${failList}`,
-		);
+		summaryParts.push(`${blockingFailures.length}/${results.length} gate(s) failed: ${failList}`);
 	}
 
 	return {
@@ -253,14 +251,10 @@ export function tryTransitionWithGates(
 
 	if (!gateResult.allPassed) {
 		// ── Security-Invariante: Security-Fail kann nicht durch Human-Approval überschrieben werden ──
-		const securityFailed = gateResult.blockingFailures.some(
-			(f) => f.gateType === 'security',
-		);
+		const securityFailed = gateResult.blockingFailures.some((f) => f.gateType === 'security');
 		const humanApprovalPassed =
 			hasGateEvaluator('human_approval') &&
-			gateResult.results.some(
-				(r) => r.gateType === 'human_approval' && r.passed,
-			);
+			gateResult.results.some((r) => r.gateType === 'human_approval' && r.passed);
 
 		if (securityFailed) {
 			// Security-Fail → immer blockiert, egal was human_approval sagt

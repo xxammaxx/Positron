@@ -45,11 +45,7 @@ const CAPABILITIES_FILE = 'docs/status/current-capabilities.md';
 const LIMITATIONS_FILE = 'docs/status/known-limitations.md';
 const EVIDENCE_INDEX_FILE = 'docs/status/evidence-index.md';
 
-const ALL_TARGETS: PortfolioFileTarget[] = [
-	'capabilities',
-	'limitations',
-	'evidence-index',
-];
+const ALL_TARGETS: PortfolioFileTarget[] = ['capabilities', 'limitations', 'evidence-index'];
 
 // ── Public API ────────────────────────────────────────────────────────
 
@@ -104,9 +100,7 @@ export function planEvidencePortfolioUpdate(
 
 	// Guard: RED/UNKNOWN status only allowed for evidence-index updates
 	const writeStatus: EvidenceRunStatus =
-		input.status === 'RED' || input.status === 'UNKNOWN'
-			? ('RED' as const)
-			: input.status;
+		input.status === 'RED' || input.status === 'UNKNOWN' ? ('RED' as const) : input.status;
 
 	if (writeStatus === 'RED') {
 		result.warnings.push(
@@ -122,9 +116,7 @@ export function planEvidencePortfolioUpdate(
 
 		// Safety: path traversal check
 		if (!isPathWithinWorkspace(fullPath, workspaceRoot)) {
-			result.conflicts.push(
-				`Path traversal detected for '${target}' → ${fullPath}`,
-			);
+			result.conflicts.push(`Path traversal detected for '${target}' → ${fullPath}`);
 			result.skippedFiles.push(filePath);
 			continue;
 		}
@@ -145,15 +137,7 @@ export function planEvidencePortfolioUpdate(
 		const lines = readLines(rawContent);
 		const blocks = findMarkerBlocks(lines);
 
-		const detail = processTarget(
-			target,
-			filePath,
-			lines,
-			blocks,
-			input,
-			cfg,
-			result,
-		);
+		const detail = processTarget(target, filePath, lines, blocks, input, cfg, result);
 
 		if (detail && detail.updated) {
 			result.changedFiles.push(filePath);
@@ -163,9 +147,7 @@ export function planEvidencePortfolioUpdate(
 					const updated = joinLines(lines);
 					fs.writeFileSync(fullPath, updated, 'utf-8');
 				} catch (err) {
-					result.conflicts.push(
-						`Failed to write ${filePath}: ${String(err)}`,
-					);
+					result.conflicts.push(`Failed to write ${filePath}: ${String(err)}`);
 					detail.updated = false;
 					detail.reason = `Write error: ${String(err)}`;
 					result.skippedFiles.push(filePath);
@@ -192,20 +174,14 @@ export function applyEvidencePortfolioUpdate(
 	workspaceRoot: string,
 	config?: Partial<EvidencePortfolioConfig>,
 ): PortfolioUpdateResult {
-	return planEvidencePortfolioUpdate(
-		{ ...input, apply: true },
-		workspaceRoot,
-		config,
-	);
+	return planEvidencePortfolioUpdate({ ...input, apply: true }, workspaceRoot, config);
 }
 
 /**
  * Extract portfolio update input from a run summary JSON file.
  * Reads a RudolphBenchmarkRunSummary or similar structured summary.
  */
-export function extractPortfolioUpdateFromRunSummary(
-	summaryPath: string,
-): {
+export function extractPortfolioUpdateFromRunSummary(summaryPath: string): {
 	runId: string;
 	status: EvidenceRunStatus;
 	evidencePaths: string[];
@@ -217,8 +193,7 @@ export function extractPortfolioUpdateFromRunSummary(
 		const raw = fs.readFileSync(summaryPath, 'utf-8');
 		const summary = JSON.parse(raw);
 
-		const runId: string =
-			summary.runId ?? summary.id ?? path.basename(summaryPath, '.json');
+		const runId: string = summary.runId ?? summary.id ?? path.basename(summaryPath, '.json');
 
 		// Determine status from conclusion or direct status
 		let status: EvidenceRunStatus = 'UNKNOWN';
@@ -302,14 +277,7 @@ function processTarget(
 		case 'limitations':
 			return processLimitations(lines, blocks, input, cfg, result, detail);
 		case 'evidence-index':
-			return processEvidenceIndex(
-				lines,
-				blocks,
-				input,
-				cfg,
-				result,
-				detail,
-			);
+			return processEvidenceIndex(lines, blocks, input, cfg, result, detail);
 	}
 }
 
@@ -353,9 +321,7 @@ function processCapabilities(
 	const newCapRows: string[] = [];
 	if (input.capabilities) {
 		for (const cap of input.capabilities) {
-			newCapRows.push(
-				tableRow([`#${input.runId}`, cap, 'GREEN_SAFE', 'P2']),
-			);
+			newCapRows.push(tableRow([`#${input.runId}`, cap, 'GREEN_SAFE', 'P2']));
 		}
 	}
 
@@ -378,9 +344,7 @@ function processCapabilities(
 		detail.reason = `Added ${toAdd.length} entries to evidence-refs block`;
 		if (input.capabilities) detail.addedCapabilities = [...input.capabilities];
 	} else {
-		result.warnings.push(
-			`Failed to insert into ${evRefsBlock} block in ${CAPABILITIES_FILE}`,
-		);
+		result.warnings.push(`Failed to insert into ${evRefsBlock} block in ${CAPABILITIES_FILE}`);
 		detail.reason = 'Insert failed (block structure mismatch)';
 	}
 
@@ -412,13 +376,7 @@ function processLimitations(
 	const newRows: string[] = [];
 	if (input.limitations) {
 		for (const lim of input.limitations) {
-			newRows.push(
-				tableRow([
-					lim,
-					'Open',
-					`#${input.runId}`,
-				]),
-			);
+			newRows.push(tableRow([lim, 'Open', `#${input.runId}`]));
 		}
 	}
 
@@ -440,9 +398,7 @@ function processLimitations(
 		detail.reason = `Added ${toAdd.length} limitations to active-limitations block`;
 		detail.addedLimitations = [...(input.limitations ?? [])];
 	} else {
-		result.warnings.push(
-			`Failed to insert into ${activeBlock} block in ${LIMITATIONS_FILE}`,
-		);
+		result.warnings.push(`Failed to insert into ${activeBlock} block in ${LIMITATIONS_FILE}`);
 		detail.reason = 'Insert failed';
 	}
 
@@ -487,9 +443,7 @@ function processEvidenceIndex(
 		newRows.push('');
 	}
 
-	const existingRows = extractTableRows(
-		blocks.find((b) => b.section === mapBlock)?.content ?? [],
-	);
+	const existingRows = extractTableRows(blocks.find((b) => b.section === mapBlock)?.content ?? []);
 	const toAdd = deduplicateRows(existingRows, newRows);
 
 	if (toAdd.length === 0) {
@@ -505,9 +459,7 @@ function processEvidenceIndex(
 		detail.reason = `Added ${toAdd.length} evidence entries to evidence-map block`;
 		detail.addedEvidencePaths = [...input.evidencePaths];
 	} else {
-		result.warnings.push(
-			`Failed to insert into ${mapBlock} block in ${EVIDENCE_INDEX_FILE}`,
-		);
+		result.warnings.push(`Failed to insert into ${mapBlock} block in ${EVIDENCE_INDEX_FILE}`);
 		detail.reason = 'Insert failed';
 	}
 

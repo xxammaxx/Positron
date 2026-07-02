@@ -68,9 +68,7 @@ function defaultAuditDir(): string {
  * @param options - Audit sink configuration
  * @returns An onAudit callback function
  */
-export function createAuditSink(
-	options: AuditSinkOptions,
-): (call: ToolCall) => Promise<string> {
+export function createAuditSink(options: AuditSinkOptions): (call: ToolCall) => Promise<string> {
 	const { runId, source } = options;
 	const workspacePath = options.workspacePath ?? defaultAuditDir();
 	const auditDir = path.resolve(workspacePath);

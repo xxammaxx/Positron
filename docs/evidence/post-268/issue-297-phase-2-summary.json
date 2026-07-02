@@ -1,114 +1,114 @@
 {
-  "issue": "297",
-  "phase": "2",
-  "title": "Flaky Test Stabilization — Final Gates and Merge",
-  "timestamp": "2026-06-27T10:55:00+02:00",
-  "status": {
-    "reality": "CURRENT",
-    "scope": "CLEAN",
-    "format": "FORMAT_ONLY_APPLIED",
-    "local_gates": "GREEN",
-    "merge_readiness": "YES",
-    "pr_ready_executed": "YES",
-    "merge_status": "SUCCESS",
-    "issue_status": "CLOSED"
-  },
-  "merge": {
-    "pr": 302,
-    "branch": "fix/issue-297-flaky-test-stabilization",
-    "merge_commit": "4c687e2fdc5ecac987b867cb7cd473473382c639",
-    "merge_method": "merge",
-    "merged_at": "2026-06-27T07:59:22Z",
-    "merged_by": "xxammaxx",
-    "branch_deleted": false
-  },
-  "commits": [
-    {
-      "sha": "e8e56d7",
-      "message": "fix(issue-297): stabilize flaky test",
-      "description": "Original fix: try/finally for E2E + deterministic durationMs"
-    },
-    {
-      "sha": "c8e8faa",
-      "message": "fix(issue-297): apply biome formatting (indentation fix in try block)",
-      "description": "Pure formatting: indentation in try block + compacted reduce()"
-    }
-  ],
-  "files_changed": {
-    "code": [
-      "e2e/ui-workflow-trace.spec.ts",
-      "packages/opencode-adapter/src/deterministic-fixture-agent.ts"
-    ],
-    "evidence_phase1": [
-      "docs/evidence/post-268/issue-297-fix-plan.md",
-      "docs/evidence/post-268/issue-297-fix-report.md",
-      "docs/evidence/post-268/issue-297-gates.md",
-      "docs/evidence/post-268/issue-297-reality-refresh.md",
-      "docs/evidence/post-268/issue-297-report.md",
-      "docs/evidence/post-268/issue-297-reproduction-report.md",
-      "docs/evidence/post-268/issue-297-reviewer-report.md",
-      "docs/evidence/post-268/issue-297-root-cause.md",
-      "docs/evidence/post-268/issue-297-scope-triage.md",
-      "docs/evidence/post-268/issue-297-stability-validation.md",
-      "docs/evidence/post-268/issue-297-summary.json"
-    ],
-    "evidence_phase2": [
-      "docs/evidence/post-268/issue-297-phase-2-reality-refresh.md",
-      "docs/evidence/post-268/issue-297-phase-2-diff-scope-audit.md",
-      "docs/evidence/post-268/issue-297-phase-2-format-report.md",
-      "docs/evidence/post-268/issue-297-phase-2-final-gates.md",
-      "docs/evidence/post-268/issue-297-phase-2-merge-readiness.md",
-      "docs/evidence/post-268/issue-297-phase-2-pr-ready-report.md",
-      "docs/evidence/post-268/issue-297-phase-2-merge-report.md",
-      "docs/evidence/post-268/issue-297-phase-2-post-merge-sync.md",
-      "docs/evidence/post-268/issue-297-phase-2-issue-status-report.md",
-      "docs/evidence/post-268/issue-297-phase-2-summary.json",
-      "docs/evidence/post-268/issue-297-phase-2-report.md",
-      "docs/evidence/post-268/issue-297-phase-2-reviewer-report.md"
-    ]
-  },
-  "tests": {
-    "total": 1571,
-    "passed": 1571,
-    "failed": 0,
-    "deterministic_fixture_stability": {
-      "runs": 10,
-      "passes": 10,
-      "flake_rate": "0%"
-    },
-    "e2e": {
-      "run_locally": false,
-      "reason": "Requires backend and frontend servers",
-      "structural_verification": "try/finally cannot introduce regressions"
-    }
-  },
-  "gates": {
-    "build": "PASS",
-    "typecheck": "PASS",
-    "test_full": "PASS",
-    "diff_check": "PASS",
-    "secrets": "PASS",
-    "workflows": "UNCHANGED",
-    "no_test_deletion": "VERIFIED",
-    "no_assertion_weakening": "VERIFIED"
-  },
-  "not_touched": [
-    "PR #218",
-    "PR chain #230-#242",
-    "CodeRabbit configuration",
-    "CI workflows",
-    "Manual CI trigger",
-    "Force push",
-    "Admin merge",
-    "Auto-merge",
-    ".env files",
-    "Branch deletion"
-  ],
-  "risks": [
-    {
-      "description": "E2E fix not verified in CI (no CI trigger authorized)",
-      "level": "LOW",
-      "mitigation": "Defensive try/finally pattern cannot regress; next regular CI run will verify"
-    }
-  ]
+	"issue": "297",
+	"phase": "2",
+	"title": "Flaky Test Stabilization — Final Gates and Merge",
+	"timestamp": "2026-06-27T10:55:00+02:00",
+	"status": {
+		"reality": "CURRENT",
+		"scope": "CLEAN",
+		"format": "FORMAT_ONLY_APPLIED",
+		"local_gates": "GREEN",
+		"merge_readiness": "YES",
+		"pr_ready_executed": "YES",
+		"merge_status": "SUCCESS",
+		"issue_status": "CLOSED"
+	},
+	"merge": {
+		"pr": 302,
+		"branch": "fix/issue-297-flaky-test-stabilization",
+		"merge_commit": "4c687e2fdc5ecac987b867cb7cd473473382c639",
+		"merge_method": "merge",
+		"merged_at": "2026-06-27T07:59:22Z",
+		"merged_by": "xxammaxx",
+		"branch_deleted": false
+	},
+	"commits": [
+		{
+			"sha": "e8e56d7",
+			"message": "fix(issue-297): stabilize flaky test",
+			"description": "Original fix: try/finally for E2E + deterministic durationMs"
+		},
+		{
+			"sha": "c8e8faa",
+			"message": "fix(issue-297): apply biome formatting (indentation fix in try block)",
+			"description": "Pure formatting: indentation in try block + compacted reduce()"
+		}
+	],
+	"files_changed": {
+		"code": [
+			"e2e/ui-workflow-trace.spec.ts",
+			"packages/opencode-adapter/src/deterministic-fixture-agent.ts"
+		],
+		"evidence_phase1": [
+			"docs/evidence/post-268/issue-297-fix-plan.md",
+			"docs/evidence/post-268/issue-297-fix-report.md",
+			"docs/evidence/post-268/issue-297-gates.md",
+			"docs/evidence/post-268/issue-297-reality-refresh.md",
+			"docs/evidence/post-268/issue-297-report.md",
+			"docs/evidence/post-268/issue-297-reproduction-report.md",
+			"docs/evidence/post-268/issue-297-reviewer-report.md",
+			"docs/evidence/post-268/issue-297-root-cause.md",
+			"docs/evidence/post-268/issue-297-scope-triage.md",
+			"docs/evidence/post-268/issue-297-stability-validation.md",
+			"docs/evidence/post-268/issue-297-summary.json"
+		],
+		"evidence_phase2": [
+			"docs/evidence/post-268/issue-297-phase-2-reality-refresh.md",
+			"docs/evidence/post-268/issue-297-phase-2-diff-scope-audit.md",
+			"docs/evidence/post-268/issue-297-phase-2-format-report.md",
+			"docs/evidence/post-268/issue-297-phase-2-final-gates.md",
+			"docs/evidence/post-268/issue-297-phase-2-merge-readiness.md",
+			"docs/evidence/post-268/issue-297-phase-2-pr-ready-report.md",
+			"docs/evidence/post-268/issue-297-phase-2-merge-report.md",
+			"docs/evidence/post-268/issue-297-phase-2-post-merge-sync.md",
+			"docs/evidence/post-268/issue-297-phase-2-issue-status-report.md",
+			"docs/evidence/post-268/issue-297-phase-2-summary.json",
+			"docs/evidence/post-268/issue-297-phase-2-report.md",
+			"docs/evidence/post-268/issue-297-phase-2-reviewer-report.md"
+		]
+	},
+	"tests": {
+		"total": 1571,
+		"passed": 1571,
+		"failed": 0,
+		"deterministic_fixture_stability": {
+			"runs": 10,
+			"passes": 10,
+			"flake_rate": "0%"
+		},
+		"e2e": {
+			"run_locally": false,
+			"reason": "Requires backend and frontend servers",
+			"structural_verification": "try/finally cannot introduce regressions"
+		}
+	},
+	"gates": {
+		"build": "PASS",
+		"typecheck": "PASS",
+		"test_full": "PASS",
+		"diff_check": "PASS",
+		"secrets": "PASS",
+		"workflows": "UNCHANGED",
+		"no_test_deletion": "VERIFIED",
+		"no_assertion_weakening": "VERIFIED"
+	},
+	"not_touched": [
+		"PR #218",
+		"PR chain #230-#242",
+		"CodeRabbit configuration",
+		"CI workflows",
+		"Manual CI trigger",
+		"Force push",
+		"Admin merge",
+		"Auto-merge",
+		".env files",
+		"Branch deletion"
+	],
+	"risks": [
+		{
+			"description": "E2E fix not verified in CI (no CI trigger authorized)",
+			"level": "LOW",
+			"mitigation": "Defensive try/finally pattern cannot regress; next regular CI run will verify"
+		}
+	]
 }

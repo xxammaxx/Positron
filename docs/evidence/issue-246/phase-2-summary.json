@@ -1,64 +1,64 @@
 {
-  "phase": 2,
-  "issue": 246,
-  "title": "Enforce GateType Layers in Pipeline Loop — Final Audit and Merge",
-  "pr": 316,
-  "branch": "feat/issue-246-gatetype-layer-enforcement",
-  "merge_commit": "f73c92b83730c7976312c60739f88557ff86dad2",
-  "merged_at": "2026-06-29T05:57:04Z",
-  "timestamp": "2026-06-29T12:00:00Z",
-  "classifications": {
-    "reality_refresh": "CURRENT",
-    "pr_scope": "CLEAN_ISSUE_246_ONLY",
-    "staleness": "CURRENT",
-    "implementation": "CLEAN_WITH_LIMITATIONS",
-    "tests": "CLEAN_WITH_LIMITATIONS",
-    "security": "CLEAN_WITH_LIMITATIONS",
-    "phase_1_evidence": "CLEAN",
-    "external_review": "CODERABBIT_SKIPPED_NON_GATE",
-    "local_gates": "GREEN",
-    "merge_readiness": "YES",
-    "merge_status": "SUCCESS",
-    "issue_status": "CLOSED"
-  },
-  "limitations": [
-    "pre_run and pre_push not yet wired into PHASE_GATE_REQUIREMENTS",
-    "MERGE→DONE uses raw transition() instead of tryTransitionWithGates()",
-    "Human approval uses fake evaluator in dry-run mode (by design)"
-  ],
-  "tests": {
-    "new_gate_tests": 38,
-    "backend_total": 1597,
-    "frontend_total": 196,
-    "grand_total": 1793,
-    "passed": 1793,
-    "failed": 0
-  },
-  "gate_results": {
-    "git_diff_check": "PASS",
-    "npm_build": "PASS",
-    "npm_typecheck": "PASS",
-    "npm_test_backend": "1597/1597 PASS",
-    "npm_test_frontend": "196/196 PASS"
-  },
-  "blocker_status": {
-    "215": "CLOSED",
-    "244": "CLOSED",
-    "245": "CLOSED",
-    "246": "CLOSED",
-    "308": "OPEN — ready for Readiness Recheck"
-  },
-  "non_scope_preserved": [
-    "No #308 Real Mode",
-    "No workflow changes",
-    "No manual CI trigger",
-    "No UI changes",
-    "No CodeRabbit re-activation",
-    "No secrets exposed",
-    "No .env contents",
-    "No PR #218/#255/#230-#242 changes",
-    "No branch deletion",
-    "No force push"
-  ],
-  "next_recommended_build": "308_READINESS_RECHECK"
+	"phase": 2,
+	"issue": 246,
+	"title": "Enforce GateType Layers in Pipeline Loop — Final Audit and Merge",
+	"pr": 316,
+	"branch": "feat/issue-246-gatetype-layer-enforcement",
+	"merge_commit": "f73c92b83730c7976312c60739f88557ff86dad2",
+	"merged_at": "2026-06-29T05:57:04Z",
+	"timestamp": "2026-06-29T12:00:00Z",
+	"classifications": {
+		"reality_refresh": "CURRENT",
+		"pr_scope": "CLEAN_ISSUE_246_ONLY",
+		"staleness": "CURRENT",
+		"implementation": "CLEAN_WITH_LIMITATIONS",
+		"tests": "CLEAN_WITH_LIMITATIONS",
+		"security": "CLEAN_WITH_LIMITATIONS",
+		"phase_1_evidence": "CLEAN",
+		"external_review": "CODERABBIT_SKIPPED_NON_GATE",
+		"local_gates": "GREEN",
+		"merge_readiness": "YES",
+		"merge_status": "SUCCESS",
+		"issue_status": "CLOSED"
+	},
+	"limitations": [
+		"pre_run and pre_push not yet wired into PHASE_GATE_REQUIREMENTS",
+		"MERGE→DONE uses raw transition() instead of tryTransitionWithGates()",
+		"Human approval uses fake evaluator in dry-run mode (by design)"
+	],
+	"tests": {
+		"new_gate_tests": 38,
+		"backend_total": 1597,
+		"frontend_total": 196,
+		"grand_total": 1793,
+		"passed": 1793,
+		"failed": 0
+	},
+	"gate_results": {
+		"git_diff_check": "PASS",
+		"npm_build": "PASS",
+		"npm_typecheck": "PASS",
+		"npm_test_backend": "1597/1597 PASS",
+		"npm_test_frontend": "196/196 PASS"
+	},
+	"blocker_status": {
+		"215": "CLOSED",
+		"244": "CLOSED",
+		"245": "CLOSED",
+		"246": "CLOSED",
+		"308": "OPEN — ready for Readiness Recheck"
+	},
+	"non_scope_preserved": [
+		"No #308 Real Mode",
+		"No workflow changes",
+		"No manual CI trigger",
+		"No UI changes",
+		"No CodeRabbit re-activation",
+		"No secrets exposed",
+		"No .env contents",
+		"No PR #218/#255/#230-#242 changes",
+		"No branch deletion",
+		"No force push"
+	],
+	"next_recommended_build": "308_READINESS_RECHECK"
 }
