@@ -1264,6 +1264,14 @@ async function executePhase(
 			break;
 		}
 		case 'MERGE': {
+			// --- Issue #321: Gate DONE transitions on evidence_required ---
+			const doneGateCtx: GateEvaluationContext = {
+				runId: current.id,
+				phase: current.phase,
+				targetPhase: 'DONE',
+				gateTypes: getRequiredGates('DONE'),
+			};
+
 			// --- Safety Gates (Issue #21 + #41) ---
 			const mergeAllowed = process.env.POSITRON_ENABLE_MERGE === 'true';
 			const mergeDryRun = process.env.POSITRON_MERGE_DRY_RUN === 'true';
@@ -1272,7 +1280,7 @@ async function executePhase(
 			// Branch
 			const branch = current.branch;
 			if (!branch) {
-				result = transition(current, 'DONE', 'Merge skipped (no branch)', 'INFO');
+				result = tryTransitionWithGates(current, 'DONE', 'Merge skipped (no branch)', 'INFO', null, doneGateCtx);
 				break;
 			}
 
@@ -1291,7 +1299,7 @@ async function executePhase(
 			}
 
 			if (!pr) {
-				result = transition(current, 'DONE', 'Merge skipped (no open PR found)', 'INFO');
+				result = tryTransitionWithGates(current, 'DONE', 'Merge skipped (no open PR found)', 'INFO', null, doneGateCtx);
 				break;
 			}
 
@@ -1305,11 +1313,13 @@ async function executePhase(
 					payload: { prNumber: pr.number, prState: pr.state },
 					createdAt: new Date().toISOString(),
 				});
-				result = transition(
+				result = tryTransitionWithGates(
 					current,
 					'DONE',
 					`PR #${pr.number} ist ${pr.state} — Merge übersprungen`,
 					'WARN',
+					null,
+					doneGateCtx,
 				);
 				break;
 			}
@@ -1434,11 +1444,13 @@ async function executePhase(
 					/* comment is best-effort */
 				}
 
-				result = transition(
+				result = tryTransitionWithGates(
 					current,
 					'DONE',
 					`[DRY-RUN] ${decision}: ${allPassed ? 'All gates pass' : `${blockedGates.length} gates fail — ${blockedGates.map((g) => g.gate).join(', ')}`}`,
 					allPassed ? 'INFO' : 'WARN',
+					null,
+					doneGateCtx,
 				);
 				break;
 			}
@@ -1447,29 +1459,35 @@ async function executePhase(
 
 			// Kill-Switch
 			if (mergeKillSwitch) {
-				result = transition(
+				result = tryTransitionWithGates(
 					current,
 					'DONE',
 					'Merge BLOCKED: Kill-Switch (POSITRON_MERGE_KILL_SWITCH=true)',
 					'WARN',
+					null,
+					doneGateCtx,
 				);
 				break;
 			}
 			if (!mergeAllowed) {
-				result = transition(
+				result = tryTransitionWithGates(
 					current,
 					'DONE',
 					'Merge skipped (POSITRON_ENABLE_MERGE not set)',
 					'INFO',
+					null,
+					doneGateCtx,
 				);
 				break;
 			}
 			if (current.status !== 'active') {
-				result = transition(
+				result = tryTransitionWithGates(
 					current,
 					'DONE',
 					`Merge blocked: Run status is ${current.status}`,
 					'WARN',
+					null,
+					doneGateCtx,
 				);
 				break;
 			}
@@ -1527,18 +1545,22 @@ async function executePhase(
 							createdAt: new Date().toISOString(),
 						});
 					}
-					result = transition(
+					result = tryTransitionWithGates(
 						current,
 						'DONE',
 						`PR #${pr.number} merged: ${mergeResult.sha?.slice(0, 7)}`,
 						'INFO',
+						null,
+						doneGateCtx,
 					);
 				} else {
-					result = transition(
+					result = tryTransitionWithGates(
 						current,
 						'DONE',
 						`PR #${pr.number} not mergeable: ${mergeResult.message ?? 'unknown'}`,
 						'WARN',
+						null,
+						doneGateCtx,
 					);
 				}
 			} catch (err) {
@@ -1551,7 +1573,7 @@ async function executePhase(
 					payload: null,
 					createdAt: new Date().toISOString(),
 				});
-				result = transition(current, 'DONE', `Merge failed: ${String(err).slice(0, 100)}`, 'WARN');
+				result = tryTransitionWithGates(current, 'DONE', `Merge failed: ${String(err).slice(0, 100)}`, 'WARN', null, doneGateCtx);
 			}
 			break;
 		}

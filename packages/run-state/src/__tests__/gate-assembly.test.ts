@@ -802,3 +802,55 @@ describe('Phase B: Regression — Gate Enforcement Invariants Preserved', () => 
 		expect(result.gateResult).toHaveProperty('summary');
 	});
 });
+
+// ─── Issue #321: DONE Evidence Gate Regression Invariants ───────────────────
+// These tests verify that DONE transitions cannot be reached via raw
+// transition() bypassing the evidence_required gate.
+
+describe('Issue #321 — DONE Evidence Gate Regression Invariants', () => {
+	beforeEach(() => {
+		clearGateEvaluators();
+	});
+	it('DONE is in PHASE_GATE_REQUIREMENTS with evidence_required', () => {
+		const gates = getRequiredGates('DONE');
+		expect(gates).toContain('evidence_required');
+		expect(gates.length).toBeGreaterThan(0);
+	});
+
+	it('DONE transition via tryTransitionWithGates with evidence passes', () => {
+		registerGateEvaluator('evidence_required', passEval('evidence_required'));
+
+		const run = makeRun('MERGE');
+		const ctx = makeContext({
+			phase: 'MERGE', targetPhase: 'DONE',
+			gateTypes: ['evidence_required'],
+		});
+
+		const result = tryTransitionWithGates(run, 'DONE', 'Complete', 'INFO', null, ctx);
+		expect(result.ok).toBe(true);
+		expect(result.run.phase).toBe('DONE');
+	});
+
+	it('DONE transition via tryTransitionWithGates without evidence is blocked', () => {
+		// evidence_required evaluator NOT registered — blocks by default
+
+		const run = makeRun('MERGE');
+		const ctx = makeContext({
+			phase: 'MERGE', targetPhase: 'DONE',
+			gateTypes: ['evidence_required'],
+		});
+
+		const result = tryTransitionWithGates(run, 'DONE', 'Attempt done', 'INFO', null, ctx);
+		assertBlocked(result, 'evidence_required');
+	});
+
+	it('phaseRequiresGates returns true for DONE', () => {
+		expect(phaseRequiresGates('DONE')).toBe(true);
+	});
+
+	it('getRequiredGates for DONE returns non-empty array', () => {
+		const gates = getRequiredGates('DONE');
+		expect(gates.length).toBeGreaterThan(0);
+		expect(gates[0]).toBe('evidence_required');
+	});
+});
