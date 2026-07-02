@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import {
+	type ReactElement,
+	type ReactNode,
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useState,
+} from 'react';
 
 type Theme = 'dark' | 'light';
 const STORAGE_KEY = 'positron:theme';
@@ -19,12 +27,10 @@ function getInitialTheme(): Theme {
 	} catch {
 		/* localStorage not available */
 	}
-	// Fallback: OS preference
-	if (window.matchMedia?.('(prefers-color-scheme: light)').matches) return 'light';
 	return 'dark';
 }
 
-export function ThemeProvider({ children }: { children: React.ReactNode }): React.ReactElement {
+export function ThemeProvider({ children }: { children: ReactNode }): ReactElement {
 	const [theme, setTheme] = useState<Theme>(getInitialTheme);
 
 	// Sync <html> class with theme
