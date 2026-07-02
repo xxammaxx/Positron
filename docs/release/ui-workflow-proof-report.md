@@ -2,7 +2,7 @@
 
 ## Summary
 - **Status:** PASS
-- **Timestamp:** 2026-07-02T21:19:07.761Z
+- **Timestamp:** 2026-07-02T21:39:07.657Z
 
 ## Verification Results
 
@@ -26,8 +26,8 @@ Total API calls captured: 12
 | GET | /api/health | 200 |
 | GET | /api/health | 200 |
 | GET | /api/health | 200 |
-| GET | /api/stream | 200 |
 | GET | /api/health | 200 |
+| GET | /api/stream | 200 |
 | GET | /api/health | 200 |
 | GET | /api/health | 200 |
 | GET | /api/runs | 200 |

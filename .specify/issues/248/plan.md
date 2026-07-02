@@ -1,7 +1,7 @@
 # Implementation Plan: Operator Cockpit UI Redesign
 
-**Issue:** #248  
-**Date:** 2026-07-02  
+**Issue:** #248
+**Date:** 2026-07-02
 **Phase:** Plan Only
 
 ## Phase 1: Reality Refresh and UI Audit
@@ -37,4 +37,3 @@
 - Capture after screenshots
 - Compare before and after
 - Document results in GitHub
-

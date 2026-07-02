@@ -1,8 +1,8 @@
 # Specification: Operator Cockpit UI Redesign
 
-**Issue:** #248  
-**Status:** Draft  
-**Date:** 2026-07-02  
+**Issue:** #248
+**Status:** Draft
+**Date:** 2026-07-02
 **Author:** Issue Orchestrator (human-approved prompt)
 
 ## 1. Purpose
@@ -101,4 +101,3 @@ Shared UI areas:
 - Screenshot evidence is captured before and after
 - Tests and build remain green
 - No backend, workflow, or dependency changes are introduced
-
