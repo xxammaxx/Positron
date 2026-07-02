@@ -39,6 +39,8 @@ const consoleErrors: string[] = [];
 const consoleWarnings: string[] = [];
 const consoleLogs: string[] = [];
 
+test.use({ trace: 'off' });
+
 // ── Single comprehensive test ──────────────────────────────────
 test.describe('UI Workflow Trace & Network Proof', () => {
 	test.describe.configure({ mode: 'serial', timeout: 300_000 });
@@ -165,7 +167,7 @@ test.describe('UI Workflow Trace & Network Proof', () => {
 			await test.step('S07: Verify run detail page loaded', async () => {
 				// Check for run ID or phase display
 				const phaseText = page.locator('text=Phase').first();
-				const hasPhase = await phaseText.isVisible({ timeout: 5000 }).catch(() => false);
+				const _hasPhase = await phaseText.isVisible({ timeout: 5000 }).catch(() => false);
 				// The page should render something about the run
 				await expect(page.locator('main')).toBeVisible({ timeout: 5000 });
 				await page.screenshot({

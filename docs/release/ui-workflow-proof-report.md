@@ -2,7 +2,7 @@
 
 ## Summary
 - **Status:** PASS
-- **Timestamp:** 2026-05-29T07:43:13.293Z
+- **Timestamp:** 2026-07-02T21:19:07.761Z
 
 ## Verification Results
 
@@ -12,16 +12,23 @@
 | Runs endpoint | ✅ true |
 | UI screenshots captured | ✅ true |
 | Network log file exists | ✅ true |
-| Captured API calls | ✅ 5 calls logged |
+| Captured API calls | ✅ 12 calls logged |
 | No server errors (5xx) | ✅ true |
 | Screenshots count | ✅ 12 screenshots |
 
 ## Network Calls
-Total API calls captured: 5
+Total API calls captured: 12
 
 | Method | URL | Status |
 |--------|-----|--------|
+| GET | /api/health | 200 |
+| GET | /api/health | 200 |
+| GET | /api/health | 200 |
+| GET | /api/health | 200 |
+| GET | /api/health | 200 |
 | GET | /api/stream | 200 |
+| GET | /api/health | 200 |
+| GET | /api/health | 200 |
 | GET | /api/health | 200 |
 | GET | /api/runs | 200 |
 | GET | /api/health | 200 |
