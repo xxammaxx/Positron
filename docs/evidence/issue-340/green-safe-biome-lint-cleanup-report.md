@@ -102,7 +102,7 @@ GREEN_SAFE_DIFF_STATUS: `MECHANICAL_GREEN_SAFE_ONLY`
 | `npx biome check .` reproduced locally | met | before exit 1, 283 errors / 764 warnings |
 | Failure categories documented | met | Issue comments and this report classify GREEN_SAFE vs excluded Yellow/Red |
 | GREEN_SAFE separated from YELLOW_REVIEW | met | only `organizeImports` kept; excluded groups restored |
-| Dedicated PR created with clear scope | pending | to be created after commit/push |
+| Dedicated PR created with clear scope | met | PR #341 created: <https://github.com/xxammaxx/Positron/pull/341> |
 | Build, typecheck, tests and E2E run locally | met | all blocking gates exit 0 |
 | Remaining non-fixable warnings documented | met | Biome/lint remain expected red |
 | No unrelated behavior changes | met | import-order-only diff |
@@ -111,6 +111,8 @@ GREEN_SAFE_DIFF_STATUS: `MECHANICAL_GREEN_SAFE_ONLY`
 
 - GitHub connector issue-comment write failed with `403 Resource not accessible
   by integration`; authenticated `gh` CLI was used for required issue evidence.
+- GitHub connector PR creation failed with `403 Resource not accessible by
+  integration`; authenticated `gh` CLI created PR #341.
 - One local diagnostic read typo attempted a non-existent `/tmp` path and failed
   with file-not-found. It made no repository changes.
 - E2E generated `docs/release/ui-workflow-proof-report.md` timestamp drift and
