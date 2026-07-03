@@ -5,7 +5,7 @@
 //
 // Issue: BENCH-002
 
-import type { ReindeerBeacon, BeaconStatus } from './beacon-domain.js';
+import type { BeaconStatus, ReindeerBeacon } from './beacon-domain.js';
 import { classifyBeacon } from './beacon-domain.js';
 
 // =============================================================================

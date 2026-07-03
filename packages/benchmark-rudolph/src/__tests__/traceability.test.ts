@@ -5,14 +5,14 @@
 //
 // Red Tests: 10 (extended), 11 (extended), 14 (extended)
 
-import { describe, it, expect } from 'vitest';
-import {
-	buildTraceabilityMap,
-	validateTraceabilityMap,
-	validateIssueIndependence,
-} from '../traceability.js';
+import { describe, expect, it } from 'vitest';
 import type { BenchmarkIssueResult } from '../evidence-contract.js';
 import { createIssueResult } from '../evidence-contract.js';
+import {
+	buildTraceabilityMap,
+	validateIssueIndependence,
+	validateTraceabilityMap,
+} from '../traceability.js';
 
 // =============================================================================
 // Traceability Map Construction

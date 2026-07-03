@@ -8,32 +8,32 @@
 
 import { DeterministicFixtureAgent } from '@positron/opencode-adapter';
 import type {
-	FixtureAgentConfig,
 	Fixture,
+	FixtureAgentConfig,
 	EvidenceReport as FixtureEvidenceReport,
 } from '@positron/opencode-adapter';
 import { OpenCodeDryRunAgent } from '@positron/opencode-adapter';
-import type { DryRunAgentConfig, ActionPlan } from '@positron/opencode-adapter';
-import type { OpenCodeRunInput, ExecutionMode } from '@positron/shared';
+import type { ActionPlan, DryRunAgentConfig } from '@positron/opencode-adapter';
+import type { ExecutionMode, OpenCodeRunInput } from '@positron/shared';
 
 import type {
-	RudolphBenchmarkRunSummary,
-	BenchmarkIssueResult,
 	BenchmarkCommandResult,
 	BenchmarkConclusion,
+	BenchmarkIssueResult,
 	CapabilityDelta,
+	RudolphBenchmarkRunSummary,
 } from './evidence-contract.js';
 import {
-	createIssueResult,
 	createCommandResult,
+	createIssueResult,
 	determineConclusionStatus,
 	validateRunSummary,
 } from './evidence-contract.js';
 import {
+	type IssueTraceEntry,
+	type TraceabilityMap,
 	buildTraceabilityMap,
 	validateTraceabilityMap,
-	type TraceabilityMap,
-	type IssueTraceEntry,
 } from './traceability.js';
 
 // Re-export for convenience

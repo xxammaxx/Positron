@@ -4,8 +4,8 @@
 //
 // Red Tests: 6, 7 from the specification
 
-import { describe, it, expect } from 'vitest';
-import { simulateBeaconScan, KNOWN_BEACONS } from '../beacon-fixtures.js';
+import { describe, expect, it } from 'vitest';
+import { KNOWN_BEACONS, simulateBeaconScan } from '../beacon-fixtures.js';
 
 const SCAN_TIME = '2026-12-24T10:00:00Z';
 
