@@ -10,7 +10,11 @@ import {
 } from '@positron/github-adapter';
 import type { GitHubAdapter } from '@positron/github-adapter';
 import { FakeOpenCodeAdapter, RealOpenCodeAdapter } from '@positron/opencode-adapter';
-import { openDatabase, registerWorkspaceCleanup, registerFakeGateEvaluators } from '@positron/run-state';
+import {
+	openDatabase,
+	registerWorkspaceCleanup,
+	registerFakeGateEvaluators,
+} from '@positron/run-state';
 import type { RunState } from '@positron/run-state';
 import { FakeGitWorkspaceAdapter, RealGitWorkspaceAdapter } from '@positron/sandbox';
 import type { GitWorkspaceAdapter } from '@positron/sandbox';
@@ -26,11 +30,7 @@ import {
 import type { RepositoryConfig } from '@positron/shared';
 import type { OpenCodeAdapter, SpecKitAdapter } from '@positron/shared';
 import { FakeSpecKitAdapter, RealSpecKitAdapter } from '@positron/speckit-adapter';
-import {
-	GatewayService,
-	ToolRegistry,
-	createAuditSink,
-} from '@positron/tool-gateway';
+import { GatewayService, ToolRegistry, createAuditSink } from '@positron/tool-gateway';
 import { type Job, Queue, Worker } from 'bullmq';
 import { type PipelineDeps, runPipeline } from './pipeline-runner.js';
 

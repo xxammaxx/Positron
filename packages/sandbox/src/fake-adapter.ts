@@ -218,9 +218,7 @@ export class FakeGitWorkspaceAdapter implements GitWorkspaceAdapter {
 		return { unlocked: true };
 	}
 
-	async isLocked(
-		workspacePath: string,
-	): Promise<{ locked: boolean; ownerRunId?: string }> {
+	async isLocked(workspacePath: string): Promise<{ locked: boolean; ownerRunId?: string }> {
 		const owner = this.locks.get(workspacePath);
 		if (owner) {
 			return { locked: true, ownerRunId: owner };

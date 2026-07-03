@@ -36,8 +36,7 @@ export class RealGitWorkspaceAdapter implements GitWorkspaceAdapter {
 
 	constructor() {
 		this.workspaceRoot =
-			process.env['POSITRON_WORKSPACE_ROOT'] ??
-			path.join(process.cwd(), '.positron', 'workspaces');
+			process.env['POSITRON_WORKSPACE_ROOT'] ?? path.join(process.cwd(), '.positron', 'workspaces');
 	}
 	async prepareWorkspace(input: PrepareWorkspaceInput): Promise<PreparedWorkspace> {
 		const { repository, issueNumber, issueTitle, runId, baseBranch } = input;
@@ -357,9 +356,7 @@ export class RealGitWorkspaceAdapter implements GitWorkspaceAdapter {
 		return { unlocked: true };
 	}
 
-	async isLocked(
-		workspacePath: string,
-	): Promise<{ locked: boolean; ownerRunId?: string }> {
+	async isLocked(workspacePath: string): Promise<{ locked: boolean; ownerRunId?: string }> {
 		const owner = this.locks.get(workspacePath);
 		if (owner) {
 			return { locked: true, ownerRunId: owner };

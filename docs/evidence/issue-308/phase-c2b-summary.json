@@ -1,80 +1,80 @@
 {
-  "issue": "308",
-  "phase": "C2b",
-  "runId": "issue-308-phase-c2b-20260629-104500",
-  "timestamp": "2026-06-29T10:52:00+02:00",
-  "classifications": {
-    "ISSUE_308_PHASE_C2B_REALITY_STATUS": "CURRENT",
-    "PR_320_SCOPE_STATUS": "CLEAN_PHASE_C2_EVIDENCE_ONLY",
-    "ISSUE_308_PHASE_C2_EVIDENCE_STATUS": "CLEAN",
-    "ISSUE_308_PHASE_C2B_SAFETY_STATUS": "CLEAN",
-    "ISSUE_308_PHASE_C2B_LOCAL_GATES": "GREEN",
-    "PR_320_MERGE_READY": "YES",
-    "PR_320_MERGE_STATUS": "SUCCESS",
-    "ISSUE_308_PHASE_C2B_POST_MERGE_SYNC": "SUCCESS",
-    "ISSUE_308_STATUS": "LEFT_OPEN"
-  },
-  "testResults": {
-    "mainSuite": { "files": 71, "tests": 1640, "failures": 0 },
-    "webSuite": { "files": 8, "tests": 196, "failures": 0 },
-    "total": { "files": 79, "tests": 1836, "failures": 0 },
-    "gates": {
-      "gitDiffCheck": "PASS",
-      "npmBuild": "PASS",
-      "npmTypecheck": "PASS",
-      "npmTest": "PASS"
-    }
-  },
-  "merge": {
-    "prNumber": 320,
-    "prTitle": "test(issue-308): controlled local temp workspace probe",
-    "mergeMethod": "standard-merge",
-    "mergeCommit": "c2ca9a32bcaf3767bdc31b83af4990ec530d174c",
-    "mergedAt": "2026-06-29T08:46:29Z",
-    "mergedBy": "xxammaxx",
-    "branchDeleted": false,
-    "draftToReady": true
-  },
-  "preMergeAudit": {
-    "scopeStatus": "CLEAN_PHASE_C2_EVIDENCE_ONLY",
-    "evidenceStatus": "CLEAN",
-    "safetyStatus": "CLEAN",
-    "localGatesStatus": "GREEN",
-    "changedFiles": 15,
-    "allPhaseC2": true,
-    "noSecrets": true,
-    "noEnvContents": true,
-    "noWorkflowChanges": true,
-    "noNewProbe": true,
-    "noFullRealMode": true,
-    "noSupervisedRealRun": true,
-    "noGitHubWritesThroughPipeline": true,
-    "noProductionRepoUsage": true,
-    "noCodeRabbit": true,
-    "ownerApproval": "VERIFIED"
-  },
-  "postMerge": {
-    "localMainHead": "c2ca9a32bcaf3767bdc31b83af4990ec530d174c",
-    "remoteMainHead": "c2ca9a32bcaf3767bdc31b83af4990ec530d174c",
-    "syncMethod": "fast-forward",
-    "syncStatus": "MATCH"
-  },
-  "issue308Comment": "https://github.com/xxammaxx/Positron/issues/308#issuecomment-4830602011",
-  "nextPrompt": "POSITRON NEXT RUN — Issue #308 Phase C3: Post-Probe Readiness and Blocker Split",
-  "nextPromptFile": "docs/evidence/issue-308/phase-c2b-next-phase-c3-prompt.md",
-  "evidenceFilesCreated": [
-    "phase-c2b-reality-refresh.md",
-    "phase-c2b-pr-scope-audit.md",
-    "phase-c2b-evidence-audit.md",
-    "phase-c2b-safety-audit.md",
-    "phase-c2b-final-gates.md",
-    "phase-c2b-merge-readiness.md",
-    "phase-c2b-merge-report.md",
-    "phase-c2b-post-merge-sync.md",
-    "phase-c2b-issue-status-report.md",
-    "phase-c2b-next-phase-c3-prompt.md",
-    "phase-c2b-summary.json",
-    "phase-c2b-report.md",
-    "phase-c2b-reviewer-report.md"
-  ]
+	"issue": "308",
+	"phase": "C2b",
+	"runId": "issue-308-phase-c2b-20260629-104500",
+	"timestamp": "2026-06-29T10:52:00+02:00",
+	"classifications": {
+		"ISSUE_308_PHASE_C2B_REALITY_STATUS": "CURRENT",
+		"PR_320_SCOPE_STATUS": "CLEAN_PHASE_C2_EVIDENCE_ONLY",
+		"ISSUE_308_PHASE_C2_EVIDENCE_STATUS": "CLEAN",
+		"ISSUE_308_PHASE_C2B_SAFETY_STATUS": "CLEAN",
+		"ISSUE_308_PHASE_C2B_LOCAL_GATES": "GREEN",
+		"PR_320_MERGE_READY": "YES",
+		"PR_320_MERGE_STATUS": "SUCCESS",
+		"ISSUE_308_PHASE_C2B_POST_MERGE_SYNC": "SUCCESS",
+		"ISSUE_308_STATUS": "LEFT_OPEN"
+	},
+	"testResults": {
+		"mainSuite": { "files": 71, "tests": 1640, "failures": 0 },
+		"webSuite": { "files": 8, "tests": 196, "failures": 0 },
+		"total": { "files": 79, "tests": 1836, "failures": 0 },
+		"gates": {
+			"gitDiffCheck": "PASS",
+			"npmBuild": "PASS",
+			"npmTypecheck": "PASS",
+			"npmTest": "PASS"
+		}
+	},
+	"merge": {
+		"prNumber": 320,
+		"prTitle": "test(issue-308): controlled local temp workspace probe",
+		"mergeMethod": "standard-merge",
+		"mergeCommit": "c2ca9a32bcaf3767bdc31b83af4990ec530d174c",
+		"mergedAt": "2026-06-29T08:46:29Z",
+		"mergedBy": "xxammaxx",
+		"branchDeleted": false,
+		"draftToReady": true
+	},
+	"preMergeAudit": {
+		"scopeStatus": "CLEAN_PHASE_C2_EVIDENCE_ONLY",
+		"evidenceStatus": "CLEAN",
+		"safetyStatus": "CLEAN",
+		"localGatesStatus": "GREEN",
+		"changedFiles": 15,
+		"allPhaseC2": true,
+		"noSecrets": true,
+		"noEnvContents": true,
+		"noWorkflowChanges": true,
+		"noNewProbe": true,
+		"noFullRealMode": true,
+		"noSupervisedRealRun": true,
+		"noGitHubWritesThroughPipeline": true,
+		"noProductionRepoUsage": true,
+		"noCodeRabbit": true,
+		"ownerApproval": "VERIFIED"
+	},
+	"postMerge": {
+		"localMainHead": "c2ca9a32bcaf3767bdc31b83af4990ec530d174c",
+		"remoteMainHead": "c2ca9a32bcaf3767bdc31b83af4990ec530d174c",
+		"syncMethod": "fast-forward",
+		"syncStatus": "MATCH"
+	},
+	"issue308Comment": "https://github.com/xxammaxx/Positron/issues/308#issuecomment-4830602011",
+	"nextPrompt": "POSITRON NEXT RUN — Issue #308 Phase C3: Post-Probe Readiness and Blocker Split",
+	"nextPromptFile": "docs/evidence/issue-308/phase-c2b-next-phase-c3-prompt.md",
+	"evidenceFilesCreated": [
+		"phase-c2b-reality-refresh.md",
+		"phase-c2b-pr-scope-audit.md",
+		"phase-c2b-evidence-audit.md",
+		"phase-c2b-safety-audit.md",
+		"phase-c2b-final-gates.md",
+		"phase-c2b-merge-readiness.md",
+		"phase-c2b-merge-report.md",
+		"phase-c2b-post-merge-sync.md",
+		"phase-c2b-issue-status-report.md",
+		"phase-c2b-next-phase-c3-prompt.md",
+		"phase-c2b-summary.json",
+		"phase-c2b-report.md",
+		"phase-c2b-reviewer-report.md"
+	]
 }

@@ -114,10 +114,7 @@ const STATUS_PRIORITY: Record<EvidenceRunStatus, number> = {
 };
 
 /** Check if run status meets or exceeds minimum */
-export function statusMeetsMinimum(
-	actual: EvidenceRunStatus,
-	minimum: EvidenceRunStatus,
-): boolean {
+export function statusMeetsMinimum(actual: EvidenceRunStatus, minimum: EvidenceRunStatus): boolean {
 	return STATUS_PRIORITY[actual] <= STATUS_PRIORITY[minimum];
 }
 

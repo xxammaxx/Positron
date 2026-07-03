@@ -6,11 +6,7 @@
  * string and regex operations.
  */
 
-import {
-	MARKER_PREFIX,
-	MARKER_SUFFIX,
-	type PortfolioSection,
-} from './types.js';
+import { MARKER_PREFIX, MARKER_SUFFIX, type PortfolioSection } from './types.js';
 
 /**
  * Create a start marker for a named section.
@@ -49,12 +45,8 @@ export interface MarkerBlock {
  */
 export function findMarkerBlocks(lines: string[]): MarkerBlock[] {
 	const blocks: MarkerBlock[] = [];
-	const markerRegex = new RegExp(
-		`^\\s*${escapeRegex(MARKER_PREFIX)}\\s+(\\S+)\\s*-->\\s*$`,
-	);
-	const endRegex = new RegExp(
-		`^\\s*${escapeRegex(MARKER_SUFFIX)}\\s+(\\S+)\\s*-->\\s*$`,
-	);
+	const markerRegex = new RegExp(`^\\s*${escapeRegex(MARKER_PREFIX)}\\s+(\\S+)\\s*-->\\s*$`);
+	const endRegex = new RegExp(`^\\s*${escapeRegex(MARKER_SUFFIX)}\\s+(\\S+)\\s*-->\\s*$`);
 
 	for (let i = 0; i < lines.length; i++) {
 		const line = lines[i];
@@ -109,10 +101,7 @@ export function findMarkerBlocks(lines: string[]): MarkerBlock[] {
 /**
  * Check if a section block exists and is well-formed.
  */
-export function hasWellFormedBlock(
-	blocks: MarkerBlock[],
-	section: PortfolioSection,
-): boolean {
+export function hasWellFormedBlock(blocks: MarkerBlock[], section: PortfolioSection): boolean {
 	const block = blocks.find((b) => b.section === section);
 	return block !== undefined && block.endLine >= 0;
 }
@@ -169,10 +158,7 @@ export function extractTableRows(content: string[]): string[] {
  * Check if a specific table row already exists in the content.
  * Compares first column (up to first `|` after the opening one).
  */
-export function rowExists(
-	existingRows: string[],
-	newRow: string,
-): boolean {
+export function rowExists(existingRows: string[], newRow: string): boolean {
 	const normalizedNew = newRow.trim().toLowerCase();
 
 	// Extract first column value for meaningful dedup
@@ -204,10 +190,7 @@ function extractFirstColumn(row: string): string {
  * De-duplicate new rows against existing rows.
  * Returns only rows that don't already exist.
  */
-export function deduplicateRows(
-	existingRows: string[],
-	newRows: string[],
-): string[] {
+export function deduplicateRows(existingRows: string[], newRows: string[]): string[] {
 	const result: string[] = [];
 	for (const row of newRows) {
 		if (!rowExists(existingRows, row)) {
@@ -255,10 +238,7 @@ export function joinLines(lines: string[]): string {
 /**
  * Validate that a file path is within the given workspace root.
  */
-export function isPathWithinWorkspace(
-	filePath: string,
-	workspaceRoot: string,
-): boolean {
+export function isPathWithinWorkspace(filePath: string, workspaceRoot: string): boolean {
 	const resolvedFile = normalizePath(filePath);
 	const resolvedRoot = normalizePath(workspaceRoot);
 	return resolvedFile.startsWith(resolvedRoot);

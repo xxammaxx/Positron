@@ -15,11 +15,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import {
-	createAuditSink,
-	createBlockedAuditEntry,
-	hashAuditEntry,
-} from '../audit-sink.js';
+import { createAuditSink, createBlockedAuditEntry, hashAuditEntry } from '../audit-sink.js';
 import { GatewayService } from '../gateway.js';
 import { ToolRegistry } from '../registry.js';
 import { BLOCK_REASONS } from '../types.js';
@@ -29,7 +25,10 @@ import type { ToolCall, ToolDefinition, ToolResult } from '../types.js';
 // ─── Test Helpers ────────────────────────────────────────────────────
 
 function makeTempDir(): string {
-	const dir = path.join(os.tmpdir(), `positron-audit-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+	const dir = path.join(
+		os.tmpdir(),
+		`positron-audit-test-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+	);
 	fs.mkdirSync(dir, { recursive: true });
 	return dir;
 }
@@ -91,7 +90,11 @@ describe('createAuditSink', () => {
 	});
 
 	afterEach(() => {
-		try { fs.rmSync(tempDir, { recursive: true, force: true }); } catch { /* cleanup best-effort */ }
+		try {
+			fs.rmSync(tempDir, { recursive: true, force: true });
+		} catch {
+			/* cleanup best-effort */
+		}
 	});
 
 	// ── Positive Tests ────────────────────────────────────────────────
@@ -257,7 +260,11 @@ describe('createAuditSink', () => {
 		});
 
 		afterEach(() => {
-			try { fs.rmSync(tempDir2, { recursive: true, force: true }); } catch { /* cleanup */ }
+			try {
+				fs.rmSync(tempDir2, { recursive: true, force: true });
+			} catch {
+				/* cleanup */
+			}
 		});
 
 		it('I1: gateway with audit sink should allow audited tool execution', async () => {
@@ -436,7 +443,11 @@ describe('hashAuditEntry', () => {
 			decision: 'ALLOW',
 			meta: { tool: 'test.tool_a', source: 'server' },
 		};
-		const entry2: AuditEntry = { ...entry1, toolId: 'test.tool_b', meta: { tool: 'test.tool_b', source: 'server' } };
+		const entry2: AuditEntry = {
+			...entry1,
+			toolId: 'test.tool_b',
+			meta: { tool: 'test.tool_b', source: 'server' },
+		};
 
 		expect(hashAuditEntry(entry1)).not.toBe(hashAuditEntry(entry2));
 	});

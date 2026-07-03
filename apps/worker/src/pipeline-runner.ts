@@ -13,7 +13,15 @@ import type {
 	GitHubStatusSyncInput,
 	GitHubStatusSyncResult,
 } from '@positron/github-adapter';
-import { createRun, markFailed, transition, runCleanup, tryTransitionWithGates, phaseRequiresGates, getRequiredGates } from '@positron/run-state';
+import {
+	createRun,
+	markFailed,
+	transition,
+	runCleanup,
+	tryTransitionWithGates,
+	phaseRequiresGates,
+	getRequiredGates,
+} from '@positron/run-state';
 import type { RunEventData, RunState } from '@positron/run-state';
 import { TestCommandDetector, TestRunner } from '@positron/sandbox';
 import type { GitWorkspaceAdapter } from '@positron/sandbox';
@@ -829,7 +837,14 @@ async function executePhase(run: RunState, deps: PipelineDeps): Promise<RunState
 					targetPhase: 'COMMIT',
 					gateTypes: getRequiredGates('COMMIT'),
 				};
-				result = tryTransitionWithGates(current, 'COMMIT', 'Verified, commit ready', 'INFO', null, gateCtx);
+				result = tryTransitionWithGates(
+					current,
+					'COMMIT',
+					'Verified, commit ready',
+					'INFO',
+					null,
+					gateCtx,
+				);
 			} else {
 				result = transition(current, 'COMMIT', 'Verified, commit ready');
 			}
@@ -875,17 +890,17 @@ async function executePhase(run: RunState, deps: PipelineDeps): Promise<RunState
 				}
 
 				const summary = `Committed: ${commitResult.sha.slice(0, 7)}${pushResult} (${changeSummary})`;
-			if (phaseRequiresGates('PR_CREATE')) {
-				const gateCtx: GateEvaluationContext = {
-					runId: current.id,
-					phase: current.phase,
-					targetPhase: 'PR_CREATE',
-					gateTypes: getRequiredGates('PR_CREATE'),
-				};
-				result = tryTransitionWithGates(current, 'PR_CREATE', summary, 'INFO', null, gateCtx);
-			} else {
-				result = transition(current, 'PR_CREATE', summary, 'INFO');
-			}
+				if (phaseRequiresGates('PR_CREATE')) {
+					const gateCtx: GateEvaluationContext = {
+						runId: current.id,
+						phase: current.phase,
+						targetPhase: 'PR_CREATE',
+						gateTypes: getRequiredGates('PR_CREATE'),
+					};
+					result = tryTransitionWithGates(current, 'PR_CREATE', summary, 'INFO', null, gateCtx);
+				} else {
+					result = transition(current, 'PR_CREATE', summary, 'INFO');
+				}
 			} catch (err) {
 				storeEvent(
 					{
@@ -967,16 +982,23 @@ async function executePhase(run: RunState, deps: PipelineDeps): Promise<RunState
 				}
 
 				if (phaseRequiresGates('MERGE')) {
-				const gateCtx: GateEvaluationContext = {
-					runId: current.id,
-					phase: current.phase,
-					targetPhase: 'MERGE',
-					gateTypes: getRequiredGates('MERGE'),
-				};
-				result = tryTransitionWithGates(current, 'MERGE', `PR #${pr.number} created: ${pr.htmlUrl}`, 'INFO', null, gateCtx);
-			} else {
-				result = transition(current, 'MERGE', `PR #${pr.number} created: ${pr.htmlUrl}`, 'INFO');
-			}
+					const gateCtx: GateEvaluationContext = {
+						runId: current.id,
+						phase: current.phase,
+						targetPhase: 'MERGE',
+						gateTypes: getRequiredGates('MERGE'),
+					};
+					result = tryTransitionWithGates(
+						current,
+						'MERGE',
+						`PR #${pr.number} created: ${pr.htmlUrl}`,
+						'INFO',
+						null,
+						gateCtx,
+					);
+				} else {
+					result = transition(current, 'MERGE', `PR #${pr.number} created: ${pr.htmlUrl}`, 'INFO');
+				}
 			} catch (err) {
 				storeEvent(
 					{
@@ -1012,7 +1034,14 @@ async function executePhase(run: RunState, deps: PipelineDeps): Promise<RunState
 			const mergeKillSwitch = process.env.POSITRON_MERGE_KILL_SWITCH !== 'false';
 			const branch = current.branch;
 			if (!branch) {
-				result = tryTransitionWithGates(current, 'DONE', 'Merge skipped (no branch)', 'INFO', null, doneGateCtx);
+				result = tryTransitionWithGates(
+					current,
+					'DONE',
+					'Merge skipped (no branch)',
+					'INFO',
+					null,
+					doneGateCtx,
+				);
 				break;
 			}
 
@@ -1030,7 +1059,14 @@ async function executePhase(run: RunState, deps: PipelineDeps): Promise<RunState
 			}
 
 			if (!pr) {
-				result = tryTransitionWithGates(current, 'DONE', 'Merge skipped (no open PR found)', 'INFO', null, doneGateCtx);
+				result = tryTransitionWithGates(
+					current,
+					'DONE',
+					'Merge skipped (no open PR found)',
+					'INFO',
+					null,
+					doneGateCtx,
+				);
 				break;
 			}
 
@@ -1266,7 +1302,14 @@ async function executePhase(run: RunState, deps: PipelineDeps): Promise<RunState
 					},
 					deps,
 				);
-				result = tryTransitionWithGates(current, 'DONE', `Merge failed: ${String(err).slice(0, 100)}`, 'WARN', null, doneGateCtx);
+				result = tryTransitionWithGates(
+					current,
+					'DONE',
+					`Merge failed: ${String(err).slice(0, 100)}`,
+					'WARN',
+					null,
+					doneGateCtx,
+				);
 			}
 			break;
 		}
@@ -1500,7 +1543,9 @@ export async function runPipeline(run: RunState, deps: PipelineDeps): Promise<Ru
 			runCleanup(next)
 				.then((cleanupResult) => {
 					if (!cleanupResult.cleaned) {
-						console.warn(`[Worker] Workspace cleanup: ${cleanupResult.reason ?? 'unknown'}`, { runId: next.id });
+						console.warn(`[Worker] Workspace cleanup: ${cleanupResult.reason ?? 'unknown'}`, {
+							runId: next.id,
+						});
 					}
 				})
 				.catch((err) => {
@@ -1541,7 +1586,9 @@ export async function runPipeline(run: RunState, deps: PipelineDeps): Promise<Ru
 	runCleanup(result.run)
 		.then((cleanupResult) => {
 			if (!cleanupResult.cleaned) {
-				console.warn(`[Worker] Workspace cleanup: ${cleanupResult.reason ?? 'unknown'}`, { runId: result.run.id });
+				console.warn(`[Worker] Workspace cleanup: ${cleanupResult.reason ?? 'unknown'}`, {
+					runId: result.run.id,
+				});
 			}
 		})
 		.catch((err) => {

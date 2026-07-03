@@ -1,52 +1,52 @@
 {
-  "issue": 308,
-  "phase": "B",
-  "title": "Fake/Dry-Run Gate Assembly Validation",
-  "generated_at": "2026-06-29T09:00:00+02:00",
-  "branch": "feat/issue-308-phase-b-fake-gate-assembly",
-  "classifications": {
-    "ISSUE_308_PHASE_B_REALITY_STATUS": "CURRENT",
-    "ISSUE_308_PHASE_B_EVIDENCE_INTAKE_STATUS": "COMPLETE",
-    "ISSUE_308_PHASE_B_TEST_HARNESS_STATUS": "READY",
-    "ISSUE_308_PHASE_B_DESIGN_STATUS": "GREEN_SAFE",
-    "ISSUE_308_PHASE_B_IMPLEMENTATION_STATUS": "IMPLEMENTED",
-    "ISSUE_308_PHASE_B_TEST_STATUS": "GREEN",
-    "ISSUE_308_PHASE_B_SAFETY_STATUS": "CLEAN",
-    "ISSUE_308_PHASE_B_SCOPE_STATUS": "CLEAN_PHASE_B_ONLY",
-    "ISSUE_308_PHASE_B_LOCAL_GATES": "GREEN",
-    "ISSUE_308_PHASE_B_DECISION": "PASSED_FAKE_GATE_ASSEMBLY",
-    "NEXT_ALLOWED_PHASE": "PHASE_C_READINESS_RECHECK_ONLY"
-  },
-  "test_results": {
-    "targeted": { "passed": 43, "failed": 0, "total": 43 },
-    "full_suite": { "passed": 1836, "failed": 0, "total": 1836 }
-  },
-  "local_gates": {
-    "git_diff_check": { "exit_code": 0, "result": "PASS" },
-    "npm_run_build": { "exit_code": 0, "result": "PASS" },
-    "npm_run_typecheck": { "exit_code": 0, "result": "PASS" },
-    "npm_test": { "exit_code": 0, "result": "PASS" }
-  },
-  "files": {
-    "test": ["packages/run-state/src/__tests__/gate-assembly.test.ts"],
-    "evidence": [
-      "docs/evidence/issue-308/phase-b-reality-refresh.md",
-      "docs/evidence/issue-308/phase-b-evidence-intake.md",
-      "docs/evidence/issue-308/phase-b-test-harness-discovery.md",
-      "docs/evidence/issue-308/phase-b-design-plan.md",
-      "docs/evidence/issue-308/phase-b-implementation-report.md",
-      "docs/evidence/issue-308/phase-b-test-report.md",
-      "docs/evidence/issue-308/phase-b-safety-audit.md",
-      "docs/evidence/issue-308/phase-b-scope-audit.md",
-      "docs/evidence/issue-308/phase-b-gates.md",
-      "docs/evidence/issue-308/phase-b-decision.md",
-      "docs/evidence/issue-308/phase-b-next-prompt.md",
-      "docs/evidence/issue-308/phase-b-summary.json",
-      "docs/evidence/issue-308/phase-b-report.md",
-      "docs/evidence/issue-308/phase-b-reviewer-report.md"
-    ]
-  },
-  "prohibited_actions_verified": 17,
-  "restrictions_violated": 0,
-  "confidence": 0.95
+	"issue": 308,
+	"phase": "B",
+	"title": "Fake/Dry-Run Gate Assembly Validation",
+	"generated_at": "2026-06-29T09:00:00+02:00",
+	"branch": "feat/issue-308-phase-b-fake-gate-assembly",
+	"classifications": {
+		"ISSUE_308_PHASE_B_REALITY_STATUS": "CURRENT",
+		"ISSUE_308_PHASE_B_EVIDENCE_INTAKE_STATUS": "COMPLETE",
+		"ISSUE_308_PHASE_B_TEST_HARNESS_STATUS": "READY",
+		"ISSUE_308_PHASE_B_DESIGN_STATUS": "GREEN_SAFE",
+		"ISSUE_308_PHASE_B_IMPLEMENTATION_STATUS": "IMPLEMENTED",
+		"ISSUE_308_PHASE_B_TEST_STATUS": "GREEN",
+		"ISSUE_308_PHASE_B_SAFETY_STATUS": "CLEAN",
+		"ISSUE_308_PHASE_B_SCOPE_STATUS": "CLEAN_PHASE_B_ONLY",
+		"ISSUE_308_PHASE_B_LOCAL_GATES": "GREEN",
+		"ISSUE_308_PHASE_B_DECISION": "PASSED_FAKE_GATE_ASSEMBLY",
+		"NEXT_ALLOWED_PHASE": "PHASE_C_READINESS_RECHECK_ONLY"
+	},
+	"test_results": {
+		"targeted": { "passed": 43, "failed": 0, "total": 43 },
+		"full_suite": { "passed": 1836, "failed": 0, "total": 1836 }
+	},
+	"local_gates": {
+		"git_diff_check": { "exit_code": 0, "result": "PASS" },
+		"npm_run_build": { "exit_code": 0, "result": "PASS" },
+		"npm_run_typecheck": { "exit_code": 0, "result": "PASS" },
+		"npm_test": { "exit_code": 0, "result": "PASS" }
+	},
+	"files": {
+		"test": ["packages/run-state/src/__tests__/gate-assembly.test.ts"],
+		"evidence": [
+			"docs/evidence/issue-308/phase-b-reality-refresh.md",
+			"docs/evidence/issue-308/phase-b-evidence-intake.md",
+			"docs/evidence/issue-308/phase-b-test-harness-discovery.md",
+			"docs/evidence/issue-308/phase-b-design-plan.md",
+			"docs/evidence/issue-308/phase-b-implementation-report.md",
+			"docs/evidence/issue-308/phase-b-test-report.md",
+			"docs/evidence/issue-308/phase-b-safety-audit.md",
+			"docs/evidence/issue-308/phase-b-scope-audit.md",
+			"docs/evidence/issue-308/phase-b-gates.md",
+			"docs/evidence/issue-308/phase-b-decision.md",
+			"docs/evidence/issue-308/phase-b-next-prompt.md",
+			"docs/evidence/issue-308/phase-b-summary.json",
+			"docs/evidence/issue-308/phase-b-report.md",
+			"docs/evidence/issue-308/phase-b-reviewer-report.md"
+		]
+	},
+	"prohibited_actions_verified": 17,
+	"restrictions_violated": 0,
+	"confidence": 0.95
 }

@@ -297,11 +297,7 @@ describe('handleGateApprove — structural integrity', () => {
 		const run = makeRunState();
 		const { outcome } = handleGateApprove(run);
 
-		const validKinds: GateApproveOutcome['kind'][] = [
-			'TRANSITION',
-			'FAILED_BLOCKED',
-			'STAY',
-		];
+		const validKinds: GateApproveOutcome['kind'][] = ['TRANSITION', 'FAILED_BLOCKED', 'STAY'];
 		expect(validKinds).toContain(outcome.kind);
 	});
 

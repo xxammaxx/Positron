@@ -1,115 +1,115 @@
 {
-  "status": "YELLOW",
-  "repo": "xxammaxx/Positron",
-  "transfer_method": "github_only",
-  "source_machine_role": "previous_builder",
-  "source_machine_os": "Windows (PowerShell 5.1)",
-  "source_node_version": "v24.14.0",
-  "source_npm_version": "11.9.0",
-  "source_git_version": "2.47.0.windows.1",
-  "branch": "docs/issue-308-phase-d-readiness-after-322",
-  "local_head": "f7502ea9806aee388a5fbd3688034113ef950fb9",
-  "remote_main_head": "2198bc99e44b3742bc8c2dfd5491c815ac306eb6",
-  "commits_ahead_of_main": 1,
-  "commits_behind_main": 0,
-  "working_tree": "clean",
-  "secret_env_status": "CLEAN",
-  "local_gates": "YELLOW_PREEXISTING",
-  "local_gates_detail": {
-    "git_diff_check": "PASS",
-    "build": "YELLOW_PREEXISTING (5 known errors)",
-    "typecheck": "PASS",
-    "test": "PASS (1858/1858, 0 failures)"
-  },
-  "open_prs_to_review": [
-    {
-      "number": 329,
-      "title": "docs(issue-308): reassess Phase D readiness after onAudit wiring",
-      "draft": true,
-      "mergeable": "MERGEABLE",
-      "recommendation": "KEEP_OPEN_ACTIVE"
-    },
-    {
-      "number": 313,
-      "title": "docs(issue-308): add supervised real-mode readiness audit",
-      "draft": true,
-      "mergeable": "MERGEABLE",
-      "stale": true,
-      "recommendation": "CLOSE_AS_OBSOLETE"
-    }
-  ],
-  "issues_to_review": [
-    {
-      "number": 322,
-      "title": "Wire ToolGateway onAudit into server/worker runtime",
-      "recommendation": "CLOSE_WITH_OWNER_APPROVAL"
-    },
-    {
-      "number": 308,
-      "title": "Validation: Supervised Full Real Mode pilot",
-      "status": "READY_FOR_LIMITED_PHASE_D_APPROVAL_PACKAGE"
-    },
-    {
-      "number": 321,
-      "title": "Gate MERGE->DONE transition"
-    },
-    {
-      "number": 323,
-      "title": "Decide pre_run/pre_push GateType applicability"
-    },
-    {
-      "number": 324,
-      "title": "Evaluate persistent workspace lock"
-    },
-    {
-      "number": 325,
-      "title": "Resolve pre-existing dist artifacts"
-    },
-    {
-      "number": 326,
-      "title": "Remove or disable CodeRabbit external app"
-    }
-  ],
-  "do_not_transfer": [
-    ".env",
-    "tokens",
-    "ssh_keys",
-    "node_modules",
-    "dist_artifacts",
-    "local_stashes"
-  ],
-  "next_machine_first_steps": [
-    "git clone https://github.com/xxammaxx/Positron.git",
-    "cd Positron",
-    "node --version",
-    "npm ci",
-    "npm run build",
-    "npm run typecheck",
-    "npm test",
-    "Review PR #329",
-    "Review Issues #322, #308",
-    "Create fresh apps/server/.env from .env.example"
-  ],
-  "stashes": {
-    "count": 3,
-    "do_not_transfer": true,
-    "description": "3 stashes on old long-closed branches, historical only"
-  },
-  "pre_existing_dist_artifacts": {
-    "path": "packages/shared/dist/",
-    "tracked_in_git": true,
-    "issue": 325,
-    "action": "DO_NOT_TRANSFER_AS_BUILD_DEPENDENCY"
-  },
-  "timestamp": "2026-06-29T14:33:00+02:00",
-  "evidence_files": [
-    "docs/evidence/machine-migration/source-working-tree-audit.md",
-    "docs/evidence/machine-migration/source-secret-env-audit.md",
-    "docs/evidence/machine-migration/source-github-handoff-status.md",
-    "docs/evidence/machine-migration/source-local-gates.md",
-    "docs/evidence/machine-migration/HANDOFF_MANIFEST.md",
-    "docs/evidence/machine-migration/source-handoff-summary.json",
-    "docs/evidence/machine-migration/source-handoff-report.md",
-    "docs/evidence/machine-migration/source-handoff-reviewer-report.md"
-  ]
+	"status": "YELLOW",
+	"repo": "xxammaxx/Positron",
+	"transfer_method": "github_only",
+	"source_machine_role": "previous_builder",
+	"source_machine_os": "Windows (PowerShell 5.1)",
+	"source_node_version": "v24.14.0",
+	"source_npm_version": "11.9.0",
+	"source_git_version": "2.47.0.windows.1",
+	"branch": "docs/issue-308-phase-d-readiness-after-322",
+	"local_head": "f7502ea9806aee388a5fbd3688034113ef950fb9",
+	"remote_main_head": "2198bc99e44b3742bc8c2dfd5491c815ac306eb6",
+	"commits_ahead_of_main": 1,
+	"commits_behind_main": 0,
+	"working_tree": "clean",
+	"secret_env_status": "CLEAN",
+	"local_gates": "YELLOW_PREEXISTING",
+	"local_gates_detail": {
+		"git_diff_check": "PASS",
+		"build": "YELLOW_PREEXISTING (5 known errors)",
+		"typecheck": "PASS",
+		"test": "PASS (1858/1858, 0 failures)"
+	},
+	"open_prs_to_review": [
+		{
+			"number": 329,
+			"title": "docs(issue-308): reassess Phase D readiness after onAudit wiring",
+			"draft": true,
+			"mergeable": "MERGEABLE",
+			"recommendation": "KEEP_OPEN_ACTIVE"
+		},
+		{
+			"number": 313,
+			"title": "docs(issue-308): add supervised real-mode readiness audit",
+			"draft": true,
+			"mergeable": "MERGEABLE",
+			"stale": true,
+			"recommendation": "CLOSE_AS_OBSOLETE"
+		}
+	],
+	"issues_to_review": [
+		{
+			"number": 322,
+			"title": "Wire ToolGateway onAudit into server/worker runtime",
+			"recommendation": "CLOSE_WITH_OWNER_APPROVAL"
+		},
+		{
+			"number": 308,
+			"title": "Validation: Supervised Full Real Mode pilot",
+			"status": "READY_FOR_LIMITED_PHASE_D_APPROVAL_PACKAGE"
+		},
+		{
+			"number": 321,
+			"title": "Gate MERGE->DONE transition"
+		},
+		{
+			"number": 323,
+			"title": "Decide pre_run/pre_push GateType applicability"
+		},
+		{
+			"number": 324,
+			"title": "Evaluate persistent workspace lock"
+		},
+		{
+			"number": 325,
+			"title": "Resolve pre-existing dist artifacts"
+		},
+		{
+			"number": 326,
+			"title": "Remove or disable CodeRabbit external app"
+		}
+	],
+	"do_not_transfer": [
+		".env",
+		"tokens",
+		"ssh_keys",
+		"node_modules",
+		"dist_artifacts",
+		"local_stashes"
+	],
+	"next_machine_first_steps": [
+		"git clone https://github.com/xxammaxx/Positron.git",
+		"cd Positron",
+		"node --version",
+		"npm ci",
+		"npm run build",
+		"npm run typecheck",
+		"npm test",
+		"Review PR #329",
+		"Review Issues #322, #308",
+		"Create fresh apps/server/.env from .env.example"
+	],
+	"stashes": {
+		"count": 3,
+		"do_not_transfer": true,
+		"description": "3 stashes on old long-closed branches, historical only"
+	},
+	"pre_existing_dist_artifacts": {
+		"path": "packages/shared/dist/",
+		"tracked_in_git": true,
+		"issue": 325,
+		"action": "DO_NOT_TRANSFER_AS_BUILD_DEPENDENCY"
+	},
+	"timestamp": "2026-06-29T14:33:00+02:00",
+	"evidence_files": [
+		"docs/evidence/machine-migration/source-working-tree-audit.md",
+		"docs/evidence/machine-migration/source-secret-env-audit.md",
+		"docs/evidence/machine-migration/source-github-handoff-status.md",
+		"docs/evidence/machine-migration/source-local-gates.md",
+		"docs/evidence/machine-migration/HANDOFF_MANIFEST.md",
+		"docs/evidence/machine-migration/source-handoff-summary.json",
+		"docs/evidence/machine-migration/source-handoff-report.md",
+		"docs/evidence/machine-migration/source-handoff-reviewer-report.md"
+	]
 }

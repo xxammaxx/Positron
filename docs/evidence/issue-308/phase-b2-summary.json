@@ -1,64 +1,64 @@
 {
-  "issue": 308,
-  "phase": "B2",
-  "title": "Final Audit and Merge — Phase B Fake Gate Assembly Validation",
-  "generated_at": "2026-06-29T09:22:00+02:00",
-  "branch": "main",
-  "head_before": "d2970e5326aefe1ca33df77e5663c1475823b6ec",
-  "head_after": "9461fa12f9295a14b0a3221836a4a8c383b46125",
-  "pr": 318,
-  "pr_merged": true,
-  "merge_sha": "9461fa12f9295a14b0a3221836a4a8c383b46125",
-  "classifications": {
-    "ISSUE_308_PHASE_B2_REALITY_STATUS": "CURRENT",
-    "PR_318_SCOPE_STATUS": "CLEAN_PHASE_B_ONLY",
-    "ISSUE_308_PHASE_B_IMPLEMENTATION_AUDIT_STATUS": "CLEAN",
-    "ISSUE_308_PHASE_B_EVIDENCE_STATUS": "CLEAN",
-    "ISSUE_308_PHASE_B2_SAFETY_STATUS": "CLEAN",
-    "ISSUE_308_PHASE_B2_LOCAL_GATES": "GREEN",
-    "PR_318_MERGE_READY": "YES",
-    "PR_READY_EXECUTED": "YES",
-    "PR_318_MERGE_STATUS": "SUCCESS",
-    "POST_MERGE_SYNC": "SUCCESS",
-    "ISSUE_308_STATUS": "LEFT_OPEN",
-    "NEXT_ALLOWED_PHASE": "PHASE_C_READINESS_RECHECK_ONLY"
-  },
-  "test_results": {
-    "targeted": { "passed": 43, "failed": 0, "total": 43 },
-    "full_suite": { "passed": 1836, "failed": 0, "total": 1836 }
-  },
-  "local_gates": {
-    "git_diff_check": { "exit_code": 0, "result": "PASS" },
-    "npm_run_build": { "exit_code": 0, "result": "PASS" },
-    "npm_run_typecheck": { "exit_code": 0, "result": "PASS" },
-    "npm_test": { "exit_code": 0, "result": "PASS", "tests": 1836 }
-  },
-  "files": {
-    "evidence_b2": [
-      "docs/evidence/issue-308/phase-b2-reality-refresh.md",
-      "docs/evidence/issue-308/phase-b2-pr-scope-audit.md",
-      "docs/evidence/issue-308/phase-b2-implementation-audit.md",
-      "docs/evidence/issue-308/phase-b2-evidence-audit.md",
-      "docs/evidence/issue-308/phase-b2-safety-audit.md",
-      "docs/evidence/issue-308/phase-b2-final-gates.md",
-      "docs/evidence/issue-308/phase-b2-merge-readiness.md",
-      "docs/evidence/issue-308/phase-b2-merge-report.md",
-      "docs/evidence/issue-308/phase-b2-post-merge-sync.md",
-      "docs/evidence/issue-308/phase-b2-issue-status-report.md",
-      "docs/evidence/issue-308/phase-b2-next-phase-c-readiness-prompt.md",
-      "docs/evidence/issue-308/phase-b2-summary.json",
-      "docs/evidence/issue-308/phase-b2-report.md",
-      "docs/evidence/issue-308/phase-b2-reviewer-report.md"
-    ]
-  },
-  "merge": {
-    "pr": 318,
-    "method": "standard-merge",
-    "delete_branch": false,
-    "branch": "feat/issue-308-phase-b-fake-gate-assembly",
-    "retained": true
-  },
-  "prohibited_actions_verified": 27,
-  "restrictions_violated": 0,
-  "confidence": 0.98
+	"issue": 308,
+	"phase": "B2",
+	"title": "Final Audit and Merge — Phase B Fake Gate Assembly Validation",
+	"generated_at": "2026-06-29T09:22:00+02:00",
+	"branch": "main",
+	"head_before": "d2970e5326aefe1ca33df77e5663c1475823b6ec",
+	"head_after": "9461fa12f9295a14b0a3221836a4a8c383b46125",
+	"pr": 318,
+	"pr_merged": true,
+	"merge_sha": "9461fa12f9295a14b0a3221836a4a8c383b46125",
+	"classifications": {
+		"ISSUE_308_PHASE_B2_REALITY_STATUS": "CURRENT",
+		"PR_318_SCOPE_STATUS": "CLEAN_PHASE_B_ONLY",
+		"ISSUE_308_PHASE_B_IMPLEMENTATION_AUDIT_STATUS": "CLEAN",
+		"ISSUE_308_PHASE_B_EVIDENCE_STATUS": "CLEAN",
+		"ISSUE_308_PHASE_B2_SAFETY_STATUS": "CLEAN",
+		"ISSUE_308_PHASE_B2_LOCAL_GATES": "GREEN",
+		"PR_318_MERGE_READY": "YES",
+		"PR_READY_EXECUTED": "YES",
+		"PR_318_MERGE_STATUS": "SUCCESS",
+		"POST_MERGE_SYNC": "SUCCESS",
+		"ISSUE_308_STATUS": "LEFT_OPEN",
+		"NEXT_ALLOWED_PHASE": "PHASE_C_READINESS_RECHECK_ONLY"
+	},
+	"test_results": {
+		"targeted": { "passed": 43, "failed": 0, "total": 43 },
+		"full_suite": { "passed": 1836, "failed": 0, "total": 1836 }
+	},
+	"local_gates": {
+		"git_diff_check": { "exit_code": 0, "result": "PASS" },
+		"npm_run_build": { "exit_code": 0, "result": "PASS" },
+		"npm_run_typecheck": { "exit_code": 0, "result": "PASS" },
+		"npm_test": { "exit_code": 0, "result": "PASS", "tests": 1836 }
+	},
+	"files": {
+		"evidence_b2": [
+			"docs/evidence/issue-308/phase-b2-reality-refresh.md",
+			"docs/evidence/issue-308/phase-b2-pr-scope-audit.md",
+			"docs/evidence/issue-308/phase-b2-implementation-audit.md",
+			"docs/evidence/issue-308/phase-b2-evidence-audit.md",
+			"docs/evidence/issue-308/phase-b2-safety-audit.md",
+			"docs/evidence/issue-308/phase-b2-final-gates.md",
+			"docs/evidence/issue-308/phase-b2-merge-readiness.md",
+			"docs/evidence/issue-308/phase-b2-merge-report.md",
+			"docs/evidence/issue-308/phase-b2-post-merge-sync.md",
+			"docs/evidence/issue-308/phase-b2-issue-status-report.md",
+			"docs/evidence/issue-308/phase-b2-next-phase-c-readiness-prompt.md",
+			"docs/evidence/issue-308/phase-b2-summary.json",
+			"docs/evidence/issue-308/phase-b2-report.md",
+			"docs/evidence/issue-308/phase-b2-reviewer-report.md"
+		]
+	},
+	"merge": {
+		"pr": 318,
+		"method": "standard-merge",
+		"delete_branch": false,
+		"branch": "feat/issue-308-phase-b-fake-gate-assembly",
+		"retained": true
+	},
+	"prohibited_actions_verified": 27,
+	"restrictions_violated": 0,
+	"confidence": 0.98
 }

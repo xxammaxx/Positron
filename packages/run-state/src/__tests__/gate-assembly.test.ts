@@ -34,7 +34,13 @@ import {
 	PHASE_GATE_REQUIREMENTS,
 } from '../gate-evaluator.js';
 import type { GatedTransitionResult } from '../gate-evaluator.js';
-import { createRun, transition, registerWorkspaceCleanup, getWorkspaceCleanupFn, canTransition } from '../state-machine.js';
+import {
+	createRun,
+	transition,
+	registerWorkspaceCleanup,
+	getWorkspaceCleanupFn,
+	canTransition,
+} from '../state-machine.js';
 import type { RunState } from '../state-machine.js';
 import type { GateEvaluationContext, GateResult, GateType, Phase } from '@positron/shared';
 
@@ -118,8 +124,14 @@ describe('Phase B: Fake Gate Assembly — Positive Tests', () => {
 		it('registers all 8 gate types', () => {
 			expect(gateEvaluatorCount()).toBe(8);
 			const allGates: GateType[] = [
-				'pre_run', 'pre_write', 'pre_push', 'pre_pr',
-				'pre_merge', 'evidence_required', 'security', 'human_approval',
+				'pre_run',
+				'pre_write',
+				'pre_push',
+				'pre_pr',
+				'pre_merge',
+				'evidence_required',
+				'security',
+				'human_approval',
 			];
 			for (const gt of allGates) {
 				expect(hasGateEvaluator(gt), `Missing evaluator for ${gt}`).toBe(true);
@@ -129,8 +141,14 @@ describe('Phase B: Fake Gate Assembly — Positive Tests', () => {
 		it('each registered evaluator returns passed:true', () => {
 			const ctx = makeContext();
 			const allGates: GateType[] = [
-				'pre_run', 'pre_write', 'pre_push', 'pre_pr',
-				'pre_merge', 'evidence_required', 'security', 'human_approval',
+				'pre_run',
+				'pre_write',
+				'pre_push',
+				'pre_pr',
+				'pre_merge',
+				'evidence_required',
+				'security',
+				'human_approval',
 			];
 
 			for (const gt of allGates) {
@@ -207,34 +225,70 @@ describe('Phase B: Fake Gate Assembly — Positive Tests', () => {
 			let run = makeRun('VERIFY');
 
 			// COMMIT
-			const r1 = tryTransitionWithGates(run, 'COMMIT', 'Step 1: Commit', 'INFO', null,
-				makeContext({ phase: 'VERIFY', targetPhase: 'COMMIT',
+			const r1 = tryTransitionWithGates(
+				run,
+				'COMMIT',
+				'Step 1: Commit',
+				'INFO',
+				null,
+				makeContext({
+					phase: 'VERIFY',
+					targetPhase: 'COMMIT',
 					gateTypes: [...(PHASE_GATE_REQUIREMENTS['COMMIT'] ?? [])],
-					evidencePaths: ['evidence/step1.md'] }));
+					evidencePaths: ['evidence/step1.md'],
+				}),
+			);
 			assertPassed(r1);
 			run = r1.run;
 
 			// PR_CREATE
-			const r2 = tryTransitionWithGates(run, 'PR_CREATE', 'Step 2: PR', 'INFO', null,
-				makeContext({ phase: 'COMMIT', targetPhase: 'PR_CREATE',
+			const r2 = tryTransitionWithGates(
+				run,
+				'PR_CREATE',
+				'Step 2: PR',
+				'INFO',
+				null,
+				makeContext({
+					phase: 'COMMIT',
+					targetPhase: 'PR_CREATE',
 					gateTypes: [...(PHASE_GATE_REQUIREMENTS['PR_CREATE'] ?? [])],
-					evidencePaths: ['evidence/step2.md'] }));
+					evidencePaths: ['evidence/step2.md'],
+				}),
+			);
 			assertPassed(r2);
 			run = r2.run;
 
 			// MERGE
-			const r3 = tryTransitionWithGates(run, 'MERGE', 'Step 3: Merge', 'INFO', null,
-				makeContext({ phase: 'PR_CREATE', targetPhase: 'MERGE',
+			const r3 = tryTransitionWithGates(
+				run,
+				'MERGE',
+				'Step 3: Merge',
+				'INFO',
+				null,
+				makeContext({
+					phase: 'PR_CREATE',
+					targetPhase: 'MERGE',
 					gateTypes: [...(PHASE_GATE_REQUIREMENTS['MERGE'] ?? [])],
-					evidencePaths: ['evidence/step3.md'] }));
+					evidencePaths: ['evidence/step3.md'],
+				}),
+			);
 			assertPassed(r3);
 			run = r3.run;
 
 			// DONE
-			const r4 = tryTransitionWithGates(run, 'DONE', 'Step 4: Done', 'INFO', null,
-				makeContext({ phase: 'MERGE', targetPhase: 'DONE',
+			const r4 = tryTransitionWithGates(
+				run,
+				'DONE',
+				'Step 4: Done',
+				'INFO',
+				null,
+				makeContext({
+					phase: 'MERGE',
+					targetPhase: 'DONE',
 					gateTypes: [...(PHASE_GATE_REQUIREMENTS['DONE'] ?? [])],
-					evidencePaths: ['evidence/step4.md'] }));
+					evidencePaths: ['evidence/step4.md'],
+				}),
+			);
 			assertPassed(r4);
 			expect(r4.run.phase).toBe('DONE');
 			expect(r4.run.status).toBe('done');
@@ -291,7 +345,14 @@ describe('Phase B: Fake Gate Assembly — Positive Tests', () => {
 				evidencePaths,
 			});
 
-			const result = tryTransitionWithGates(run, 'COMMIT', 'Commit with evidence', 'INFO', null, ctx);
+			const result = tryTransitionWithGates(
+				run,
+				'COMMIT',
+				'Commit with evidence',
+				'INFO',
+				null,
+				ctx,
+			);
 			assertPassed(result);
 			expect(ctx.evidencePaths).toEqual(evidencePaths);
 		});
@@ -337,8 +398,14 @@ describe('Phase B: Fake Gate Assembly — Positive Tests', () => {
 		it('gateResult is present even when no gates are required', () => {
 			const run = makeRun('TEST');
 			// Transition from TEST to VERIFY (internal, valid, no gates)
-			const result = tryTransitionWithGates(run, 'VERIFY', 'Internal transition', 'INFO', null,
-				makeContext({ phase: 'TEST', targetPhase: 'VERIFY', gateTypes: [] }));
+			const result = tryTransitionWithGates(
+				run,
+				'VERIFY',
+				'Internal transition',
+				'INFO',
+				null,
+				makeContext({ phase: 'TEST', targetPhase: 'VERIFY', gateTypes: [] }),
+			);
 
 			expect(result.ok).toBe(true);
 			expect(result.gateResult).toBeDefined();
@@ -388,14 +455,16 @@ describe('Phase B: Fake Gate Assembly — Negative Tests', () => {
 
 			const run = makeRun('VERIFY');
 			const ctx = makeContext({
-				phase: 'VERIFY', targetPhase: 'COMMIT',
+				phase: 'VERIFY',
+				targetPhase: 'COMMIT',
 				gateTypes: ['pre_write', 'evidence_required'],
 			});
 
 			const result = tryTransitionWithGates(run, 'COMMIT', 'Attempt', 'INFO', null, ctx);
 			assertBlocked(result, 'pre_write');
-			expect(result.gateResult.results.find((r) => r.gateType === 'pre_write')!.message)
-				.toContain('No evaluator registered');
+			expect(result.gateResult.results.find((r) => r.gateType === 'pre_write')!.message).toContain(
+				'No evaluator registered',
+			);
 		});
 
 		it('missing evidence_required evaluator blocks DONE', () => {
@@ -403,7 +472,8 @@ describe('Phase B: Fake Gate Assembly — Negative Tests', () => {
 
 			const run = makeRun('MERGE');
 			const ctx = makeContext({
-				phase: 'MERGE', targetPhase: 'DONE',
+				phase: 'MERGE',
+				targetPhase: 'DONE',
 				gateTypes: ['evidence_required'],
 			});
 
@@ -418,7 +488,8 @@ describe('Phase B: Fake Gate Assembly — Negative Tests', () => {
 
 			const run = makeRun('PR_CREATE');
 			const ctx = makeContext({
-				phase: 'PR_CREATE', targetPhase: 'MERGE',
+				phase: 'PR_CREATE',
+				targetPhase: 'MERGE',
 				gateTypes: ['pre_merge', 'security', 'human_approval'],
 			});
 
@@ -435,7 +506,8 @@ describe('Phase B: Fake Gate Assembly — Negative Tests', () => {
 
 			const run = makeRun('PR_CREATE');
 			const ctx = makeContext({
-				phase: 'PR_CREATE', targetPhase: 'MERGE',
+				phase: 'PR_CREATE',
+				targetPhase: 'MERGE',
 				gateTypes: ['pre_merge', 'security', 'human_approval'],
 			});
 
@@ -453,7 +525,8 @@ describe('Phase B: Fake Gate Assembly — Negative Tests', () => {
 
 			const run = makeRun('PR_CREATE');
 			const ctx = makeContext({
-				phase: 'PR_CREATE', targetPhase: 'MERGE',
+				phase: 'PR_CREATE',
+				targetPhase: 'MERGE',
 				gateTypes: ['pre_merge', 'security', 'human_approval'],
 			});
 
@@ -477,11 +550,15 @@ describe('Phase B: Fake Gate Assembly — Negative Tests', () => {
 			clearGateEvaluators();
 			registerGateEvaluator('pre_merge', passEval('pre_merge'));
 			registerGateEvaluator('security', passEval('security'));
-			registerGateEvaluator('human_approval', blockEval('human_approval', 'Human approval required'));
+			registerGateEvaluator(
+				'human_approval',
+				blockEval('human_approval', 'Human approval required'),
+			);
 
 			const run = makeRun('PR_CREATE');
 			const ctx = makeContext({
-				phase: 'PR_CREATE', targetPhase: 'MERGE',
+				phase: 'PR_CREATE',
+				targetPhase: 'MERGE',
 				gateTypes: ['pre_merge', 'security', 'human_approval'],
 			});
 
@@ -502,7 +579,8 @@ describe('Phase B: Fake Gate Assembly — Negative Tests', () => {
 
 			const run = makeRun('PR_CREATE');
 			const ctx = makeContext({
-				phase: 'PR_CREATE', targetPhase: 'MERGE',
+				phase: 'PR_CREATE',
+				targetPhase: 'MERGE',
 				gateTypes: ['pre_merge', 'security', 'human_approval'],
 			});
 
@@ -521,7 +599,8 @@ describe('Phase B: Fake Gate Assembly — Negative Tests', () => {
 
 			const run = makeRun('VERIFY');
 			const ctx = makeContext({
-				phase: 'VERIFY', targetPhase: 'COMMIT',
+				phase: 'VERIFY',
+				targetPhase: 'COMMIT',
 				gateTypes: ['pre_write', 'evidence_required'],
 			});
 
@@ -536,7 +615,8 @@ describe('Phase B: Fake Gate Assembly — Negative Tests', () => {
 			registerGateEvaluator('evidence_required', throwEval('evidence_required'));
 
 			const ctx = makeContext({
-				phase: 'MERGE', targetPhase: 'DONE',
+				phase: 'MERGE',
+				targetPhase: 'DONE',
 				gateTypes: ['evidence_required'],
 			});
 
@@ -555,7 +635,8 @@ describe('Phase B: Fake Gate Assembly — Negative Tests', () => {
 
 			const run = makeRun('PR_CREATE');
 			const ctx = makeContext({
-				phase: 'PR_CREATE', targetPhase: 'MERGE',
+				phase: 'PR_CREATE',
+				targetPhase: 'MERGE',
 				gateTypes: ['pre_merge', 'security', 'human_approval'],
 			});
 
@@ -642,8 +723,14 @@ describe('Phase B: Fake Gate Assembly — Edge Cases', () => {
 
 		it('evaluates all 8 gate types together and all pass', () => {
 			const allGates: GateType[] = [
-				'pre_run', 'pre_write', 'pre_push', 'pre_pr',
-				'pre_merge', 'evidence_required', 'security', 'human_approval',
+				'pre_run',
+				'pre_write',
+				'pre_push',
+				'pre_pr',
+				'pre_merge',
+				'evidence_required',
+				'security',
+				'human_approval',
 			];
 
 			const ctx = makeContext({ gateTypes: allGates });
@@ -660,8 +747,14 @@ describe('Phase B: Fake Gate Assembly — Edge Cases', () => {
 			registerGateEvaluator('security', blockEval('security', 'Security alert'));
 
 			const allGates: GateType[] = [
-				'pre_run', 'pre_write', 'pre_push', 'pre_pr',
-				'pre_merge', 'evidence_required', 'security', 'human_approval',
+				'pre_run',
+				'pre_write',
+				'pre_push',
+				'pre_pr',
+				'pre_merge',
+				'evidence_required',
+				'security',
+				'human_approval',
 			];
 
 			const ctx = makeContext({ gateTypes: allGates });
@@ -682,7 +775,8 @@ describe('Phase B: Fake Gate Assembly — Edge Cases', () => {
 
 			const run = makeRun('VERIFY');
 			const ctx = makeContext({
-				phase: 'VERIFY', targetPhase: 'COMMIT',
+				phase: 'VERIFY',
+				targetPhase: 'COMMIT',
 				gateTypes: ['pre_write', 'evidence_required'],
 			});
 
@@ -704,8 +798,14 @@ describe('Phase B: Fake Gate Assembly — Edge Cases', () => {
 		it('transition with empty gate list proceeds (no gates required)', () => {
 			const run = makeRun('TEST');
 			// Internal transition (TEST → VERIFY) is valid and has no gates
-			const result = tryTransitionWithGates(run, 'VERIFY', 'Internal', 'INFO', null,
-				makeContext({ phase: 'TEST', targetPhase: 'VERIFY', gateTypes: [] }));
+			const result = tryTransitionWithGates(
+				run,
+				'VERIFY',
+				'Internal',
+				'INFO',
+				null,
+				makeContext({ phase: 'TEST', targetPhase: 'VERIFY', gateTypes: [] }),
+			);
 
 			expect(result.ok).toBe(true);
 			expect(result.gateResult.allPassed).toBe(true);
@@ -722,7 +822,8 @@ describe('Phase B: Fake Gate Assembly — Edge Cases', () => {
 		it('gateResult references are present in both OK and BLOCKED transitions', () => {
 			const run = makeRun('VERIFY');
 			const ctx = makeContext({
-				phase: 'VERIFY', targetPhase: 'COMMIT',
+				phase: 'VERIFY',
+				targetPhase: 'COMMIT',
 				gateTypes: ['pre_write', 'evidence_required'],
 			});
 
@@ -785,7 +886,8 @@ describe('Phase B: Regression — Gate Enforcement Invariants Preserved', () => 
 
 		const run = makeRun('VERIFY');
 		const ctx = makeContext({
-			phase: 'VERIFY', targetPhase: 'COMMIT',
+			phase: 'VERIFY',
+			targetPhase: 'COMMIT',
 			gateTypes: ['pre_write', 'evidence_required'],
 		});
 
@@ -822,7 +924,8 @@ describe('Issue #321 — DONE Evidence Gate Regression Invariants', () => {
 
 		const run = makeRun('MERGE');
 		const ctx = makeContext({
-			phase: 'MERGE', targetPhase: 'DONE',
+			phase: 'MERGE',
+			targetPhase: 'DONE',
 			gateTypes: ['evidence_required'],
 		});
 
@@ -836,7 +939,8 @@ describe('Issue #321 — DONE Evidence Gate Regression Invariants', () => {
 
 		const run = makeRun('MERGE');
 		const ctx = makeContext({
-			phase: 'MERGE', targetPhase: 'DONE',
+			phase: 'MERGE',
+			targetPhase: 'DONE',
 			gateTypes: ['evidence_required'],
 		});
 
