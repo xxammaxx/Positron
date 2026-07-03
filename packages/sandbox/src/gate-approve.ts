@@ -6,14 +6,14 @@
 //
 // Issue #215: Safety: Integrate Stop/Ask Policy via GATE_APPROVE runtime hook
 
-import type { Phase, EventLevel } from '@positron/shared';
+import type { EventLevel, Phase } from '@positron/shared';
 import { evaluateStopAsk } from './stop-ask-policy.js';
 import type {
-	StopAskDecision,
-	StopAskRiskLevel,
-	StopAskActionCategory,
 	RepoRisk,
+	StopAskActionCategory,
+	StopAskDecision,
 	StopAskRequest,
+	StopAskRiskLevel,
 } from './stop-ask-policy.js';
 
 // ─── Types ───────────────────────────────────────────────────────────────────

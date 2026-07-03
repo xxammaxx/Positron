@@ -4,22 +4,22 @@
 // All fixtures are inline — no GitHub API calls, no gh CLI execution.
 
 import { describe, expect, test } from 'vitest';
+import { getApplyableGreenSafeActions, validateDecisionManifest } from '../decision-manifest.js';
 import type {
+	GitHubContextSnapshot,
 	GitHubIssueSnapshot,
 	GitHubPullRequestSnapshot,
-	GitHubContextSnapshot,
 } from '../github-context-reconciler.js';
 import {
 	reconcileGitHubContext,
 	reconcileGitHubContextToDecisionManifestRows,
 } from '../github-context-reconciler.js';
-import { validateDecisionManifest, getApplyableGreenSafeActions } from '../decision-manifest.js';
 import {
-	normalizeGitHubIssuesFromGhJson,
-	normalizeGitHubPullRequestsFromGhJson,
 	createGitHubContextSnapshot,
 	getAllowedReadOnlyGhCommands,
 	isAllowedReadOnlyGhCommand,
+	normalizeGitHubIssuesFromGhJson,
+	normalizeGitHubPullRequestsFromGhJson,
 } from '../github-snapshot-collector.js';
 
 // ---------------------------------------------------------------------------

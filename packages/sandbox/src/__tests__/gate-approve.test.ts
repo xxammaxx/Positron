@@ -5,7 +5,7 @@
 //
 // Issue #215: Safety: Integrate Stop/Ask Policy via GATE_APPROVE runtime hook
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 // Tests will import from the module once implemented
 // import { gateApproveAction, GateApproveResult } from '../gate-approve.js';

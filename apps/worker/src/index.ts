@@ -12,8 +12,8 @@ import type { GitHubAdapter } from '@positron/github-adapter';
 import { FakeOpenCodeAdapter, RealOpenCodeAdapter } from '@positron/opencode-adapter';
 import {
 	openDatabase,
-	registerWorkspaceCleanup,
 	registerFakeGateEvaluators,
+	registerWorkspaceCleanup,
 } from '@positron/run-state';
 import type { RunState } from '@positron/run-state';
 import { FakeGitWorkspaceAdapter, RealGitWorkspaceAdapter } from '@positron/sandbox';

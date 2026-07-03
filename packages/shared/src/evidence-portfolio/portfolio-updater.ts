@@ -11,6 +11,20 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import {
+	type MarkerBlock,
+	deduplicateRows,
+	extractTableRows,
+	findMarkerBlocks,
+	hasWellFormedBlock,
+	insertIntoBlock,
+	isPathWithinWorkspace,
+	joinLines,
+	makeEndMarker,
+	makeStartMarker,
+	readLines,
+	tableRow,
+} from './markdown-utils.js';
 import type {
 	EvidenceRunStatus,
 	PortfolioFileDetail,
@@ -24,20 +38,6 @@ import {
 	resolvePortfolioConfig,
 	statusMeetsMinimum,
 } from './types.js';
-import {
-	deduplicateRows,
-	extractTableRows,
-	findMarkerBlocks,
-	hasWellFormedBlock,
-	insertIntoBlock,
-	isPathWithinWorkspace,
-	joinLines,
-	makeEndMarker,
-	makeStartMarker,
-	readLines,
-	tableRow,
-	type MarkerBlock,
-} from './markdown-utils.js';
 
 // ── File path constants ──────────────────────────────────────────────
 

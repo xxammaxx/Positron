@@ -1,0 +1,392 @@
+./.opencode/package.json format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+    1 1 │   {
+    2   │ - ··"dependencies":·{
+    3   │ - ····"@opencode-ai/plugin":·"1.15.13"
+    4   │ - ··}
+      2 │ + → "dependencies":·{
+      3 │ + → → "@opencode-ai/plugin":·"1.15.13"
+      4 │ + → }
+    5 5 │   }
+    6 6 │   
+  
+
+./apps/server/src/__tests__/observability/queue.test.ts:45:37 lint/suspicious/noExplicitAny ━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    44 │ 	it('help texts contain no secrets', () => {
+  > 45 │ 		const helps = [(queueJobsTotal as any).help, (queueRedisUp as any).help];
+       │ 		                                  ^^^
+    46 │ 		for (const h of helps) {
+    47 │ 			expect(h).not.toMatch(/ghp_/);
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+./apps/server/src/__tests__/observability/queue.test.ts:45:65 lint/suspicious/noExplicitAny ━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    44 │ 	it('help texts contain no secrets', () => {
+  > 45 │ 		const helps = [(queueJobsTotal as any).help, (queueRedisUp as any).help];
+       │ 		                                                              ^^^
+    46 │ 		for (const h of helps) {
+    47 │ 			expect(h).not.toMatch(/ghp_/);
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+./apps/server/src/gate-approve-handler.ts organizeImports ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Import statements could be sorted:
+  
+     12  12 │   // - Existing Gate 9 / onAudit behavior is not weakened
+     13  13 │   
+     14     │ - import·type·{·Phase·}·from·'@positron/shared';
+     15     │ - import·type·{·RunState·}·from·'@positron/run-state';
+     16     │ - import·{·gateApproveAction·}·from·'@positron/sandbox';
+     17     │ - import·type·{·GateApproveInput,·GateApproveResult·}·from·'@positron/sandbox';
+         14 │ + import·type·{·RunState·}·from·'@positron/run-state';
+         15 │ + import·{·gateApproveAction·}·from·'@positron/sandbox';
+         16 │ + import·type·{·GateApproveInput,·GateApproveResult·}·from·'@positron/sandbox';
+         17 │ + import·type·{·Phase·}·from·'@positron/shared';
+     18  18 │   
+     19  19 │   /**
+  
+
+./apps/server/src/__tests__/integration.test.ts:13:14 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━
+
+  ! The computed expression can be simplified without the use of a string literal.
+  
+    11 │ beforeAll(async () => {
+    12 │ 	// Set the admin token via env so SecretManager picks it up (env provider first)
+  > 13 │ 	process.env['POSITRON_ADMIN_TOKEN'] = DEV_ADMIN_TOKEN;
+       │ 	            ^^^^^^^^^^^^^^^^^^^^^^
+    14 │ 	server = createServer({ repository, dbPath: ':memory:' });
+    15 │ 	await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', () => resolve()));
+  
+  i Unsafe fix: Use a literal key instead.
+  
+     11  11 │   beforeAll(async () => {
+     12  12 │   	// Set the admin token via env so SecretManager picks it up (env provider first)
+     13     │ - → process.env['POSITRON_ADMIN_TOKEN']·=·DEV_ADMIN_TOKEN;
+         13 │ + → process.env.POSITRON_ADMIN_TOKEN·=·DEV_ADMIN_TOKEN;
+     14  14 │   	server = createServer({ repository, dbPath: ':memory:' });
+     15  15 │   	await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', () => resolve()));
+  
+
+./apps/server/src/__tests__/integration.test.ts:21:2 lint/performance/noDelete  FIXABLE  ━━━━━━━━━━━
+
+  × Avoid the delete operator which can impact performance.
+  
+    20 │ afterAll(() => {
+  > 21 │ 	delete process.env['POSITRON_ADMIN_TOKEN'];
+       │ 	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    22 │ 	server.close();
+    23 │ });
+  
+  i Unsafe fix: Use an undefined assignment instead.
+  
+     19  19 │   
+     20  20 │   afterAll(() => {
+     21     │ - → delete·process.env['POSITRON_ADMIN_TOKEN'];
+         21 │ + → process.env['POSITRON_ADMIN_TOKEN']·=·undefined;
+     22  22 │   	server.close();
+     23  23 │   });
+  
+
+./apps/server/src/__tests__/integration.test.ts:21:21 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━
+
+  ! The computed expression can be simplified without the use of a string literal.
+  
+    20 │ afterAll(() => {
+  > 21 │ 	delete process.env['POSITRON_ADMIN_TOKEN'];
+       │ 	                   ^^^^^^^^^^^^^^^^^^^^^^
+    22 │ 	server.close();
+    23 │ });
+  
+  i Unsafe fix: Use a literal key instead.
+  
+     19  19 │   
+     20  20 │   afterAll(() => {
+     21     │ - → delete·process.env['POSITRON_ADMIN_TOKEN'];
+         21 │ + → delete·process.env.POSITRON_ADMIN_TOKEN;
+     22  22 │   	server.close();
+     23  23 │   });
+  
+
+./apps/server/src/handlers/cancel-run.ts:10:58 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+     9 │ // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  > 10 │ export function createCancelHandler(deps: Record<string, any>) {
+       │                                                          ^^^
+    11 │ 	return async (req: Request, res: Response): Promise<void> => {
+    12 │ 		const { id } = req.params;
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+./apps/server/src/demo/live-run-handler.ts:59:19 lint/style/useNumberNamespace  FIXABLE  ━━━━━━━━━━━
+
+  × Use Number.parseInt instead of the equivalent global.
+  
+    57 │ 			const { blueprint, issueNumber } =
+    58 │ 				(req.body as { blueprint?: string; issueNumber?: number }) ?? {};
+  > 59 │ 			let issueNum = parseInt(process.env.POSITRON_DEFAULT_ISSUE_NUMBER ?? '56', 10);
+       │ 			               ^^^^^^^^
+    60 │ 			if (issueNumber !== undefined && issueNumber !== null) {
+    61 │ 				const parsed = Number(issueNumber);
+  
+  i ES2015 moved some globals into the Number namespace for consistency.
+  
+  i Safe fix: Use Number.parseInt instead.
+  
+     57  57 │   			const { blueprint, issueNumber } =
+     58  58 │   				(req.body as { blueprint?: string; issueNumber?: number }) ?? {};
+     59     │ - → → → let·issueNum·=·parseInt(process.env.POSITRON_DEFAULT_ISSUE_NUMBER·??·'56',·10);
+         59 │ + → → → let·issueNum·=·Number.parseInt(process.env.POSITRON_DEFAULT_ISSUE_NUMBER·??·'56',·10);
+     60  60 │   			if (issueNumber !== undefined && issueNumber !== null) {
+     61  61 │   				const parsed = Number(issueNumber);
+  
+
+./apps/server/src/__tests__/gate-approve-handler.test.ts organizeImports ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Import statements could be sorted:
+  
+      9   9 │   // Stop/Ask Category A/B policy patterns.
+     10  10 │   
+     11     │ - import·{·describe,·it,·expect·}·from·'vitest';
+         11 │ + import·type·{·RunState·}·from·'@positron/run-state';
+     12  12 │   import type { Phase } from '@positron/shared';
+     13     │ - import·type·{·RunState·}·from·'@positron/run-state';
+         13 │ + import·{·describe,·expect,·it·}·from·'vitest';
+     14  14 │   import { handleGateApprove } from '../gate-approve-handler.js';
+     15  15 │   import type { GateApproveOutcome } from '../gate-approve-handler.js';
+  
+
+./apps/server/src/github-watcher.ts:50:35 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━━━━━
+
+  ! The computed expression can be simplified without the use of a string literal.
+  
+    48 │ export async function pollOnce(options: WatcherOptions): Promise<number> {
+    49 │ 	const { github, repository, db, onRunCreated } = options;
+  > 50 │ 	const labelsFilter = process.env['POSITRON_WATCHER_LABELS'] ?? '';
+       │ 	                                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+    51 │ 	const labelList = labelsFilter
+    52 │ 		.split(',')
+  
+  i Unsafe fix: Use a literal key instead.
+  
+     48  48 │   export async function pollOnce(options: WatcherOptions): Promise<number> {
+     49  49 │   	const { github, repository, db, onRunCreated } = options;
+     50     │ - → const·labelsFilter·=·process.env['POSITRON_WATCHER_LABELS']·??·'';
+         50 │ + → const·labelsFilter·=·process.env.POSITRON_WATCHER_LABELS·??·'';
+     51  51 │   	const labelList = labelsFilter
+     52  52 │   		.split(',')
+  
+
+./apps/server/src/github-watcher.ts:145:30 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━━━━
+
+  ! The computed expression can be simplified without the use of a string literal.
+  
+    144 │ 	// Prüfen ob Watcher aktiviert ist
+  > 145 │ 	const enabled = process.env['POSITRON_ENABLE_WATCHER'] === 'true';
+        │ 	                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+    146 │ 	if (!enabled) {
+    147 │ 		log.info('Deaktiviert (POSITRON_ENABLE_WATCHER != true)');
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    143 143 │   
+    144 144 │   	// Prüfen ob Watcher aktiviert ist
+    145     │ - → const·enabled·=·process.env['POSITRON_ENABLE_WATCHER']·===·'true';
+        145 │ + → const·enabled·=·process.env.POSITRON_ENABLE_WATCHER·===·'true';
+    146 146 │   	if (!enabled) {
+    147 147 │   		log.info('Deaktiviert (POSITRON_ENABLE_WATCHER != true)');
+  
+
+./apps/server/src/github-watcher.ts:154:34 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━━━━
+
+  ! The computed expression can be simplified without the use of a string literal.
+  
+    153 │ 	// Intervall validieren
+  > 154 │ 	const rawInterval = process.env['POSITRON_WATCHER_INTERVAL_MS'] ?? '60000';
+        │ 	                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    155 │ 	const intervalMs = parseInt(rawInterval, 10);
+    156 │ 	const safeInterval = isNaN(intervalMs) || intervalMs < 1000 ? 60000 : intervalMs;
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    152 152 │   
+    153 153 │   	// Intervall validieren
+    154     │ - → const·rawInterval·=·process.env['POSITRON_WATCHER_INTERVAL_MS']·??·'60000';
+        154 │ + → const·rawInterval·=·process.env.POSITRON_WATCHER_INTERVAL_MS·??·'60000';
+    155 155 │   	const intervalMs = parseInt(rawInterval, 10);
+    156 156 │   	const safeInterval = isNaN(intervalMs) || intervalMs < 1000 ? 60000 : intervalMs;
+  
+
+./apps/server/src/github-watcher.ts:162:63 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━━━━
+
+  ! The computed expression can be simplified without the use of a string literal.
+  
+    161 │ 	log.info(
+  > 162 │ 		`Started — interval=${safeInterval}ms, labels=${process.env['POSITRON_WATCHER_LABELS'] ?? '(all)'}`,
+        │ 		                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+    163 │ 	);
+    164 │ 
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    160 160 │   
+    161 161 │   	log.info(
+    162     │ - → → `Started·—·interval=${safeInterval}ms,·labels=${process.env['POSITRON_WATCHER_LABELS']·??·'(all)'}`,
+        162 │ + → → `Started·—·interval=${safeInterval}ms,·labels=${process.env.POSITRON_WATCHER_LABELS·??·'(all)'}`,
+    163 163 │   	);
+    164 164 │   
+  
+
+./apps/server/src/github-watcher.ts:155:21 lint/style/useNumberNamespace  FIXABLE  ━━━━━━━━━━━━━━━━━
+
+  × Use Number.parseInt instead of the equivalent global.
+  
+    153 │ 	// Intervall validieren
+    154 │ 	const rawInterval = process.env['POSITRON_WATCHER_INTERVAL_MS'] ?? '60000';
+  > 155 │ 	const intervalMs = parseInt(rawInterval, 10);
+        │ 	                   ^^^^^^^^
+    156 │ 	const safeInterval = isNaN(intervalMs) || intervalMs < 1000 ? 60000 : intervalMs;
+    157 │ 	if (safeInterval !== intervalMs) {
+  
+  i ES2015 moved some globals into the Number namespace for consistency.
+  
+  i Safe fix: Use Number.parseInt instead.
+  
+    153 153 │   	// Intervall validieren
+    154 154 │   	const rawInterval = process.env['POSITRON_WATCHER_INTERVAL_MS'] ?? '60000';
+    155     │ - → const·intervalMs·=·parseInt(rawInterval,·10);
+        155 │ + → const·intervalMs·=·Number.parseInt(rawInterval,·10);
+    156 156 │   	const safeInterval = isNaN(intervalMs) || intervalMs < 1000 ? 60000 : intervalMs;
+    157 157 │   	if (safeInterval !== intervalMs) {
+  
+
+./apps/server/src/github-watcher.ts:156:23 lint/suspicious/noGlobalIsNan  FIXABLE  ━━━━━━━━━━━━━━━━━
+
+  × isNaN is unsafe. It attempts a type coercion. Use Number.isNaN instead.
+  
+    154 │ 	const rawInterval = process.env['POSITRON_WATCHER_INTERVAL_MS'] ?? '60000';
+    155 │ 	const intervalMs = parseInt(rawInterval, 10);
+  > 156 │ 	const safeInterval = isNaN(intervalMs) || intervalMs < 1000 ? 60000 : intervalMs;
+        │ 	                     ^^^^^
+    157 │ 	if (safeInterval !== intervalMs) {
+    158 │ 		log.warn(`Invalid POSITRON_WATCHER_INTERVAL_MS="${rawInterval}", using default 60000ms`);
+  
+  i See the MDN documentation for more details.
+  
+  i Unsafe fix: Use Number.isNaN instead.
+  
+    154 154 │   	const rawInterval = process.env['POSITRON_WATCHER_INTERVAL_MS'] ?? '60000';
+    155 155 │   	const intervalMs = parseInt(rawInterval, 10);
+    156     │ - → const·safeInterval·=·isNaN(intervalMs)·||·intervalMs·<·1000·?·60000·:·intervalMs;
+        156 │ + → const·safeInterval·=·Number.isNaN(intervalMs)·||·intervalMs·<·1000·?·60000·:·intervalMs;
+    157 157 │   	if (safeInterval !== intervalMs) {
+    158 158 │   		log.warn(`Invalid POSITRON_WATCHER_INTERVAL_MS="${rawInterval}", using default 60000ms`);
+  
+
+./apps/server/src/cli.ts:100:16 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+  
+     98 │ 				if (val) {
+     99 │ 					args.autonomyLevel = parseInt(val, 10);
+  > 100 │ 					if (isNaN(args.autonomyLevel!) || args.autonomyLevel! < 0 || args.autonomyLevel! > 2) {
+        │ 					          ^^^^^^^^^^^^^^^^^^^
+    101 │ 						return { kind: 'error', message: '--autonomyLevel muss 0, 1 oder 2 sein' };
+    102 │ 					}
+  
+
+./apps/server/src/cli.ts:100:40 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+  
+     98 │ 				if (val) {
+     99 │ 					args.autonomyLevel = parseInt(val, 10);
+  > 100 │ 					if (isNaN(args.autonomyLevel!) || args.autonomyLevel! < 0 || args.autonomyLevel! > 2) {
+        │ 					                                  ^^^^^^^^^^^^^^^^^^^
+    101 │ 						return { kind: 'error', message: '--autonomyLevel muss 0, 1 oder 2 sein' };
+    102 │ 					}
+  
+
+./apps/server/src/cli.ts:100:67 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+  
+     98 │ 				if (val) {
+     99 │ 					args.autonomyLevel = parseInt(val, 10);
+  > 100 │ 					if (isNaN(args.autonomyLevel!) || args.autonomyLevel! < 0 || args.autonomyLevel! > 2) {
+        │ 					                                                             ^^^^^^^^^^^^^^^^^^^
+    101 │ 						return { kind: 'error', message: '--autonomyLevel muss 0, 1 oder 2 sein' };
+    102 │ 					}
+  
+
+./apps/server/src/cli.ts:21:2 lint/suspicious/noConsoleLog  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Don't use console.log
+  
+    20 │ function printHelp(): void {
+  > 21 │ 	console.log(`
+       │ 	^^^^^^^^^^^^^
+  > 22 │ Positron CLI — Evidence-Gated GitHub Issue Execution
+        ...
+  > 37 │   positron run --issueNumber 42 --serverUrl http://localhost:3000
+  > 38 │ `);
+       │ ^^^
+    39 │ }
+    40 │ 
+  
+  i console.log is usually a tool for debugging and you don't want to have that in production.
+  
+  i If it is not for debugging purpose then using console.info might be more appropriate.
+  
+  i Unsafe fix: Remove console.log
+  
+     19  19 │   
+     20  20 │   function printHelp(): void {
+     21     │ - → console.log(`
+     22     │ - Positron·CLI·—·Evidence-Gated·GitHub·Issue·Execution
+     23     │ - 
+     24     │ - Usage:
+     25     │ - ··positron·run·--issueNumber·<number>·[options]
+     26     │ - 
+     27     │ - Options:
+     28     │ - ··--issueNumber·<n>····GitHub·Issue·number·(required)
+     29     │ - ··--repoId·<id>········Repository·ID·(default:·config·from·server·env)
+     30     │ - ··--autonomyLevel·<n>··Autonomy·level·0-2·(default:·2)
+     31     │ - ··--serverUrl·<url>····Server·URL·(default:·http://localhost:3000)
+     32     │ - ··--help···············Show·this·help
+     33     │ - 
+     34     │ - Examples:
+     35     │ - ··positron·run·--issueNumber·42
+     36     │ - ··positron·run·--issueNumber·42·--autonomyLevel·1
+     37     │ - ··positron·run·--issueNumber·42·--serverUrl·http://localhost:3000
+     38     │ - `);
+     39  21 │   }
+     40  22 │   
+  
+
+Skipped 32 suggested fixes.
+If you wish to apply the suggested (unsafe) fixes, use the command biome check --fix --unsafe
+
+The number of diagnostics exceeds the number allowed by Biome.
+Diagnostics not shown: 1515.
+Checked 730 files in 484ms. No fixes applied.
+Found 253 errors.
+Found 764 warnings.
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.
+  
+
