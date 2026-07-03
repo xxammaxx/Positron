@@ -92,6 +92,7 @@ import { FakeSpecKitAdapter, RealSpecKitAdapter } from '@positron/speckit-adapte
 import Database from 'better-sqlite3';
 import express from 'express';
 import { createDemoLiveRunHandler } from './demo/live-run-handler.js';
+import { getManagedProjects } from './data/voicewiki-seed.js';
 import { startWatcher } from './github-watcher.js';
 import { createCancelHandler } from './handlers/cancel-run.js';
 import { createLogger } from './logger.js';
@@ -2653,6 +2654,16 @@ export function createApp(options: ServerOptions = {}) {
 			res.json({ repos, total: (repos as Array<unknown>).length });
 		} catch (err) {
 			res.status(500).json({ error: 'Datenbankfehler', details: String(err) });
+		}
+	});
+
+	// Managed Projects (external target projects tracked by Positron)
+	app.get('/api/projects', (_req, res) => {
+		try {
+			const projects = getManagedProjects();
+			res.json({ projects, total: projects.length });
+		} catch (err) {
+			res.status(500).json({ error: 'Failed to load managed projects', details: String(err) });
 		}
 	});
 

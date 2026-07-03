@@ -6,6 +6,7 @@ import type {
 	Artifact,
 	HealthStatus,
 	Issue,
+	ManagedProject,
 	Metrics,
 	Repository,
 	Run,
@@ -217,6 +218,11 @@ export const api = {
 			avgDurationMs: m.avgRunDurationMs ?? 0,
 			successRate,
 		};
+	},
+
+	// Managed Projects (external target projects)
+	getProjects(): Promise<{ projects: ManagedProject[]; total: number }> {
+		return request<{ projects: ManagedProject[]; total: number }>('/projects');
 	},
 
 	// Evidence (aggregated)

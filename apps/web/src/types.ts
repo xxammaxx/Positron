@@ -121,3 +121,52 @@ export interface ApiError {
 	code?: string;
 	details?: unknown;
 }
+
+// Managed External Project (e.g. VoiceWiki tracked by Positron)
+export interface ManagedProject {
+	id: string;
+	name: string;
+	description: string;
+	repoUrl: string;
+	defaultBranch: string;
+	status: 'FIRST_EXTERNAL_TEST_SUCCESS' | 'EXTERNAL_TEST_PENDING' | 'BUILD_IN_PROGRESS' | 'BLOCKED';
+	externalTestStatus: string;
+	lastMergedPr: {
+		number: number;
+		title: string;
+		mergeSha: string;
+		mergedAt: string;
+		url: string;
+	};
+	knownBlockers: Array<{
+		id: string;
+		description: string;
+		severity: 'blocker' | 'warning';
+	}>;
+	timeline: Array<{
+		step: string;
+		status: 'completed' | 'next' | 'planned';
+		description: string;
+	}>;
+	nextRecommendedRun: {
+		label: string;
+		description: string;
+		approvalLabel: string;
+	};
+	nextAppLevelRun: {
+		label: string;
+		description: string;
+		approvalLabel: string;
+	};
+	safetyStatus: {
+		appCodeChanged: boolean;
+		sttEnabled: boolean;
+		modelAudioFilesAdded: boolean;
+		cloudTelemetryEnabled: boolean;
+		realMode: boolean;
+		phaseDProbe: boolean;
+	};
+	evidenceReportUrl: string | null;
+	createdAt: string;
+	updatedAt: string;
+}
