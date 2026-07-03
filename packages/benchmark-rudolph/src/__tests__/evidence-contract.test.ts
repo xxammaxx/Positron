@@ -4,13 +4,13 @@
 //
 // Red Tests: 8, 9, 10, 11, 14 from the specification
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
-	redactSecrets,
 	containsSecrets,
-	createIssueResult,
 	createCommandResult,
+	createIssueResult,
 	determineConclusionStatus,
+	redactSecrets,
 	validateRunSummary,
 } from '../evidence-contract.js';
 import type { BenchmarkIssueResult, RudolphBenchmarkRunSummary } from '../evidence-contract.js';

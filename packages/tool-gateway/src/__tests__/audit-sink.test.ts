@@ -12,14 +12,14 @@
 // - Workspace path resolution
 
 import fs from 'node:fs';
-import path from 'node:path';
 import os from 'node:os';
+import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createAuditSink, createBlockedAuditEntry, hashAuditEntry } from '../audit-sink.js';
+import type { AuditEntry, AuditSinkOptions } from '../audit-sink.js';
 import { GatewayService } from '../gateway.js';
 import { ToolRegistry } from '../registry.js';
 import { BLOCK_REASONS } from '../types.js';
-import type { AuditEntry, AuditSinkOptions } from '../audit-sink.js';
 import type { ToolCall, ToolDefinition, ToolResult } from '../types.js';
 
 // ─── Test Helpers ────────────────────────────────────────────────────

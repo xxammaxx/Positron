@@ -3,9 +3,9 @@
 // Pure functions only. No GitHub API calls, no shell execution, no mutations.
 
 import type {
+	GitHubContextSnapshot,
 	GitHubIssueSnapshot,
 	GitHubPullRequestSnapshot,
-	GitHubContextSnapshot,
 } from './github-context-reconciler.js';
 
 // ---------------------------------------------------------------------------

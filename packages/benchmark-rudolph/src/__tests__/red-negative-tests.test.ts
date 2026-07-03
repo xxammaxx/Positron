@@ -13,23 +13,23 @@
 //   Red Test 21: RED_HOLD action must never execute
 //   Red Test 22: UNKNOWN must not be replaced by assumption
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import {
-	redactSecrets,
-	containsSecrets,
-	createIssueResult,
-	determineConclusionStatus,
-	validateRunSummary,
-} from '../evidence-contract.js';
-import type { BenchmarkIssueResult } from '../evidence-contract.js';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { BenchmarkRunner } from '../benchmark-runner.js';
 import type { RudolphBenchmarkConfig } from '../benchmark-runner.js';
 import {
-	runControlledRealModeProbe,
-	isRedHoldAction,
 	checkCommitReadiness,
 	isCommitReady,
+	isRedHoldAction,
+	runControlledRealModeProbe,
 } from '../controlled-real-probe.js';
+import {
+	containsSecrets,
+	createIssueResult,
+	determineConclusionStatus,
+	redactSecrets,
+	validateRunSummary,
+} from '../evidence-contract.js';
+import type { BenchmarkIssueResult } from '../evidence-contract.js';
 
 const FIXED_TIMESTAMP = '2026-12-24T10:00:00Z';
 

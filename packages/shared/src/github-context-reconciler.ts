@@ -2,7 +2,7 @@
 // Maps GitHub issue/PR snapshots into Decision Manifest rows.
 // Pure functions only. No GitHub API calls, no mutations.
 
-import type { DecisionManifestRow, RiskClass, AgentRecommendation } from './decision-manifest.js';
+import type { AgentRecommendation, DecisionManifestRow, RiskClass } from './decision-manifest.js';
 import { validateDecisionManifest } from './decision-manifest.js';
 
 // ---------------------------------------------------------------------------

@@ -21,9 +21,9 @@ import type {
 	GateType,
 	Phase,
 } from '@positron/shared';
+import type { EventLevel } from '@positron/shared';
 import type { RunState, TransitionResult } from './state-machine.js';
 import { transition } from './state-machine.js';
-import type { EventLevel } from '@positron/shared';
 
 // ─── Gate Evaluator Type ─────────────────────────────────────────────────────
 

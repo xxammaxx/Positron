@@ -11,10 +11,10 @@
 // - Exception / missing input → fail closed
 // - Existing Gate 9 / onAudit behavior is not weakened
 
-import type { Phase } from '@positron/shared';
 import type { RunState } from '@positron/run-state';
 import { gateApproveAction } from '@positron/sandbox';
 import type { GateApproveInput, GateApproveResult } from '@positron/sandbox';
+import type { Phase } from '@positron/shared';
 
 /**
  * Outcome of GATE_APPROVE handler — determines how the server

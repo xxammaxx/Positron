@@ -3,10 +3,10 @@
 
 import { describe, expect, test } from 'vitest';
 import {
+	type DecisionManifestRow,
 	getApplyableGreenSafeActions,
 	parseDecisionManifestCsv,
 	validateDecisionManifest,
-	type DecisionManifestRow,
 } from '../decision-manifest.js';
 
 // ---------------------------------------------------------------------------

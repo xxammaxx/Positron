@@ -4,17 +4,17 @@
 
 import { describe, expect, test } from 'vitest';
 import type { DecisionManifestRow } from '../decision-manifest.js';
+import {
+	type EvidenceGateReport,
+	createEvidenceGateReportFromGitHubContext,
+	createEvidenceGateReportFromRows,
+} from '../evidence-gate.js';
 import type {
 	GitHubContextSnapshot,
-	GitHubPullRequestSnapshot,
 	GitHubIssueSnapshot,
+	GitHubPullRequestSnapshot,
 } from '../github-context-reconciler.js';
 import type { LocalGateReport, LocalGateResult } from '../local-gate-runner.js';
-import {
-	createEvidenceGateReportFromRows,
-	createEvidenceGateReportFromGitHubContext,
-	type EvidenceGateReport,
-} from '../evidence-gate.js';
 
 // ---------------------------------------------------------------------------
 // Inline fixtures — no network, no GitHub API

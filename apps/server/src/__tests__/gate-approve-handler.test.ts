@@ -8,9 +8,9 @@
 // (e.g., "merge to main branch for issue #42") that match
 // Stop/Ask Category A/B policy patterns.
 
-import { describe, it, expect } from 'vitest';
-import type { Phase } from '@positron/shared';
 import type { RunState } from '@positron/run-state';
+import type { Phase } from '@positron/shared';
+import { describe, expect, it } from 'vitest';
 import { handleGateApprove } from '../gate-approve-handler.js';
 import type { GateApproveOutcome } from '../gate-approve-handler.js';
 

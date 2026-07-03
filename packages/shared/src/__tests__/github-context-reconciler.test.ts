@@ -4,13 +4,13 @@
 
 import { describe, expect, test } from 'vitest';
 import type { DecisionManifestRow } from '../decision-manifest.js';
-import { validateDecisionManifest, getApplyableGreenSafeActions } from '../decision-manifest.js';
+import { getApplyableGreenSafeActions, validateDecisionManifest } from '../decision-manifest.js';
 import {
-	reconcileGitHubContextToDecisionManifestRows,
-	reconcileGitHubContext,
+	type GitHubContextSnapshot,
 	type GitHubIssueSnapshot,
 	type GitHubPullRequestSnapshot,
-	type GitHubContextSnapshot,
+	reconcileGitHubContext,
+	reconcileGitHubContextToDecisionManifestRows,
 } from '../github-context-reconciler.js';
 
 // ---------------------------------------------------------------------------

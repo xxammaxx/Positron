@@ -20,29 +20,29 @@
 //   C: Edge Case Tests — Boundary conditions, invariants
 //   D: Regression Tests — Verify existing invariants remain intact
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import type { GateEvaluationContext, GateResult, GateType, Phase } from '@positron/shared';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
-	clearGateEvaluators,
-	registerGateEvaluator,
-	registerFakeGateEvaluators,
-	evaluateGates,
-	tryTransitionWithGates,
-	getRequiredGates,
-	phaseRequiresGates,
-	gateEvaluatorCount,
-	hasGateEvaluator,
 	PHASE_GATE_REQUIREMENTS,
+	clearGateEvaluators,
+	evaluateGates,
+	gateEvaluatorCount,
+	getRequiredGates,
+	hasGateEvaluator,
+	phaseRequiresGates,
+	registerFakeGateEvaluators,
+	registerGateEvaluator,
+	tryTransitionWithGates,
 } from '../gate-evaluator.js';
 import type { GatedTransitionResult } from '../gate-evaluator.js';
 import {
-	createRun,
-	transition,
-	registerWorkspaceCleanup,
-	getWorkspaceCleanupFn,
 	canTransition,
+	createRun,
+	getWorkspaceCleanupFn,
+	registerWorkspaceCleanup,
+	transition,
 } from '../state-machine.js';
 import type { RunState } from '../state-machine.js';
-import type { GateEvaluationContext, GateResult, GateType, Phase } from '@positron/shared';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Test Helpers

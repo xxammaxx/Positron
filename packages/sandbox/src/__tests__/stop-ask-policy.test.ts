@@ -3,13 +3,13 @@
 // Verification Contract: docs/testing/verification-contract-stop-ask.md
 // Protocol Spec: docs/security/stop-ask-protocol.md
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
 	evaluateStopAsk,
 	getAllDecisionOutcomes,
 	requiresHumanApproval,
 } from '../stop-ask-policy.js';
-import type { StopAskRequest, StopAskDecision } from '../stop-ask-policy.js';
+import type { StopAskDecision, StopAskRequest } from '../stop-ask-policy.js';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 

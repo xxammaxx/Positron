@@ -10,9 +10,9 @@
 //   node scripts/run-evidence-gate.mjs --snapshot .local-release/snapshot.json
 //   node scripts/run-evidence-gate.mjs --dry-run --output .local-release/evidence-gate/report.json --format json
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
-import { dirname } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname } from 'node:path';
 
 // ---------------------------------------------------------------------------
 // Exit code contract

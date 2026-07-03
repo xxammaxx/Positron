@@ -1,12 +1,12 @@
 // Positron — Human Approval Pack Generator Tests (Issue #279 Phase 1F)
 // Red tests: module does not exist yet — expect import failure initially.
 // After implementation, all tests must pass.
-import { describe, it, expect, beforeAll } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 // Will be imported after the module is implemented:
 // import { createHumanApprovalPackReport } from '../human-approval-pack.js';
 
-import type { DecisionManifestRow, RiskClass, AgentRecommendation } from '../decision-manifest.js';
+import type { AgentRecommendation, DecisionManifestRow, RiskClass } from '../decision-manifest.js';
 import type { EvidenceGateReport } from '../evidence-gate.js';
 
 // ---------------------------------------------------------------------------

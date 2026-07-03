@@ -1,0 +1,383 @@
+./apps/server/src/__tests__/observability/queue.test.ts:45:37 lint/suspicious/noExplicitAny ━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    44 │ 	it('help texts contain no secrets', () => {
+  > 45 │ 		const helps = [(queueJobsTotal as any).help, (queueRedisUp as any).help];
+       │ 		                                  ^^^
+    46 │ 		for (const h of helps) {
+    47 │ 			expect(h).not.toMatch(/ghp_/);
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+./apps/server/src/__tests__/observability/queue.test.ts:45:65 lint/suspicious/noExplicitAny ━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    44 │ 	it('help texts contain no secrets', () => {
+  > 45 │ 		const helps = [(queueJobsTotal as any).help, (queueRedisUp as any).help];
+       │ 		                                                              ^^^
+    46 │ 		for (const h of helps) {
+    47 │ 			expect(h).not.toMatch(/ghp_/);
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+./apps/server/src/handlers/cancel-run.ts:10:58 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+     9 │ // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  > 10 │ export function createCancelHandler(deps: Record<string, any>) {
+       │                                                          ^^^
+    11 │ 	return async (req: Request, res: Response): Promise<void> => {
+    12 │ 		const { id } = req.params;
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+./apps/server/src/demo/live-run-handler.ts:59:19 lint/style/useNumberNamespace  FIXABLE  ━━━━━━━━━━━
+
+  × Use Number.parseInt instead of the equivalent global.
+  
+    57 │ 			const { blueprint, issueNumber } =
+    58 │ 				(req.body as { blueprint?: string; issueNumber?: number }) ?? {};
+  > 59 │ 			let issueNum = parseInt(process.env.POSITRON_DEFAULT_ISSUE_NUMBER ?? '56', 10);
+       │ 			               ^^^^^^^^
+    60 │ 			if (issueNumber !== undefined && issueNumber !== null) {
+    61 │ 				const parsed = Number(issueNumber);
+  
+  i ES2015 moved some globals into the Number namespace for consistency.
+  
+  i Safe fix: Use Number.parseInt instead.
+  
+     57  57 │   			const { blueprint, issueNumber } =
+     58  58 │   				(req.body as { blueprint?: string; issueNumber?: number }) ?? {};
+     59     │ - → → → let·issueNum·=·parseInt(process.env.POSITRON_DEFAULT_ISSUE_NUMBER·??·'56',·10);
+         59 │ + → → → let·issueNum·=·Number.parseInt(process.env.POSITRON_DEFAULT_ISSUE_NUMBER·??·'56',·10);
+     60  60 │   			if (issueNumber !== undefined && issueNumber !== null) {
+     61  61 │   				const parsed = Number(issueNumber);
+  
+
+./apps/server/src/github-watcher.ts:50:35 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━━━━━
+
+  ! The computed expression can be simplified without the use of a string literal.
+  
+    48 │ export async function pollOnce(options: WatcherOptions): Promise<number> {
+    49 │ 	const { github, repository, db, onRunCreated } = options;
+  > 50 │ 	const labelsFilter = process.env['POSITRON_WATCHER_LABELS'] ?? '';
+       │ 	                                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+    51 │ 	const labelList = labelsFilter
+    52 │ 		.split(',')
+  
+  i Unsafe fix: Use a literal key instead.
+  
+     48  48 │   export async function pollOnce(options: WatcherOptions): Promise<number> {
+     49  49 │   	const { github, repository, db, onRunCreated } = options;
+     50     │ - → const·labelsFilter·=·process.env['POSITRON_WATCHER_LABELS']·??·'';
+         50 │ + → const·labelsFilter·=·process.env.POSITRON_WATCHER_LABELS·??·'';
+     51  51 │   	const labelList = labelsFilter
+     52  52 │   		.split(',')
+  
+
+./apps/server/src/github-watcher.ts:145:30 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━━━━
+
+  ! The computed expression can be simplified without the use of a string literal.
+  
+    144 │ 	// Prüfen ob Watcher aktiviert ist
+  > 145 │ 	const enabled = process.env['POSITRON_ENABLE_WATCHER'] === 'true';
+        │ 	                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+    146 │ 	if (!enabled) {
+    147 │ 		log.info('Deaktiviert (POSITRON_ENABLE_WATCHER != true)');
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    143 143 │   
+    144 144 │   	// Prüfen ob Watcher aktiviert ist
+    145     │ - → const·enabled·=·process.env['POSITRON_ENABLE_WATCHER']·===·'true';
+        145 │ + → const·enabled·=·process.env.POSITRON_ENABLE_WATCHER·===·'true';
+    146 146 │   	if (!enabled) {
+    147 147 │   		log.info('Deaktiviert (POSITRON_ENABLE_WATCHER != true)');
+  
+
+./apps/server/src/github-watcher.ts:154:34 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━━━━
+
+  ! The computed expression can be simplified without the use of a string literal.
+  
+    153 │ 	// Intervall validieren
+  > 154 │ 	const rawInterval = process.env['POSITRON_WATCHER_INTERVAL_MS'] ?? '60000';
+        │ 	                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    155 │ 	const intervalMs = parseInt(rawInterval, 10);
+    156 │ 	const safeInterval = isNaN(intervalMs) || intervalMs < 1000 ? 60000 : intervalMs;
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    152 152 │   
+    153 153 │   	// Intervall validieren
+    154     │ - → const·rawInterval·=·process.env['POSITRON_WATCHER_INTERVAL_MS']·??·'60000';
+        154 │ + → const·rawInterval·=·process.env.POSITRON_WATCHER_INTERVAL_MS·??·'60000';
+    155 155 │   	const intervalMs = parseInt(rawInterval, 10);
+    156 156 │   	const safeInterval = isNaN(intervalMs) || intervalMs < 1000 ? 60000 : intervalMs;
+  
+
+./apps/server/src/github-watcher.ts:162:63 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━━━━
+
+  ! The computed expression can be simplified without the use of a string literal.
+  
+    161 │ 	log.info(
+  > 162 │ 		`Started — interval=${safeInterval}ms, labels=${process.env['POSITRON_WATCHER_LABELS'] ?? '(all)'}`,
+        │ 		                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+    163 │ 	);
+    164 │ 
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    160 160 │   
+    161 161 │   	log.info(
+    162     │ - → → `Started·—·interval=${safeInterval}ms,·labels=${process.env['POSITRON_WATCHER_LABELS']·??·'(all)'}`,
+        162 │ + → → `Started·—·interval=${safeInterval}ms,·labels=${process.env.POSITRON_WATCHER_LABELS·??·'(all)'}`,
+    163 163 │   	);
+    164 164 │   
+  
+
+./apps/server/src/github-watcher.ts:155:21 lint/style/useNumberNamespace  FIXABLE  ━━━━━━━━━━━━━━━━━
+
+  × Use Number.parseInt instead of the equivalent global.
+  
+    153 │ 	// Intervall validieren
+    154 │ 	const rawInterval = process.env['POSITRON_WATCHER_INTERVAL_MS'] ?? '60000';
+  > 155 │ 	const intervalMs = parseInt(rawInterval, 10);
+        │ 	                   ^^^^^^^^
+    156 │ 	const safeInterval = isNaN(intervalMs) || intervalMs < 1000 ? 60000 : intervalMs;
+    157 │ 	if (safeInterval !== intervalMs) {
+  
+  i ES2015 moved some globals into the Number namespace for consistency.
+  
+  i Safe fix: Use Number.parseInt instead.
+  
+    153 153 │   	// Intervall validieren
+    154 154 │   	const rawInterval = process.env['POSITRON_WATCHER_INTERVAL_MS'] ?? '60000';
+    155     │ - → const·intervalMs·=·parseInt(rawInterval,·10);
+        155 │ + → const·intervalMs·=·Number.parseInt(rawInterval,·10);
+    156 156 │   	const safeInterval = isNaN(intervalMs) || intervalMs < 1000 ? 60000 : intervalMs;
+    157 157 │   	if (safeInterval !== intervalMs) {
+  
+
+./apps/server/src/github-watcher.ts:156:23 lint/suspicious/noGlobalIsNan  FIXABLE  ━━━━━━━━━━━━━━━━━
+
+  × isNaN is unsafe. It attempts a type coercion. Use Number.isNaN instead.
+  
+    154 │ 	const rawInterval = process.env['POSITRON_WATCHER_INTERVAL_MS'] ?? '60000';
+    155 │ 	const intervalMs = parseInt(rawInterval, 10);
+  > 156 │ 	const safeInterval = isNaN(intervalMs) || intervalMs < 1000 ? 60000 : intervalMs;
+        │ 	                     ^^^^^
+    157 │ 	if (safeInterval !== intervalMs) {
+    158 │ 		log.warn(`Invalid POSITRON_WATCHER_INTERVAL_MS="${rawInterval}", using default 60000ms`);
+  
+  i See the MDN documentation for more details.
+  
+  i Unsafe fix: Use Number.isNaN instead.
+  
+    154 154 │   	const rawInterval = process.env['POSITRON_WATCHER_INTERVAL_MS'] ?? '60000';
+    155 155 │   	const intervalMs = parseInt(rawInterval, 10);
+    156     │ - → const·safeInterval·=·isNaN(intervalMs)·||·intervalMs·<·1000·?·60000·:·intervalMs;
+        156 │ + → const·safeInterval·=·Number.isNaN(intervalMs)·||·intervalMs·<·1000·?·60000·:·intervalMs;
+    157 157 │   	if (safeInterval !== intervalMs) {
+    158 158 │   		log.warn(`Invalid POSITRON_WATCHER_INTERVAL_MS="${rawInterval}", using default 60000ms`);
+  
+
+./apps/server/src/__tests__/integration.test.ts:13:14 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━
+
+  ! The computed expression can be simplified without the use of a string literal.
+  
+    11 │ beforeAll(async () => {
+    12 │ 	// Set the admin token via env so SecretManager picks it up (env provider first)
+  > 13 │ 	process.env['POSITRON_ADMIN_TOKEN'] = DEV_ADMIN_TOKEN;
+       │ 	            ^^^^^^^^^^^^^^^^^^^^^^
+    14 │ 	server = createServer({ repository, dbPath: ':memory:' });
+    15 │ 	await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', () => resolve()));
+  
+  i Unsafe fix: Use a literal key instead.
+  
+     11  11 │   beforeAll(async () => {
+     12  12 │   	// Set the admin token via env so SecretManager picks it up (env provider first)
+     13     │ - → process.env['POSITRON_ADMIN_TOKEN']·=·DEV_ADMIN_TOKEN;
+         13 │ + → process.env.POSITRON_ADMIN_TOKEN·=·DEV_ADMIN_TOKEN;
+     14  14 │   	server = createServer({ repository, dbPath: ':memory:' });
+     15  15 │   	await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', () => resolve()));
+  
+
+./apps/server/src/__tests__/integration.test.ts:21:2 lint/performance/noDelete  FIXABLE  ━━━━━━━━━━━
+
+  × Avoid the delete operator which can impact performance.
+  
+    20 │ afterAll(() => {
+  > 21 │ 	delete process.env['POSITRON_ADMIN_TOKEN'];
+       │ 	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    22 │ 	server.close();
+    23 │ });
+  
+  i Unsafe fix: Use an undefined assignment instead.
+  
+     19  19 │   
+     20  20 │   afterAll(() => {
+     21     │ - → delete·process.env['POSITRON_ADMIN_TOKEN'];
+         21 │ + → process.env['POSITRON_ADMIN_TOKEN']·=·undefined;
+     22  22 │   	server.close();
+     23  23 │   });
+  
+
+./apps/server/src/__tests__/integration.test.ts:21:21 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━
+
+  ! The computed expression can be simplified without the use of a string literal.
+  
+    20 │ afterAll(() => {
+  > 21 │ 	delete process.env['POSITRON_ADMIN_TOKEN'];
+       │ 	                   ^^^^^^^^^^^^^^^^^^^^^^
+    22 │ 	server.close();
+    23 │ });
+  
+  i Unsafe fix: Use a literal key instead.
+  
+     19  19 │   
+     20  20 │   afterAll(() => {
+     21     │ - → delete·process.env['POSITRON_ADMIN_TOKEN'];
+         21 │ + → delete·process.env.POSITRON_ADMIN_TOKEN;
+     22  22 │   	server.close();
+     23  23 │   });
+  
+
+./apps/server/src/logger.ts:23:27 lint/complexity/useLiteralKeys  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! The computed expression can be simplified without the use of a string literal.
+  
+    22 │ function getConfiguredLevel(): LogLevel {
+  > 23 │ 	const env = (process.env['POSITRON_LOG_LEVEL'] ?? 'info').toLowerCase();
+       │ 	                         ^^^^^^^^^^^^^^^^^^^^
+    24 │ 	if (env in LOG_LEVELS) return env as LogLevel;
+    25 │ 	return 'info';
+  
+  i Unsafe fix: Use a literal key instead.
+  
+    21 21 │   
+    22 22 │   function getConfiguredLevel(): LogLevel {
+    23    │ - → const·env·=·(process.env['POSITRON_LOG_LEVEL']·??·'info').toLowerCase();
+       23 │ + → const·env·=·(process.env.POSITRON_LOG_LEVEL·??·'info').toLowerCase();
+    24 24 │   	if (env in LOG_LEVELS) return env as LogLevel;
+    25 25 │   	return 'info';
+  
+
+./apps/server/src/logger.ts:56:4 lint/suspicious/noConsoleLog  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Don't use console.log
+  
+    54 │ 				}
+    55 │ 			}
+  > 56 │ 			console.log(`${prefix} ${message} ${metaStr}`);
+       │ 			^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    57 │ 		} else {
+    58 │ 			console.log(`${prefix} ${message}`);
+  
+  i console.log is usually a tool for debugging and you don't want to have that in production.
+  
+  i If it is not for debugging purpose then using console.info might be more appropriate.
+  
+  i Unsafe fix: Remove console.log
+  
+    54 54 │   				}
+    55 55 │   			}
+    56    │ - → → → console.log(`${prefix}·${message}·${metaStr}`);
+    57 56 │   		} else {
+    58 57 │   			console.log(`${prefix} ${message}`);
+  
+
+./apps/server/src/logger.ts:58:4 lint/suspicious/noConsoleLog  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Don't use console.log
+  
+    56 │ 			console.log(`${prefix} ${message} ${metaStr}`);
+    57 │ 		} else {
+  > 58 │ 			console.log(`${prefix} ${message}`);
+       │ 			^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    59 │ 		}
+    60 │ 	}
+  
+  i console.log is usually a tool for debugging and you don't want to have that in production.
+  
+  i If it is not for debugging purpose then using console.info might be more appropriate.
+  
+  i Unsafe fix: Remove console.log
+  
+    56 56 │   			console.log(`${prefix} ${message} ${metaStr}`);
+    57 57 │   		} else {
+    58    │ - → → → console.log(`${prefix}·${message}`);
+    59 58 │   		}
+    60 59 │   	}
+  
+
+./apps/server/src/__tests__/observability/instrumentation.test.ts:51:65 lint/suspicious/noExplicitAny ━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    50 │ /** Simulate a run creation via POST /api/repos/:id/runs */
+  > 51 │ async function createTestRun(): Promise<{ status: number; body: any }> {
+       │                                                                 ^^^
+    52 │ 	return new Promise((resolve, reject) => {
+    53 │ 		const data = JSON.stringify({ issueNumber: 42, autonomyLevel: 2 });
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+./apps/server/src/__tests__/observability/instrumentation.test.ts:203:60 lint/suspicious/noExplicitAny ━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    201 │ describe('Metrics Regression (QA-011)', () => {
+    202 │ 	it('/health endpoint unchanged', async () => {
+  > 203 │ 		const result = await new Promise<{ status: number; body: any }>((resolve, reject) => {
+        │ 		                                                         ^^^
+    204 │ 			http
+    205 │ 				.get(`http://localhost:${port}/api/health`, (res) => {
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+./apps/server/src/__tests__/observability/instrumentation.test.ts:51:16 lint/correctness/noUnusedVariables ━━━━━━━━━━
+
+  ! This function is unused.
+  
+    50 │ /** Simulate a run creation via POST /api/repos/:id/runs */
+  > 51 │ async function createTestRun(): Promise<{ status: number; body: any }> {
+       │                ^^^^^^^^^^^^^
+    52 │ 	return new Promise((resolve, reject) => {
+    53 │ 		const data = JSON.stringify({ issueNumber: 42, autonomyLevel: 2 });
+  
+  i Unused variables usually are result of incomplete refactoring, typos and other source of bugs.
+  
+
+./apps/server/src/cli.ts:100:16 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+  
+     98 │ 				if (val) {
+     99 │ 					args.autonomyLevel = parseInt(val, 10);
+  > 100 │ 					if (isNaN(args.autonomyLevel!) || args.autonomyLevel! < 0 || args.autonomyLevel! > 2) {
+        │ 					          ^^^^^^^^^^^^^^^^^^^
+    101 │ 						return { kind: 'error', message: '--autonomyLevel muss 0, 1 oder 2 sein' };
+    102 │ 					}
+  
+
+Skipped 4 suggested fixes.
+If you wish to apply the suggested (unsafe) fixes, use the command biome check --fix --unsafe
+
+The number of diagnostics exceeds the number allowed by Biome.
+Diagnostics not shown: 1484.
+Checked 730 files in 361ms. No fixes applied.
+Found 222 errors.
+Found 764 warnings.
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.
+  
+
