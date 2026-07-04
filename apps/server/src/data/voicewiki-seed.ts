@@ -56,7 +56,7 @@ export const VOICEWIKI_SEED: ManagedProject = {
 	repoUrl: 'https://github.com/xxammaxx/VoiceWiki',
 	defaultBranch: 'master',
 	status: 'FIRST_EXTERNAL_TEST_SUCCESS',
-	externalTestStatus: 'FIRST_EXTERNAL_TEST_SUCCESS',
+	externalTestStatus: 'LOCAL_GATES_REPRODUCIBLE',
 	lastMergedPr: {
 		number: 35,
 		title: 'docs: add VoiceWiki setup readiness evidence and fix stale test count',
@@ -67,8 +67,8 @@ export const VOICEWIKI_SEED: ManagedProject = {
 	knownBlockers: [
 		{
 			id: 'flutter-sdk-mismatch',
-			description: 'Local Flutter/Dart SDK mismatch: Dart 3.11.0 installed, ^3.11.3 required. CI uses Flutter 3.41.5.',
-			severity: 'blocker',
+			description: '[RESOLVED 2026-07-04] Local Flutter/Dart SDK mismatch resolved. Flutter 3.44.4 / Dart 3.12.2 installed, meets ^3.11.3 requirement.',
+			severity: 'warning',
 		},
 	],
 	timeline: [
@@ -84,19 +84,19 @@ export const VOICEWIKI_SEED: ManagedProject = {
 		},
 		{
 			step: 'Local Flutter toolchain alignment',
-			status: 'next',
-			description: 'Align local Flutter/Dart SDK to match VoiceWiki requirements (Dart ^3.11.3).',
+			status: 'completed',
+			description: 'Flutter 3.44.4 / Dart 3.12.2. All 221 local tests pass. flutter analyze clean (no errors). Toolchain ready for app-level tests.',
 		},
 		{
 			step: 'Privacy Settings Snapshot / Doc Consistency',
-			status: 'planned',
+			status: 'next',
 			description: 'First small app-level test: snapshot privacy settings UI, verify documentation consistency.',
 		},
 	],
 	nextRecommendedRun: {
-		label: 'Local Flutter Toolchain Alignment',
-		description: 'Resolve local Dart SDK mismatch (3.11.0 → ^3.11.3). Align with CI Flutter 3.41.5.',
-		approvalLabel: 'APPROVE VOICEWIKI LOCAL FLUTTER TOOLCHAIN ALIGNMENT',
+		label: 'First Small App Test — Privacy Settings Snapshot / Doc Consistency',
+		description: 'Toolchain aligned (Flutter 3.44.4 / Dart 3.12.2). Next: snapshot privacy settings UI, verify no doc drift. No app code changes yet.',
+		approvalLabel: 'APPROVE VOICEWIKI FIRST SMALL APP TEST — PRIVACY SETTINGS SNAPSHOT / DOC CONSISTENCY ONLY',
 	},
 	nextAppLevelRun: {
 		label: 'First Small App Test — Privacy Settings Snapshot / Doc Consistency',
@@ -111,9 +111,9 @@ export const VOICEWIKI_SEED: ManagedProject = {
 		realMode: false,
 		phaseDProbe: false,
 	},
-	evidenceReportUrl: null,
+	evidenceReportUrl: 'docs/evidence/voicewiki-toolchain-alignment-report.md',
 	createdAt: '2026-07-03T00:00:00Z',
-	updatedAt: '2026-07-03T12:00:00Z',
+	updatedAt: '2026-07-04T00:00:00Z',
 };
 
 export function getManagedProjects(): ManagedProject[] {
