@@ -112,7 +112,7 @@ const NAV_SECTIONS: Array<{ label: string; items: NavItem[] }> = [
 			},
 			{
 				to: '/projects',
-				label: 'Managed Projects',
+				label: 'Projects',
 				icon: (
 					<svg
 						width="18"
