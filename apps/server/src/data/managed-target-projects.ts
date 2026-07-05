@@ -120,27 +120,24 @@ export const MANAGED_TARGET_PROJECTS: ManagedTargetProject[] = [
 		lastSecurityScan: null,
 	},
 
-	// ── KleinPilot — Candidate Project (NOT_YET_CREATED) ─────────────
+	// ── KleinPilot — MVP Scaffolded (LOCAL_GATES_REPRODUCIBLE) ──────
 	{
 		id: 'xxammaxx/kleinpilot',
 		name: 'KleinPilot',
 		role: 'candidate_project',
-		repoUrl: '',
-		defaultBranch: '',
-		status: 'NOT_YET_EVALUATED',
+		repoUrl: 'https://github.com/xxammaxx/KleinPilot',
+		defaultBranch: 'main',
+		status: 'LOCAL_GATES_REPRODUCIBLE',
 		description:
 			'Local-first Android test app for preparing manual Kleinanzeigen listing drafts. No scraping, no login automation, no auto-posting.',
 		techStack: ['Flutter', 'Dart', 'Android', 'Local-first storage'],
 		lastEvidence: '2026-07-05',
 		lastRunRef:
-			'docs/evidence/kleinpilot-external-target-project-preparation-report.md',
-		blockers: [
-			'Target repository not created yet',
-			'Flutter scaffold not created yet',
-		],
+			'docs/evidence/kleinpilot-target-repo-and-mvp-scaffold-report.md',
+		blockers: [],
 		nextRecommendedRuns: [
-			'APPROVE KLEINPILOT TARGET REPO CREATION AND FLUTTER MVP SCAFFOLD',
-			'APPROVE KLEINPILOT ANDROID FIRST DRAFT FLOW TEST',
+			'APPROVE KLEINPILOT FIRST ANDROID DRAFT FLOW TEST (MANUAL)',
+			'APPROVE KLEINPILOT PHOTO ATTACHMENT FEATURE (IF DESIRED)',
 		],
 		safetyChecks: [
 			{
