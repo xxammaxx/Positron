@@ -120,6 +120,69 @@ export const MANAGED_TARGET_PROJECTS: ManagedTargetProject[] = [
 		lastSecurityScan: null,
 	},
 
+	// ── KleinPilot — Candidate Project (NOT_YET_CREATED) ─────────────
+	{
+		id: 'xxammaxx/kleinpilot',
+		name: 'KleinPilot',
+		role: 'candidate_project',
+		repoUrl: '',
+		defaultBranch: '',
+		status: 'NOT_YET_EVALUATED',
+		description:
+			'Local-first Android test app for preparing manual Kleinanzeigen listing drafts. No scraping, no login automation, no auto-posting.',
+		techStack: ['Flutter', 'Dart', 'Android', 'Local-first storage'],
+		lastEvidence: '2026-07-05',
+		lastRunRef:
+			'docs/evidence/kleinpilot-external-target-project-preparation-report.md',
+		blockers: [
+			'Target repository not created yet',
+			'Flutter scaffold not created yet',
+		],
+		nextRecommendedRuns: [
+			'APPROVE KLEINPILOT TARGET REPO CREATION AND FLUTTER MVP SCAFFOLD',
+			'APPROVE KLEINPILOT ANDROID FIRST DRAFT FLOW TEST',
+		],
+		safetyChecks: [
+			{
+				id: 'no_auto_posting',
+				label: 'No automatic posting',
+				status: 'pass',
+				description:
+					'KleinPilot is scoped as a manual draft helper only.',
+			},
+			{
+				id: 'no_scraping',
+				label: 'No scraping',
+				status: 'pass',
+				description:
+					'No Kleinanzeigen.de scraping or automated platform access is allowed.',
+			},
+			{
+				id: 'no_login_automation',
+				label: 'No login automation',
+				status: 'pass',
+				description:
+					'No account login or session management for any third-party platform.',
+			},
+			{
+				id: 'manual_review',
+				label: 'Manual owner review required',
+				status: 'pass',
+				description:
+					'All listing text must be reviewed and copied/exported manually.',
+			},
+			{
+				id: 'no_telemetry',
+				label: 'No telemetry',
+				status: 'pass',
+				description:
+					'No usage data collection, analytics, or crash reporting.',
+			},
+		],
+		securityStatus: 'review_needed',
+		lastSecurityScan: null,
+	},
+
 	// ── Template: Weitere Zielprojekte ──────────────────────────────────
 	//
 	// Neue Zielprojekte werden hier als Registry-Eintrag hinzugefügt.
