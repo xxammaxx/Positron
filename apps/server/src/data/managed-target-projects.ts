@@ -120,7 +120,7 @@ export const MANAGED_TARGET_PROJECTS: ManagedTargetProject[] = [
 		lastSecurityScan: null,
 	},
 
-	// ── KleinPilot — Android Draft Flow Verified (LOCAL_GATES_REPRODUCIBLE) ──────
+	// ── KleinPilot — Photo Attachment Feature Added (LOCAL_GATES_REPRODUCIBLE) ──
 	{
 		id: 'xxammaxx/kleinpilot',
 		name: 'KleinPilot',
@@ -129,15 +129,16 @@ export const MANAGED_TARGET_PROJECTS: ManagedTargetProject[] = [
 		defaultBranch: 'main',
 		status: 'LOCAL_GATES_REPRODUCIBLE',
 		description:
-			'Local-first Android test app for preparing manual Kleinanzeigen listing drafts. No scraping, no login automation, no auto-posting.',
-		techStack: ['Flutter', 'Dart', 'Android', 'Local-first storage'],
+			'Local-first Android test app for preparing manual Kleinanzeigen listing drafts with local photo attachments. No scraping, no login automation, no auto-posting.',
+		techStack: ['Flutter', 'Dart', 'Android', 'image_picker', 'Local-first storage'],
 		lastEvidence: '2026-07-05',
 		lastRunRef:
-			'https://github.com/xxammaxx/KleinPilot/pull/2 (Android Draft Flow Evidence)',
+			'https://github.com/xxammaxx/KleinPilot/pull/3 (Photo Attachment Feature)',
 		blockers: [],
 		nextRecommendedRuns: [
-			'APPROVE FINAL AUDIT AND MERGE KLEINPILOT ANDROID DRAFT FLOW EVIDENCE PR #2',
-			'APPROVE KLEINPILOT PHOTO ATTACHMENT FEATURE (IF DESIRED)',
+			'APPROVE FINAL AUDIT AND MERGE KLEINPILOT PHOTO ATTACHMENT PR #3',
+			'APPROVE FINAL AUDIT AND MERGE POSITRON KLEINPILOT PHOTO TRACKING PR',
+			'APPROVE KLEINPILOT LISTING TEMPLATE QUALITY PASS',
 		],
 		safetyChecks: [
 			{
@@ -175,9 +176,23 @@ export const MANAGED_TARGET_PROJECTS: ManagedTargetProject[] = [
 				description:
 					'No usage data collection, analytics, or crash reporting.',
 			},
+			{
+				id: 'photo_local_only',
+				label: 'Photos remain local',
+				status: 'pass',
+				description:
+					'Photo attachments are local file references only. No upload, no cloud sync, no Kleinanzeigen.de integration.',
+			},
+			{
+				id: 'no_exif_extraction',
+				label: 'No EXIF/GPS extraction',
+				status: 'pass',
+				description:
+					'Only file paths are stored — no EXIF metadata or GPS coordinates are read from photos.',
+			},
 		],
-		securityStatus: 'review_needed',
-		lastSecurityScan: null,
+		securityStatus: 'ok',
+		lastSecurityScan: '2026-07-05',
 	},
 
 	// ── Template: Weitere Zielprojekte ──────────────────────────────────
