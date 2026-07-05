@@ -120,7 +120,7 @@ export const MANAGED_TARGET_PROJECTS: ManagedTargetProject[] = [
 		lastSecurityScan: null,
 	},
 
-	// ── KleinPilot — MVP Scaffolded (LOCAL_GATES_REPRODUCIBLE) ──────
+	// ── KleinPilot — Android Draft Flow Verified (LOCAL_GATES_REPRODUCIBLE) ──────
 	{
 		id: 'xxammaxx/kleinpilot',
 		name: 'KleinPilot',
@@ -133,10 +133,10 @@ export const MANAGED_TARGET_PROJECTS: ManagedTargetProject[] = [
 		techStack: ['Flutter', 'Dart', 'Android', 'Local-first storage'],
 		lastEvidence: '2026-07-05',
 		lastRunRef:
-			'docs/evidence/kleinpilot-target-repo-and-mvp-scaffold-report.md',
+			'https://github.com/xxammaxx/KleinPilot/pull/2 (Android Draft Flow Evidence)',
 		blockers: [],
 		nextRecommendedRuns: [
-			'APPROVE KLEINPILOT FIRST ANDROID DRAFT FLOW TEST (MANUAL)',
+			'APPROVE FINAL AUDIT AND MERGE KLEINPILOT ANDROID DRAFT FLOW EVIDENCE PR #2',
 			'APPROVE KLEINPILOT PHOTO ATTACHMENT FEATURE (IF DESIRED)',
 		],
 		safetyChecks: [
