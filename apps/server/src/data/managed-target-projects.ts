@@ -120,7 +120,7 @@ export const MANAGED_TARGET_PROJECTS: ManagedTargetProject[] = [
 		lastSecurityScan: null,
 	},
 
-	// ── KleinPilot — Photo Picker Full Manual Device Verified (GREEN_FULL_MANUAL) ──
+	// ── KleinPilot — Template Quality Pass (GREEN_TEMPLATE_QUALITY_VERIFIED_ON_ANDROID) ──
 	{
 		id: 'xxammaxx/kleinpilot',
 		name: 'KleinPilot',
@@ -129,16 +129,16 @@ export const MANAGED_TARGET_PROJECTS: ManagedTargetProject[] = [
 		defaultBranch: 'main',
 		status: 'LOCAL_GATES_REPRODUCIBLE',
 		description:
-			'Local-first Android test app for preparing manual Kleinanzeigen listing drafts with local photo attachments. No scraping, no login automation, no auto-posting.',
+			'Local-first Android test app for preparing manual Kleinanzeigen listing drafts with local photo attachments. Improved deterministic German listing template quality. No scraping, no login automation, no auto-posting, no AI generation.',
 		techStack: ['Flutter', 'Dart', 'Android', 'image_picker', 'Local-first storage'],
-		lastEvidence: '2026-07-05',
+		lastEvidence: '2026-07-06',
 		lastRunRef:
-			'https://github.com/xxammaxx/KleinPilot/pull/4 (Photo Picker Full Manual Device Verification)',
+			'https://github.com/xxammaxx/KleinPilot/pull/5 (Listing Template Quality Pass)',
 		blockers: [],
 		nextRecommendedRuns: [
-			'APPROVE FINAL AUDIT AND MERGE KLEINPILOT PHOTO PICKER VERIFICATION PR #4',
-			'APPROVE FINAL AUDIT AND MERGE POSITRON PHOTO PICKER TRACKING PR',
-			'APPROVE KLEINPILOT LISTING TEMPLATE QUALITY PASS',
+			'APPROVE FINAL AUDIT AND MERGE KLEINPILOT LISTING TEMPLATE QUALITY PR #5',
+			'APPROVE FINAL AUDIT AND MERGE POSITRON KLEINPILOT TEMPLATE TRACKING PR #<n>',
+			'APPROVE KLEINPILOT DRAFT PERSISTENCE PASS',
 		],
 		safetyChecks: [
 			{
@@ -190,9 +190,16 @@ export const MANAGED_TARGET_PROJECTS: ManagedTargetProject[] = [
 				description:
 					'Only file paths are stored — no EXIF metadata or GPS coordinates are read from photos.',
 			},
+			{
+				id: 'no_ai_text_generation',
+				label: 'No AI text generation',
+				status: 'pass',
+				description:
+					'Listing templates are deterministic string formatting only. No cloud LLM, no AI text generation.',
+			},
 		],
 		securityStatus: 'ok',
-		lastSecurityScan: '2026-07-05',
+		lastSecurityScan: '2026-07-06',
 	},
 
 	// ── Template: Weitere Zielprojekte ──────────────────────────────────
