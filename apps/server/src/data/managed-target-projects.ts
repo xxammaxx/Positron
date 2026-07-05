@@ -120,7 +120,7 @@ export const MANAGED_TARGET_PROJECTS: ManagedTargetProject[] = [
 		lastSecurityScan: null,
 	},
 
-	// ── KleinPilot — Photo Attachment Feature Added (LOCAL_GATES_REPRODUCIBLE) ──
+	// ── KleinPilot — Photo Picker Full Manual Device Verified (GREEN_FULL_MANUAL) ──
 	{
 		id: 'xxammaxx/kleinpilot',
 		name: 'KleinPilot',
@@ -133,11 +133,11 @@ export const MANAGED_TARGET_PROJECTS: ManagedTargetProject[] = [
 		techStack: ['Flutter', 'Dart', 'Android', 'image_picker', 'Local-first storage'],
 		lastEvidence: '2026-07-05',
 		lastRunRef:
-			'https://github.com/xxammaxx/KleinPilot/pull/3 (Photo Attachment Feature)',
+			'https://github.com/xxammaxx/KleinPilot/pull/4 (Photo Picker Full Manual Device Verification)',
 		blockers: [],
 		nextRecommendedRuns: [
-			'APPROVE FINAL AUDIT AND MERGE KLEINPILOT PHOTO ATTACHMENT PR #3',
-			'APPROVE FINAL AUDIT AND MERGE POSITRON KLEINPILOT PHOTO TRACKING PR',
+			'APPROVE FINAL AUDIT AND MERGE KLEINPILOT PHOTO PICKER VERIFICATION PR #4',
+			'APPROVE FINAL AUDIT AND MERGE POSITRON PHOTO PICKER TRACKING PR',
 			'APPROVE KLEINPILOT LISTING TEMPLATE QUALITY PASS',
 		],
 		safetyChecks: [
