@@ -6,13 +6,13 @@ import type {
 	Artifact,
 	HealthStatus,
 	Issue,
-	ManagedProject,
+	ManagedTargetProject,
 	Metrics,
 	Repository,
 	Run,
 	RunEvent,
-} from './types.jsx';
-import type { Phase, RunStatus } from './types.jsx';
+} from './types.js';
+import type { Phase, RunStatus } from './types.js';
 
 const BASE = '/api';
 
@@ -100,6 +100,11 @@ export const api = {
 			method: 'POST',
 			body: JSON.stringify({ owner, name }),
 		});
+	},
+
+	// Managed Target Projects (generische Registry externer Zielprojekte)
+	getManagedTargetProjects(): Promise<{ projects: ManagedTargetProject[]; total: number }> {
+		return request<{ projects: ManagedTargetProject[]; total: number }>('/projects');
 	},
 
 	getRepoIssues(repoId: string): Promise<{ issues: Issue[] }> {
@@ -218,11 +223,6 @@ export const api = {
 			avgDurationMs: m.avgRunDurationMs ?? 0,
 			successRate,
 		};
-	},
-
-	// Managed Projects (external target projects)
-	getProjects(): Promise<{ projects: ManagedProject[]; total: number }> {
-		return request<{ projects: ManagedProject[]; total: number }>('/projects');
 	},
 
 	// Evidence (aggregated)

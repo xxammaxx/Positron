@@ -91,8 +91,8 @@ import type {
 import { FakeSpecKitAdapter, RealSpecKitAdapter } from '@positron/speckit-adapter';
 import Database from 'better-sqlite3';
 import express from 'express';
+import { getManagedTargetProjects } from './data/managed-target-projects.js';
 import { createDemoLiveRunHandler } from './demo/live-run-handler.js';
-import { getManagedProjects } from './data/voicewiki-seed.js';
 import { startWatcher } from './github-watcher.js';
 import { createCancelHandler } from './handlers/cancel-run.js';
 import { createLogger } from './logger.js';
@@ -2657,13 +2657,13 @@ export function createApp(options: ServerOptions = {}) {
 		}
 	});
 
-	// Managed Projects (external target projects tracked by Positron)
+	// Managed Target Projects Registry (generisch, nicht projekt-spezifisch)
 	app.get('/api/projects', (_req, res) => {
 		try {
-			const projects = getManagedProjects();
+			const projects = getManagedTargetProjects();
 			res.json({ projects, total: projects.length });
 		} catch (err) {
-			res.status(500).json({ error: 'Failed to load managed projects', details: String(err) });
+			res.status(500).json({ error: 'Registry-Fehler', details: String(err) });
 		}
 	});
 

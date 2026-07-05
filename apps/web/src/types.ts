@@ -122,51 +122,41 @@ export interface ApiError {
 	details?: unknown;
 }
 
-// Managed External Project (e.g. VoiceWiki tracked by Positron)
-export interface ManagedProject {
+// ── Managed Target Projects (Issue: Target Project Registry) ──────
+
+export interface SafetyCheck {
+	id: string;
+	label: string;
+	status: 'pass' | 'warn' | 'fail' | 'unknown';
+	description?: string;
+}
+
+export type TargetProjectRole =
+	| 'external_target_project'
+	| 'proof_project'
+	| 'candidate_project';
+
+export type TargetProjectStatus =
+	| 'LOCAL_GATES_REPRODUCIBLE'
+	| 'LOCAL_GATES_BLOCKED'
+	| 'NOT_YET_EVALUATED'
+	| 'DEPLOYED'
+	| 'ARCHIVED';
+
+export interface ManagedTargetProject {
 	id: string;
 	name: string;
-	description: string;
+	role: TargetProjectRole;
 	repoUrl: string;
 	defaultBranch: string;
-	status: 'FIRST_EXTERNAL_TEST_SUCCESS' | 'EXTERNAL_TEST_PENDING' | 'BUILD_IN_PROGRESS' | 'BLOCKED';
-	externalTestStatus: string;
-	lastMergedPr: {
-		number: number;
-		title: string;
-		mergeSha: string;
-		mergedAt: string;
-		url: string;
-	};
-	knownBlockers: Array<{
-		id: string;
-		description: string;
-		severity: 'blocker' | 'warning';
-	}>;
-	timeline: Array<{
-		step: string;
-		status: 'completed' | 'next' | 'planned';
-		description: string;
-	}>;
-	nextRecommendedRun: {
-		label: string;
-		description: string;
-		approvalLabel: string;
-	};
-	nextAppLevelRun: {
-		label: string;
-		description: string;
-		approvalLabel: string;
-	};
-	safetyStatus: {
-		appCodeChanged: boolean;
-		sttEnabled: boolean;
-		modelAudioFilesAdded: boolean;
-		cloudTelemetryEnabled: boolean;
-		realMode: boolean;
-		phaseDProbe: boolean;
-	};
-	evidenceReportUrl: string | null;
-	createdAt: string;
-	updatedAt: string;
+	status: TargetProjectStatus;
+	description: string;
+	techStack: string[];
+	lastEvidence: string | null;
+	lastRunRef: string | null;
+	blockers: string[];
+	nextRecommendedRuns: string[];
+	safetyChecks: SafetyCheck[];
+	securityStatus: 'ok' | 'review_needed' | 'vulnerable' | 'unknown';
+	lastSecurityScan: string | null;
 }
