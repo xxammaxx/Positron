@@ -120,7 +120,7 @@ export const MANAGED_TARGET_PROJECTS: ManagedTargetProject[] = [
 		lastSecurityScan: null,
 	},
 
-	// ── KleinPilot — Template Quality Pass (GREEN_TEMPLATE_QUALITY_VERIFIED_ON_ANDROID) ──
+	// ── KleinPilot — Draft Persistence Pass (GREEN_LOCAL_PERSISTENCE_VERIFIED_ON_ANDROID) ──
 	{
 		id: 'xxammaxx/kleinpilot',
 		name: 'KleinPilot',
@@ -129,16 +129,16 @@ export const MANAGED_TARGET_PROJECTS: ManagedTargetProject[] = [
 		defaultBranch: 'main',
 		status: 'LOCAL_GATES_REPRODUCIBLE',
 		description:
-			'Local-first Android test app for preparing manual Kleinanzeigen listing drafts with local photo attachments. Improved deterministic German listing template quality. No scraping, no login automation, no auto-posting, no AI generation.',
-		techStack: ['Flutter', 'Dart', 'Android', 'image_picker', 'Local-first storage'],
+			'Local-first Android test app for preparing manual Kleinanzeigen listing drafts with local photo attachments, local draft persistence, and deterministic German listing template quality. No scraping, no login automation, no auto-posting, no AI generation.',
+		techStack: ['Flutter', 'Dart', 'Android', 'image_picker', 'shared_preferences', 'Local-first storage'],
 		lastEvidence: '2026-07-06',
 		lastRunRef:
-			'https://github.com/xxammaxx/KleinPilot/pull/5 (Listing Template Quality Pass)',
+			'https://github.com/xxammaxx/KleinPilot/pull/6 (Draft Persistence Pass)',
 		blockers: [],
 		nextRecommendedRuns: [
-			'APPROVE FINAL AUDIT AND MERGE KLEINPILOT LISTING TEMPLATE QUALITY PR #5',
-			'APPROVE FINAL AUDIT AND MERGE POSITRON KLEINPILOT TEMPLATE TRACKING PR #<n>',
-			'APPROVE KLEINPILOT DRAFT PERSISTENCE PASS',
+			'APPROVE FINAL AUDIT AND MERGE KLEINPILOT DRAFT PERSISTENCE PR #6',
+			'APPROVE FINAL AUDIT AND MERGE POSITRON KLEINPILOT DRAFT PERSISTENCE TRACKING PR #<n>',
+			'APPROVE KLEINPILOT MANUAL EXPORT PACKAGE PASS',
 		],
 		safetyChecks: [
 			{
@@ -196,6 +196,13 @@ export const MANAGED_TARGET_PROJECTS: ManagedTargetProject[] = [
 				status: 'pass',
 				description:
 					'Listing templates are deterministic string formatting only. No cloud LLM, no AI text generation.',
+			},
+			{
+				id: 'local_only_storage',
+				label: 'Local-only draft storage',
+				status: 'pass',
+				description:
+					'Drafts are saved locally via SharedPreferences as JSON. No cloud sync, no account, no upload, no remote storage.',
 			},
 		],
 		securityStatus: 'ok',
