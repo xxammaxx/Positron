@@ -23,11 +23,33 @@ afterAll(() => {
 });
 
 async function post(path: string, body: unknown) {
-	return fetch(`${baseUrl}${path}`, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify(body),
-	});
+  return fetch(`${baseUrl}${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${DEV_ADMIN_TOKEN}`,
+    },
+    body: JSON.stringify(body),
+  });
+}
+
+async function postUnauth(path: string, body: unknown) {
+  return fetch(`${baseUrl}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
+async function postWrongToken(path: string, body: unknown) {
+  return fetch(`${baseUrl}${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer wrong-token-123',
+    },
+    body: JSON.stringify(body),
+  });
 }
 
 async function get(path: string) {
@@ -141,17 +163,90 @@ describe('Admin Auth Middleware', () => {
 		expect(body.error).toContain('admin token');
 	});
 
-	test('GET /api/admin/stats mit gültigem Token → 200', async () => {
-		const res = await getWithToken('/api/admin/stats', DEV_ADMIN_TOKEN);
-		expect(res.status).toBe(200);
-		const body = (await res.json()) as {
-			runs: { total: number };
-			repositories: number;
-		};
-		expect(body).toHaveProperty('runs');
-		expect(body.runs).toHaveProperty('total');
-		expect(body).toHaveProperty('repositories');
-		expect(body).toHaveProperty('events');
-		expect(body).toHaveProperty('artifacts');
-	});
+  test('GET /api/admin/stats mit gültigem Token → 200', async () => {
+    const res = await getWithToken('/api/admin/stats', DEV_ADMIN_TOKEN);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      runs: { total: number };
+      repositories: number;
+    };
+    expect(body).toHaveProperty('runs');
+    expect(body.runs).toHaveProperty('total');
+    expect(body).toHaveProperty('repositories');
+    expect(body).toHaveProperty('events');
+    expect(body).toHaveProperty('artifacts');
+  });
+});
+
+// --- RED_HOLD remediation: Write-endpoint auth tests ---
+describe('Write Endpoint Auth (RED_HOLD remediation)', () => {
+  test('POST /api/repos/:repoId/runs ohne Token → 401', async () => {
+    const res = await postUnauth('/api/repos/repo-1/runs', { issueNumber: 1 });
+    expect(res.status).toBe(401);
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toContain('admin token');
+  });
+
+  test('POST /api/repos/:repoId/runs mit falschem Token → 401', async () => {
+    const res = await postWrongToken('/api/repos/repo-1/runs', { issueNumber: 1 });
+    expect(res.status).toBe(401);
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toContain('admin token');
+  });
+
+  test('POST /api/repos/:repoId/runs mit gültigem Token → 200', async () => {
+    const res = await post('/api/repos/repo-1/runs', { issueNumber: 1 });
+    expect(res.status).toBe(200);
+  });
+
+  test('POST /api/evidence ohne Token → 401', async () => {
+    const res = await postUnauth('/api/evidence', { runId: 'test', kind: 'log', content: 'test' });
+    expect(res.status).toBe(401);
+  });
+
+  test('POST /api/runs/:id/control ohne Token → 401', async () => {
+    const res = await postUnauth('/api/runs/test-id/control', { action: 'pause' });
+    expect(res.status).toBe(401);
+  });
+
+  test('POST /api/webhook/test ohne Token → 401', async () => {
+    const res = await postUnauth('/api/webhook/test', { message: 'test' });
+    expect(res.status).toBe(401);
+  });
+
+  test('POST /api/demo/blueprint ohne Token → 401', async () => {
+    const res = await postUnauth('/api/demo/blueprint', { blueprint: '# Test' });
+    expect(res.status).toBe(401);
+  });
+
+  test('POST /api/demo-runs ohne Token → 401', async () => {
+    const res = await postUnauth('/api/demo-runs', { issueNumber: 99 });
+    expect(res.status).toBe(401);
+  });
+
+  test('POST /api/runs/:id/gate ohne Token → 401', async () => {
+    const res = await postUnauth('/api/runs/test-id/gate', { decision: 'approve' });
+    expect(res.status).toBe(401);
+  });
+
+  test('POST /api/runs/:id/cancel ohne Token → 401', async () => {
+    const res = await postUnauth('/api/runs/test-id/cancel', {});
+    expect(res.status).toBe(401);
+  });
+
+  test('GET read-only endpoints bleiben ohne Token erreichbar', async () => {
+    const healthRes = await get('/api/health');
+    expect(healthRes.status).toBe(200);
+
+    const runsRes = await get('/api/runs');
+    expect(runsRes.status).toBe(200);
+
+    const safetyRes = await get('/api/safety');
+    expect(safetyRes.status).toBe(200);
+  });
+
+  test('Authorization: Bearer header wird ebenfalls akzeptiert', async () => {
+    const res = await post('/api/repos/repo-1/runs', { issueNumber: 42 });
+    expect(res.status).toBe(200);
+  });
 });
