@@ -9,6 +9,14 @@ services:
       server:
         condition: service_healthy
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:5173/api/health"]
       interval: 30s
@@ -17,13 +25,23 @@ services:
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    # RED_HOLD remediation: Redis is internal-only — no host port exposure.
+    # Access via Docker network: redis:6379 only.
+    expose:
+      - "6379"
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD:?set REDIS_PASSWORD for Redis auth}
+      --protected-mode yes
     volumes:
       - redis-data:/data
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
       timeout: 3s
       retries: 3
@@ -45,7 +63,7 @@ services:
       - NODE_ENV=production
       - PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${HOME}/.local/share/uv/tools/specify-cli/bin:${HOME}/.local/share/uv/tools/specify-cli/bin
       - POSITRON_DB_PATH=/app/.positron/runs/positron.db
-      - POSITRON_REDIS_URL=redis://redis:6379
+      - POSITRON_REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
       - GITHUB_TOKEN=${GITHUB_TOKEN:-ghp_fake}
       - POSITRON_GITHUB_MODE=${POSITRON_GITHUB_MODE:-fake}
       - POSITRON_SPECKIT_MODE=${POSITRON_SPECKIT_MODE:-fake}
@@ -59,12 +77,17 @@ services:
       - POSITRON_MERGE_KILL_SWITCH=true
       - POSITRON_ENABLE_FIX_LOOP=${POSITRON_ENABLE_FIX_LOOP:-false}
       - POSITRON_WORKSPACE_ROOT=/app/workspace
-      - POSITRON_ADMIN_TOKEN=${POSITRON_ADMIN_TOKEN:-positron-admin-prod}
+      # RED_HOLD remediation: No default token — must be explicitly set by operator.
+      - POSITRON_ADMIN_TOKEN=${POSITRON_ADMIN_TOKEN:?set POSITRON_ADMIN_TOKEN in .env or env vars}
       - POSITRON_CORS_ORIGIN=${POSITRON_CORS_ORIGIN:-http://localhost:5173}
     depends_on:
       redis:
         condition: service_healthy
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
       interval: 30s
@@ -84,7 +107,7 @@ services:
     environment:
       - NODE_ENV=production
       - POSITRON_DB_PATH=/app/.positron/runs/positron.db
-      - POSITRON_REDIS_URL=redis://redis:6379
+      - POSITRON_REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
       - PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${HOME}/.local/share/uv/tools/specify-cli/bin
       - GITHUB_TOKEN=${GITHUB_TOKEN:-ghp_fake}
       - POSITRON_GITHUB_MODE=${POSITRON_GITHUB_MODE:-fake}
@@ -99,11 +122,15 @@ services:
       - POSITRON_MERGE_KILL_SWITCH=true
       - POSITRON_ENABLE_FIX_LOOP=${POSITRON_ENABLE_FIX_LOOP:-false}
       - POSITRON_WORKSPACE_ROOT=/app/workspace
-      - POSITRON_ADMIN_TOKEN=${POSITRON_ADMIN_TOKEN:-positron-admin-prod}
+      - POSITRON_ADMIN_TOKEN=${POSITRON_ADMIN_TOKEN:?set POSITRON_ADMIN_TOKEN in .env or env vars}
     depends_on:
       redis:
         condition: service_healthy
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
 
   web:
     build:
@@ -113,6 +140,13 @@ services:
       server:
         condition: service_healthy
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:5173"]
       interval: 30s
