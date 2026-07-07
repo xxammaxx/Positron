@@ -138,3 +138,23 @@ GitHubAdapter (7 read + 8 write methods)
 - Security: `docs/evidence/security-readonly-adapter-analysis.md`
 - Compliance: `docs/evidence/compliance-readonly-adapter-audit.md`
 - Issue: #356
+
+---
+
+## Post-Merge: Stage 1 Read-Only Validation Prep
+
+**Date:** 2026-07-07
+
+After PR #357 merge (feca04a), the Stage-1 Read-Only Validation Prep was executed to:
+
+1. Define Stage-1 operational boundaries
+2. Document least-privilege token policy
+3. Verify redaction and audit readiness
+4. Prepare a controlled later run plan
+
+**Prep Result:** GREEN_STAGE1_PREP_PR_CREATED
+
+**Next Stage Status:** READY_FOR_STAGE1_READONLY_VALIDATION_AFTER_MERGE
+
+See: `docs/evidence/stage1-readonly-validation-prep.md`
+See: `docs/security/github-readonly-token-policy.md`
