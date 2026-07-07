@@ -19,6 +19,7 @@ GitHub Actions remains advisory-only. Workflow YAML files are syntactically vali
 - Full Real Mode (human-in-the-loop GitHub operations) has not been productively proven.
 - The Rudolph Beacon `controlled-real-probe` validates safety gates in simulation but does not exercise real GitHub operations with a live token.
 - Full Real Mode Pilot is tracked in Issue #308 (YELLOW_VALIDATE, P1).
+- Preflight validation completed 2026-07-07: security baseline confirmed, 1900 tests pass, Stage 0 (Fake Mode Baseline) ready. Stage 1+ blocked by #215, #244, #245, #246.
 - Real mode requires combined approval gates (GATE_APPROVE → #215, #244, #245, #246).
 
 ## E2E Testing
