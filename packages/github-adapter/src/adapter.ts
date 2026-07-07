@@ -1,4 +1,4 @@
-// Positron — GitHub Adapter: Interface
+// Positron — GitHub Adapter: Interfaces (ReadOnly + Full)
 
 import type {
 	ClaimOptions,
@@ -18,7 +18,8 @@ import type {
 	RequestReviewersResult,
 } from './types.js';
 
-export interface GitHubAdapter {
+/** Read-only GitHub operations. Safe to expose to untrusted or read-only consumers. */
+export interface ReadOnlyGitHubAdapter {
 	getRepository(owner: string, repo: string): Promise<GitHubRepositorySummary>;
 
 	listOpenIssues(
@@ -35,6 +36,16 @@ export interface GitHubAdapter {
 
 	listIssueComments(ref: GitHubIssueRef): Promise<GitHubIssueComment[]>;
 
+	// --- Pull Request Read Methods ---
+	listPullRequests(options: PRListOptions): Promise<GitHubPullRequest[]>;
+
+	listPullRequestFiles(owner: string, repo: string, prNumber: number): Promise<GitHubPRFile[]>;
+
+	getPullRequest(owner: string, repo: string, prNumber: number): Promise<GitHubPullRequest>;
+}
+
+/** Full GitHub adapter with write capability. Extends the read-only interface. */
+export interface GitHubAdapter extends ReadOnlyGitHubAdapter {
 	createIssueComment(ref: GitHubIssueRef, body: string): Promise<GitHubCommentResult>;
 
 	addIssueLabels(ref: GitHubIssueRef, labels: string[]): Promise<void>;
@@ -43,21 +54,10 @@ export interface GitHubAdapter {
 
 	claimIssue(ref: GitHubIssueRef, options: ClaimOptions): Promise<GitHubIssueClaimResult>;
 
-	// --- Pull Request Methods (Issue #17) ---
+	// --- Pull Request Write Methods ---
 
 	/** Erstellt einen Pull Request. Idempotent: prüft zuerst ob bereits ein offener PR existiert. */
 	createPullRequest(options: CreatePROptions): Promise<GitHubPullRequest>;
-
-	/** Listet Pull Requests mit optionalem Head-Filter (für Idempotenz-Prüfung). */
-	listPullRequests(options: PRListOptions): Promise<GitHubPullRequest[]>;
-
-	/** Listet die geänderten Dateien eines Pull Requests. */
-	listPullRequestFiles(owner: string, repo: string, prNumber: number): Promise<GitHubPRFile[]>;
-
-	// --- Merge Methods (Issue #20) ---
-
-	/** Holt einen einzelnen Pull Request (für Status-Prüfung). */
-	getPullRequest(owner: string, repo: string, prNumber: number): Promise<GitHubPullRequest>;
 
 	/** Merged einen Pull Request. Prüft mergeable state vorher. */
 	mergePullRequest(options: MergePROptions): Promise<MergePRResult>;

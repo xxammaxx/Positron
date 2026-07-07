@@ -15,9 +15,21 @@ export class GitHubAuthError extends GitHubError {
 }
 
 export class GitHubPermissionError extends GitHubError {
-	constructor() {
-		super('GitHub permission denied. Check your token scopes.');
+	constructor(message?: string) {
+		super(message ?? 'GitHub permission denied. Check your token scopes.');
 		this.name = 'GitHubPermissionError';
+	}
+}
+
+/** Thrown when a write operation is attempted through a read-only adapter boundary. */
+export class GitHubCapabilityError extends GitHubPermissionError {
+	public readonly operation: string;
+	public readonly requiredCapability = 'github:write' as const;
+
+	constructor(operation: string) {
+		super(`GitHub operation '${operation}' requires write capability — blocked by read-only adapter`);
+		this.name = 'GitHubCapabilityError';
+		this.operation = operation;
 	}
 }
 
