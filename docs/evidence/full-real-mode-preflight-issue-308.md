@@ -17,7 +17,9 @@ after the RED_HOLD Security Remediation (PR #353).
 | POSITRON_REAL_MODE_SECURITY_STATUS | **READY_FOR_SUPERVISED_STAGE_0_ONLY** |
 | Confidence | HIGH |
 
-**Explanation**: The security baseline from PR #353 is confirmed and effective. All fake/real adapter boundaries are properly gated. Build, typecheck, and all 1900 tests pass. However, Issue #308's blocking prerequisites (#215, #244, #245, #246) remain open, and compliance gaps exist for write-mode operations. Stage 0 (Local Fake Mode Baseline) is ready now. Stage 1 (Real GitHub Read-Only Probe) requires separate approval and resolution of blocking dependencies.
+**Explanation**: The security baseline from PR #353 is confirmed and effective. All fake/real adapter boundaries are properly gated. Build, typecheck, and all 1900 tests pass.
+**UPDATE 2026-07-07**: Issues #215, #244, #245, #246 were already CLOSED and MERGED at the time of this preflight — the documentation was stale. A separate blocker audit (PR #355) confirmed all four issues are resolved and in main. See `docs/evidence/stage1-blocker-audit-issues-215-244-245-246.md`.
+Compliance gaps exist for write-mode operations. Stage 0 (Local Fake Mode Baseline) is ready now. Stage 1 (Real GitHub Read-Only Probe) requires separate approval and a read-only capability layer.
 
 ---
 
@@ -93,7 +95,7 @@ after the RED_HOLD Security Remediation (PR #353).
 | Stage | Requires Secret? | Allows GitHub Write? | Allows Push? | Allows Merge? | Current Recommendation |
 |---|---|---|---|---|---|
 | **Stage 0** — Local Fake Mode Baseline | No | No | No | No | **READY NOW** |
-| **Stage 1** — Real GitHub Read-Only Probe | Yes (later) | No | No | No | **BLOCKED by #215, #244, #245, #246** |
+| **Stage 1** — Real GitHub Read-Only Probe | Yes (later) | No | No | No | **READY_WITH_NOTES — Blockers #215, #244, #245, #246 resolved (CLOSED/MERGED). See blocker audit PR #355.** |
 | **Stage 2** — Real GitHub Write Sandbox Proposal | Yes (later) | Limited (sandbox only) | Maybe with approval | No | **BLOCKED — requires Stage 1 pass + separate approval** |
 | **Stage 3** — Supervised Issue-to-PR Pilot | Yes (later) | Yes | Yes with approval | No | **BLOCKED — requires Stage 2 pass + separate approval** |
 
@@ -151,7 +153,7 @@ after the RED_HOLD Security Remediation (PR #353).
 | Gate Assembly Tests | 48/48 | ✅ PASS | No |
 | Gate Enforcement Tests | 38/38 | ✅ PASS | No |
 | git diff --check | No whitespace issues | ✅ PASS | No |
-| Blocking Dependencies (#215, #244, #245, #246) | Still OPEN | ❌ BLOCKING | Yes for Stage 1+ |
+| Blocking Dependencies (#215, #244, #245, #246) | CLOSED/MERGED (2026-06-28 to 2026-06-29) | ✅ RESOLVED — see blocker audit | No |
 
 ---
 
@@ -193,17 +195,18 @@ after the RED_HOLD Security Remediation (PR #353).
 
 ---
 
-## 10. Remaining Blockers
+## 10. Remaining Blockers (Post-Audit Update)
 
-| Blocker | Class | Before Stage | Issue |
-|---|---|---|---|
-| GATE_APPROVE runtime hook | Architecture | Stage 1 | #215 (PR #218 exists) |
-| Runtime Workspace Cleanup | Architecture | Stage 1 | #244 |
-| requiresAuditLog enforcement | Architecture | Stage 1 | #245 |
-| GateType Layers enforcement | Architecture | Stage 1 | #246 |
-| Persistent workspace lock | Architecture | Stage 2 | #324 |
-| Compliance retention/deletion policy | Compliance | Stage 2 | — |
-| GDPR/DSGVO full governance | Compliance | Stage 3 | — |
+| Blocker | Class | Before Stage | Issue | Status |
+|---|---|---|---|---|
+| GATE_APPROVE runtime hook | Architecture | Stage 1 | #215 | ✅ CLOSED/MERGED (2026-06-28) |
+| Runtime Workspace Cleanup | Architecture | Stage 1 | #244 | ✅ CLOSED/MERGED (2026-06-28) |
+| requiresAuditLog enforcement | Architecture | Stage 1 | #245 | ✅ CLOSED/MERGED (2026-06-28) |
+| GateType Layers enforcement | Architecture | Stage 1 | #246 | ✅ CLOSED/MERGED (2026-06-29) |
+| Read-only adapter capability layer | Security | Stage 1 | — | ⚠️ NEW — needed for safe Stage 1 |
+| Persistent workspace lock | Architecture | Stage 2 | #324 | ⚠️ Open |
+| Compliance retention/deletion policy | Compliance | Stage 2 | — | ⚠️ Open |
+| GDPR/DSGVO full governance | Compliance | Stage 3 | — | ⚠️ Open |
 
 ---
 
@@ -212,8 +215,8 @@ after the RED_HOLD Security Remediation (PR #353).
 ### Decision: **CONDITIONAL GO for Stage 0 only**
 
 - **Stage 0 (Local Fake Mode Baseline)**: **GO** — Ready now. All 1900 tests pass, security baseline confirmed, fake/real boundaries properly gated.
-- **Stage 1 (Real GitHub Read-Only Probe)**: **NO-GO** — Blocked by Issues #215, #244, #245, #246. Requires owner resolution of these dependencies first.
-- **Stage 2 (Real GitHub Write Sandbox)**: **NO-GO** — Blocked by Stage 1 + Issue #324.
+- **Stage 1 (Real GitHub Read-Only Probe)**: **READY_WITH_NOTES** — Blocker Issues #215, #244, #245, #246 are CLOSED/MERGED (resolved 2026-06-28 to 2026-06-29, confirmed by blocker audit PR #355). Requires read-only adapter capability or risk acceptance, plus owner approval.
+- **Stage 2 (Real GitHub Write Sandbox)**: **NO-GO** — Blocked by Stage 1 + Issue #324 + adapter capability layer.
 - **Stage 3 (Supervised Pilot)**: **NO-GO** — Blocked by prior stages + compliance gaps.
 
 ### Allowed next stage: **Stage 0 only**
@@ -249,10 +252,10 @@ PR #353 improved the security baseline, but Full Real Mode remains a high-risk s
 ## 15. Recommended Next Steps
 
 1. **If preflight is accepted**: Merge this preflight PR (docs only).
-2. **Before Stage 1**: Resolve blocking Issues #215, #244, #245, #246.
+2. **Stage 1 Prep**: Reviewed by blocker audit (PR #355). Blocker issues #215, #244, #245, #246 are resolved. A read-only adapter capability is recommended before Stage 1 execution.
 3. **Then**: Request explicit owner approval for:
    ```
-   APPROVE POSITRON FULL REAL MODE STAGE 1 VALIDATION FOR ISSUE #308
+   APPROVE POSITRON FULL REAL MODE STAGE 1 READ-ONLY VALIDATION FOR ISSUE #308
    ```
 
 ---

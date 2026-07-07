@@ -19,8 +19,9 @@ GitHub Actions remains advisory-only. Workflow YAML files are syntactically vali
 - Full Real Mode (human-in-the-loop GitHub operations) has not been productively proven.
 - The Rudolph Beacon `controlled-real-probe` validates safety gates in simulation but does not exercise real GitHub operations with a live token.
 - Full Real Mode Pilot is tracked in Issue #308 (YELLOW_VALIDATE, P1).
-- Preflight validation completed 2026-07-07: security baseline confirmed, 1900 tests pass, Stage 0 (Fake Mode Baseline) ready. Stage 1+ blocked by #215, #244, #245, #246.
-- Real mode requires combined approval gates (GATE_APPROVE → #215, #244, #245, #246).
+- Preflight validation completed 2026-07-07: security baseline confirmed, 1900 tests pass, Stage 0 (Fake Mode Baseline) ready.
+- **UPDATE 2026-07-07**: Blocker Issues #215, #244, #245, #246 were already CLOSED/MERGED (2026-06-28 to 2026-06-29) at the time of the preflight — the documentation was stale. Blocker audit PR #355 confirmed all four are resolved and in main. Stage 1 is READY_WITH_NOTES (read-only adapter capability recommended).
+- Real mode requires combined approval gates (GATE_APPROVE → all four merged, verified in audit).
 
 ## E2E Testing
 
@@ -33,7 +34,7 @@ GitHub Actions remains advisory-only. Workflow YAML files are syntactically vali
 
 ## Open Issues / PRs
 
-- **1 open PR**: Only PR #218 (GATE_APPROVE for #215) remains open.
+- **0 open PRs**: All blocker PRs (#218, #314, #315, #316) merged. No open PRs at audit time.
 - **PR-Chain #230–#242**: 13 PRs in the Issue #229 chain remain intentionally untouched pending human decision.
 - **#229 MCP Bootstrap Epic**: Large epic requiring decomposition before implementation.
 - **#243 Agentic Baseline Epic**: Large epic requiring decomposition before implementation.
@@ -78,7 +79,7 @@ These must not be applied, popped, or dropped without explicit human instruction
 | Documentation drift | Being addressed | #307 |
 | Full Real Mode not productively validated | Open | #308 |
 | Large epics need decomposition | Open | #229, #243 |
-| Security/runtime gates (GATE_APPROVE) | Approval-bound / RED_HOLD | #215, #244, #245, #246 |
+| Security/runtime gates (GATE_APPROVE) | Resolved — merged to main | #215, #244, #245, #246 (all CLOSED) |
 | CodeRabbit external removal | Owner action only | — |
 | Repository polish (labels, wiki) | Deferred | #211 |
 | Biome lint backlog resolution | Out of scope for closeout | — |
