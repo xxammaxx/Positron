@@ -153,11 +153,13 @@ The full integration is deferred to a subsequent PR to keep this change scoped a
 
 ## 13. Recommended Next Step
 
-1. **Review this PR** — human Owner reviews the Stage 2 policy implementation
-2. **APPROVE FINAL AUDIT AND MERGE** — Owner approves merge
-3. **After merge:** `APPROVE POSITRON STAGE 2 SANDBOX TARGET CREATION / SELECTION`
+1. **Review this PR** — human Owner reviews the Stage 2 policy implementation ✅ (PR #361 MERGED)
+2. **APPROVE FINAL AUDIT AND MERGE** — Owner approves merge ✅ (MERGED)
+3. **After merge:** `APPROVE POSITRON STAGE 2 SANDBOX TARGET CREATION / SELECTION` ✅ (Done — `xxammaxx/positron-sandbox`, issue #1)
 4. **Then:** Stage 2 Write Sandbox dry-run execution (separate run with real token)
 5. **NOT directly:** Full real mode or Stage 3
+
+**UPDATE 2026-07-09**: Sandbox target created. See `docs/evidence/stage2-sandbox-target.md`.
 
 ## 14. References
 
