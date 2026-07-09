@@ -246,6 +246,8 @@ If Option A must be used:
 - Stage 2 write execution: NO
 - Real token used: NO
 
+**UPDATE 2026-07-09 (Target Selection)**: Dedicated Stage 2 sandbox target created. Repository `xxammaxx/positron-sandbox` (PRIVATE), issue #1, label `positron-stage2-sandbox`. All setup performed by Developer via `gh` CLI — no Positron runtime writes. Stage 2 remains not executed. See `docs/evidence/stage2-sandbox-target.md`.
+
 ## 14. References
 
 - Stage 1 Evidence: `docs/evidence/stage1-readonly-dry-run.md`

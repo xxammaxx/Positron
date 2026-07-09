@@ -213,7 +213,7 @@ Compliance gaps exist for write-mode operations. Stage 0 (Local Fake Mode Baseli
 
 ## 11. Go / No-Go Decision
 
-### Decision: **CONDITIONAL GO for Stage 0 only**
+### Decision: **CONDITIONAL GO for Stage 0 only** (original 2026-07-07)
 
 - **Stage 0 (Local Fake Mode Baseline)**: **GO** — Ready now. All 1900 tests pass, security baseline confirmed, fake/real boundaries properly gated.
 - **Stage 1 (Real GitHub Read-Only Probe)**: **READY_WITH_NOTES** — Blocker Issues #215, #244, #245, #246 are CLOSED/MERGED (resolved 2026-06-28 to 2026-06-29, confirmed by blocker audit PR #355). Requires read-only adapter capability or risk acceptance, plus owner approval.
@@ -221,6 +221,13 @@ Compliance gaps exist for write-mode operations. Stage 0 (Local Fake Mode Baseli
 - **Stage 3 (Supervised Pilot)**: **NO-GO** — Blocked by prior stages + compliance gaps.
 
 ### Allowed next stage: **Stage 0 only**
+
+### Current Status (UPDATE 2026-07-09)
+
+- **Stage 0**: **GO / DONE**
+- **Stage 1**: **VALIDATED_AND_DOCUMENTED** — ReadOnly dry run successfully completed (7/7 reads, 0 writes). PRs #357, #358, #359 merged.
+- **Stage 2**: **TARGET_CREATED_NOT_EXECUTED** — Policy implemented (PR #361 MERGED, 1967 tests). Sandbox target created: `xxammaxx/positron-sandbox`, issue #1, label `positron-stage2-sandbox`. No writes executed.
+- **Stage 3**: **BLOCKED** — Depends on Stage 2 validation + compliance.
 
 ---
 

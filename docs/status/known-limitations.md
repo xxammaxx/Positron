@@ -24,6 +24,7 @@ GitHub Actions remains advisory-only. Workflow YAML files are syntactically vali
 - **UPDATE 2026-07-08**: Stage 1 ReadOnly Dry Run validated successfully (7/7 reads, 0 writes, write boundary enforced). See `docs/evidence/stage1-readonly-dry-run.md`. Stage 2/3 remain blocked.
 - **UPDATE 2026-07-09**: Stage 2 Write-Sandbox Blueprint created. Stage 2 remains in PREFLIGHT_DESIGNED_NOT_EXECUTED status. Stage 3 remains blocked. See `docs/evidence/stage2-write-sandbox-blueprint.md` and `docs/security/github-stage2-write-sandbox-token-policy.md`.
 - **UPDATE 2026-07-09 (Policy Implementation)**: Stage 2 Write-Sandbox Policy implemented as a technical, testable module in `packages/github-adapter/src/stage2-write-sandbox-policy.ts` with 41 tests. Stage 2 policy is IMPLEMENTED_NOT_EXECUTED — no real writes performed. Stage 3 remains blocked. See `docs/evidence/stage2-write-sandbox-policy-implementation.md`.
+- **UPDATE 2026-07-09 (Target Selection)**: Stage 2 sandbox target created: dedicated repo `xxammaxx/positron-sandbox` (PRIVATE), issue #1, label `positron-stage2-sandbox`. All GitHub operations performed by Developer via `gh` CLI — no Positron runtime writes. Stage 2 remains NOT_EXECUTED. See `docs/evidence/stage2-sandbox-target.md`.
 - Real mode requires combined approval gates (GATE_APPROVE → all four merged, verified in audit).
 
 ## E2E Testing
