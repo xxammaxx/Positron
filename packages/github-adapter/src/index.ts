@@ -78,6 +78,21 @@ export type {
 	SafeLlmRunMetadata,
 } from './sync-service.js';
 
+// --- Stage 2 Write-Sandbox Policy ---
+export {
+	Stage2WriteSandboxPolicy,
+	createStage2SandboxPolicy,
+	STAGE2_DEFAULT_CONFIG,
+	STAGE2_PERMANENTLY_FORBIDDEN,
+} from './stage2-write-sandbox-policy.js';
+export type {
+	Stage2WriteOperation,
+	Stage2WriteSandboxConfig,
+	Stage2WritePolicyResult,
+	Stage2PreWritePreview,
+	Stage2WriteAuditEvent,
+} from './stage2-write-sandbox-policy.js';
+
 // --- Label Lifecycle ---
 export { getLabelsForPhase, LABEL_LIFECYCLE } from './label-lifecycle.js';
 export type { PhaseLabels } from './label-lifecycle.js';

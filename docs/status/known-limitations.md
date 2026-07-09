@@ -23,6 +23,7 @@ GitHub Actions remains advisory-only. Workflow YAML files are syntactically vali
 - **UPDATE 2026-07-07**: Blocker Issues #215, #244, #245, #246 were already CLOSED/MERGED (2026-06-28 to 2026-06-29) at the time of the preflight — the documentation was stale. Blocker audit PR #355 confirmed all four are resolved and in main.
 - **UPDATE 2026-07-08**: Stage 1 ReadOnly Dry Run validated successfully (7/7 reads, 0 writes, write boundary enforced). See `docs/evidence/stage1-readonly-dry-run.md`. Stage 2/3 remain blocked.
 - **UPDATE 2026-07-09**: Stage 2 Write-Sandbox Blueprint created. Stage 2 remains in PREFLIGHT_DESIGNED_NOT_EXECUTED status. Stage 3 remains blocked. See `docs/evidence/stage2-write-sandbox-blueprint.md` and `docs/security/github-stage2-write-sandbox-token-policy.md`.
+- **UPDATE 2026-07-09 (Policy Implementation)**: Stage 2 Write-Sandbox Policy implemented as a technical, testable module in `packages/github-adapter/src/stage2-write-sandbox-policy.ts` with 41 tests. Stage 2 policy is IMPLEMENTED_NOT_EXECUTED — no real writes performed. Stage 3 remains blocked. See `docs/evidence/stage2-write-sandbox-policy-implementation.md`.
 - Real mode requires combined approval gates (GATE_APPROVE → all four merged, verified in audit).
 
 ## E2E Testing

@@ -236,7 +236,17 @@ If Option A must be used:
 5. **Then:** Stage 2 Write Sandbox dry-run execution (separate run)
 6. **NOT directly:** Stage 2 write execution without separate approval
 
-## 13. References
+## 13. Implementation Status
+
+**UPDATE 2026-07-09**: The Stage 2 Write-Sandbox Policy has been implemented as a standalone technical module. See `docs/evidence/stage2-write-sandbox-policy-implementation.md`.
+
+- Policy module: `packages/github-adapter/src/stage2-write-sandbox-policy.ts`
+- Test suite: `packages/github-adapter/src/__tests__/stage2-write-sandbox-policy.test.ts` (41 tests, all passing)
+- Stage 2 status: **STAGE2_POLICY_IMPLEMENTED_NOT_EXECUTED**
+- Stage 2 write execution: NO
+- Real token used: NO
+
+## 14. References
 
 - Stage 1 Evidence: `docs/evidence/stage1-readonly-dry-run.md`
 - Stage 1 Prep: `docs/evidence/stage1-readonly-validation-prep.md`
