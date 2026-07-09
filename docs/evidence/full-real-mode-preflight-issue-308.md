@@ -19,7 +19,8 @@ after the RED_HOLD Security Remediation (PR #353).
 
 **Explanation**: The security baseline from PR #353 is confirmed and effective. All fake/real adapter boundaries are properly gated. Build, typecheck, and all 1900 tests pass.
 **UPDATE 2026-07-07**: Issues #215, #244, #245, #246 were already CLOSED and MERGED at the time of this preflight — the documentation was stale. A separate blocker audit (PR #355) confirmed all four issues are resolved and in main. See `docs/evidence/stage1-blocker-audit-issues-215-244-245-246.md`.
-Compliance gaps exist for write-mode operations. Stage 0 (Local Fake Mode Baseline) is ready now. Stage 1 (Real GitHub Read-Only Probe) requires separate approval and a read-only capability layer.
+**UPDATE 2026-07-08**: Stage 1 ReadOnly Dry Run successfully completed and validated. All 7 read operations passed with a real read-only token, 0 write attempts, write boundary fully enforced. Token was unset after the run. Evidence documented in `docs/evidence/stage1-readonly-dry-run.md`. Stage 2 and Stage 3 remain blocked.
+Compliance gaps exist for write-mode operations. Stage 0 (Local Fake Mode Baseline) is ready now. Stage 1 (Real GitHub Read-Only Probe) has been validated and is documented.
 
 ---
 
@@ -95,7 +96,7 @@ Compliance gaps exist for write-mode operations. Stage 0 (Local Fake Mode Baseli
 | Stage | Requires Secret? | Allows GitHub Write? | Allows Push? | Allows Merge? | Current Recommendation |
 |---|---|---|---|---|---|
 | **Stage 0** — Local Fake Mode Baseline | No | No | No | No | **READY NOW** |
-| **Stage 1** — Real GitHub Read-Only Probe | Yes (later) | No | No | No | **READY_WITH_NOTES — Blockers #215, #244, #245, #246 resolved (CLOSED/MERGED). See blocker audit PR #355.** |
+| **Stage 1** — Real GitHub Read-Only Probe | Yes (one-time, redacted, unset after) | No | No | No | **VALIDATED (2026-07-08)** — Stage 1 dry run passed: 7/7 reads, 0 writes, boundary enforced. See `docs/evidence/stage1-readonly-dry-run.md`. |
 | **Stage 2** — Real GitHub Write Sandbox Proposal | Yes (later) | Limited (sandbox only) | Maybe with approval | No | **BLOCKED — requires Stage 1 pass + separate approval** |
 | **Stage 3** — Supervised Issue-to-PR Pilot | Yes (later) | Yes | Yes with approval | No | **BLOCKED — requires Stage 2 pass + separate approval** |
 
