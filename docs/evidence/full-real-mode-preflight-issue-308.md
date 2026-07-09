@@ -97,7 +97,7 @@ Compliance gaps exist for write-mode operations. Stage 0 (Local Fake Mode Baseli
 |---|---|---|---|---|---|
 | **Stage 0** — Local Fake Mode Baseline | No | No | No | No | **READY NOW** |
 | **Stage 1** — Real GitHub Read-Only Probe | Yes (one-time, redacted, unset after) | No | No | No | **VALIDATED (2026-07-08)** — Stage 1 dry run passed: 7/7 reads, 0 writes, boundary enforced. See `docs/evidence/stage1-readonly-dry-run.md`. |
-| **Stage 2** — Real GitHub Write Sandbox Proposal | Yes (later) | Limited (sandbox only) | Maybe with approval | No | **BLOCKED — requires Stage 1 pass + separate approval** |
+| **Stage 2** — Real GitHub Write Sandbox Proposal | Yes (later) | Limited (sandbox only) | Maybe with approval | No | **BLOCKED — Blueprint created (2026-07-09).** Stage 1 passed. Stage 2 write sandbox target and policy defined but NOT yet executed. See `docs/evidence/stage2-write-sandbox-blueprint.md`. |
 | **Stage 3** — Supervised Issue-to-PR Pilot | Yes (later) | Yes | Yes with approval | No | **BLOCKED — requires Stage 2 pass + separate approval** |
 
 ---
