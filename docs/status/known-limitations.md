@@ -22,6 +22,7 @@ GitHub Actions remains advisory-only. Workflow YAML files are syntactically vali
 - Preflight validation completed 2026-07-07: security baseline confirmed, 1900 tests pass, Stage 0 (Fake Mode Baseline) ready.
 - **UPDATE 2026-07-07**: Blocker Issues #215, #244, #245, #246 were already CLOSED/MERGED (2026-06-28 to 2026-06-29) at the time of the preflight — the documentation was stale. Blocker audit PR #355 confirmed all four are resolved and in main.
 - **UPDATE 2026-07-08**: Stage 1 ReadOnly Dry Run validated successfully (7/7 reads, 0 writes, write boundary enforced). See `docs/evidence/stage1-readonly-dry-run.md`. Stage 2/3 remain blocked.
+- **UPDATE 2026-07-09**: Stage 2 Write-Sandbox Blueprint created. Stage 2 remains in PREFLIGHT_DESIGNED_NOT_EXECUTED status. Stage 3 remains blocked. See `docs/evidence/stage2-write-sandbox-blueprint.md` and `docs/security/github-stage2-write-sandbox-token-policy.md`.
 - Real mode requires combined approval gates (GATE_APPROVE → all four merged, verified in audit).
 
 ## E2E Testing
@@ -79,6 +80,7 @@ These must not be applied, popped, or dropped without explicit human instruction
 | Backlog hygiene (milestones, labels, taxonomy) | Open | #306 |
 | Documentation drift | Being addressed | #307 |
 | Full Real Mode not productively validated | Open | #308 |
+| Stage 2 Write Sandbox not executed | Preflight designed | #308 |
 | Large epics need decomposition | Open | #229, #243 |
 | Security/runtime gates (GATE_APPROVE) | Resolved — merged to main | #215, #244, #245, #246 (all CLOSED) |
 | CodeRabbit external removal | Owner action only | — |
