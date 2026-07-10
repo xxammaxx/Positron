@@ -241,6 +241,8 @@ DENY_STAGE3: YES
 
 ## 12. Next Step
 
+**UPDATE 2026-07-10**: Stage 2 single-comment dry run attempted. Blocked at Phase H: `BLOCKED_BY_RUNTIME_WRITE_HARNESS_MISSING`. See `docs/evidence/stage2-write-sandbox-single-comment-dry-run.md`.
+
 ```
 APPROVE FINAL AUDIT AND MERGE POSITRON STAGE 2 WRITE-SANDBOX DRY-RUN PREFLIGHT PR <number>
 ```
