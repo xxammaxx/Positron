@@ -20,6 +20,8 @@ after the RED_HOLD Security Remediation (PR #353).
 **Explanation**: The security baseline from PR #353 is confirmed and effective. All fake/real adapter boundaries are properly gated. Build, typecheck, and all 1900 tests pass.
 **UPDATE 2026-07-07**: Issues #215, #244, #245, #246 were already CLOSED and MERGED at the time of this preflight — the documentation was stale. A separate blocker audit (PR #355) confirmed all four issues are resolved and in main. See `docs/evidence/stage1-blocker-audit-issues-215-244-245-246.md`.
 **UPDATE 2026-07-08**: Stage 1 ReadOnly Dry Run successfully completed and validated. All 7 read operations passed with a real read-only token, 0 write attempts, write boundary fully enforced. Token was unset after the run. Evidence documented in `docs/evidence/stage1-readonly-dry-run.md`. Stage 2 and Stage 3 remain blocked.
+**UPDATE 2026-07-09**: Stage 2 Write-Sandbox Blueprint, Policy Implementation, and Sandbox Target selection completed (PRs #360, #361, #362 merged). Stage 2 remains NOT EXECUTED.
+**UPDATE 2026-07-10**: Stage 2 Write-Sandbox Dry-Run Preflight completed. Sandbox target verified, pre-write preview generated (body hash: `48be36a2eccb9dc4a1e90c336cbec0045a13e44048d56dfcac83da5d228f371e`), token scope defined, human approval string defined. NO real write executed. NO real Stage 2 token used. Evidence in `docs/evidence/stage2-write-sandbox-dry-run-preflight.md`. Stage 2 remains NOT EXECUTED, Stage 3 remains BLOCKED.
 Compliance gaps exist for write-mode operations. Stage 0 (Local Fake Mode Baseline) is ready now. Stage 1 (Real GitHub Read-Only Probe) has been validated and is documented.
 
 ---
