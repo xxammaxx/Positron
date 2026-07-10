@@ -6,7 +6,17 @@ Defines the least-privilege token requirements for the Positron Stage 2 Write Sa
 
 ## Status
 
-**DRAFT — Not yet executed. Blueprint only.** This document defines the policy for a future Stage-2 run. No write token has been created or used during blueprint creation.
+**PREFLIGHT — Dry-run preflight completed 2026-07-10. Token scope defined, NOT created.** This document defines the policy for the upcoming Stage-2 dry run. No write token has been created or used at any point. The dry-run preflight (PR TBD) verified sandbox target, generated pre-write preview, and defined the exact token scope below.
+
+### Key Preflight Values (from dry-run preflight)
+
+| Field | Value |
+|---|---|
+| Comment body SHA-256 | `48be36a2eccb9dc4a1e90c336cbec0045a13e44048d56dfcac83da5d228f371e` |
+| Comment body length | 215 bytes |
+| Idempotency key | `e2cab0b797a942a0` |
+
+These values are embedded in the later Human Approval string to prevent body tampering and replay.
 
 ## Token Requirements for Stage 2
 
@@ -35,10 +45,11 @@ Fine-grained GitHub Personal Access Token (github_pat_...)
 ### Repository Scope
 
 The token MUST be scoped to a single sandbox repository:
-- **Recommended:** `xxammaxx/positron-sandbox` (dedicated, no production data)
-- **Alternative:** `xxammaxx/Positron` (only with explicit Owner approval + sandbox issue allowlist)
+- **Selected:** `xxammaxx/positron-sandbox` (dedicated, private, no production data)
+- **Verified:** 2026-07-10 dry-run preflight — repo exists, issue #1 open, label `positron-stage2-sandbox` present
+- **Alternative:** NONE — only `xxammaxx/positron-sandbox` is permitted for Stage 2
 
-The token MUST NOT have access to any other repositories.
+The token MUST NOT have access to any other repositories, especially NOT `xxammaxx/Positron`.
 
 ### Token Expiry
 

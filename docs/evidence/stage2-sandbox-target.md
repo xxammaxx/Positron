@@ -75,13 +75,15 @@ No Positron runtime performed any GitHub write.
 
 ## 7. Next Step
 
+**UPDATE 2026-07-10**: Dry-run preflight completed. See `docs/evidence/stage2-write-sandbox-dry-run-preflight.md`.
+
 ```
-APPROVE FINAL AUDIT AND MERGE POSITRON STAGE 2 SANDBOX TARGET PR TBD
+APPROVE FINAL AUDIT AND MERGE POSITRON STAGE 2 WRITE-SANDBOX DRY-RUN PREFLIGHT PR <number>
 ```
 
-After merge:
+After merge, and only after separate explicit Owner approval:
 ```
-APPROVE POSITRON STAGE 2 WRITE-SANDBOX DRY-RUN PREFLIGHT
+APPROVE POSITRON STAGE 2 WRITE-SANDBOX SINGLE COMMENT DRY RUN
 ```
 
 Not directly:
@@ -89,6 +91,7 @@ Stage 2 Write Dry Run.
 
 ## 8. References
 
+- Stage 2 Dry-Run Preflight: `docs/evidence/stage2-write-sandbox-dry-run-preflight.md`
 - Stage 2 Blueprint: `docs/evidence/stage2-write-sandbox-blueprint.md`
 - Stage 2 Policy Implementation: `docs/evidence/stage2-write-sandbox-policy-implementation.md`
 - Stage 2 Token Policy: `docs/security/github-stage2-write-sandbox-token-policy.md`

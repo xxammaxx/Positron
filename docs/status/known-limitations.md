@@ -82,7 +82,7 @@ These must not be applied, popped, or dropped without explicit human instruction
 | Backlog hygiene (milestones, labels, taxonomy) | Open | #306 |
 | Documentation drift | Being addressed | #307 |
 | Full Real Mode not productively validated | Open | #308 |
-| Stage 2 Write Sandbox not executed | Preflight designed | #308 |
+| Stage 2 Write Sandbox — Preflight Ready | Dry-run preflight completed 2026-07-10 | #308 |
 | Large epics need decomposition | Open | #229, #243 |
 | Security/runtime gates (GATE_APPROVE) | Resolved — merged to main | #215, #244, #245, #246 (all CLOSED) |
 | CodeRabbit external removal | Owner action only | — |
