@@ -93,6 +93,19 @@ export type {
 	Stage2WriteAuditEvent,
 } from './stage2-write-sandbox-policy.js';
 
+// --- Stage 2 Runtime Write Harness ---
+export {
+	Stage2RuntimeWriteHarness,
+	createStage2WriteHarness,
+} from './stage2-runtime-write-harness.js';
+export type {
+	Stage2IssueCommentWriter,
+	Stage2WriteHarnessInput,
+	Stage2WriteHarnessResult,
+	Stage2WriteHarnessConfig,
+	Stage2AuditSink,
+} from './stage2-runtime-write-harness.js';
+
 // --- Label Lifecycle ---
 export { getLabelsForPhase, LABEL_LIFECYCLE } from './label-lifecycle.js';
 export type { PhaseLabels } from './label-lifecycle.js';

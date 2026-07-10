@@ -243,6 +243,8 @@ DENY_STAGE3: YES
 
 **UPDATE 2026-07-10**: Stage 2 single-comment dry run attempted. Blocked at Phase H: `BLOCKED_BY_RUNTIME_WRITE_HARNESS_MISSING`. See `docs/evidence/stage2-write-sandbox-single-comment-dry-run.md`.
 
+**UPDATE 2026-07-10 (Runtime Write Harness)**: The missing runtime write harness has been implemented (PR #365). Policy-to-adapter bridge now exists. See `docs/evidence/stage2-runtime-write-harness-implementation.md`.
+
 ```
 APPROVE FINAL AUDIT AND MERGE POSITRON STAGE 2 WRITE-SANDBOX DRY-RUN PREFLIGHT PR <number>
 ```
@@ -261,6 +263,7 @@ APPROVE POSITRON STAGE 2 WRITE-SANDBOX SINGLE COMMENT DRY RUN
 - Stage 2 Policy Implementation: `docs/evidence/stage2-write-sandbox-policy-implementation.md`
 - Stage 2 Sandbox Target: `docs/evidence/stage2-sandbox-target.md`
 - Stage 2 Token Policy: `docs/security/github-stage2-write-sandbox-token-policy.md`
+- Stage 2 Runtime Harness: `docs/evidence/stage2-runtime-write-harness-implementation.md`
 - Stage 1 Evidence: `docs/evidence/stage1-readonly-dry-run.md`
 - Full Real Mode Preflight: `docs/evidence/full-real-mode-preflight-issue-308.md`
 - Known Limitations: `docs/status/known-limitations.md`
