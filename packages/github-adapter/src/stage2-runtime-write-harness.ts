@@ -92,8 +92,8 @@ export interface Stage2WriteHarnessResult {
 		createdAt?: string;
 	};
 	/** Whether the harness is in fake mode. */
-	mode: 'fake' | 'preview';
-	/** Whether a real write was executed. Always false in this implementation. */
+	mode: 'fake' | 'preview' | 'live';
+	/** Whether a real write was executed. */
 	writeExecuted: boolean;
 }
 
@@ -156,7 +156,7 @@ export class Stage2RuntimeWriteHarness {
 	 * In fake mode, the adapter is NOT called even if the policy allows the operation.
 	 */
 	async execute(input: Stage2WriteHarnessInput): Promise<Stage2WriteHarnessResult> {
-		const mode: 'fake' | 'preview' = this.config.fakeMode ? 'fake' : 'preview';
+		const mode: 'fake' | 'preview' | 'live' = this.config.fakeMode ? 'fake' : 'live';
 		const timestamp = new Date().toISOString();
 
 		// --- 0. Harness-level gate ---
@@ -336,38 +336,107 @@ export class Stage2RuntimeWriteHarness {
 			};
 		}
 
-		// --- 7. Real mode: execute adapter write (BLOCKED in this implementation) ---
+		// --- 7. Non-fake mode: execute adapter write ---
 		//
-		// This code path is intentionally unreachable in this implementation:
-		// - fakeMode defaults to true
-		// - POSITRON_STAGE2_WRITE_ENABLED is not set
-		// - POSITRON_STAGE2_GITHUB_TOKEN is not required
+		// This path is only reachable when fakeMode is explicitly set to false.
+		// The adapter is called ONLY through the Stage2IssueCommentWriter interface,
+		// which decouples the harness from RealGitHubAdapter (dependency inversion).
 		//
-		// When Stage 2 is unblocked in a future run, this path will be activated
-		// by setting fakeMode=false and providing a real adapter.
-		//
-		// For now: return a compelling error message instead of executing.
-		const auditEvent = this._buildAuditEvent({
-			mode,
-			operation: input.operation,
-			repository: input.repository,
-			issueNumber: input.issueNumber,
-			result: 'blocked',
-			reason: 'Real write execution is not enabled in this harness implementation. Set fakeMode=false and provide a real token to execute.',
-			bodyHash: preview.bodyHash,
-			idempotencyKey: input.idempotencyKey,
-		});
-		await this._emitAudit(auditEvent);
-		return {
-			success: false,
-			reason: 'Real write execution is not enabled in this harness implementation',
-			policyAllowed: true,
-			preview,
-			auditEvent,
-			writeCount: this.writeCount,
-			mode,
-			writeExecuted: false,
-		};
+		// All 15+ policy gates have already passed before reaching this point.
+		// No real GitHub token is read or required — the adapter is injected.
+		const [owner, repo] = input.repository.split('/');
+		if (!owner || !repo) {
+			const auditEvent = this._buildAuditEvent({
+				mode,
+				operation: input.operation,
+				repository: input.repository,
+				issueNumber: input.issueNumber,
+				result: 'blocked',
+				reason: 'Invalid repository format — expected owner/repo',
+				bodyHash: preview.bodyHash,
+				idempotencyKey: input.idempotencyKey,
+			});
+			await this._emitAudit(auditEvent);
+			return {
+				success: false,
+				reason: 'Invalid repository format — expected owner/repo',
+				policyAllowed: true,
+				preview,
+				auditEvent,
+				writeCount: this.writeCount,
+				mode,
+				writeExecuted: false,
+			};
+		}
+
+		try {
+			const commentResult = await this.adapter.createIssueComment({
+				owner,
+				repo,
+				issueNumber: input.issueNumber,
+				body: input.bodyText ?? '',
+			});
+
+			// Success: record write and increment counters
+			this.policy.recordWrite(input.idempotencyKey);
+			this.writeCount++;
+
+			const auditEvent = this._buildAuditEvent({
+				mode,
+				operation: input.operation,
+				repository: input.repository,
+				issueNumber: input.issueNumber,
+				result: 'allowed_executed',
+				bodyHash: preview.bodyHash,
+				idempotencyKey: input.idempotencyKey,
+			});
+			await this._emitAudit(auditEvent);
+
+			return {
+				success: true,
+				policyAllowed: true,
+				preview,
+				auditEvent,
+				writeCount: this.writeCount,
+				commentResult: {
+					id: commentResult.id,
+					url: commentResult.url,
+					createdAt: commentResult.createdAt,
+				},
+				mode,
+				writeExecuted: true,
+			};
+		} catch (error: unknown) {
+			// Adapter error: do NOT increment write count, do NOT leak raw error
+			// Record idempotency key (no counter increment) to prevent infinite retries
+			this.policy.recordIdempotencyKey(input.idempotencyKey);
+
+			const rawMessage = error instanceof Error ? error.message : String(error ?? 'Unknown adapter error');
+			const sanitizedReason = redactValue(rawMessage);
+
+			const auditEvent = this._buildAuditEvent({
+				mode,
+				operation: input.operation,
+				repository: input.repository,
+				issueNumber: input.issueNumber,
+				result: 'blocked',
+				reason: `Adapter error: ${sanitizedReason}`,
+				bodyHash: preview.bodyHash,
+				idempotencyKey: input.idempotencyKey,
+			});
+			await this._emitAudit(auditEvent);
+
+			return {
+				success: false,
+				reason: `Adapter error: ${sanitizedReason}`,
+				policyAllowed: true,
+				preview,
+				auditEvent,
+				writeCount: this.writeCount,
+				mode,
+				writeExecuted: false,
+			};
+		}
 	}
 
 	/** Get current write count. */
@@ -389,11 +458,11 @@ export class Stage2RuntimeWriteHarness {
 	// --- Private Helpers ---
 
 	private _buildAuditEvent(params: {
-		mode: 'fake' | 'preview';
+		mode: 'fake' | 'preview' | 'live';
 		operation: Stage2WriteOperation;
 		repository: string;
 		issueNumber?: number;
-		result: 'allowed_preview' | 'blocked';
+		result: 'allowed_preview' | 'allowed_executed' | 'blocked';
 		reason?: string;
 		bodyHash?: string;
 		idempotencyKey?: string;

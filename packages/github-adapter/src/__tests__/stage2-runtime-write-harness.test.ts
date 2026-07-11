@@ -67,6 +67,38 @@ class FakeIssueCommentWriter implements Stage2IssueCommentWriter {
 		return this.calls.length;
 	}
 
+	getLastCall(): CreateIssueCommentCall | undefined {
+		return this.calls[this.calls.length - 1];
+	}
+
+	reset(): void {
+		this.calls = [];
+	}
+}
+
+/** Fake writer that throws on createIssueComment — used for error-path testing. */
+class ErrorThrowingWriter implements Stage2IssueCommentWriter {
+	calls: CreateIssueCommentCall[] = [];
+	private _errorMessage: string;
+
+	constructor(errorMessage = 'Simulated adapter failure') {
+		this._errorMessage = errorMessage;
+	}
+
+	async createIssueComment(_input: {
+		owner: string;
+		repo: string;
+		issueNumber: number;
+		body: string;
+	}): Promise<{ id: string; url: string; createdAt: string }> {
+		this.calls.push(_input);
+		throw new Error(this._errorMessage);
+	}
+
+	getCallCount(): number {
+		return this.calls.length;
+	}
+
 	reset(): void {
 		this.calls = [];
 	}
@@ -551,6 +583,339 @@ describe('createStage2WriteHarness', () => {
 		});
 
 		expect(h.getConfig().fakeMode).toBe(true);
+	});
+});
+
+// =====================================================================
+// Helper: Non-Fake Harness (fakeMode: false)
+// =====================================================================
+
+function makeNonFakeHarness(overrides?: {
+	enabled?: boolean;
+	maxWritesPerRun?: number;
+	auditSink?: Stage2AuditSink;
+}): { harness: Stage2RuntimeWriteHarness; adapter: FakeIssueCommentWriter } {
+	const adapter = new FakeIssueCommentWriter();
+	const harness = createStage2WriteHarness({
+		allowedRepository: SANDBOX_REPO,
+		allowedIssueNumber: SANDBOX_ISSUE,
+		adapter,
+		auditSink: overrides?.auditSink,
+		config: {
+			fakeMode: false,
+			enabled: overrides?.enabled ?? true,
+			maxWritesPerRun: overrides?.maxWritesPerRun ?? 1,
+		},
+	});
+	return { harness, adapter };
+}
+
+// =====================================================================
+// Non-Fake Mode: Green Path (adapter is called)
+// =====================================================================
+
+describe('non-fake mode — green path', () => {
+	it('calls injected spy writer exactly once after all policy gates pass', async () => {
+		const { harness, adapter } = makeNonFakeHarness();
+		const result = await harness.execute(validInput());
+
+		expect(result.success).toBe(true);
+		expect(result.writeExecuted).toBe(true);
+		expect(result.mode).toBe('live');
+		expect(adapter.getCallCount()).toBe(1);
+	});
+
+	it('returns success metadata from writer', async () => {
+		const { harness, adapter } = makeNonFakeHarness();
+		const result = await harness.execute(validInput());
+
+		expect(result.commentResult).toBeDefined();
+		expect(result.commentResult!.id).toBe('fake-comment-123');
+		expect(result.commentResult!.url).toContain('github.com');
+		expect(result.commentResult!.createdAt).toBeDefined();
+		expect(adapter.getCallCount()).toBe(1);
+	});
+
+	it('write count increments to 1 only after successful writer call', async () => {
+		const { harness, adapter } = makeNonFakeHarness();
+
+		expect(harness.getWriteCount()).toBe(0);
+
+		const result = await harness.execute(validInput());
+		expect(result.writeCount).toBe(1);
+		expect(harness.getWriteCount()).toBe(1);
+		expect(adapter.getCallCount()).toBe(1);
+	});
+
+	it('audit event remains redacted', async () => {
+		const { harness, adapter } = makeNonFakeHarness();
+		const result = await harness.execute(validInput());
+
+		expect(result.auditEvent.tokenValue).toBe('REDACTED');
+		expect(result.auditEvent.result).toBe('allowed_executed');
+		expect(result.auditEvent.mode).toBe('live');
+		expect(adapter.getCallCount()).toBe(1);
+	});
+
+	it('body hash and idempotency key are preserved', async () => {
+		const { harness, adapter } = makeNonFakeHarness();
+		const crypto = await import('node:crypto');
+		const actualHash = crypto.createHash('sha256').update(TEST_COMMENT_BODY, 'utf8').digest('hex');
+
+		const result = await harness.execute(
+			validInput({
+				expectedBodyHash: actualHash,
+				idempotencyKey: TEST_IDEMPOTENCY_KEY,
+			}),
+		);
+
+		expect(result.success).toBe(true);
+		expect(result.auditEvent.bodyHash).toBe(actualHash);
+		expect(result.auditEvent.idempotencyKey).toBe(TEST_IDEMPOTENCY_KEY);
+		expect(adapter.getCallCount()).toBe(1);
+	});
+
+	it('passes correct owner, repo, issueNumber, body to writer', async () => {
+		const { harness, adapter } = makeNonFakeHarness();
+		await harness.execute(validInput());
+
+		expect(adapter.getCallCount()).toBe(1);
+		const lastCall = adapter.getLastCall();
+		expect(lastCall).toBeDefined();
+		expect(lastCall!.owner).toBe('xxammaxx');
+		expect(lastCall!.repo).toBe('positron-sandbox');
+		expect(lastCall!.issueNumber).toBe(SANDBOX_ISSUE);
+		expect(lastCall!.body).toBe(TEST_COMMENT_BODY);
+	});
+});
+
+// =====================================================================
+// Non-Fake Mode: Red Tests (blocked paths — adapter NEVER called)
+// =====================================================================
+
+describe('non-fake mode — red blocked paths', () => {
+	it('blocks wrong repository before writer call', async () => {
+		const { harness, adapter } = makeNonFakeHarness();
+		const result = await harness.execute(
+			validInput({ repository: NON_SANDBOX_REPO }),
+		);
+
+		expect(result.success).toBe(false);
+		expect(result.policyAllowed).toBe(false);
+		expect(adapter.getCallCount()).toBe(0);
+	});
+
+	it('blocks wrong issue before writer call', async () => {
+		const { harness, adapter } = makeNonFakeHarness();
+		const result = await harness.execute(
+			validInput({ issueNumber: NON_SANDBOX_ISSUE }),
+		);
+
+		expect(result.success).toBe(false);
+		expect(result.policyAllowed).toBe(false);
+		expect(adapter.getCallCount()).toBe(0);
+	});
+
+	it('blocks unsupported operations before writer call', async () => {
+		const { harness, adapter } = makeNonFakeHarness();
+		const result = await harness.execute(
+			validInput({ operation: 'addIssueLabels', bodyText: undefined }),
+		);
+
+		expect(result.success).toBe(false);
+		expect(result.policyAllowed).toBe(false);
+		expect(adapter.getCallCount()).toBe(0);
+	});
+
+	it('blocks missing approval before writer call', async () => {
+		const { harness, adapter } = makeNonFakeHarness();
+		const result = await harness.execute(
+			validInput({ humanApproved: false }),
+		);
+
+		expect(result.success).toBe(false);
+		expect(result.reason).toContain('Human approval');
+		expect(adapter.getCallCount()).toBe(0);
+	});
+
+	it('blocks missing preview before writer call', async () => {
+		const { harness, adapter } = makeNonFakeHarness();
+		const result = await harness.execute(
+			validInput({ previewGenerated: false }),
+		);
+
+		expect(result.success).toBe(false);
+		expect(result.reason).toContain('Pre-write preview');
+		expect(adapter.getCallCount()).toBe(0);
+	});
+
+	it('blocks hash mismatch before writer call', async () => {
+		const { harness, adapter } = makeNonFakeHarness();
+		const result = await harness.execute(
+			validInput({ expectedBodyHash: '0000000000000000000000000000000000000000000000000000000000000000' }),
+		);
+
+		expect(result.success).toBe(false);
+		expect(result.reason).toContain('Body SHA-256 mismatch');
+		expect(adapter.getCallCount()).toBe(0);
+	});
+
+	it('blocks duplicate idempotency before writer call', async () => {
+		// In non-fake mode, a successful write increments both the harness
+		// and policy write counters. With maxWritesPerRun=1, the second call
+		// is blocked by maxWrites exhaustion before the policy's duplicate
+		// detection fires. Both are valid safety behaviors.
+		const { harness, adapter } = makeNonFakeHarness({ maxWritesPerRun: 1 });
+		// First call: should succeed and call adapter
+		const r1 = await harness.execute(validInput({ idempotencyKey: TEST_IDEMPOTENCY_KEY }));
+		expect(r1.success).toBe(true);
+		expect(adapter.getCallCount()).toBe(1);
+
+		// Second call with same key: blocked (by maxWrites or duplicate detection)
+		const r2 = await harness.execute(validInput({ idempotencyKey: TEST_IDEMPOTENCY_KEY }));
+		expect(r2.success).toBe(false);
+		expect(r2.reason).toMatch(/Max writes|Duplicate/);
+		expect(adapter.getCallCount()).toBe(1); // no additional call
+	});
+
+	it('blocks maxWrites exceeded before writer call', async () => {
+		const { harness, adapter } = makeNonFakeHarness({ maxWritesPerRun: 1 });
+		// First call: succeed
+		const r1 = await harness.execute(
+			validInput({ idempotencyKey: 'maxwrites-test-1' }),
+		);
+		expect(r1.success).toBe(true);
+		expect(adapter.getCallCount()).toBe(1);
+
+		// Second call: blocked by maxWritesPerRun
+		const r2 = await harness.execute(
+			validInput({ idempotencyKey: 'maxwrites-test-2' }),
+		);
+		expect(r2.success).toBe(false);
+		expect(r2.reason).toContain('Max writes');
+		expect(adapter.getCallCount()).toBe(1); // no additional call
+	});
+
+	it('blocks Stage3 attempt before writer call', async () => {
+		const { harness, adapter } = makeNonFakeHarness();
+		const result = await harness.execute(
+			validInput({ operation: 'claimIssue', bodyText: undefined }),
+		);
+
+		expect(result.success).toBe(false);
+		expect(result.reason).toContain('permanently forbidden');
+		expect(adapter.getCallCount()).toBe(0);
+	});
+
+	it('blocks disabled harness before writer call', async () => {
+		const { harness, adapter } = makeNonFakeHarness({ enabled: false });
+		const result = await harness.execute(validInput());
+
+		expect(result.success).toBe(false);
+		expect(result.reason).toContain('not enabled');
+		expect(adapter.getCallCount()).toBe(0);
+	});
+});
+
+// =====================================================================
+// Non-Fake Mode: Error Handling
+// =====================================================================
+
+describe('non-fake mode — error handling', () => {
+	it('adapter error returns failure and does not report false success', async () => {
+		const errorWriter = new ErrorThrowingWriter('Simulated adapter failure');
+		const harness = createStage2WriteHarness({
+			allowedRepository: SANDBOX_REPO,
+			allowedIssueNumber: SANDBOX_ISSUE,
+			adapter: errorWriter,
+			config: { fakeMode: false, enabled: true, maxWritesPerRun: 1 },
+		});
+
+		const result = await harness.execute(validInput());
+
+		expect(result.success).toBe(false);
+		expect(result.writeExecuted).toBe(false);
+		expect(result.reason).toContain('Adapter error');
+		expect(result.reason).toContain('Simulated adapter failure');
+		expect(harness.getWriteCount()).toBe(0); // not incremented on error
+	});
+
+	it('adapter error does not leak token in result', async () => {
+		// Use a properly-formatted 36-char GitHub token that matches the regex
+		const errorWriter = new ErrorThrowingWriter('Token ghp_abcdefghijklmnopqrstuvwxyz1234567890 leaked');
+		const harness = createStage2WriteHarness({
+			allowedRepository: SANDBOX_REPO,
+			allowedIssueNumber: SANDBOX_ISSUE,
+			adapter: errorWriter,
+			config: { fakeMode: false, enabled: true, maxWritesPerRun: 1 },
+		});
+
+		const result = await harness.execute(validInput());
+
+		expect(result.success).toBe(false);
+		expect(result.reason).not.toContain('ghp_abcdefghijklmnopqrstuvwxyz1234567890');
+		expect(result.reason).toContain('ghp_***REDACTED***');
+	});
+
+	it('adapter error does not increment write count', async () => {
+		const errorWriter = new ErrorThrowingWriter();
+		const harness = createStage2WriteHarness({
+			allowedRepository: SANDBOX_REPO,
+			allowedIssueNumber: SANDBOX_ISSUE,
+			adapter: errorWriter,
+			config: { fakeMode: false, enabled: true, maxWritesPerRun: 1 },
+		});
+
+		expect(harness.getWriteCount()).toBe(0);
+		await harness.execute(validInput());
+		expect(harness.getWriteCount()).toBe(0); // still 0 after error
+	});
+});
+
+// =====================================================================
+// Non-Fake Mode: Second Write Blocked
+// =====================================================================
+
+describe('non-fake mode — second write blocked', () => {
+	it('blocks second createIssueComment after first successful non-fake write', async () => {
+		const { harness, adapter } = makeNonFakeHarness();
+
+		// First call: succeed in non-fake mode
+		const r1 = await harness.execute(
+			validInput({ idempotencyKey: 'second-write-test-1' }),
+		);
+		expect(r1.success).toBe(true);
+		expect(r1.writeExecuted).toBe(true);
+		expect(r1.writeCount).toBe(1);
+		expect(adapter.getCallCount()).toBe(1);
+
+		// Second call with different idempotency key: blocked by maxWritesPerRun
+		const r2 = await harness.execute(
+			validInput({ idempotencyKey: 'second-write-test-2' }),
+		);
+		expect(r2.success).toBe(false);
+		expect(r2.reason).toContain('Max writes');
+		expect(adapter.getCallCount()).toBe(1); // no additional call
+		expect(harness.getWriteCount()).toBe(1);
+	});
+});
+
+// =====================================================================
+// Non-Fake Mode: Token Safety
+// =====================================================================
+
+describe('non-fake mode — token safety', () => {
+	it('token string never appears in result or audit', async () => {
+		const { harness, adapter } = makeNonFakeHarness();
+		const result = await harness.execute(validInput());
+
+		const resultStr = JSON.stringify(result);
+		expect(resultStr).not.toContain('ghp_');
+		expect(resultStr).not.toContain('github_pat_');
+		expect(resultStr).not.toContain('Authorization');
+		expect(result.auditEvent.tokenValue).toBe('REDACTED');
+		expect(result.preview!.tokenValue).toBe('REDACTED');
+		expect(adapter.getCallCount()).toBe(1);
 	});
 });
 
