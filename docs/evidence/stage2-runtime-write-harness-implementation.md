@@ -198,6 +198,7 @@ APPROVE POSITRON STAGE 2 SINGLE COMMENT DRY RUN RETRY
 
 - Stage 2 Policy Implementation: `docs/evidence/stage2-write-sandbox-policy-implementation.md`
 - Stage 2 Single Comment Dry Run: `docs/evidence/stage2-write-sandbox-single-comment-dry-run.md`
+- Stage 2 Single Comment Retry: `docs/evidence/stage2-write-sandbox-single-comment-retry.md`
 - Stage 2 Dry-Run Preflight: `docs/evidence/stage2-write-sandbox-dry-run-preflight.md`
 - Stage 2 Token Policy: `docs/security/github-stage2-write-sandbox-token-policy.md`
 - Full Real Mode Preflight: `docs/evidence/full-real-mode-preflight-issue-308.md`

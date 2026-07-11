@@ -11,6 +11,7 @@
 **Explanation**: All pre-write gates passed (Phase A–G). The halt is at Phase H because no Positron Runtime write harness exists that chains `Stage2WriteSandboxPolicy` validation to an actual GitHub API call. The policy module is implemented and tested (41 tests, all passing), the sandbox target is verified, token scope is defined, and the comment body hash is validated — but the bridge between validation and execution is not wired in the server runtime.
 
 **UPDATE 2026-07-10 (Runtime Write Harness)**: The missing runtime write harness has been implemented in `packages/github-adapter/src/stage2-runtime-write-harness.ts` with 42 tests (PR #365). The policy-to-adapter bridge now exists in fake/test mode. A single-comment retry can be attempted now that the harness bridges `Stage2WriteSandboxPolicy` → `Stage2IssueCommentWriter`. See `docs/evidence/stage2-runtime-write-harness-implementation.md`.
+**UPDATE 2026-07-11 (Single Comment Dry Run Retry)**: Retry attempted after PR #365 merge. All pre-write gates (A–I) passed. Halted at Phase E: `BLOCKED_BY_REAL_HARNESS_EXECUTION_PATH_MISSING` — the harness's real write path (lines 339–371) is intentionally unreachable and returns `success: false` even with `fakeMode=false`. `this.adapter.createIssueComment()` is never called. No real write executed. Evidence in `docs/evidence/stage2-write-sandbox-single-comment-retry.md`.
 
 **No GitHub write was executed during this run. No Stage 2 token was created, set, or used.**
 
