@@ -99,11 +99,11 @@ export interface Stage2PreWritePreview {
 /** Redacted audit event — JSONL-compatible, no tokens, no raw API output. */
 export interface Stage2WriteAuditEvent {
 	stage: 'stage2-write-sandbox';
-	mode: 'fake' | 'preview';
+	mode: 'fake' | 'preview' | 'live';
 	operation: Stage2WriteOperation;
 	repository: string;
 	issueNumber?: number;
-	result: 'allowed_preview' | 'blocked';
+	result: 'allowed_preview' | 'allowed_executed' | 'blocked';
 	reason?: string;
 	bodyHash?: string;
 	labelNames?: string[];
@@ -341,11 +341,11 @@ export class Stage2WriteSandboxPolicy {
 	 * Create a redacted audit event. Never includes tokens, headers, or full API output.
 	 */
 	createAuditEvent(params: {
-		mode: 'fake' | 'preview';
+		mode: 'fake' | 'preview' | 'live';
 		operation: Stage2WriteOperation;
 		repository: string;
 		issueNumber?: number;
-		result: 'allowed_preview' | 'blocked';
+		result: 'allowed_preview' | 'allowed_executed' | 'blocked';
 		reason?: string;
 		bodyHash?: string;
 		labelNames?: string[];

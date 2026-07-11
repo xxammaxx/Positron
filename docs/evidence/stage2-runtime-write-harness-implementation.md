@@ -2,8 +2,8 @@
 
 ## 1. Result
 
-POSITRON_STAGE2_RUNTIME_HARNESS_IMPL_STATUS: **GREEN_RUNTIME_HARNESS_IMPLEMENTED_FAKE_ONLY**
-POSITRON_STAGE2_STATUS: **STAGE2_RUNTIME_HARNESS_IMPLEMENTED_NOT_EXECUTED**
+POSITRON_STAGE2_RUNTIME_HARNESS_IMPL_STATUS: **GREEN_RUNTIME_HARNESS_EXECUTION_PATH_IMPLEMENTED**
+POSITRON_STAGE2_STATUS: **STAGE2_HARNESS_EXECUTION_PATH_IMPLEMENTED_NOT_EXECUTED**
 Confidence: HIGH
 
 ## 2. Scope
@@ -42,9 +42,9 @@ Confidence: HIGH
 | `RealGitHubAdapter.createIssueComment()` | EXISTS |
 | `Stage2RuntimeWriteHarness` | **NEW — IMPLEMENTED** |
 | `Stage2IssueCommentWriter` (minimal adapter interface) | **NEW — IMPLEMENTED** |
-| Policy → Adapter bridge | **NEW — IMPLEMENTED** in fake/test mode |
+| Policy → Adapter bridge | **NEW — IMPLEMENTED** in fake AND non-fake mode |
 | Server-side integration | DEFERRED — not in this PR |
-| Real write execution path | **INTENTIONALLY UNREACHABLE** (fakeMode=true default) |
+| Real write execution path | **IMPLEMENTED** — calls injected writer after all policy gates pass; tested with fake/spy writer |
 
 ### Architecture Design
 
