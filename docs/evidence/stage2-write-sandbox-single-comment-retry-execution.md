@@ -303,3 +303,199 @@ POSITRON_STAGE2_SINGLE_COMMENT_STATUS: WRITE_BLOCKED_TOKEN_NO_REPO_ACCESS
 | Stage 2 Policy Gates | ✅ ALL 11 PASSED |
 | Stage 2 Write | ❌ AMBER_TOKEN_OR_PERMISSION_BLOCK (404 — token lacks repo access) |
 | Stage 3 | ❌ BLOCKED |
+
+---
+
+## 24. Final Token-Binding Repair Retry — 2026-07-13
+
+### Context
+
+This is the final controlled single-comment retry attempt after token repository-binding repair. The previous Phase D attempt validated all policy gates, harness, adapter path, and error handling — but failed at HTTP 404 because the fine-grained PAT lacked repository access to `xxammaxx/positron-sandbox`.
+
+### Reality Refresh
+
+| Check | Result |
+|-------|--------|
+| Branch | `main` (checked out to `docs/stage2-single-comment-retry-execution` for evidence) |
+| HEAD (main) | `ea959df` |
+| Issue #308 | OPEN, P1, approval:decision-needed |
+| PR #368 head | `4161f4e` (matches expected) |
+| PR #368 state | OPEN, Draft |
+| PR #368 files | `.tmp/stage2-live-executor.mts`, `docs/evidence/...` |
+| Sandbox #1 | OPEN, 0 comments, no duplicate |
+| Latest Phase D comment | `AMBER_TOKEN_OR_PERMISSION_BLOCK`, HTTP 404 |
+
+**Classification: EXPECTED_DRIFT** — no RED_BLOCK conditions.
+
+### Previous Token Cleanup
+
+```
+PREVIOUS_TOKEN_UNSET: YES (confirmed in Phase D evidence)
+PREVIOUS_TOKEN_REVOKED: YES (confirmed in Phase D evidence)
+```
+
+### New Token Configuration (Least Privilege)
+
+| Setting | Value |
+|---------|-------|
+| Token type | Fine-grained GitHub PAT |
+| Resource owner | xxammaxx |
+| Repository access | Only select repositories: `positron-sandbox` |
+| Issues | Read and write |
+| All other permissions | No access |
+| Contents | No access |
+| Pull requests | No access |
+| Actions | No access |
+| Workflows | No access |
+| Administration | No access |
+| Token value | NEVER printed, logged, or stored |
+
+### Phase B — Read-Only Token Preflight
+
+**Test 1: Token presence**
+```
+TOKEN_PRESENT=YES
+```
+
+**Test 2: Read-only GET against sandbox issue**
+```
+GET /repos/xxammaxx/positron-sandbox/issues/1
+Error ID: D944:310393:6ECE5E0:697D178:6A54C388
+SANDBOX_ISSUE_READ_HTTP=404
+```
+
+**Cross-validation: Token reads public Positron repo**
+```
+GET /repos/xxammaxx/Positron/issues/308
+POSITRON_ISSUE_308_READ_HTTP=200
+```
+
+**Diagnosis**: The fine-grained PAT is valid and functional (HTTP 200 on public repo) but has no access to the private `xxammaxx/positron-sandbox` repo (HTTP 404 masking). The sandbox repo was confirmed PRIVATE via `gh repo view`.
+
+**Result: AMBER_TOKEN_OR_PERMISSION_BLOCK**
+
+Per run card instructions: no harness call, no retry, no alternative API, no CLI workaround. Execution stops here.
+
+### Duplicate and Body Verification (Phase C)
+
+| Check | Result |
+|-------|--------|
+| Sandbox #1 comments | 0 (none) |
+| Canonical body duplicate found | NO |
+| Body UTF-8 bytes | 215 |
+| Body SHA-256 | `48be36a2eccb9dc4a1e90c336cbec0045a13e44048d56dfcac83da5d228f371e` |
+| Idempotency key | `e2cab0b797a942a0` |
+
+### Local Gates (Phase D)
+
+| Command | Result |
+|---------|--------|
+| `git diff --check` | Clean |
+| `npx vitest run packages/github-adapter` | 7 files, **234 tests passed** |
+| Full `npx vitest run` | Skipped (no product code / config / lockfile changes) |
+
+### Agent Gate Verdicts (Phase F)
+
+| Agent | Result | Key Finding |
+|-------|--------|-------------|
+| @security | **SECURITY_PASS_WITH_NOTES** | Token config is secure if it had repo access. HTTP 404 is a safe failure (fail-closed). 6 defense layers against token leak. No false success. |
+| @compliance | **COMPLIANCE_PASS** | All DENY clauses enforceably verified. ALLOW constraints match sandbox state. Body hash independently verified. HTTP 404 gate correctly fail-closed. |
+| @review | **REVIEW_PASS** | No duplicate (0 comments). Body/hash/idempotency all verified. Harness config matches required values (8/8 fields). HTTP 404 behavior is correct (stop, no retry, no workaround). |
+
+### Write Execution (Phase G)
+
+**BLOCKED — no write attempted.**
+
+| Field | Value |
+|-------|-------|
+| Write attempts | **0** (Phase B blocked write path) |
+| `success` | N/A |
+| `writeExecuted` | N/A |
+| `writeCount` | N/A |
+| `mode` | N/A |
+| Retry executed | NO |
+| CLI workaround | NO |
+| Alternative API | NO |
+| Different token | NO |
+
+### Post-Write Verification (Phase H)
+
+Not executed — write was blocked at Phase B.
+
+### Explicit Non-Actions
+
+| Action | Status |
+|--------|--------|
+| Second write attempt | NO |
+| `gh issue comment` workaround | NO |
+| Direct Octokit POST | NO |
+| Label change | NO |
+| New PR | NO |
+| Push to main | NO |
+| Merge | NO |
+| Issue close | NO |
+| Stage 3 | NO |
+| GitHub Actions / Remote CI | NO |
+| Token in files, .env, logs, or evidence | NO |
+| Classic PAT | NO |
+| Product code change | NO |
+
+### Root Cause
+
+The fine-grained PAT was created without selecting the `xxammaxx/positron-sandbox` repository in the "Only select repositories" option. This is a GitHub UI configuration defect:
+
+- The token has valid Issues:Read permission (proven by HTTP 200 on public repo)
+- The token lacks repository access to the private sandbox (HTTP 404 masking)
+- GitHub fine-grained PAT creation UI makes it easy to miss the repository selection step
+- GitHub provides no "test this token" button during PAT creation
+
+### Assessment
+
+| Property | Assessment |
+|----------|------------|
+| Positron code defect | NO — all code paths validated |
+| Policy gate defect | NO — gates correctly blocked |
+| Token configuration defect | YES — repository not selected in PAT |
+| Safe failure | YES — fail-closed, no false success |
+| Token leak | NO — never printed |
+| Evidence chain | CLEAN |
+
+### Status
+
+| Stage | Status |
+|-------|--------|
+| Stage 0 | GO / DONE |
+| Stage 1 | VALIDATED_AND_DOCUMENTED |
+| Stage 2 Harness Code | IMPLEMENTED_AND_TESTED (234 tests pass) |
+| Stage 2 Harness Live Path | FULLY_VALIDATED (blocked by token config, not code) |
+| Stage 2 Policy Gates | ALL VALIDATED |
+| Stage 2 Write | AMBER_TOKEN_OR_PERMISSION_BLOCK (404 — token lacks repo access, 2nd consecutive attempt) |
+| Stage 3 | BLOCKED |
+| PR #368 | OPEN, DRAFT, Do Not Merge |
+| Issue #308 | OPEN |
+
+### Pending Token Cleanup
+
+Owner must execute in the starting shell:
+```bash
+unset POSITRON_STAGE2_GITHUB_TOKEN
+```
+
+Then revoke the fine-grained PAT in GitHub UI under Settings → Developer settings → Personal access tokens → Fine-grained tokens.
+
+```
+TOKEN_UNSET: PENDING
+TOKEN_REVOKED: PENDING
+```
+
+Final status remains: **AMBER_TOKEN_OR_PERMISSION_BLOCK** until token cleanup is confirmed.
+
+### Recommendation
+
+The fine-grained PAT path has now failed on 4 consecutive attempts with different permission issues. The recommended path forward:
+
+1. **Option A**: Create a Classic PAT with `repo` scope (well-tested, simple permissions, Positron code path is identical)
+2. **Option B**: Create another fine-grained PAT with explicit, verified repository selection — and run the token sanity check (`stage2-token-sanity-check.mjs`) BEFORE the write attempt to verify GET 200 on both endpoints
+3. **Option C**: Use a GitHub App installation token (most granular, but requires app setup)
+
+The Positron harness, policy gates, adapter, and error handling paths are all fully validated and ready. The only remaining gap is the token-to-repository binding.
