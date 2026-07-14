@@ -29,7 +29,8 @@ GitHub Actions remains advisory-only. Workflow YAML files are syntactically vali
 - **UPDATE 2026-07-10 (Runtime Write Harness)**: Stage 2 runtime write harness implemented in fake/test mode (42 harness tests, 195 total regression tests passing). Policy-to-adapter bridge exists now. No real token used, no real write executed. Harness is ready for final audit. See `docs/evidence/stage2-runtime-write-harness-implementation.md`.
 - **UPDATE 2026-07-11 (Single Comment Dry Run Retry)**: Stage 2 dry-run retry attempted after harness merge. All pre-write gates passed. Blocked at harness execution: code path for real writes is intentionally unreachable — harness returns `success: false` even with `fakeMode=false`. `this.adapter.createIssueComment()` is never called. Stage 2 remains NOT_EXECUTABLE until harness execution path is implemented. See `docs/evidence/stage2-write-sandbox-single-comment-retry.md`.
 - **UPDATE 2026-07-11 (Harness Execution Path Fix)**: Stage 2 harness execution path implemented. The non-fake path now calls the injected issue-comment writer after all policy gates pass. Tested with fake/spy writer (63 tests pass). No real Stage2 token used, no real GitHub write executed. Harness is ready for final audit before the real single-comment retry. Stage 3 remains blocked. See `docs/evidence/stage2-harness-execution-path-fix.md`.
-- **UPDATE 2026-07-13 (STAGE 2 COMPLETE)**: Stage 2 single-comment write SUCCESSFULLY EXECUTED. Classic PAT with `repo` scope used through the Positron harness path. Sandbox comment ID 4962261394 written to `xxammaxx/positron-sandbox#1` (SHA-256: 48be36a2... verified). PAT immediately revoked. No second write, no side effects. Stage 2 is COMPLETE. Stage 3 remains BLOCKED. See `docs/evidence/stage2-write-sandbox-single-comment-closeout-verification.md` and `docs/evidence/issue-308/closeout-phase-c-final-status.md`.
+- **UPDATE 2026-07-13 (STAGE 2 COMPLETE)**: Stage 2 single-comment write SUCCESSFULLY EXECUTED. Classic PAT with `repo` scope used through the Positron harness path. Sandbox comment ID 4962261394 written to `xxammaxx/positron-sandbox#1` (SHA-256: 48be36a2... verified). PAT immediately revoked. No second write, no side effects. Stage 2 is COMPLETE. See `docs/evidence/stage2-write-sandbox-single-comment-closeout-verification.md` and `docs/evidence/issue-308/closeout-phase-c-final-status.md`.
+- **UPDATE 2026-07-14 (STAGE 3 RUNTIME FOUNDATION)**: Stage 3 Runtime Foundation implemented and tested (not executed). 345 tests across 10 github-adapter test files (37 policy + 27 harness + 47 remediation + 234 other adapter tests). Stage3SupervisedPilotPolicy with 20+ gates. Stage3RuntimeHarness with 11-phase orchestration. Five remediation modules integrated (approval-binding, base-resolver, safety-probe, reader-verifier, bridge). Fake mode operational. Real GitHub write path exists but requires separate PAT and owner approval.
 - Real mode requires combined approval gates (GATE_APPROVE → all four merged, verified in audit).
 
 ## E2E Testing
@@ -88,7 +89,8 @@ These must not be applied, popped, or dropped without explicit human instruction
 | Documentation drift | Being addressed | #307 |
 | Full Real Mode not productively validated | Open | #308 |
 | Stage 2 Write Sandbox — COMPLETED | Single comment written 2026-07-13, PAT revoked | #308 |
-| Stage 3 Full Real Mode | BLOCKED — requires new PAT and separate approval | #308 |
+| Stage 3 Full Real Mode | IMPLEMENTED_AND_TESTED_NOT_EXECUTED — real write path exists, requires new PAT and owner approval | #308 |
+| Stage 3 remediation modules (approval-binding, base-resolver, safety-probe, reader-verifier, bridge) | Integrated via PR #370 — 345 github-adapter tests passing | #308 |
 | Large epics need decomposition | Open | #229, #243 |
 | Security/runtime gates (GATE_APPROVE) | Resolved — merged to main | #215, #244, #245, #246 (all CLOSED) |
 | CodeRabbit external removal | Owner action only | — |
@@ -97,7 +99,15 @@ These must not be applied, popped, or dropped without explicit human instruction
 | api-overview #229 endpoint expansion | Separate issue | #251 |
 | Remote CI reactivation | Requires explicit approval | — |
 | CHANGELOG v0.2.0/v0.3.0 | Being created | #307 |
+| Stage 3 real GitHub write | Implemented and tested, not executed | #308 |
+| Multi-process workspace lock | Not implemented at runtime | #324 |
 <!-- positron:auto-generated:end active-limitations -->
+
+## Stage 3 Runtime Foundation
+
+- Stage 3 Runtime Foundation implemented and tested (not executed). Real GitHub write path exists but requires separate PAT and owner approval.
+- PR #370 integrated five remediation modules (approval-binding, base-resolver, safety-probe, reader-verifier, bridge) into `Stage3RuntimeHarness`. `Stage3HarnessInput` is now a discriminated union. All 345 github-adapter tests pass (10 test files).
+- Issue #324 (multi-process workspace lock) remains open and documented.
 
 ## Resolved Limitations (Reference)
 

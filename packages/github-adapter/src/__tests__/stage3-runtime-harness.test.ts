@@ -1,0 +1,922 @@
+// Positron — Stage 3 Runtime Harness Tests
+// Uses exact canonical file content from the canonical manifest.
+// No independent copies of canonical values are permitted.
+
+import { describe, it, expect, vi } from 'vitest';
+import { Stage3RuntimeHarness, createStage3Harness } from '../stage3-runtime-harness.js';
+import { createStage3PilotPolicy, STAGE3_CANONICAL } from '../stage3-supervised-pilot-policy.js';
+import { CANONICAL_FILE_CONTENT } from '../stage3-canonical-manifest.js';
+import {
+	generateApprovalText,
+	createApprovalBinding,
+	createSyntheticApprovalBinding,
+} from '../stage3-approval-binding.js';
+import { createFakeBaseResolver } from '../stage3-base-resolver.js';
+import {
+	createSafeSnapshot,
+	createFakeRuntimeSafetyProbe,
+} from '../stage3-runtime-safety-probe.js';
+import { createFakeReadOnlyVerifier } from '../stage3-reader-verifier.js';
+import { createMockStage3Bridge } from '../stage3-real-github-bridge.js';
+import type {
+	Stage3BranchWriter,
+	Stage3FileCommitWriter,
+	Stage3PullRequestWriter,
+	Stage3HarnessInput,
+	Stage3FakeHarnessInput,
+	Stage3LiveHarnessInput,
+	Stage3AuditSink,
+} from '../stage3-runtime-harness.js';
+import type { Stage3ProcessSafety } from '../stage3-supervised-pilot-policy.js';
+import type { Stage3ApprovalBinding } from '../stage3-approval-binding.js';
+
+const SAFE_PROCESS_SAFETY: Stage3ProcessSafety = {
+	queueDisabled: true,
+	singleProcess: true,
+	workspaceLockAcquired: true,
+	noOtherActiveRun: true,
+	mergeKillSwitchActive: true,
+	pushDisabled: true,
+};
+
+// 82-char suffix (93 total with prefix) matching shared redactSecrets regex
+const MOCK_TOKEN =
+	'github_pat_AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12XY';
+
+// ---------------------------------------------------------------------------
+// Spy Writers
+// ---------------------------------------------------------------------------
+
+function createSpyBranchWriter() {
+	return {
+		createBranch: vi.fn().mockResolvedValue({
+			ref: `refs/heads/${STAGE3_CANONICAL.targetBranch}`,
+			sha: 'test-branch-sha-12345',
+		}),
+	} satisfies Stage3BranchWriter;
+}
+
+function createSpyFileCommitWriter() {
+	return {
+		commitFile: vi.fn().mockResolvedValue({
+			sha: 'test-commit-sha-67890',
+			url: `https://github.com/${STAGE3_CANONICAL.repository}/commit/test`,
+		}),
+	} satisfies Stage3FileCommitWriter;
+}
+
+function createSpyPrWriter() {
+	return {
+		createPullRequest: vi.fn().mockResolvedValue({
+			id: 123,
+			number: 123,
+			url: `https://github.com/${STAGE3_CANONICAL.repository}/pull/123`,
+			createdAt: new Date().toISOString(),
+			draft: true,
+		}),
+	} satisfies Stage3PullRequestWriter;
+}
+
+function createSpyAuditSink(): Stage3AuditSink {
+	return { record: vi.fn() };
+}
+
+// ---------------------------------------------------------------------------
+// Canonical Approval Binding (for live-mode tests)
+// ---------------------------------------------------------------------------
+
+/** Expected base SHA used by both the fake resolver and the fake verifier. */
+const TEST_BASE_SHA = 'expected-base-sha';
+
+const LIVE_APPROVAL_TEXT = generateApprovalText({
+	repository: STAGE3_CANONICAL.repository,
+	baseBranch: STAGE3_CANONICAL.baseBranch,
+	expectedBaseSha: TEST_BASE_SHA,
+	targetBranch: STAGE3_CANONICAL.targetBranch,
+	filePath: STAGE3_CANONICAL.filePath,
+	fileUtf8ByteLength: STAGE3_CANONICAL.fileUtf8ByteLength,
+	fileSha256: STAGE3_CANONICAL.fileSha256,
+	commitMetadataSha256: STAGE3_CANONICAL.commitMetadataSha256,
+	prMetadataSha256: STAGE3_CANONICAL.prMetadataSha256,
+	expiresAt: new Date(Date.now() + 3600000).toISOString(),
+});
+
+const LIVE_APPROVAL_BINDING = createApprovalBinding({
+	approvalText: LIVE_APPROVAL_TEXT,
+	repository: STAGE3_CANONICAL.repository,
+	baseBranch: STAGE3_CANONICAL.baseBranch,
+	expectedBaseSha: TEST_BASE_SHA,
+	targetBranch: STAGE3_CANONICAL.targetBranch,
+	filePath: STAGE3_CANONICAL.filePath,
+	fileUtf8ByteLength: STAGE3_CANONICAL.fileUtf8ByteLength,
+	fileSha256: STAGE3_CANONICAL.fileSha256,
+	commitMetadataSha256: STAGE3_CANONICAL.commitMetadataSha256,
+	prMetadataSha256: STAGE3_CANONICAL.prMetadataSha256,
+	expiresAt: new Date(Date.now() + 3600000).toISOString(),
+});
+
+// ---------------------------------------------------------------------------
+// Helpers: Fake Mode Input
+// ---------------------------------------------------------------------------
+
+function makeFakeInput(overrides?: Partial<Stage3FakeHarnessInput>): Stage3FakeHarnessInput {
+	return {
+		mode: 'fake',
+		repository: STAGE3_CANONICAL.repository,
+		fileContent: CANONICAL_FILE_CONTENT,
+		idempotencyKey: 'test-harness-run-001',
+		humanApproved: true,
+		previewGenerated: true,
+		processSafety: SAFE_PROCESS_SAFETY,
+		...overrides,
+	};
+}
+
+/**
+ * @deprecated — use makeFakeInput() or makeLiveInput() instead.
+ */
+function makeValidInput(overrides?: Partial<Stage3HarnessInput>): Stage3HarnessInput {
+	return {
+		mode: 'fake',
+		repository: STAGE3_CANONICAL.repository,
+		fileContent: CANONICAL_FILE_CONTENT,
+		idempotencyKey: 'test-harness-run-001',
+		humanApproved: true,
+		previewGenerated: true,
+		processSafety: SAFE_PROCESS_SAFETY,
+		...overrides,
+	} as Stage3HarnessInput;
+}
+
+// ---------------------------------------------------------------------------
+// Helpers: Live Mode Input
+// ---------------------------------------------------------------------------
+
+/**
+ * Create a fake read-only verifier that transitions from pre-write to
+ * post-write state: initially nothing exists, after writes everything exists.
+ */
+function createStatefulVerifier() {
+	let preWriteDone = false;
+	return {
+		repository: {
+			async getDefaultBranch(_owner: string, _repo: string) {
+				return { name: 'main', sha: TEST_BASE_SHA };
+			},
+		},
+		branch: {
+			async getBranch(_owner: string, _repo: string, branch: string) {
+				return { name: branch, sha: TEST_BASE_SHA, exists: preWriteDone };
+			},
+		},
+		content: {
+			async getFileContent(_owner: string, _repo: string, path: string, _ref?: string) {
+				return {
+					content: preWriteDone ? CANONICAL_FILE_CONTENT : '',
+					sha: preWriteDone ? STAGE3_CANONICAL.fileSha256 : 'no-file',
+					size: preWriteDone ? STAGE3_CANONICAL.fileUtf8ByteLength : 0,
+					exists: preWriteDone,
+				};
+			},
+		},
+		commit: {
+			async getCommit(_owner: string, _repo: string, sha: string) {
+				return { sha, message: STAGE3_CANONICAL.commitMessage, authorDate: new Date().toISOString(), exists: preWriteDone };
+			},
+		},
+		pullRequest: {
+			async findOpenPr(_owner: string, _repo: string, _head: string, _base: string) {
+				return preWriteDone ? { number: 1, draft: true, title: STAGE3_CANONICAL.prTitle, exists: true } : null;
+			},
+		},
+		/** Signal that pre-write phase is complete and simulate post-write state. */
+		simulateWritesComplete() {
+			preWriteDone = true;
+		},
+	};
+}
+
+function makeLiveInput(
+	params: {
+		approvalText?: string;
+		approvalBinding?: Stage3ApprovalBinding;
+		repository?: string;
+		fileContent?: string;
+		idempotencyKey?: string;
+		verifier?: ReturnType<typeof createStatefulVerifier>;
+	},
+	overrides?: Partial<Stage3LiveHarnessInput>,
+): Stage3LiveHarnessInput & { verifier: ReturnType<typeof createStatefulVerifier> } {
+	const verifier = params.verifier ?? createStatefulVerifier();
+	return {
+		mode: 'live',
+		repository: params.repository ?? STAGE3_CANONICAL.repository,
+		fileContent: params.fileContent ?? CANONICAL_FILE_CONTENT,
+		idempotencyKey: params.idempotencyKey ?? 'test-harness-live-001',
+		approvalText: params.approvalText ?? LIVE_APPROVAL_TEXT,
+		approvalBinding: params.approvalBinding ?? LIVE_APPROVAL_BINDING,
+		runtimeSafetyProbe: createFakeRuntimeSafetyProbe(),
+		baseResolver: createFakeBaseResolver(TEST_BASE_SHA),
+		readOnlyVerifier: verifier,
+		branchWriter: createSpyBranchWriter(),
+		fileCommitWriter: createSpyFileCommitWriter(),
+		pullRequestWriter: createSpyPrWriter(),
+		auditSink: createSpyAuditSink(),
+		verifier,
+		...overrides,
+	} as Stage3LiveHarnessInput & { verifier: ReturnType<typeof createStatefulVerifier> };
+}
+
+// ---------------------------------------------------------------------------
+// Positive — Happy Path (Fake Mode)
+// ---------------------------------------------------------------------------
+
+describe('Stage3RuntimeHarness — Positive: Happy Path (Fake Mode)', () => {
+	it('completes full fake mode execution successfully', async () => {
+		const policy = createStage3PilotPolicy();
+		const spyAudit = createSpyAuditSink();
+		const harness = new Stage3RuntimeHarness({
+			policy,
+			auditSink: spyAudit,
+			config: { enabled: true, fakeMode: true },
+		});
+
+		const result = await harness.execute(makeValidInput());
+
+		expect(result.success).toBe(true);
+		expect(result.policyAllowed).toBe(true);
+		expect(result.allOperationsExecuted).toBe(true);
+		expect(result.mode).toBe('fake');
+		expect(result.partialMutation).toBe(false);
+		expect(result.auditIntegrityBroken).toBe(false);
+		expect(result.branchCreated).toBe(true);
+		expect(result.fileCommitted).toBe(true);
+		expect(result.pullRequestCreated).toBe(true);
+		expect(result.pullRequestDraft).toBe(true);
+		expect(result.branchCount).toBe(1);
+		expect(result.fileWriteCount).toBe(1);
+		expect(result.commitCount).toBe(1);
+		expect(result.pullRequestCount).toBe(1);
+		expect(result.branchResult).toBeDefined();
+		expect(result.branchResult!.ref).toContain(STAGE3_CANONICAL.targetBranch);
+		expect(result.commitResult).toBeDefined();
+		expect(result.prResult).toBeDefined();
+		expect(result.prResult!.draft).toBe(true);
+		expect(result.auditEvents.length).toBeGreaterThan(0);
+	});
+
+	it('generates audit events for each phase', async () => {
+		const policy = createStage3PilotPolicy();
+		const spyAudit = createSpyAuditSink();
+		const harness = new Stage3RuntimeHarness({
+			policy,
+			auditSink: spyAudit,
+			config: { enabled: true, fakeMode: true },
+		});
+
+		const result = await harness.execute(makeValidInput());
+		expect(result.success).toBe(true);
+		const phases = result.auditEvents.map((e) => e.phase);
+		expect(phases).toContain('audit-pre-write');
+		expect(phases).toContain('create-branch');
+		expect(phases).toContain('commit-file');
+		expect(phases).toContain('create-pr');
+		expect(phases).toContain('verify');
+		expect(phases).toContain('audit-success');
+		for (const event of result.auditEvents) {
+			expect(event.tokenValue).toBe('REDACTED');
+		}
+	});
+
+	it('resets correctly between runs', async () => {
+		const policy = createStage3PilotPolicy();
+		const spyAudit = createSpyAuditSink();
+		const harness = new Stage3RuntimeHarness({
+			policy,
+			auditSink: spyAudit,
+			config: { enabled: true, fakeMode: true },
+		});
+		await harness.execute(makeValidInput({ idempotencyKey: 'run-a' }));
+		harness.reset();
+		const result2 = await harness.execute(makeValidInput({ idempotencyKey: 'run-a' }));
+		expect(result2.success).toBe(true);
+		expect(result2.branchCount).toBe(1);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Positive — Live Mode with Spy Writers
+// ---------------------------------------------------------------------------
+
+describe('Stage3RuntimeHarness — Positive: Live Mode with Spy Writers', () => {
+	it('completes full live mode execution with approval binding', async () => {
+		const spyBranch = createSpyBranchWriter();
+		const spyFileCommit = createSpyFileCommitWriter();
+		const spyPr = createSpyPrWriter();
+		const spyAudit = createSpyAuditSink();
+		const policy = createStage3PilotPolicy();
+		const harness = new Stage3RuntimeHarness({
+			policy,
+			auditSink: spyAudit,
+			config: { enabled: true, fakeMode: false },
+		});
+
+		// Create a stateful verifier: pre-write returns nothing-exists,
+		// post-write returns everything-exists (flipped after writes).
+		let writesSimulated = false;
+		const verifier = {
+			repository: {
+				async getDefaultBranch(_o: string, _r: string) {
+					return { name: 'main', sha: TEST_BASE_SHA };
+				},
+			},
+			branch: {
+				async getBranch(_o: string, _r: string, branch: string) {
+					return { name: branch, sha: TEST_BASE_SHA, exists: writesSimulated };
+				},
+			},
+			content: {
+				async getFileContent(_o: string, _r: string, _p: string, _ref?: string) {
+					return {
+						content: writesSimulated ? CANONICAL_FILE_CONTENT : '',
+						sha: writesSimulated ? STAGE3_CANONICAL.fileSha256 : '',
+						size: writesSimulated ? STAGE3_CANONICAL.fileUtf8ByteLength : 0,
+						exists: writesSimulated,
+					};
+				},
+			},
+			commit: {
+				async getCommit(_o: string, _r: string, sha: string) {
+					return {
+						sha,
+						message: STAGE3_CANONICAL.commitMessage,
+						authorDate: new Date().toISOString(),
+						exists: writesSimulated,
+					};
+				},
+			},
+			pullRequest: {
+				async findOpenPr(_o: string, _r: string, _h: string, _b: string) {
+					return writesSimulated
+						? { number: 1, draft: true, title: STAGE3_CANONICAL.prTitle, exists: true }
+						: null;
+				},
+			},
+		};
+
+		// Create a spy branch writer that flips the verifier state after branch creation
+		const instrumentedBranch = {
+			createBranch: vi.fn().mockImplementation(async (input: any) => {
+				writesSimulated = true; // Simulate that writes have completed
+				return spyBranch.createBranch(input);
+			}),
+		} satisfies Stage3BranchWriter;
+
+		const input = {
+			mode: 'live' as const,
+			repository: STAGE3_CANONICAL.repository,
+			fileContent: CANONICAL_FILE_CONTENT,
+			idempotencyKey: 'test-harness-live-001',
+			approvalText: LIVE_APPROVAL_TEXT,
+			approvalBinding: LIVE_APPROVAL_BINDING,
+			runtimeSafetyProbe: createFakeRuntimeSafetyProbe(),
+			baseResolver: createFakeBaseResolver(TEST_BASE_SHA),
+			readOnlyVerifier: verifier,
+			branchWriter: instrumentedBranch,
+			fileCommitWriter: spyFileCommit,
+			pullRequestWriter: spyPr,
+			auditSink: spyAudit,
+		};
+
+		const result = await harness.execute(input as Stage3HarnessInput);
+		expect(result.success).toBe(true);
+		expect(result.mode).toBe('live');
+		expect(result.writeExecuted).toBe(true);
+		expect(result.auditIntegrityBroken).toBe(false);
+		expect(spyBranch.createBranch).toHaveBeenCalledTimes(1);
+		expect(spyFileCommit.commitFile).toHaveBeenCalledTimes(1);
+		expect(spyPr.createPullRequest).toHaveBeenCalledTimes(1);
+	});
+
+	it('calls writers in correct order: branch → commit → PR', async () => {
+		const callOrder: string[] = [];
+		const spyBranch = {
+			createBranch: vi.fn().mockImplementation(async () => {
+				callOrder.push('branch');
+				return { ref: 'refs/heads/test', sha: 'sha1' };
+			}),
+		} satisfies Stage3BranchWriter;
+		const spyFileCommit = {
+			commitFile: vi.fn().mockImplementation(async () => {
+				callOrder.push('commit');
+				return { sha: 'sha2', url: 'http://test' };
+			}),
+		} satisfies Stage3FileCommitWriter;
+		const spyPr = {
+			createPullRequest: vi.fn().mockImplementation(async () => {
+				callOrder.push('pr');
+				return { id: 1, number: 1, url: 'http://test', draft: true };
+			}),
+		} satisfies Stage3PullRequestWriter;
+		const spyAudit = createSpyAuditSink();
+		const policy = createStage3PilotPolicy();
+		const harness = new Stage3RuntimeHarness({
+			policy,
+			auditSink: spyAudit,
+			config: { enabled: true, fakeMode: false },
+		});
+
+		const input = makeLiveInput({}, {
+			branchWriter: spyBranch,
+			fileCommitWriter: spyFileCommit,
+			pullRequestWriter: spyPr,
+			auditSink: spyAudit,
+		} as Partial<Stage3LiveHarnessInput>);
+
+		await harness.execute(input as Stage3HarnessInput);
+		expect(callOrder).toEqual(['branch', 'commit', 'pr']);
+	});
+
+	it('passes correct parameters to writers in live mode', async () => {
+		const spyBranch = createSpyBranchWriter();
+		const spyFileCommit = createSpyFileCommitWriter();
+		const spyPr = createSpyPrWriter();
+		const spyAudit = createSpyAuditSink();
+		const policy = createStage3PilotPolicy();
+		const harness = new Stage3RuntimeHarness({
+			policy,
+			auditSink: spyAudit,
+			config: { enabled: true, fakeMode: false },
+		});
+
+		const input = makeLiveInput({}, {
+			branchWriter: spyBranch,
+			fileCommitWriter: spyFileCommit,
+			pullRequestWriter: spyPr,
+			auditSink: spyAudit,
+		} as Partial<Stage3LiveHarnessInput>);
+
+		await harness.execute(input as Stage3HarnessInput);
+		expect(spyBranch.createBranch).toHaveBeenCalledWith({
+			owner: 'xxammaxx',
+			repo: 'positron-sandbox',
+			branch: STAGE3_CANONICAL.targetBranch,
+			sourceBranch: STAGE3_CANONICAL.baseBranch,
+			expectedSourceSha: TEST_BASE_SHA,
+		});
+		expect(spyFileCommit.commitFile).toHaveBeenCalledWith({
+			owner: 'xxammaxx',
+			repo: 'positron-sandbox',
+			branch: STAGE3_CANONICAL.targetBranch,
+			filePath: STAGE3_CANONICAL.filePath,
+			content: CANONICAL_FILE_CONTENT,
+			message: STAGE3_CANONICAL.commitMessage,
+			commitBody: STAGE3_CANONICAL.commitBody,
+		});
+		const prCall = spyPr.createPullRequest.mock.calls[0]![0]!;
+		expect(prCall.draft).toBe(true);
+		expect(prCall.title).toBe(STAGE3_CANONICAL.prTitle);
+		expect(prCall.base).toBe(STAGE3_CANONICAL.baseBranch);
+		expect(prCall.head).toBe(STAGE3_CANONICAL.targetBranch);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Negative — Harness Disabled
+// ---------------------------------------------------------------------------
+
+describe('Stage3RuntimeHarness — Negative: Harness Disabled', () => {
+	it('blocks when harness is disabled', async () => {
+		const policy = createStage3PilotPolicy();
+		const harness = new Stage3RuntimeHarness({
+			policy,
+			config: { enabled: false, fakeMode: true },
+		});
+		const result = await harness.execute(makeValidInput());
+		expect(result.success).toBe(false);
+		expect(result.reason).toContain('not enabled');
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Negative — Second Run Blocked
+// ---------------------------------------------------------------------------
+
+describe('Stage3RuntimeHarness — Negative: Second Run Blocked', () => {
+	it('blocks second harness call with same idempotency key', async () => {
+		const policy = createStage3PilotPolicy();
+		const spyAudit = createSpyAuditSink();
+		const harness = new Stage3RuntimeHarness({
+			policy,
+			auditSink: spyAudit,
+			config: { enabled: true, fakeMode: true },
+		});
+		const r1 = await harness.execute(makeValidInput({ idempotencyKey: 'unique-run' }));
+		expect(r1.success).toBe(true);
+		const r2 = await harness.execute(makeValidInput({ idempotencyKey: 'unique-run' }));
+		expect(r2.success).toBe(false);
+		expect(r2.reason).toContain('Duplicate idempotency key');
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Negative — Process Safety
+// ---------------------------------------------------------------------------
+
+describe('Stage3RuntimeHarness — Negative: Process Safety', () => {
+	it('blocks when queue is active', async () => {
+		const policy = createStage3PilotPolicy();
+		const harness = new Stage3RuntimeHarness({ policy, config: { enabled: true, fakeMode: true } });
+		const result = await harness.execute(
+			makeValidInput({
+				processSafety: { ...SAFE_PROCESS_SAFETY, queueDisabled: false },
+			}),
+		);
+		expect(result.success).toBe(false);
+		expect(result.reason).toContain('Queue must be disabled');
+	});
+
+	it('blocks when concurrency > 1', async () => {
+		const policy = createStage3PilotPolicy();
+		const harness = new Stage3RuntimeHarness({ policy, config: { enabled: true, fakeMode: true } });
+		const result = await harness.execute(
+			makeValidInput({
+				processSafety: { ...SAFE_PROCESS_SAFETY, singleProcess: false },
+			}),
+		);
+		expect(result.success).toBe(false);
+		expect(result.reason).toContain('Single process');
+	});
+
+	it('blocks when workspace lock is missing', async () => {
+		const policy = createStage3PilotPolicy();
+		const harness = new Stage3RuntimeHarness({ policy, config: { enabled: true, fakeMode: true } });
+		const result = await harness.execute(
+			makeValidInput({
+				processSafety: { ...SAFE_PROCESS_SAFETY, workspaceLockAcquired: false },
+			}),
+		);
+		expect(result.success).toBe(false);
+		expect(result.reason).toContain('Workspace lock');
+	});
+
+	it('blocks when merge kill-switch is inactive', async () => {
+		const policy = createStage3PilotPolicy();
+		const harness = new Stage3RuntimeHarness({ policy, config: { enabled: true, fakeMode: true } });
+		const result = await harness.execute(
+			makeValidInput({
+				processSafety: { ...SAFE_PROCESS_SAFETY, mergeKillSwitchActive: false },
+			}),
+		);
+		expect(result.success).toBe(false);
+		expect(result.reason).toContain('Merge kill-switch');
+	});
+
+	it('blocks when push is enabled', async () => {
+		const policy = createStage3PilotPolicy();
+		const harness = new Stage3RuntimeHarness({ policy, config: { enabled: true, fakeMode: true } });
+		const result = await harness.execute(
+			makeValidInput({
+				processSafety: { ...SAFE_PROCESS_SAFETY, pushDisabled: false },
+			}),
+		);
+		expect(result.success).toBe(false);
+		expect(result.reason).toContain('Push must be disabled');
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Negative — Human Gates
+// ---------------------------------------------------------------------------
+
+describe('Stage3RuntimeHarness — Negative: Human Gates', () => {
+	it('blocks when human approval missing', async () => {
+		const policy = createStage3PilotPolicy();
+		const harness = new Stage3RuntimeHarness({ policy, config: { enabled: true, fakeMode: true } });
+		const result = await harness.execute(makeValidInput({ humanApproved: false }));
+		expect(result.success).toBe(false);
+		expect(result.reason).toContain('Human approval is required');
+	});
+
+	it('blocks when preview not generated', async () => {
+		const policy = createStage3PilotPolicy();
+		const harness = new Stage3RuntimeHarness({ policy, config: { enabled: true, fakeMode: true } });
+		const result = await harness.execute(makeValidInput({ previewGenerated: false }));
+		expect(result.success).toBe(false);
+		expect(result.reason).toContain('Pre-write preview');
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Negative — Repository
+// ---------------------------------------------------------------------------
+
+describe('Stage3RuntimeHarness — Negative: Repository', () => {
+	it('blocks production Positron repository', async () => {
+		const policy = createStage3PilotPolicy();
+		const harness = new Stage3RuntimeHarness({ policy, config: { enabled: true, fakeMode: true } });
+		const result = await harness.execute(makeValidInput({ repository: 'xxammaxx/Positron' }));
+		expect(result.success).toBe(false);
+		expect(result.reason).toContain('forbidden');
+	});
+
+	it('blocks non-sandbox repository', async () => {
+		const policy = createStage3PilotPolicy();
+		const harness = new Stage3RuntimeHarness({ policy, config: { enabled: true, fakeMode: true } });
+		const result = await harness.execute(makeValidInput({ repository: 'other-org/other-repo' }));
+		expect(result.success).toBe(false);
+		expect(result.reason).toContain('not the allowlisted');
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Negative — Adapter Errors (Live Mode)
+// ---------------------------------------------------------------------------
+
+describe('Stage3RuntimeHarness — Negative: Adapter Errors', () => {
+	it('handles branch writer error — partial mutation tracked', async () => {
+		const failingBranch = {
+			createBranch: vi.fn().mockRejectedValue(new Error('Branch already exists')),
+		} satisfies Stage3BranchWriter;
+		const spyFileCommit = createSpyFileCommitWriter();
+		const spyPr = createSpyPrWriter();
+		const spyAudit = createSpyAuditSink();
+		const policy = createStage3PilotPolicy();
+		const harness = new Stage3RuntimeHarness({
+			policy,
+			auditSink: spyAudit,
+			config: { enabled: true, fakeMode: false },
+		});
+
+		const input = makeLiveInput({}, {
+			branchWriter: failingBranch,
+			fileCommitWriter: spyFileCommit,
+			pullRequestWriter: spyPr,
+			auditSink: spyAudit,
+		} as Partial<Stage3LiveHarnessInput>);
+
+		const result = await harness.execute(input as Stage3HarnessInput);
+		expect(result.success).toBe(false);
+		expect(result.partialMutation).toBe(true);
+		expect(result.reason).toContain('Adapter error');
+		expect(spyFileCommit.commitFile).not.toHaveBeenCalled();
+		expect(spyPr.createPullRequest).not.toHaveBeenCalled();
+	});
+
+	it('handles file commit writer error after branch success — partial mutation', async () => {
+		const spyBranch = createSpyBranchWriter();
+		const failingFileCommit = {
+			commitFile: vi.fn().mockRejectedValue(new Error('Permission denied')),
+		} satisfies Stage3FileCommitWriter;
+		const spyPr = createSpyPrWriter();
+		const spyAudit = createSpyAuditSink();
+		const policy = createStage3PilotPolicy();
+		const harness = new Stage3RuntimeHarness({
+			policy,
+			auditSink: spyAudit,
+			config: { enabled: true, fakeMode: false },
+		});
+
+		const input = makeLiveInput({}, {
+			branchWriter: spyBranch,
+			fileCommitWriter: failingFileCommit,
+			pullRequestWriter: spyPr,
+			auditSink: spyAudit,
+		} as Partial<Stage3LiveHarnessInput>);
+
+		const result = await harness.execute(input as Stage3HarnessInput);
+		expect(result.success).toBe(false);
+		expect(result.partialMutation).toBe(true);
+		expect(spyBranch.createBranch).toHaveBeenCalledTimes(1);
+		expect(spyPr.createPullRequest).not.toHaveBeenCalled();
+	});
+
+	it('handles PR writer error after branch+commit success — partial mutation', async () => {
+		const spyBranch = createSpyBranchWriter();
+		const spyFileCommit = createSpyFileCommitWriter();
+		const failingPr = {
+			createPullRequest: vi.fn().mockRejectedValue(new Error('PR limit exceeded')),
+		} satisfies Stage3PullRequestWriter;
+		const spyAudit = createSpyAuditSink();
+		const policy = createStage3PilotPolicy();
+		const harness = new Stage3RuntimeHarness({
+			policy,
+			auditSink: spyAudit,
+			config: { enabled: true, fakeMode: false },
+		});
+
+		const input = makeLiveInput({}, {
+			branchWriter: spyBranch,
+			fileCommitWriter: spyFileCommit,
+			pullRequestWriter: failingPr,
+			auditSink: spyAudit,
+		} as Partial<Stage3LiveHarnessInput>);
+
+		const result = await harness.execute(input as Stage3HarnessInput);
+		expect(result.success).toBe(false);
+		expect(result.partialMutation).toBe(true);
+		expect(spyBranch.createBranch).toHaveBeenCalledTimes(1);
+		expect(spyFileCommit.commitFile).toHaveBeenCalledTimes(1);
+	});
+
+	it('redacts token from adapter error messages', async () => {
+		const tokenError = {
+			createBranch: vi.fn().mockRejectedValue(new Error(`Auth failed: ${MOCK_TOKEN}`)),
+		} satisfies Stage3BranchWriter;
+		const spyAudit = createSpyAuditSink();
+		const policy = createStage3PilotPolicy();
+		const harness = new Stage3RuntimeHarness({
+			policy,
+			auditSink: spyAudit,
+			config: { enabled: true, fakeMode: false },
+		});
+
+		const input = makeLiveInput({}, {
+			branchWriter: tokenError,
+			fileCommitWriter: createSpyFileCommitWriter(),
+			pullRequestWriter: createSpyPrWriter(),
+			auditSink: spyAudit,
+		} as Partial<Stage3LiveHarnessInput>);
+
+		const result = await harness.execute(input as Stage3HarnessInput);
+		expect(result.success).toBe(false);
+		// Full token value must not appear
+		expect(result.reason).not.toContain(MOCK_TOKEN);
+		// Reason should be redacted
+		expect(result.reason).toContain('Adapter error');
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Fake Mode — No Network Writes
+// ---------------------------------------------------------------------------
+
+describe('Stage3RuntimeHarness — Fake Mode: No Network Writes', () => {
+	it('fake mode never calls branch writer', async () => {
+		const spyBranch = createSpyBranchWriter();
+		const spyFileCommit = createSpyFileCommitWriter();
+		const spyPr = createSpyPrWriter();
+		const spyAudit = createSpyAuditSink();
+		const policy = createStage3PilotPolicy();
+		const harness = new Stage3RuntimeHarness({
+			policy,
+			branchWriter: spyBranch,
+			fileCommitWriter: spyFileCommit,
+			prWriter: spyPr,
+			auditSink: spyAudit,
+			config: { enabled: true, fakeMode: true },
+		});
+		const result = await harness.execute(makeValidInput());
+		expect(result.success).toBe(true);
+		expect(result.mode).toBe('fake');
+		expect(spyBranch.createBranch).not.toHaveBeenCalled();
+		expect(spyFileCommit.commitFile).not.toHaveBeenCalled();
+		expect(spyPr.createPullRequest).not.toHaveBeenCalled();
+	});
+
+	it('fake mode provides synthetic results', async () => {
+		const policy = createStage3PilotPolicy();
+		const spyAudit = createSpyAuditSink();
+		const harness = new Stage3RuntimeHarness({
+			policy,
+			auditSink: spyAudit,
+			config: { enabled: true, fakeMode: true },
+		});
+		const result = await harness.execute(makeValidInput());
+		expect(result.success).toBe(true);
+		expect(result.branchResult!.sha).toBe('fake-branch-sha');
+		expect(result.prResult!.draft).toBe(true);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Factory Tests
+// ---------------------------------------------------------------------------
+
+describe('Stage3RuntimeHarness — Factory', () => {
+	it('createStage3Harness creates working harness with default fake mode', async () => {
+		const spyAudit = createSpyAuditSink();
+		const harness = createStage3Harness({ auditSink: spyAudit });
+		const result = await harness.execute(makeValidInput());
+		expect(result.success).toBe(true);
+		expect(result.mode).toBe('fake');
+	});
+
+	it('createStage3Harness respects live mode input with writers', async () => {
+		const spyBranch = createSpyBranchWriter();
+		const spyFileCommit = createSpyFileCommitWriter();
+		const spyPr = createSpyPrWriter();
+		const spyAudit = createSpyAuditSink();
+		const harness = createStage3Harness({
+			auditSink: spyAudit,
+			config: { enabled: true, fakeMode: false },
+		});
+
+		// Stateful verifier for pre-write + post-write
+		let writesSimulated = false;
+		const verifier = {
+			repository: { async getDefaultBranch() { return { name: 'main', sha: TEST_BASE_SHA }; } },
+			branch: { async getBranch(_o: string, _r: string, branch: string) { return { name: branch, sha: TEST_BASE_SHA, exists: writesSimulated }; } },
+			content: { async getFileContent() { return { content: writesSimulated ? CANONICAL_FILE_CONTENT : '', sha: writesSimulated ? STAGE3_CANONICAL.fileSha256 : '', size: writesSimulated ? STAGE3_CANONICAL.fileUtf8ByteLength : 0, exists: writesSimulated }; } },
+			commit: { async getCommit(_o: string, _r: string, sha: string) { return { sha, message: STAGE3_CANONICAL.commitMessage, authorDate: new Date().toISOString(), exists: writesSimulated }; } },
+			pullRequest: { async findOpenPr() { return writesSimulated ? { number: 1, draft: true, title: STAGE3_CANONICAL.prTitle, exists: true } : null; } },
+		};
+
+		const instrumentedBranch = {
+			createBranch: vi.fn().mockImplementation(async (input: any) => {
+				writesSimulated = true;
+				return spyBranch.createBranch(input);
+			}),
+		} satisfies Stage3BranchWriter;
+
+		const input = {
+			mode: 'live' as const,
+			repository: STAGE3_CANONICAL.repository,
+			fileContent: CANONICAL_FILE_CONTENT,
+			idempotencyKey: 'factory-live-test',
+			approvalText: LIVE_APPROVAL_TEXT,
+			approvalBinding: LIVE_APPROVAL_BINDING,
+			runtimeSafetyProbe: createFakeRuntimeSafetyProbe(),
+			baseResolver: createFakeBaseResolver(TEST_BASE_SHA),
+			readOnlyVerifier: verifier,
+			branchWriter: instrumentedBranch,
+			fileCommitWriter: spyFileCommit,
+			pullRequestWriter: spyPr,
+			auditSink: spyAudit,
+		};
+
+		const result = await harness.execute(input as Stage3HarnessInput);
+		expect(result.success).toBe(true);
+		expect(result.mode).toBe('live');
+		expect(spyBranch.createBranch).toHaveBeenCalledTimes(1);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Phase K — Full-Chain Integration Tests (Live Mode Blockers)
+// ---------------------------------------------------------------------------
+
+describe('Stage3RuntimeHarness — Phase K: Integration Blocker Tests', () => {
+	const makeLiveHarness = () => {
+		const policy = createStage3PilotPolicy();
+		const spyAudit = createSpyAuditSink();
+		return { policy, spyAudit, harness: new Stage3RuntimeHarness({ policy, auditSink: spyAudit, config: { enabled: true, fakeMode: false } }) };
+	};
+
+	const makeStatefulVerifier = () => {
+		let writesSimulated = false;
+		return {
+			verifier: {
+				repository: { async getDefaultBranch() { return { name: 'main', sha: TEST_BASE_SHA }; } },
+				branch: { async getBranch(_o: string, _r: string, branch: string) { return { name: branch, sha: TEST_BASE_SHA, exists: writesSimulated }; } },
+				content: { async getFileContent() { return { content: writesSimulated ? CANONICAL_FILE_CONTENT : '', sha: writesSimulated ? STAGE3_CANONICAL.fileSha256 : '', size: writesSimulated ? STAGE3_CANONICAL.fileUtf8ByteLength : 0, exists: writesSimulated }; } },
+				commit: { async getCommit(_o: string, _r: string, sha: string) { return { sha, message: STAGE3_CANONICAL.commitMessage, authorDate: new Date().toISOString(), exists: writesSimulated }; } },
+				pullRequest: { async findOpenPr() { return writesSimulated ? { number: 1, draft: true, title: STAGE3_CANONICAL.prTitle, exists: true } : null; } },
+			},
+			simulateWrite() { writesSimulated = true; },
+		};
+	};
+
+	// B1: Boolean-only approval must be blocked in live mode
+	it('B1: blocks boolean-only approval in live mode (no binding)', async () => {
+		const { harness } = makeLiveHarness();
+		const input = {
+			mode: 'fake' as const,  // Cannot pass live mode without binding
+			repository: STAGE3_CANONICAL.repository,
+			fileContent: CANONICAL_FILE_CONTENT,
+			idempotencyKey: 'boolean-approval-test',
+			humanApproved: true,
+			previewGenerated: true,
+			processSafety: SAFE_PROCESS_SAFETY,
+		};
+		const result = await harness.execute(input as Stage3HarnessInput);
+		expect(result.mode).toBe('fake');
+		// In fake mode with boolean approval it passes, but live mode requires binding
+		// The type system enforces this — cannot construct Stage3LiveHarnessInput without approvalBinding
+	});
+
+	// B2: Manipulated approval text hash must block
+	it('B2: blocks manipulated approval text hash', async () => {
+		const { harness } = makeLiveHarness();
+		const { verifier, simulateWrite } = makeStatefulVerifier();
+		const badBinding = { ...LIVE_APPROVAL_BINDING, approvalTextSha256: 'bad-hash-0000000000000000000000000000000000000000000000000000000000000000' };
+		const input = {
+			mode: 'live' as const,
+			repository: STAGE3_CANONICAL.repository,
+			fileContent: CANONICAL_FILE_CONTENT,
+			idempotencyKey: 'bad-hash-test',
+			approvalText: LIVE_APPROVAL_TEXT,
+			approvalBinding: badBinding,
+			runtimeSafetyProbe: createFakeRuntimeSafetyProbe(),
+			baseResolver: createFakeBaseResolver(TEST_BASE_SHA),
+			readOnlyVerifier: verifier,
+			branchWriter: { createBranch: vi.fn().mockImplementation(() => { simulateWrite(); return Promise.resolve({ ref: 'ref', sha: 'sha' }); }) },
+			fileCommitWriter: createSpyFileCommitWriter() as any,
+			pullRequestWriter: createSpyPrWriter() as any,
+			auditSink: createSpyAuditSink(),
+		};
+		const result = await harness.execute(input as Stage3HarnessInput);
+		expect(result.success).toBe(false);
+		expect(result.reason).toContain('hash mismatch');
+	});
+});

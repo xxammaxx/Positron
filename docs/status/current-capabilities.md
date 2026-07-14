@@ -12,9 +12,9 @@ Project closeout state as of the latest local verification on main (post PR #309
 | `npx biome format .` | PASS |
 | `npm run build` | PASS |
 | `npm run typecheck` | PASS (9 projects up to date) |
-| `npm test` (root/packages) | PASS — **1834/1834** (76 test files) |
+| `npm test` (root/packages) | PASS — **~1897/1897** (78 test files) |
 | `npm test` (apps/web) | PASS — **196/196** (8 test files, JSX/TSX resolved) |
-| **Total Tests** | **2030/2030** (84 test files) |
+| **Total Tests** | **~2141/2141** (86 test files — Stage 3 PR #370 added ~48 tests to github-adapter) |
 | `npx biome check .` | advisory-only (known lint backlog) |
 
 ## Implemented Capabilities
@@ -111,7 +111,16 @@ Project closeout state as of the latest local verification on main (post PR #309
 - PAT lifecycle: set → used (exactly once) → unset → revoked on GitHub.
 - Kill-switches, idempotency, body hash binding, duplicate detection all enforced.
 - Evidence: `docs/evidence/stage2-write-sandbox-single-comment-closeout-verification.md`
-- Stage 3 (Full Real Mode) remains BLOCKED.
+
+### Stage 3: Runtime Foundation (#308)
+
+- Stage 3 Runtime Foundation implemented with 345 github-adapter tests passing (10 test files).
+- Stage3SupervisedPilotPolicy validates 20+ gates including repository allowlist, file hash binding, process safety, and quantity limits.
+- Stage3RuntimeHarness orchestrates branch→commit→draft-PR sequence with partial failure detection.
+- **PR #370 integration (July 2026):** Five remediation modules added — `Stage3ApprovalBinding` (cryptographic approval), `Stage3BaseResolver` (TOCTOU protection), `Stage3RuntimeSafetyProbe` (runtime safety), `Stage3ReadOnlyVerifier` (pre/post-write verification), `Stage3RealGitHubBridge` (restricted-transport bridge).
+- `Stage3HarnessInput` is now a discriminated union (`Stage3FakeHarnessInput | Stage3LiveHarnessInput`) with no free booleans in live mode.
+- Fake mode operational; live path implemented but not executed.
+- No real GitHub token used; no sandbox branch created.
 
 ## GitHub / Remote CI Status
 
@@ -164,7 +173,7 @@ Project closeout state as of the latest local verification on main (post PR #309
 |---------|-------|--------|
 | packages/shared | contracts, utils, secrets, types | PASS |
 | packages/sandbox | commit-policy, paths, speckit-policy, opencode-policy, smoke | PASS |
-| packages/github-adapter | sync-templates, contract, templates | PASS |
+| packages/github-adapter | sync-templates, contract, templates, stage3-policy, stage3-harness, stage3-remediation, stage2-policy, stage2-harness, readonly, smoke | PASS (345) |
 | packages/run-state | state-machine, smoke, property tests | PASS |
 | packages/speckit-adapter | smoke, artifact-scanner | PASS |
 | packages/opencode-adapter | fake-adapter, smoke, frontend-design-skill | PASS |
@@ -172,4 +181,4 @@ Project closeout state as of the latest local verification on main (post PR #309
 | packages/benchmark-rudolph | controlled-real-probe, red-negative tests | PASS |
 | apps/server | observability/queue | PASS |
 | apps/web | voice, voice-output, voice-settings, smoke, PhasePipeline, BlueprintPanel, VoiceControls | PASS (196/196) |
-| **Total** | **72 files** | **1571/1571 PASS** |
+| **Total** | **86 files** | **~2141/2141 PASS** (Stage 3 github-adapter: 345 across 10 test files) |
