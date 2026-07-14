@@ -42,19 +42,30 @@ import {
 } from '../stage3-real-github-bridge.js';
 import type { Stage3RealGitHubBridge } from '../stage3-real-github-bridge.js';
 
+import {
+	CANONICAL_REPOSITORY,
+	CANONICAL_BASE_BRANCH,
+	CANONICAL_TARGET_BRANCH,
+	CANONICAL_FILE_PATH,
+	CANONICAL_FILE_LENGTH,
+	CANONICAL_FILE_SHA256,
+	CANONICAL_COMMIT_MESSAGE_SHA256,
+	CANONICAL_PR_METADATA_SHA256,
+} from '../stage3-canonical-manifest.js';
+
 // ---------------------------------------------------------------------------
-// Canonical test values (synced with stage3-canonical-manifest.ts)
+// Canonical test values (imported from stage3-canonical-manifest.ts)
 // ---------------------------------------------------------------------------
 
 const CANONICAL_VALUES = {
-	repository: 'xxammaxx/positron-sandbox',
-	baseBranch: 'main',
-	targetBranch: 'positron/issue-308-stage3-pilot',
-	filePath: 'stage3/positron-supervised-pilot.md',
-	fileUtf8ByteLength: 1724,
-	fileSha256: '73ac6e0faf0b13118de60a3a1eb02a54e68d272ecf137f356d134e84ea9f46ff',
-	commitMetadataSha256: 'test-commit-metadata-hash-00000000000000000000',
-	prMetadataSha256: 'test-pr-metadata-hash-0000000000000000000000',
+	repository: CANONICAL_REPOSITORY,
+	baseBranch: CANONICAL_BASE_BRANCH,
+	targetBranch: CANONICAL_TARGET_BRANCH,
+	filePath: CANONICAL_FILE_PATH,
+	fileUtf8ByteLength: CANONICAL_FILE_LENGTH,
+	fileSha256: CANONICAL_FILE_SHA256,
+	commitMetadataSha256: CANONICAL_COMMIT_MESSAGE_SHA256,
+	prMetadataSha256: CANONICAL_PR_METADATA_SHA256,
 };
 
 function makeCanonicalBinding(overrides?: Partial<Stage3ApprovalBinding>): Stage3ApprovalBinding {
@@ -232,9 +243,40 @@ describe('Stage3ApprovalBinding', () => {
 
 		it('rejects mergeForbidden !== true', () => {
 			// Test that the validation catches wrong merge flag
-			const binding = makeCanonicalBinding({ mergeForbidden: true });
+			const approvalText = generateApprovalText({
+				repository: CANONICAL_VALUES.repository,
+				baseBranch: CANONICAL_VALUES.baseBranch,
+				expectedBaseSha: '0000000000000000000000000000000000000000000000000000000000000000',
+				targetBranch: CANONICAL_VALUES.targetBranch,
+				filePath: CANONICAL_VALUES.filePath,
+				fileUtf8ByteLength: CANONICAL_VALUES.fileUtf8ByteLength,
+				fileSha256: CANONICAL_VALUES.fileSha256,
+				commitMetadataSha256: CANONICAL_VALUES.commitMetadataSha256,
+				prMetadataSha256: CANONICAL_VALUES.prMetadataSha256,
+				expiresAt: new Date(Date.now() + 3600000).toISOString(),
+			});
+			const binding: Stage3ApprovalBinding = {
+				version: 'stage3-approval-v1',
+				approvalTextSha256: computeApprovalTextSha256(approvalText),
+				repository: CANONICAL_VALUES.repository,
+				baseBranch: CANONICAL_VALUES.baseBranch,
+				expectedBaseSha: '0000000000000000000000000000000000000000000000000000000000000000',
+				targetBranch: CANONICAL_VALUES.targetBranch,
+				filePath: CANONICAL_VALUES.filePath,
+				fileUtf8ByteLength: CANONICAL_VALUES.fileUtf8ByteLength,
+				fileSha256: CANONICAL_VALUES.fileSha256,
+				commitMetadataSha256: CANONICAL_VALUES.commitMetadataSha256,
+				prMetadataSha256: CANONICAL_VALUES.prMetadataSha256,
+				maxBranches: 1,
+				maxFileWrites: 1,
+				maxCommits: 1,
+				maxPullRequests: 1,
+				mergeForbidden: false as true,
+				expiresAt: new Date(Date.now() + 3600000).toISOString(),
+			};
 			const result = validateApprovalBinding(binding, CANONICAL_VALUES);
-			expect(result.valid).toBe(true); // mergeForbidden IS true, should pass
+			expect(result.valid).toBe(false);
+			expect(result.failedChecks.some((c) => c.includes('mergeForbidden'))).toBe(true);
 		});
 	});
 
