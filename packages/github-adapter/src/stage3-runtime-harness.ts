@@ -128,8 +128,17 @@ export interface Stage3HarnessResult {
 	/** Whether a real write was executed. */
 	writeExecuted: boolean;
 
+	/** Whether a write was attempted (before adapter call). */
+	writeAttempted: boolean;
+
+	/** Number of confirmed successful mutations (0-3). */
+	confirmedMutationCount: number;
+
 	/** Whether a partial mutation occurred. */
 	partialMutation: boolean;
+
+	/** Whether audit integrity is broken (sink failure detected). */
+	auditIntegrityBroken: boolean;
 
 	/** Current phase where execution stopped. */
 	currentPhase: string | null;
@@ -323,7 +332,12 @@ export class Stage3RuntimeHarness {
 		const preWriteAudit = this._audit(mode, 'createBranch', input.repository, 'allowed_preview',
 			undefined, preview.fileSha256, preview.fileLength, idempotencyKey, 'audit-pre-write');
 		auditEvents.push(preWriteAudit);
-		await this._emitAudit(preWriteAudit);
+		const preWriteAuditOk = await this._emitAudit(preWriteAudit);
+		if (!preWriteAuditOk) {
+			return this._result(false, 'Pre-write audit sink unavailable — write blocked (fail-closed)',
+				true, false, auditEvents, mode, false, false, 'audit-pre-write',
+				undefined, undefined, undefined, false, false, false, false, undefined, true);
+		}
 
 		// ── Phase 5: Branch Creation ──
 		this.policy.setCurrentPhase('create-branch');
@@ -339,9 +353,15 @@ export class Stage3RuntimeHarness {
 			const auditEvent = this._audit('fake', 'createBranch', input.repository, 'allowed_executed',
 				undefined, undefined, undefined, idempotencyKey, 'create-branch');
 			auditEvents.push(auditEvent);
-			await this._emitAudit(auditEvent);
+			const branchAuditOk = await this._emitAudit(auditEvent);
+			if (!branchAuditOk) {
+				return this._result(false, 'Audit sink failure after branch creation (fail-closed)',
+					true, false, auditEvents, mode, true, true, 'create-branch',
+					undefined, undefined, undefined, false, false, false, false, undefined, true);
+			}
 		} else if (this.branchWriter) {
 			// Live mode: call the injected branch writer
+			this.policy.markWriteAttempted();
 			try {
 				const result = await this.branchWriter.createBranch({
 					owner: ownerRepo.owner,
@@ -356,7 +376,13 @@ export class Stage3RuntimeHarness {
 				const auditEvent = this._audit('live', 'createBranch', input.repository, 'allowed_executed',
 					undefined, undefined, undefined, idempotencyKey, 'create-branch');
 				auditEvents.push(auditEvent);
-				await this._emitAudit(auditEvent);
+				const branchAuditOk = await this._emitAudit(auditEvent);
+				if (!branchAuditOk) {
+					this.policy.markPartialMutation();
+					return this._result(false, 'Audit sink failure after branch creation — commit blocked (fail-closed)',
+						true, false, auditEvents, mode, true, true, 'create-branch',
+						branchResult, undefined, undefined, branchCreated, false, false, false, undefined, true);
+				}
 			} catch (error: unknown) {
 				// Branch creation failed — partial mutation
 				this.policy.markPartialMutation();
@@ -366,7 +392,7 @@ export class Stage3RuntimeHarness {
 				const auditEvent = this._audit('live', 'createBranch', input.repository, 'blocked',
 					`Adapter error: ${sanitized}`, undefined, undefined, idempotencyKey, 'create-branch');
 				auditEvents.push(auditEvent);
-				await this._emitAudit(auditEvent);
+				await this._emitAudit(auditEvent); // best-effort audit for error
 
 				return this._result(false, `Adapter error: ${sanitized}`, true, false,
 					auditEvents, mode, false, true, 'create-branch',
@@ -425,8 +451,14 @@ export class Stage3RuntimeHarness {
 			const auditEvent = this._audit('fake', 'commitFile', input.repository, 'allowed_executed',
 				undefined, preview.fileSha256, preview.fileLength, idempotencyKey, 'commit-file');
 			auditEvents.push(auditEvent);
-			await this._emitAudit(auditEvent);
+			const commitAuditOk = await this._emitAudit(auditEvent);
+			if (!commitAuditOk) {
+				return this._result(false, 'Audit sink failure after commit (fail-closed)',
+					true, false, auditEvents, mode, true, true, 'commit-file',
+					branchResult, undefined, undefined, branchCreated, false, false, false, undefined, true);
+			}
 		} else if (this.fileCommitWriter) {
+			this.policy.markWriteAttempted();
 			try {
 				const result = await this.fileCommitWriter.commitFile({
 					owner: ownerRepo.owner,
@@ -444,7 +476,14 @@ export class Stage3RuntimeHarness {
 				const auditEvent = this._audit('live', 'commitFile', input.repository, 'allowed_executed',
 					undefined, preview.fileSha256, preview.fileLength, idempotencyKey, 'commit-file');
 				auditEvents.push(auditEvent);
-				await this._emitAudit(auditEvent);
+				const commitAuditOk = await this._emitAudit(auditEvent);
+				if (!commitAuditOk) {
+					this.policy.markPartialMutation();
+					return this._result(false, 'Audit sink failure after commit — PR blocked (fail-closed)',
+						true, false, auditEvents, mode, true, true, 'commit-file',
+						branchResult, commitResult, undefined,
+						branchCreated, fileCommitted, false, false, undefined, true);
+				}
 			} catch (error: unknown) {
 				this.policy.markPartialMutation();
 				const rawMsg = error instanceof Error ? error.message : String(error ?? 'Unknown adapter error');
@@ -453,7 +492,7 @@ export class Stage3RuntimeHarness {
 				const auditEvent = this._audit('live', 'commitFile', input.repository, 'blocked',
 					`Adapter error: ${sanitized}`, preview.fileSha256, preview.fileLength, idempotencyKey, 'commit-file');
 				auditEvents.push(auditEvent);
-				await this._emitAudit(auditEvent);
+				await this._emitAudit(auditEvent); // best-effort for error
 
 				return this._result(false, `Adapter error: ${sanitized}`, true, false,
 					auditEvents, mode, false, true, 'commit-file',
@@ -521,8 +560,15 @@ export class Stage3RuntimeHarness {
 			const auditEvent = this._audit('fake', 'createPullRequest', input.repository, 'allowed_executed',
 				undefined, preview.fileSha256, preview.fileLength, idempotencyKey, 'create-pr');
 			auditEvents.push(auditEvent);
-			await this._emitAudit(auditEvent);
+			const prAuditOk = await this._emitAudit(auditEvent);
+			if (!prAuditOk) {
+				return this._result(false, 'Audit sink failure after PR creation (fail-closed)',
+					true, false, auditEvents, mode, true, true, 'create-pr',
+					branchResult, commitResult, prResult,
+					branchCreated, fileCommitted, prCreated, prResult?.draft ?? false, undefined, true);
+			}
 		} else if (this.prWriter) {
+			this.policy.markWriteAttempted();
 			try {
 				const result = await this.prWriter.createPullRequest({
 					owner: ownerRepo.owner,
@@ -540,7 +586,14 @@ export class Stage3RuntimeHarness {
 				const auditEvent = this._audit('live', 'createPullRequest', input.repository, 'allowed_executed',
 					undefined, preview.fileSha256, preview.fileLength, idempotencyKey, 'create-pr');
 				auditEvents.push(auditEvent);
-				await this._emitAudit(auditEvent);
+				const prAuditOk = await this._emitAudit(auditEvent);
+				if (!prAuditOk) {
+					this.policy.markPartialMutation();
+					return this._result(false, 'Audit sink failure after PR creation — cannot confirm (fail-closed)',
+						true, false, auditEvents, mode, true, true, 'create-pr',
+						branchResult, commitResult, prResult,
+						branchCreated, fileCommitted, prCreated, prResult?.draft ?? false, undefined, true);
+				}
 			} catch (error: unknown) {
 				this.policy.markPartialMutation();
 				const rawMsg = error instanceof Error ? error.message : String(error ?? 'Unknown adapter error');
@@ -574,25 +627,29 @@ export class Stage3RuntimeHarness {
 		const verifyAudit = this._audit(mode, 'createPullRequest', input.repository, 'allowed_executed',
 			'Verification complete', preview.fileSha256, preview.fileLength, idempotencyKey, 'verify');
 		auditEvents.push(verifyAudit);
-		await this._emitAudit(verifyAudit);
+		const verifyAuditOk = await this._emitAudit(verifyAudit);
+		if (!verifyAuditOk) {
+			return this._result(false, 'Audit sink failure during verification (fail-closed)',
+				true, false, auditEvents, mode, true, true, 'verify',
+				branchResult, commitResult, prResult,
+				branchCreated, fileCommitted, prCreated, prResult?.draft ?? false, preview, true);
+		}
 
 		// ── Phase 11: Audit Success ──
 		this.policy.setCurrentPhase('audit-success');
-		if (mode !== 'fake') {
-			this.policy.markWriteExecuted();
-		}
 		const successAudit = this._audit(mode, 'createPullRequest', input.repository, 'allowed_executed',
 			`Stage 3 pilot complete: branch=${branchCreated}, file=${fileCommitted}, pr=${prCreated}`,
 			preview.fileSha256, preview.fileLength, idempotencyKey, 'audit-success');
 		auditEvents.push(successAudit);
-		await this._emitAudit(successAudit);
+		const successAuditOk = await this._emitAudit(successAudit);
 
 		// ── Complete Success ──
+		const auditBroken = !successAuditOk;
 		return this._result(true, undefined, true, true,
-			auditEvents, mode, mode !== 'fake', false, 'audit-success',
+			auditEvents, mode, true, false, 'audit-success',
 			branchResult, commitResult, prResult,
 			branchCreated, fileCommitted, prCreated, prResult?.draft ?? false,
-			preview);
+			preview, auditBroken);
 	}
 
 	// --- Getters ---
@@ -606,6 +663,7 @@ export class Stage3RuntimeHarness {
 	}
 
 	reset(): void {
+		this.policy.unlockExecution(); // clear execution lock before reset
 		this.policy.reset();
 	}
 
@@ -635,13 +693,22 @@ export class Stage3RuntimeHarness {
 		});
 	}
 
-	private async _emitAudit(event: Stage3PilotAuditEvent): Promise<void> {
-		if (this.auditSink) {
-			try {
-				await this.auditSink.record(event);
-			} catch {
-				// Audit sink failure must not block the write path
-			}
+	/**
+	 * Emit an audit event to the configured sink.
+	 * Returns true if audit was successfully recorded, false if it failed or no sink is configured.
+	 * Fail-closed: failures are NOT silently swallowed.
+	 */
+	private async _emitAudit(event: Stage3PilotAuditEvent): Promise<boolean> {
+		if (!this.auditSink) {
+			// No audit sink configured — fail-closed in live mode
+			return false;
+		}
+		try {
+			await this.auditSink.record(event);
+			return true;
+		} catch {
+			// Audit sink failure detected — fail-closed
+			return false;
 		}
 	}
 
@@ -663,6 +730,7 @@ export class Stage3RuntimeHarness {
 		prCreated = false,
 		prDraft = false,
 		preview?: Stage3PreWritePreview,
+		auditIntegrityBroken = false,
 	): Stage3HarnessResult {
 		return {
 			success,
@@ -673,7 +741,10 @@ export class Stage3RuntimeHarness {
 			auditEvents,
 			mode,
 			writeExecuted,
+			writeAttempted: this.policy.getWriteAttempted(),
+			confirmedMutationCount: this.policy.getConfirmedMutationCount(),
 			partialMutation,
+			auditIntegrityBroken,
 			currentPhase,
 			branchCount: this.policy.getBranchCount(),
 			fileWriteCount: this.policy.getFileWriteCount(),

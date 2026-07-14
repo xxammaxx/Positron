@@ -9,6 +9,23 @@
 
 import crypto from 'node:crypto';
 import { redactValue } from '@positron/shared';
+import {
+	CANONICAL_REPOSITORY,
+	CANONICAL_BASE_BRANCH,
+	CANONICAL_TARGET_BRANCH,
+	CANONICAL_FILE_PATH,
+	CANONICAL_FILE_LENGTH,
+	CANONICAL_FILE_SHA256,
+	CANONICAL_COMMIT_MESSAGE,
+	CANONICAL_COMMIT_BODY,
+	CANONICAL_PR_TITLE,
+	CANONICAL_PR_BODY,
+	FORBIDDEN_REPOSITORIES,
+	MAX_BRANCHES,
+	MAX_FILE_WRITES,
+	MAX_COMMITS,
+	MAX_PULL_REQUESTS,
+} from './stage3-canonical-manifest.js';
 
 // ---------------------------------------------------------------------------
 // Types — Write Operations
@@ -180,68 +197,35 @@ export interface Stage3ProcessSafety {
 // Default Configuration
 // ---------------------------------------------------------------------------
 
-/** Canonical Stage 3 defaults from the approval package. */
-const CANONICAL_REPOSITORY = 'xxammaxx/positron-sandbox';
-const CANONICAL_BASE_BRANCH = 'main';
-const CANONICAL_TARGET_BRANCH = 'positron/issue-308-stage3-pilot';
-const CANONICAL_FILE_PATH = 'stage3/positron-supervised-pilot.md';
-const CANONICAL_FILE_LENGTH = 1695; // actual canonical content length matching SHA-256
-const CANONICAL_FILE_SHA256 = '0a97795fdc21740548b4d02cc4b0dd0538afa0d2917390c84671a94b3089c823';
-const CANONICAL_COMMIT_MSG = 'feat(issue-308): stage 3 supervised real mode pilot';
-const CANONICAL_COMMIT_BODY =
-	'- Create sandbox marker file stage3/positron-supervised-pilot.md\n' +
-	'- Prove single-process, single-branch, single-file controlled write\n' +
-	'- No merge, no production repo, no second mutation\n' +
-	'- PAT revoked immediately after verification';
-const CANONICAL_PR_TITLE = 'feat(issue-308): Stage 3 supervised real mode pilot — sandbox marker';
-const CANONICAL_PR_BODY =
-	'## Stage 3 Supervised Real Mode Pilot — Sandbox Marker\n\n' +
-	'### Status: STAGE3_EXECUTED — Awaiting Owner Review\n\n' +
-	'This PR was created by the Positron Stage 3 Supervised Real Mode Pilot.\n' +
-	'It contains exactly one file (`stage3/positron-supervised-pilot.md`)\n' +
-	'and proves that Positron can perform a strictly controlled, minimal\n' +
-	'write operation on a sandbox repository.\n\n' +
-	'### Boundaries Enforced\n\n' +
-	'| Boundary | Status |\n' +
-	'|----------|--------|\n' +
-	'| Single process | ENFORCED |\n' +
-	'| Single workspace | ENFORCED |\n' +
-	'| Single branch | ENFORCED |\n' +
-	'| Single file | ENFORCED |\n' +
-	'| Single commit | ENFORCED |\n' +
-	'| Single draft PR | ENFORCED |\n' +
-	'| No merge | ENFORCED |\n\n' +
-	'### Verification\n\n' +
-	`- SHA-256 of file: \`${CANONICAL_FILE_SHA256}\`\n` +
-	`- File size: ${CANONICAL_FILE_LENGTH} bytes\n` +
-	`- Branch: \`${CANONICAL_TARGET_BRANCH}\`\n` +
-	'- No other mutations were performed\n\n' +
-	'### Do Not Merge\n\n' +
-	'This is a supervised pilot PR. Merge requires separate owner approval.\n' +
-	'The Stage 3 PAT has been revoked.\n\n' +
-	'### Related\n' +
-	'- Issue: #308 (Full Real Mode Pilot)\n' +
-	'- Approval Package: `docs/evidence/issue-308/stage3-supervised-pilot-approval-package.md`';
+// Canonical values imported from stage3-canonical-manifest.ts (single source of truth).
+// Local aliases for backward compatibility with existing code.
+const FILE_LENGTH = CANONICAL_FILE_LENGTH;
+const FILE_SHA256 = CANONICAL_FILE_SHA256;
+const COMMIT_MSG = CANONICAL_COMMIT_MESSAGE;
+const PR_TITLE = CANONICAL_PR_TITLE;
+// CANONICAL_REPOSITORY, CANONICAL_BASE_BRANCH, CANONICAL_TARGET_BRANCH,
+// CANONICAL_FILE_PATH, CANONICAL_COMMIT_BODY, CANONICAL_PR_BODY,
+// FORBIDDEN_REPOSITORIES imported directly — see imports above.
 
 /** Safe defaults that block everything until explicitly configured. */
 export const STAGE3_DEFAULT_CONFIG: Stage3PilotConfig = {
 	enabled: false,
 	allowedRepository: CANONICAL_REPOSITORY,
-	forbiddenRepositories: ['xxammaxx/Positron'],
+	forbiddenRepositories: [...FORBIDDEN_REPOSITORIES],
 	allowedBaseBranch: CANONICAL_BASE_BRANCH,
 	allowedTargetBranch: CANONICAL_TARGET_BRANCH,
 	allowedFilePath: CANONICAL_FILE_PATH,
 	expectedFileLength: CANONICAL_FILE_LENGTH,
 	expectedFileSha256: CANONICAL_FILE_SHA256,
-	expectedCommitMessage: CANONICAL_COMMIT_MSG,
+	expectedCommitMessage: CANONICAL_COMMIT_MESSAGE,
 	expectedCommitBody: CANONICAL_COMMIT_BODY,
 	expectedPrTitle: CANONICAL_PR_TITLE,
 	expectedPrBody: CANONICAL_PR_BODY,
 	requireDraftPr: true,
-	maxBranchCount: 1,
-	maxFileWriteCount: 1,
-	maxCommitCount: 1,
-	maxPullRequestCount: 1,
+	maxBranchCount: MAX_BRANCHES,
+	maxFileWriteCount: MAX_FILE_WRITES,
+	maxCommitCount: MAX_COMMITS,
+	maxPullRequestCount: MAX_PULL_REQUESTS,
 	requireHumanApproval: true,
 	requirePreWritePreview: true,
 	requireDuplicateDetection: true,
@@ -267,6 +251,9 @@ export class Stage3SupervisedPilotPolicy {
 	private _writeExecuted = false;
 	private _partialMutation = false;
 	private _currentPhase: string | null = null;
+	private _writeAttempted = false;
+	private _confirmedMutationCount = 0;
+	private _executionLocked = false;
 
 	constructor(config?: Partial<Stage3PilotConfig>) {
 		this.config = { ...STAGE3_DEFAULT_CONFIG, ...config };
@@ -637,6 +624,7 @@ export class Stage3SupervisedPilotPolicy {
 	 */
 	recordBranchCreated(): void {
 		this.branchCount++;
+		this._confirmedMutationCount++;
 	}
 
 	/**
@@ -645,6 +633,7 @@ export class Stage3SupervisedPilotPolicy {
 	recordFileWrite(): void {
 		this.fileWriteCount++;
 		this.commitCount++;
+		this._confirmedMutationCount++;
 	}
 
 	/**
@@ -652,6 +641,7 @@ export class Stage3SupervisedPilotPolicy {
 	 */
 	recordPrCreated(): void {
 		this.pullRequestCount++;
+		this._confirmedMutationCount++;
 	}
 
 	/**
@@ -673,14 +663,24 @@ export class Stage3SupervisedPilotPolicy {
 		}
 		this.usedIdempotencyKeys.add(idempotencyKey);
 		this._reservedRunKey = idempotencyKey;
+		this._executionLocked = true; // --- lock config and state mutations once run key reserved ---
 		return true;
 	}
 
 	/**
-	 * Mark that a write has been executed.
+	 * Mark that a write has been attempted (before adapter call).
+	 */
+	markWriteAttempted(): void {
+		this._writeAttempted = true;
+	}
+
+	/**
+	 * Mark that a write has been executed AND confirmed.
+	 * Also increments the confirmed mutation counter.
 	 */
 	markWriteExecuted(): void {
 		this._writeExecuted = true;
+		this._confirmedMutationCount++;
 	}
 
 	/**
@@ -705,20 +705,34 @@ export class Stage3SupervisedPilotPolicy {
 	getPullRequestCount(): number { return this.pullRequestCount; }
 	getWriteExecuted(): boolean { return this._writeExecuted; }
 	getPartialMutation(): boolean { return this._partialMutation; }
+	getWriteAttempted(): boolean { return this._writeAttempted; }
+	getConfirmedMutationCount(): number { return this._confirmedMutationCount; }
 	getCurrentPhase(): string | null { return this._currentPhase; }
+	isExecutionLocked(): boolean { return this._executionLocked; }
+
+	/** Unlock execution (called after execution completes/aborts). Only use in harness finally block. */
+	unlockExecution(): void {
+		this._executionLocked = false;
+	}
 
 	/** Get current configuration (read-only snapshot). */
 	getConfig(): Readonly<Stage3PilotConfig> {
 		return { ...this.config };
 	}
 
-	/** Update configuration at runtime. */
+	/** Update configuration at runtime. BLOCKED during active execution. */
 	updateConfig(partial: Partial<Stage3PilotConfig>): void {
+		if (this._executionLocked) {
+			throw new Error('Cannot modify Stage 3 policy configuration during active execution');
+		}
 		this.config = { ...this.config, ...partial };
 	}
 
-	/** Reset all state. */
+	/** Reset all state. BLOCKED during active execution. */
 	reset(): void {
+		if (this._executionLocked) {
+			throw new Error('Cannot reset Stage 3 policy state during active execution');
+		}
 		this.branchCount = 0;
 		this.fileWriteCount = 0;
 		this.commitCount = 0;
@@ -727,7 +741,10 @@ export class Stage3SupervisedPilotPolicy {
 		this._reservedRunKey = null;
 		this._writeExecuted = false;
 		this._partialMutation = false;
+		this._writeAttempted = false;
+		this._confirmedMutationCount = 0;
 		this._currentPhase = null;
+		this._executionLocked = false;
 	}
 
 	// --- Helpers ---
@@ -770,7 +787,7 @@ export const STAGE3_CANONICAL = {
 	filePath: CANONICAL_FILE_PATH,
 	fileLength: CANONICAL_FILE_LENGTH,
 	fileSha256: CANONICAL_FILE_SHA256,
-	commitMessage: CANONICAL_COMMIT_MSG,
+	commitMessage: CANONICAL_COMMIT_MESSAGE,
 	commitBody: CANONICAL_COMMIT_BODY,
 	prTitle: CANONICAL_PR_TITLE,
 	prBody: CANONICAL_PR_BODY,
