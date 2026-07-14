@@ -186,7 +186,7 @@ export function createMockStage3Bridge(params?: {
 				async getFileContent(_owner: string, _repo: string, path: string, _ref?: string) {
 					return {
 						content: 'test-content',
-						sha: 'content-sha',
+						gitBlobSha: 'fake-git-blob-sha-000000000000000000000000',
 						size: 1724,
 						exists: path === filePath,
 					};
@@ -198,6 +198,8 @@ export function createMockStage3Bridge(params?: {
 						sha,
 						message: 'test commit',
 						authorDate: new Date().toISOString(),
+						parents: [baseSha],
+						files: [{ filename: filePath, status: 'added' }],
 						exists: true,
 					};
 				},
@@ -205,6 +207,18 @@ export function createMockStage3Bridge(params?: {
 			pullRequest: {
 				async findOpenPr(_owner: string, _repo: string, _head: string, _base: string) {
 					return null; // No open PR before execution
+				},
+			},
+			compare: {
+				async compareCommits(_owner: string, _repo: string, _base: string, _head: string) {
+					return {
+						status: 'ahead',
+						aheadBy: 1,
+						behindBy: 0,
+						totalCommits: 1,
+						commits: ['fake-commit-sha'],
+						files: [{ filename: filePath, status: 'added' }],
+					};
 				},
 			},
 		},
@@ -222,14 +236,85 @@ export function createMockStage3Bridge(params?: {
  */
 export interface Stage3GitHubTransport {
 	resolveBaseSha(owner: string, repo: string, branch: string): Promise<{ sha: string }>;
-	createBranch(owner: string, repo: string, branch: string, fromSha: string): Promise<{ ref: string; sha: string }>;
-	commitFile(owner: string, repo: string, branch: string, path: string, content: string, message: string, body?: string): Promise<{ sha: string; url: string }>;
-	createDraftPr(owner: string, repo: string, title: string, head: string, base: string, body: string): Promise<{ id?: number; number?: number; url?: string; createdAt?: string; draft?: boolean }>;
+	createBranch(
+		owner: string,
+		repo: string,
+		branch: string,
+		fromSha: string,
+	): Promise<{ ref: string; sha: string }>;
+	commitFile(
+		owner: string,
+		repo: string,
+		branch: string,
+		path: string,
+		content: string,
+		message: string,
+		body?: string,
+	): Promise<{ sha: string; url: string }>;
+	createDraftPr(
+		owner: string,
+		repo: string,
+		title: string,
+		head: string,
+		base: string,
+		body: string,
+	): Promise<{ id?: number; number?: number; url?: string; createdAt?: string; draft?: boolean }>;
 	getDefaultBranch(owner: string, repo: string): Promise<{ name: string; sha: string }>;
-	getBranch(owner: string, repo: string, branch: string): Promise<{ name: string; sha: string; exists: boolean }>;
-	getFileContent(owner: string, repo: string, path: string, ref: string): Promise<{ content: string; sha: string; size: number; exists: boolean }>;
-	getCommit(owner: string, repo: string, sha: string): Promise<{ sha: string; message: string; authorDate: string; exists: boolean }>;
-	findOpenPr(owner: string, repo: string, head: string, base: string): Promise<{ number: number; draft: boolean; title: string; exists: boolean } | null>;
+	getBranch(
+		owner: string,
+		repo: string,
+		branch: string,
+	): Promise<{ name: string; sha: string; exists: boolean }>;
+	getFileContent(
+		owner: string,
+		repo: string,
+		path: string,
+		ref: string,
+	): Promise<{ content: string; gitBlobSha: string; size: number; exists: boolean }>;
+	getCommit(
+		owner: string,
+		repo: string,
+		sha: string,
+	): Promise<{
+		sha: string;
+		message: string;
+		authorDate: string;
+		parents: string[];
+		files: Array<{ filename: string; status: string }>;
+		exists: boolean;
+	}>;
+	findOpenPr(
+		owner: string,
+		repo: string,
+		head: string,
+		base: string,
+	): Promise<{
+		number: number;
+		state: 'open' | 'closed';
+		draft: boolean;
+		merged: boolean;
+		mergedAt: string | null;
+		title: string;
+		body: string;
+		headRef: string;
+		headSha: string;
+		baseRef: string;
+		baseSha: string;
+		exists: boolean;
+	} | null>;
+	compareCommits(
+		owner: string,
+		repo: string,
+		base: string,
+		head: string,
+	): Promise<{
+		status: string;
+		aheadBy: number;
+		behindBy: number;
+		totalCommits: number;
+		commits: string[];
+		files: Array<{ filename: string; status: string }>;
+	}>;
 }
 
 /**
@@ -328,6 +413,11 @@ export function createStage3RealGitHubBridge(params: {
 			pullRequest: {
 				async findOpenPr(owner, repo, head, base) {
 					return transport.findOpenPr(owner, repo, head, base);
+				},
+			},
+			compare: {
+				async compareCommits(owner, repo, base, head) {
+					return transport.compareCommits(owner, repo, base, head);
 				},
 			},
 		},

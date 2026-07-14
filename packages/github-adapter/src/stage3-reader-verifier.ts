@@ -8,6 +8,8 @@
 //   success: false
 //   mutationState: complete-unverified
 
+import { sha256Utf8, utf8ByteLength } from './stage3-canonical-manifest.js';
+
 // ---------------------------------------------------------------------------
 // Reader Interfaces
 // ---------------------------------------------------------------------------
@@ -39,7 +41,8 @@ export interface Stage3ContentReader {
 		ref?: string,
 	): Promise<{
 		content: string;
-		sha: string;
+		/** GitHub git blob SHA (SHA-1 or repo-dependent). NOT a SHA-256 hash. */
+		gitBlobSha: string;
 		size: number;
 		exists: boolean;
 	}>;
@@ -55,6 +58,11 @@ export interface Stage3CommitReader {
 		sha: string;
 		message: string;
 		authorDate: string;
+		/** Parent commit SHAs. For the first commit on a branch created from base,
+		 *  there should be exactly 1 parent (the approved base SHA). */
+		parents: string[];
+		/** Files changed in this commit. */
+		files: Array<{ filename: string; status: string }>;
 		exists: boolean;
 	}>;
 }
@@ -68,10 +76,35 @@ export interface Stage3PullRequestReader {
 		base: string,
 	): Promise<{
 		number: number;
+		state: 'open' | 'closed';
 		draft: boolean;
+		merged: boolean;
+		mergedAt: string | null;
 		title: string;
+		body: string;
+		headRef: string;
+		headSha: string;
+		baseRef: string;
+		baseSha: string;
 		exists: boolean;
 	} | null>;
+}
+
+/** Read-only branch comparison reader. */
+export interface Stage3CompareReader {
+	compareCommits(
+		owner: string,
+		repo: string,
+		base: string,
+		head: string,
+	): Promise<{
+		status: string;
+		aheadBy: number;
+		behindBy: number;
+		totalCommits: number;
+		commits: string[];
+		files: Array<{ filename: string; status: string }>;
+	}>;
 }
 
 // ---------------------------------------------------------------------------
@@ -85,6 +118,7 @@ export interface Stage3ReadOnlyVerifier {
 	content: Stage3ContentReader;
 	commit: Stage3CommitReader;
 	pullRequest: Stage3PullRequestReader;
+	compare: Stage3CompareReader;
 }
 
 // ---------------------------------------------------------------------------
@@ -214,7 +248,9 @@ export interface PostWriteVerificationInput {
 	expectedFileSha256: string;
 	expectedFileBytes: number;
 	expectedCommitMessage: string;
+	expectedCommitBody?: string;
 	expectedPrTitle: string;
+	expectedPrBody: string;
 	expectedPrDraft: boolean;
 }
 
@@ -234,6 +270,11 @@ export interface PostWriteVerificationResult {
 		draftPrExists: boolean;
 		prBaseExact: boolean;
 		prHeadExact: boolean;
+		prTitleExact: boolean;
+		prBodyExact: boolean;
+		prNotMerged: boolean;
+		prStateOpen: boolean;
+		exactlyOnePr: boolean;
 		noMerge: boolean;
 	};
 }
@@ -242,12 +283,14 @@ export interface PostWriteVerificationResult {
  * Verify repository state AFTER writes.
  * In live mode, reads from the GitHub API to confirm:
  * - Target branch exists and is based on the approved base SHA
- * - Exactly one new commit exists on the branch
- * - Exactly one file was changed
- * - File path, bytes, and SHA-256 match
- * - Commit message matches
- * - Draft PR exists with correct base/head
- * - PR is not merged
+ * - Exactly one new commit exists on the branch (aheadBy === 1)
+ * - Head commit has exactly one parent (the approved base SHA)
+ * - Exactly one file was changed, with correct path and status 'added'
+ * - File bytes match exactly (local computation from actual content)
+ * - File SHA-256 matches (local computation — NOT git blob SHA)
+ * - Commit message matches byte-exact
+ * - Exactly one draft PR exists with correct metadata
+ * - PR is open, not merged, with correct base/head/title/body
  */
 export async function verifyPostWrite(
 	verifier: Stage3ReadOnlyVerifier,
@@ -265,20 +308,49 @@ export async function verifyPostWrite(
 		draftPrExists: false,
 		prBaseExact: false,
 		prHeadExact: false,
-		noMerge: true, // PR existence check handles this
+		prTitleExact: false,
+		prBodyExact: false,
+		prNotMerged: false,
+		prStateOpen: false,
+		exactlyOnePr: false,
+		noMerge: false,
 	};
 
 	try {
+		// ── H1: Branch and Commit Checks ──
+
 		// Check target branch exists
 		const branch = await verifier.branch.getBranch(input.owner, input.repo, input.targetBranch);
 		checks.targetBranchExists = branch.exists;
 
-		if (branch.exists) {
-			// Check branch is based on approved SHA (simplified: check SHA is present)
-			checks.targetBranchBasedOnApprovedSha = true; // Actual implementation would verify parent SHA
+		if (!branch.exists) {
+			return {
+				passed: false,
+				reason: 'Post-write verification failed: target branch missing',
+				checks,
+			};
 		}
 
-		// Check file content
+		// Compare base and target branches to verify exactly 1 commit ahead
+		const compare = await verifier.compare.compareCommits(
+			input.owner,
+			input.repo,
+			input.expectedBaseSha,
+			branch.sha,
+		);
+		checks.exactlyOneCommit = compare.aheadBy === 1 && compare.totalCommits === 1;
+		checks.exactlyOneFile = compare.files.length === 1 && compare.files[0]?.status === 'added';
+		checks.filePathExact = checks.exactlyOneFile && compare.files[0]?.filename === input.filePath;
+
+		// Check head commit has exactly one parent (the approved base SHA)
+		const headCommit = await verifier.commit.getCommit(input.owner, input.repo, branch.sha);
+		checks.targetBranchBasedOnApprovedSha =
+			headCommit.exists &&
+			headCommit.parents.length === 1 &&
+			headCommit.parents[0] === input.expectedBaseSha;
+
+		// ── H2: File Content Checks (local SHA-256, NOT git blob SHA) ──
+
 		const file = await verifier.content.getFileContent(
 			input.owner,
 			input.repo,
@@ -286,17 +358,21 @@ export async function verifyPostWrite(
 			input.targetBranch,
 		);
 		if (file.exists) {
-			checks.filePathExact = true;
-			checks.fileByteSizeExact = file.size === input.expectedFileBytes;
-			checks.fileSha256Exact = file.sha === input.expectedFileSha256;
-			checks.exactlyOneFile = true; // Scope-limited: we check this one file
+			const actualBytes = utf8ByteLength(file.content);
+			const actualSha256 = sha256Utf8(file.content);
+			checks.fileByteSizeExact = actualBytes === input.expectedFileBytes;
+			checks.fileSha256Exact = actualSha256 === input.expectedFileSha256;
 		}
 
-		// Check commit (simplified: we verify the file SHA implies a commit)
-		checks.exactlyOneCommit = file.exists;
-		checks.commitMessageExact = true; // Actual implementation would verify commit message
+		// ── H3: Commit Metadata Checks ──
 
-		// Check PR
+		const expectedFullMessage = input.expectedCommitBody
+			? `${input.expectedCommitMessage}\n\n${input.expectedCommitBody}`
+			: input.expectedCommitMessage;
+		checks.commitMessageExact = headCommit.exists && headCommit.message === expectedFullMessage;
+
+		// ── H4: Pull Request Checks ──
+
 		const pr = await verifier.pullRequest.findOpenPr(
 			input.owner,
 			input.repo,
@@ -304,10 +380,20 @@ export async function verifyPostWrite(
 			input.baseBranch,
 		);
 		if (pr && pr.exists) {
-			checks.draftPrExists = pr.draft;
-			checks.prBaseExact = true; // findOpenPr already matched base/head
-			checks.prHeadExact = true;
+			checks.draftPrExists = pr.draft === true;
+			checks.prStateOpen = pr.state === 'open';
+			checks.prNotMerged = pr.merged === false && pr.mergedAt === null;
+			checks.prBaseExact = pr.baseRef === input.baseBranch;
+			checks.prHeadExact = pr.headRef === input.targetBranch;
+			checks.prTitleExact = pr.title === input.expectedPrTitle;
+			checks.prBodyExact = pr.body === input.expectedPrBody;
+			checks.exactlyOnePr = true;
 		}
+
+		// ── H5: No merge capability check ──
+		checks.noMerge = checks.prNotMerged && checks.prStateOpen && !pr?.merged;
+
+		// ── Final aggregation ──
 
 		const allPassed =
 			checks.targetBranchExists &&
@@ -321,23 +407,38 @@ export async function verifyPostWrite(
 			checks.draftPrExists &&
 			checks.prBaseExact &&
 			checks.prHeadExact &&
+			checks.prTitleExact &&
+			checks.prBodyExact &&
+			checks.prNotMerged &&
+			checks.prStateOpen &&
+			checks.exactlyOnePr &&
 			checks.noMerge;
 
 		let reason: string | undefined;
 		if (!allPassed) {
 			const failures: string[] = [];
 			if (!checks.targetBranchExists) failures.push('target branch missing');
-			if (!checks.targetBranchBasedOnApprovedSha) failures.push('branch based on wrong SHA');
-			if (!checks.exactlyOneCommit) failures.push('commit count wrong');
-			if (!checks.exactlyOneFile) failures.push('file count wrong');
+			if (!checks.targetBranchBasedOnApprovedSha) failures.push('branch not based on approved SHA');
+			if (!checks.exactlyOneCommit)
+				failures.push(
+					`commit count wrong (aheadBy=${compare.aheadBy}, total=${compare.totalCommits})`,
+				);
+			if (!checks.exactlyOneFile)
+				failures.push(`file count or status wrong (files=${compare.files.length})`);
 			if (!checks.filePathExact) failures.push('file path wrong');
-			if (!checks.fileByteSizeExact) failures.push('file size wrong');
-			if (!checks.fileSha256Exact) failures.push('file SHA-256 wrong');
-			if (!checks.commitMessageExact) failures.push('commit message wrong');
-			if (!checks.draftPrExists) failures.push('draft PR missing');
-			if (!checks.prBaseExact) failures.push('PR base wrong');
-			if (!checks.prHeadExact) failures.push('PR head wrong');
-			if (!checks.noMerge) failures.push('PR merged');
+			if (!checks.fileByteSizeExact) failures.push('file byte size mismatch');
+			if (!checks.fileSha256Exact)
+				failures.push('file SHA-256 mismatch (canonical SHA-256 vs git blob SHA)');
+			if (!checks.commitMessageExact) failures.push('commit message mismatch');
+			if (!checks.draftPrExists) failures.push('draft PR missing or not draft');
+			if (!checks.prBaseExact) failures.push('PR base branch wrong');
+			if (!checks.prHeadExact) failures.push('PR head branch wrong');
+			if (!checks.prTitleExact) failures.push('PR title wrong');
+			if (!checks.prBodyExact) failures.push('PR body wrong');
+			if (!checks.prNotMerged) failures.push('PR merged');
+			if (!checks.prStateOpen) failures.push('PR not open');
+			if (!checks.exactlyOnePr) failures.push('no matching PR found');
+			if (!checks.noMerge) failures.push('merge detected');
 			reason = `Post-write verification failed: ${failures.join(', ')}`;
 		}
 
@@ -363,6 +464,32 @@ export function createFakeReadOnlyVerifier(params?: {
 	targetBranchExists?: boolean;
 	targetFileExists?: boolean;
 	openPrExists?: boolean;
+	/** Content string to return for getFileContent when file exists. */
+	fileContent?: string;
+	/** Override comparison result for post-write testing. */
+	compareResult?: {
+		aheadBy?: number;
+		totalCommits?: number;
+		files?: Array<{ filename: string; status: string }>;
+	};
+	/** Override commit result for post-write testing. */
+	commitResult?: {
+		parents?: string[];
+		message?: string;
+	};
+	/** Override PR result for post-write testing. */
+	prResult?: {
+		state?: 'open' | 'closed';
+		draft?: boolean;
+		merged?: boolean;
+		mergedAt?: string | null;
+		title?: string;
+		body?: string;
+		headRef?: string;
+		headSha?: string;
+		baseRef?: string;
+		baseSha?: string;
+	};
 }): Stage3ReadOnlyVerifier {
 	const p = {
 		repoExists: true,
@@ -376,30 +503,79 @@ export function createFakeReadOnlyVerifier(params?: {
 	return {
 		repository: {
 			async getDefaultBranch(_owner: string, _repo: string) {
-				return { name: 'main', sha: 'expected-base-sha' };
+				return {
+					name: 'main',
+					sha: p.baseShaMatches ? 'expected-base-sha' : 'wrong-sha',
+				};
 			},
 		},
 		branch: {
 			async getBranch(_owner: string, _repo: string, branch: string) {
-				return { name: branch, sha: 'expected-base-sha', exists: p.targetBranchExists };
+				return {
+					name: branch,
+					sha: 'expected-base-sha',
+					exists: p.targetBranchExists,
+				};
 			},
 		},
 		content: {
 			async getFileContent(_owner: string, _repo: string, _path: string, _ref?: string) {
-				return { content: '', sha: 'expected-file-sha', size: 1724, exists: p.targetFileExists };
+				const content = params?.fileContent ?? '';
+				return {
+					content,
+					gitBlobSha: 'fake-git-blob-sha',
+					size: Buffer.byteLength(content, 'utf8'),
+					exists: p.targetFileExists,
+				};
 			},
 		},
 		commit: {
-			async getCommit(_owner: string, _repo: string, _sha: string) {
-				return { sha: _sha, message: 'test', authorDate: new Date().toISOString(), exists: true };
+			async getCommit(_owner: string, _repo: string, sha: string) {
+				return {
+					sha,
+					message: params?.commitResult?.message ?? 'test',
+					authorDate: new Date().toISOString(),
+					parents: params?.commitResult?.parents ?? ['expected-base-sha'],
+					files: params?.compareResult?.files ?? [
+						{ filename: 'stage3/positron-supervised-pilot.md', status: 'added' },
+					],
+					exists: true,
+				};
 			},
 		},
 		pullRequest: {
 			async findOpenPr(_owner: string, _repo: string, _head: string, _base: string) {
 				if (p.openPrExists) {
-					return { number: 1, draft: true, title: 'Test PR', exists: true };
+					return {
+						number: 1,
+						state: params?.prResult?.state ?? 'open',
+						draft: params?.prResult?.draft ?? true,
+						merged: params?.prResult?.merged ?? false,
+						mergedAt: params?.prResult?.mergedAt ?? null,
+						title: params?.prResult?.title ?? 'Test PR',
+						body: params?.prResult?.body ?? 'Test body',
+						headRef: params?.prResult?.headRef ?? _head,
+						headSha: params?.prResult?.headSha ?? 'head-sha',
+						baseRef: params?.prResult?.baseRef ?? _base,
+						baseSha: params?.prResult?.baseSha ?? 'base-sha',
+						exists: true,
+					};
 				}
 				return null;
+			},
+		},
+		compare: {
+			async compareCommits(_owner: string, _repo: string, _base: string, _head: string) {
+				return {
+					status: 'ahead',
+					aheadBy: params?.compareResult?.aheadBy ?? 1,
+					behindBy: 0,
+					totalCommits: params?.compareResult?.totalCommits ?? 1,
+					commits: ['fake-commit-sha'],
+					files: params?.compareResult?.files ?? [
+						{ filename: 'stage3/positron-supervised-pilot.md', status: 'added' },
+					],
+				};
 			},
 		},
 	};

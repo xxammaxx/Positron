@@ -201,6 +201,7 @@ export type {
 // --- Stage 3 Real GitHub Bridge ---
 export {
 	createMockStage3Bridge,
+	createStage3RealGitHubBridge,
 	verifyBridgeCapabilities,
 	STAGE3_ALLOWED_CAPABILITIES,
 	STAGE3_FORBIDDEN_CAPABILITIES,
@@ -208,7 +209,23 @@ export {
 export type {
 	Stage3RealGitHubBridge,
 	Stage3AllowedCapability,
+	Stage3GitHubTransport,
 } from './stage3-real-github-bridge.js';
+
+// --- Stage 3 Canonical Manifest ---
+export {
+	sha256Utf8,
+	sha256Bytes,
+	utf8ByteLength,
+	computeManifestSha256,
+} from './stage3-canonical-manifest.js';
+
+// --- Stage 3 Octokit Transport ---
+export {
+	createStage3OctokitTransport,
+	verifyNoForbiddenEndpointsCalled,
+	STAGE3_FORBIDDEN_OCTOKIT_ENDPOINTS,
+} from './stage3-octokit-transport.js';
 
 // --- Label Lifecycle ---
 export { getLabelsForPhase, LABEL_LIFECYCLE } from './label-lifecycle.js';

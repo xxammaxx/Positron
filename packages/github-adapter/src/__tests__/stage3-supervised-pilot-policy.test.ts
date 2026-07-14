@@ -26,7 +26,8 @@ import type { Stage3ProcessSafety } from '../stage3-supervised-pilot-policy.js';
 // 82-char suffix (93 total with prefix) matching shared redactSecrets regex
 
 // 82-char suffix (93 total with prefix) matching shared redactSecrets regex
-const MOCK_TOKEN = 'github_pat_AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12XY';
+const MOCK_TOKEN =
+	'github_pat_AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12AB12XY';
 
 const SAFE_PROCESS_SAFETY: Stage3ProcessSafety = {
 	queueDisabled: true,
