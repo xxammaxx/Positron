@@ -29,6 +29,7 @@ GitHub Actions remains advisory-only. Workflow YAML files are syntactically vali
 - **UPDATE 2026-07-10 (Runtime Write Harness)**: Stage 2 runtime write harness implemented in fake/test mode (42 harness tests, 195 total regression tests passing). Policy-to-adapter bridge exists now. No real token used, no real write executed. Harness is ready for final audit. See `docs/evidence/stage2-runtime-write-harness-implementation.md`.
 - **UPDATE 2026-07-11 (Single Comment Dry Run Retry)**: Stage 2 dry-run retry attempted after harness merge. All pre-write gates passed. Blocked at harness execution: code path for real writes is intentionally unreachable — harness returns `success: false` even with `fakeMode=false`. `this.adapter.createIssueComment()` is never called. Stage 2 remains NOT_EXECUTABLE until harness execution path is implemented. See `docs/evidence/stage2-write-sandbox-single-comment-retry.md`.
 - **UPDATE 2026-07-11 (Harness Execution Path Fix)**: Stage 2 harness execution path implemented. The non-fake path now calls the injected issue-comment writer after all policy gates pass. Tested with fake/spy writer (63 tests pass). No real Stage2 token used, no real GitHub write executed. Harness is ready for final audit before the real single-comment retry. Stage 3 remains blocked. See `docs/evidence/stage2-harness-execution-path-fix.md`.
+- **UPDATE 2026-07-13 (STAGE 2 COMPLETE)**: Stage 2 single-comment write SUCCESSFULLY EXECUTED. Classic PAT with `repo` scope used through the Positron harness path. Sandbox comment ID 4962261394 written to `xxammaxx/positron-sandbox#1` (SHA-256: 48be36a2... verified). PAT immediately revoked. No second write, no side effects. Stage 2 is COMPLETE. Stage 3 remains BLOCKED. See `docs/evidence/stage2-write-sandbox-single-comment-closeout-verification.md` and `docs/evidence/issue-308/closeout-phase-c-final-status.md`.
 - Real mode requires combined approval gates (GATE_APPROVE → all four merged, verified in audit).
 
 ## E2E Testing
@@ -86,7 +87,8 @@ These must not be applied, popped, or dropped without explicit human instruction
 | Backlog hygiene (milestones, labels, taxonomy) | Open | #306 |
 | Documentation drift | Being addressed | #307 |
 | Full Real Mode not productively validated | Open | #308 |
-| Stage 2 Write Sandbox — Preflight Ready | Dry-run preflight completed 2026-07-10 | #308 |
+| Stage 2 Write Sandbox — COMPLETED | Single comment written 2026-07-13, PAT revoked | #308 |
+| Stage 3 Full Real Mode | BLOCKED — requires new PAT and separate approval | #308 |
 | Large epics need decomposition | Open | #229, #243 |
 | Security/runtime gates (GATE_APPROVE) | Resolved — merged to main | #215, #244, #245, #246 (all CLOSED) |
 | CodeRabbit external removal | Owner action only | — |

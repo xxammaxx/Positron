@@ -12,9 +12,9 @@ Project closeout state as of the latest local verification on main (post PR #309
 | `npx biome format .` | PASS |
 | `npm run build` | PASS |
 | `npm run typecheck` | PASS (9 projects up to date) |
-| `npm test` (root/packages) | PASS — **1375/1375** (64 test files) |
+| `npm test` (root/packages) | PASS — **1834/1834** (76 test files) |
 | `npm test` (apps/web) | PASS — **196/196** (8 test files, JSX/TSX resolved) |
-| **Total Tests** | **1571/1571** (72 test files) |
+| **Total Tests** | **2030/2030** (84 test files) |
 | `npx biome check .` | advisory-only (known lint backlog) |
 
 ## Implemented Capabilities
@@ -96,6 +96,22 @@ Project closeout state as of the latest local verification on main (post PR #309
 - Evidence-gated progression through pipeline phases.
 - Audit trail enforcement with session and decision logging.
 - Max fix loops: automatic stop after 3 failed attempts.
+
+### Stage 1: Read-Only GitHub Operations (#308)
+
+- Real GitHub adapter read operations validated (7/7 reads, 0 writes).
+- Token lifecycle (set → use → unset) verified.
+- Write boundary enforcement: all write attempts blocked at policy level.
+- Evidence: `docs/evidence/stage1-readonly-dry-run.md`
+
+### Stage 2: Single Sandbox Comment Write (#308)
+
+- Single controlled write to `xxammaxx/positron-sandbox#1` (Comment ID 4962261394, 2026-07-13).
+- Full Positron harness path: Policy → Harness → Adapter → Octokit → GitHub API.
+- PAT lifecycle: set → used (exactly once) → unset → revoked on GitHub.
+- Kill-switches, idempotency, body hash binding, duplicate detection all enforced.
+- Evidence: `docs/evidence/stage2-write-sandbox-single-comment-closeout-verification.md`
+- Stage 3 (Full Real Mode) remains BLOCKED.
 
 ## GitHub / Remote CI Status
 
