@@ -138,6 +138,78 @@ export type {
 	Stage3AuditSink,
 } from './stage3-runtime-harness.js';
 
+// --- Stage 3 Approval Binding ---
+export {
+	createApprovalBinding,
+	createApprovalBindingPreview,
+	validateApprovalBinding,
+	isApprovalExpired,
+	generateApprovalText,
+	computeApprovalTextSha256,
+	createSyntheticApprovalBinding,
+} from './stage3-approval-binding.js';
+export type {
+	Stage3ApprovalBinding,
+	Stage3ApprovalBindingPreview,
+	Stage3ApprovalValidationResult,
+} from './stage3-approval-binding.js';
+
+// --- Stage 3 Base Resolver ---
+export {
+	checkBaseDrift,
+	Stage3BaseShaDriftError,
+	createFakeBaseResolver,
+} from './stage3-base-resolver.js';
+export type {
+	Stage3BaseResolver,
+	Stage3ResolvedBase,
+	Stage3BaseDriftResult,
+} from './stage3-base-resolver.js';
+
+// --- Stage 3 Runtime Safety Probe ---
+export {
+	validateSafetySnapshot,
+	createFakeRuntimeSafetyProbe,
+	createSafeSnapshot,
+	createEnvRuntimeSafetyProbe,
+} from './stage3-runtime-safety-probe.js';
+export type {
+	Stage3RuntimeSafetyProbe,
+	Stage3SafetySnapshot,
+	Stage3SafetyValidation,
+} from './stage3-runtime-safety-probe.js';
+
+// --- Stage 3 Reader / Verifier ---
+export {
+	verifyPreWrite,
+	verifyPostWrite,
+	createFakeReadOnlyVerifier,
+} from './stage3-reader-verifier.js';
+export type {
+	Stage3RepositoryReader,
+	Stage3BranchReader,
+	Stage3ContentReader,
+	Stage3CommitReader,
+	Stage3PullRequestReader,
+	Stage3ReadOnlyVerifier,
+	PreWriteVerificationInput,
+	PreWriteVerificationResult,
+	PostWriteVerificationInput,
+	PostWriteVerificationResult,
+} from './stage3-reader-verifier.js';
+
+// --- Stage 3 Real GitHub Bridge ---
+export {
+	createMockStage3Bridge,
+	verifyBridgeCapabilities,
+	STAGE3_ALLOWED_CAPABILITIES,
+	STAGE3_FORBIDDEN_CAPABILITIES,
+} from './stage3-real-github-bridge.js';
+export type {
+	Stage3RealGitHubBridge,
+	Stage3AllowedCapability,
+} from './stage3-real-github-bridge.js';
+
 // --- Label Lifecycle ---
 export { getLabelsForPhase, LABEL_LIFECYCLE } from './label-lifecycle.js';
 export type { PhaseLabels } from './label-lifecycle.js';
