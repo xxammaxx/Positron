@@ -106,6 +106,38 @@ export type {
 	Stage2AuditSink,
 } from './stage2-runtime-write-harness.js';
 
+// --- Stage 3 Supervised Pilot Policy ---
+export {
+	Stage3SupervisedPilotPolicy,
+	createStage3PilotPolicy,
+	STAGE3_DEFAULT_CONFIG,
+	STAGE3_CANONICAL,
+} from './stage3-supervised-pilot-policy.js';
+export type {
+	Stage3WriteOperation,
+	Stage3PilotConfig,
+	Stage3PilotPolicyResult,
+	Stage3PreWritePreview,
+	Stage3PilotAuditEvent,
+	Stage3FailedGate,
+	Stage3ProcessSafety,
+} from './stage3-supervised-pilot-policy.js';
+
+// --- Stage 3 Runtime Harness ---
+export {
+	Stage3RuntimeHarness,
+	createStage3Harness,
+} from './stage3-runtime-harness.js';
+export type {
+	Stage3BranchWriter,
+	Stage3FileCommitWriter,
+	Stage3PullRequestWriter,
+	Stage3HarnessInput,
+	Stage3HarnessResult,
+	Stage3HarnessConfig,
+	Stage3AuditSink,
+} from './stage3-runtime-harness.js';
+
 // --- Label Lifecycle ---
 export { getLabelsForPhase, LABEL_LIFECYCLE } from './label-lifecycle.js';
 export type { PhaseLabels } from './label-lifecycle.js';
