@@ -317,7 +317,7 @@ export function createStage3RealGitHubBridge(params: {
 			},
 			content: {
 				async getFileContent(owner, repo, path, ref) {
-					return transport.getFileContent(owner, repo, path, ref);
+					return transport.getFileContent(owner, repo, path, ref ?? 'main');
 				},
 			},
 			commit: {

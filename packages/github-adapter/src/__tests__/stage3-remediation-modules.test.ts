@@ -550,7 +550,8 @@ describe('Stage3RealGitHubBridge', () => {
 				owner: 'x',
 				repo: 'y',
 				branch: 'test-branch',
-				fromBranch: 'main',
+				sourceBranch: 'main',
+				expectedSourceSha: 'expected-base-sha',
 			});
 			expect(result.ref).toContain('test-branch');
 			expect(result.sha).toBeTruthy();
