@@ -2,11 +2,14 @@
 
 ## Status
 
-**IMPLEMENTED_AND_TESTED_NOT_EXECUTED**
+**IMPLEMENTED_AND_TESTED_NOT_EXECUTED**  
+**Updated — July 2026 (PR #370 integration):**
 
-- Implementation complete: Stage 3 Policy + Harness with 19+ validation gates.
-- 63 new tests passing (37 policy + 26 harness).
-- Fake mode operational; live path wired via spy writers.
+- Implementation complete: Stage 3 Policy + Harness + 5 remediation modules (approval-binding, base-resolver, safety-probe, reader-verifier, bridge).
+- 345 tests passing across 10 test files (37 policy + 27 harness + 47 remediation + 234 other adapter tests).
+- Fake mode operational; live path wired via spy writers with discriminated union input (`Stage3FakeHarnessInput | Stage3LiveHarnessInput`).
+- Live mode now requires `Stage3ApprovalBinding` (not free `humanApproved` boolean), `Stage3RuntimeSafetyProbe.inspect()` (not caller-supplied booleans), and `baseResolver.resolveBase()` for TOCTOU protection.
+- `Stage3BranchWriter.createBranch()` uses `sourceBranch` + `expectedSourceSha` (not `fromBranch`).
 - No real GitHub token used; no sandbox branch created.
 
 ---
@@ -57,10 +60,16 @@
 
 | Component | File Path | Lines | Purpose |
 |-----------|-----------|-------|---------|
-| `Stage3SupervisedPilotPolicy` | `packages/github-adapter/src/stage3-supervised-pilot-policy.ts` | 795 | Policy validation with 19+ gates |
-| `Stage3RuntimeHarness` | `packages/github-adapter/src/stage3-runtime-harness.ts` | 722 | Multi-phase orchestrator |
-| Policy Test Suite | `packages/github-adapter/src/__tests__/stage3-supervised-pilot-policy.test.ts` | 765 | 37 tests for policy |
-| Harness Test Suite | `packages/github-adapter/src/__tests__/stage3-runtime-harness.test.ts` | 592 | 26 tests for harness |
+| `Stage3SupervisedPilotPolicy` | `packages/github-adapter/src/stage3-supervised-pilot-policy.ts` | ~850 | Policy validation with 20+ gates |
+| `Stage3RuntimeHarness` | `packages/github-adapter/src/stage3-runtime-harness.ts` | ~1708 | Multi-phase orchestrator with discriminated input union |
+| `Stage3ApprovalBinding` | `packages/github-adapter/src/stage3-approval-binding.ts` | ~380 | Cryptographically signed approval binding (added PR #370) |
+| `Stage3BaseResolver` | `packages/github-adapter/src/stage3-base-resolver.ts` | ~100 | Base branch SHA resolver for TOCTOU protection (added PR #370) |
+| `Stage3RuntimeSafetyProbe` | `packages/github-adapter/src/stage3-runtime-safety-probe.ts` | ~150 | Runtime safety snapshot probe (added PR #370) |
+| `Stage3ReadOnlyVerifier` | `packages/github-adapter/src/stage3-reader-verifier.ts` | ~400 | Pre-write and post-write verification (added PR #370) |
+| `Stage3RealGitHubBridge` | `packages/github-adapter/src/stage3-real-github-bridge.ts` | ~300 | Real/mock bridge factory with capability enforcement (added PR #370) |
+| Policy Test Suite | `packages/github-adapter/src/__tests__/stage3-supervised-pilot-policy.test.ts` | ~770 | 37 tests for policy |
+| Harness Test Suite | `packages/github-adapter/src/__tests__/stage3-runtime-harness.test.ts` | ~922 | 27 tests for harness (added binding + probe tests) |
+| Remediation Modules Test Suite | `packages/github-adapter/src/__tests__/stage3-remediation-modules.test.ts` | ~625 | 47 tests for all 5 remediation modules (added PR #370) |
 
 ---
 
@@ -96,8 +105,8 @@ All gates are enforced by `Stage3SupervisedPilotPolicy.validate()`.
 | 6 | `filePathRequired` / `filePathAllowlist` | Only `stage3/positron-supervised-pilot.md` allowed. | `File path '...' is not allowlisted` |
 | 7 | `fileContentRequired` | File content must be provided. | `File content not provided` |
 | 7b | `tokenInInput` | Token patterns detected in input → rejected before hash/length check. | `Raw token pattern detected in input` |
-| 8 | `fileSha256` | SHA-256 must match `0a97795f...`. Checked **before** length. | `SHA-256 mismatch` |
-| 9 | `fileLength` | UTF-8 byte length must be 1695. Checked after SHA-256. | `File length ... ≠ expected 1695` |
+| 8 | `fileSha256` | SHA-256 must match `73ac6e0f...` (previously `0a97795f...` — **HISTORICAL — SUPERSEDED by PR #370 integration**). Checked **before** length. | `SHA-256 mismatch` |
+| 9 | `fileLength` | UTF-8 byte length must be 1724 (previously 1695 — **HISTORICAL — SUPERSEDED by PR #370 integration**). Checked after SHA-256. | `File length ... ≠ expected 1724` |
 | 10 | `commitMessage` | Must match `feat(issue-308): stage 3 supervised real mode pilot`. | `Commit message mismatch` |
 | 11 | `commitBody` | Must match the canonical commit body with SHA-256 binding. | `Commit body mismatch` |
 
@@ -154,7 +163,10 @@ interface Stage3BranchWriter {
     owner: string;
     repo: string;
     branch: string;
-    fromBranch: string;
+    /** Source branch name (e.g. 'main') — NOTE: originally `fromBranch` in ADR draft, renamed to `sourceBranch` + added `expectedSourceSha` in PR #370 integration. */
+    sourceBranch: string;
+    /** Expected SHA of the source branch — TOCTOU protection (added PR #370). */
+    expectedSourceSha: string;
   }): Promise<{ ref: string; sha: string }>;
 }
 ```
@@ -243,8 +255,8 @@ All values from `docs/evidence/issue-308/stage3-supervised-pilot-approval-packag
 | Base Branch | `main` | Approval Package §2 |
 | Target Branch | `positron/issue-308-stage3-pilot` | Approval Package §2 |
 | File Path | `stage3/positron-supervised-pilot.md` | Approval Package §3 |
-| File SHA-256 | `0a97795fdc21740548b4d02cc4b0dd0538afa0d2917390c84671a94b3089c823` | Approval Package §3 |
-| File Length | 1695 bytes (UTF-8) | Approval Package §3 (code-aligns to 1695) |
+| File SHA-256 | `73ac6e0faf0b13118de60a3a1eb02a54e68d272ecf137f356d134e84ea9f46ff` — **HISTORICAL — SUPERSEDED by PR #370 integration (July 2026):** previously `0a97795fdc21740548b4d02cc4b0dd0538afa0d2917390c84671a94b3089c823` | Approval Package §3 |
+| File Length | 1724 bytes (UTF-8) — **HISTORICAL — SUPERSEDED by PR #370 integration (July 2026):** previously 1695 bytes | Approval Package §3 (code-aligns to 1724) |
 | Commit Message | `feat(issue-308): stage 3 supervised real mode pilot` | Approval Package §4 |
 | Commit Body | Multi-line body with sandbox marker description | Approval Package §4 |
 | PR Title | `feat(issue-308): Stage 3 supervised real mode pilot — sandbox marker` | Approval Package §5 |
@@ -317,12 +329,14 @@ All four quantity limits are enforced per-run (per idempotency key):
 ## 11. Evidence References
 
 - **Approval Package**: `docs/evidence/issue-308/stage3-supervised-pilot-approval-package.md`
-- **Policy Source**: `packages/github-adapter/src/stage3-supervised-pilot-policy.ts` (795 lines)
-- **Harness Source**: `packages/github-adapter/src/stage3-runtime-harness.ts` (722 lines)
-- **Policy Tests**: `packages/github-adapter/src/__tests__/stage3-supervised-pilot-policy.test.ts` (765 lines, 37 tests)
-- **Harness Tests**: `packages/github-adapter/src/__tests__/stage3-runtime-harness.test.ts` (592 lines, 26 tests)
+- **Policy Source**: `packages/github-adapter/src/stage3-supervised-pilot-policy.ts` (~850 lines)
+- **Harness Source**: `packages/github-adapter/src/stage3-runtime-harness.ts` (~1708 lines)
+- **Policy Tests**: `packages/github-adapter/src/__tests__/stage3-supervised-pilot-policy.test.ts` (~770 lines, 37 tests)
+- **Harness Tests**: `packages/github-adapter/src/__tests__/stage3-runtime-harness.test.ts` (~922 lines, 27 tests)
+- **Remediation Modules Tests**: `packages/github-adapter/src/__tests__/stage3-remediation-modules.test.ts` (~625 lines, 47 tests — added PR #370)
+- **Remediation Modules**: `stage3-approval-binding.ts`, `stage3-base-resolver.ts`, `stage3-runtime-safety-probe.ts`, `stage3-reader-verifier.ts`, `stage3-real-github-bridge.ts` (all added PR #370)
 - **Test Matrix**: `docs/evidence/issue-308/stage3-runtime-foundation-test-matrix.md`
 
 ---
 
-*Generated by Positron Documentation Agent — Stage 3 Runtime Foundation Implementation*
+*Generated by Positron Documentation Agent — Stage 3 Runtime Foundation Implementation (updated for PR #370 integration, July 2026)*

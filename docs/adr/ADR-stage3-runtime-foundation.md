@@ -2,7 +2,8 @@
 
 ## Status
 
-Proposed — July 2026
+Proposed — July 2026  
+**Updated — July 2026 (PR #370 integration):** Superseded values below are marked `HISTORICAL — SUPERSEDED by PR #370 integration (July 2026)`. All values now reflect the integrated Stage 3 modules (approval-binding, base-resolver, safety-probe, reader-verifier, bridge) as implemented and tested (345 tests across 10 test files).
 
 ## Context
 
@@ -22,7 +23,7 @@ The canonical target values are fixed in `docs/evidence/issue-308/stage3-supervi
 |----------|-------|
 | Repository | `xxammaxx/positron-sandbox` |
 | Branch | `positron/issue-308-stage3-pilot` (from `main`) |
-| File | `stage3/positron-supervised-pilot.md` (1694 bytes, SHA-256: `0a97795fdc...`) |
+| File | `stage3/positron-supervised-pilot.md` (1724 bytes, SHA-256: `73ac6e0f...`) — *Historical note: previously 1694 bytes, `0a97795fdc...` (see PR #370 integration update below)* |
 | Commit | Exactly 1 (message: `feat(issue-308): stage 3 supervised real mode pilot`) |
 | PR | Draft, exactly 1 (title: `feat(issue-308): Stage 3 supervised real mode pilot — sandbox marker`) |
 | Merge | FORBIDDEN |
@@ -74,8 +75,8 @@ export interface Stage3PilotConfig {
   allowedBaseBranch: string;              // e.g. 'main'
   allowedTargetBranch: string;            // e.g. 'positron/issue-308-stage3-pilot'
   allowedFilePath: string;                // e.g. 'stage3/positron-supervised-pilot.md'
-  expectedFileLength: number;             // e.g. 1694
-  expectedFileSha256: string;             // e.g. '0a97795fdc...'
+  expectedFileLength: number;             // e.g. 1724 (HISTORICAL: previously 1694 — superseded by PR #370 integration, July 2026)
+  expectedFileSha256: string;             // e.g. '73ac6e0f...' (HISTORICAL: previously '0a97795fdc...' — superseded by PR #370 integration, July 2026)
   expectedCommitMessage: string;          // exact match required
   expectedPrTitle: string;                // exact match required
   expectedPrBody: string;                 // exact match required
@@ -216,12 +217,12 @@ export interface Stage3BranchWriter {
   createBranch(input: {
     owner: string;
     repo: string;
-    branchName: string;       // e.g. 'positron/issue-308-stage3-pilot'
+    branch: string;           // e.g. 'positron/issue-308-stage3-pilot' — NOTE: originally `branchName` in ADR draft
     sourceBranch: string;     // e.g. 'main'
+    expectedSourceSha: string; // Added by PR #370 integration — TOCTOU protection via baseResolver.resolveBase()
   }): Promise<{
     ref: string;              // e.g. 'refs/heads/positron/issue-308-stage3-pilot'
     sha: string;              // commit SHA the branch points to
-    url: string;              // API URL of the ref
   }>;
 }
 
@@ -603,6 +604,47 @@ export type {
 
 ---
 
+## 7b. PR #370 Integration Update — Module Additions & Input Changes
+
+PR #370 integrated five remediation modules into the `Stage3RuntimeHarness` and changed the input contract. These changes were not in the original ADR and are documented here as they occurred.
+
+### 7b.1 New Remediation Modules
+
+| Module | File | Purpose |
+|--------|------|---------|
+| `Stage3ApprovalBinding` | `stage3-approval-binding.ts` | Cryptographically signed approval binding replaces free `humanApproved` boolean in live mode |
+| `Stage3BaseResolver` | `stage3-base-resolver.ts` | Resolves base branch SHA at runtime for TOCTOU protection |
+| `Stage3RuntimeSafetyProbe` | `stage3-runtime-safety-probe.ts` | Runtime safety snapshot replaces caller-supplied `processSafety` booleans in live mode |
+| `Stage3ReadOnlyVerifier` | `stage3-reader-verifier.ts` | Pre-write (`verifyPreWrite`) and post-write (`verifyPostWrite`) verification |
+| `Stage3RealGitHubBridge` | `stage3-real-github-bridge.ts` | Factory `createStage3RealGitHubBridge()` with `kind: 'restricted-real-transport'`; `createMockStage3Bridge()` with `kind: 'mock'` (rejected in live mode) |
+
+### 7b.2 Discriminated Input Union
+
+Originally, `Stage3HarnessInput` was a flat interface. PR #370 changed it to a discriminated union:
+
+```ts
+type Stage3HarnessInput = Stage3FakeHarnessInput | Stage3LiveHarnessInput;
+```
+
+- **`Stage3FakeHarnessInput`**: retains `humanApproved?` boolean and `processSafety?` override for testability.
+- **`Stage3LiveHarnessInput`**: requires `approvalText`, `approvalBinding`, `runtimeSafetyProbe`, `baseResolver`, `readOnlyVerifier`, `branchWriter`, `fileCommitWriter`, `pullRequestWriter`, and `auditSink`. No free booleans — all safety checks go through injected trusted modules.
+
+### 7b.3 Canonical Values Update
+
+| Property | Original (ADR) | Current (PR #370) |
+|----------|---------------|-------------------|
+| File byte length | 1694 | 1724 |
+| File SHA-256 | `0a97795fdc...` | `73ac6e0f...` |
+
+### 7b.4 Test Count Growth
+
+| Metric | Original (ADR scope) | After PR #370 |
+|--------|---------------------|---------------|
+| Test files | 2 | 10 (all in `packages/github-adapter/src/__tests__/`) |
+| Tests | 63 (37 policy + 26 harness) | 345 (37 policy + 27 harness + 47 remediation + 234 other adapter tests) |
+
+---
+
 ## 8. Alternatives Considered
 
 ### Option A — Extend Stage 2 Policy and Harness
@@ -702,7 +744,7 @@ The harness delegates workspace lock checking to the policy (gate 22), but the a
 
 ### Q4: Should the Policy Validate File Content or Just Metadata?
 
-The Stage 3 approval package specifies the exact file content (1694 bytes, SHA-256: `0a97795fdc...`). The policy can accept the full file content as a `validate()` parameter and compute the SHA-256 itself, or it can accept only the hash and length.
+The Stage 3 approval package specifies the exact file content (originally 1694 bytes, SHA-256: `0a97795fdc...` — **HISTORICAL — SUPERSEDED by PR #370 integration (July 2026):** now 1724 bytes, SHA-256: `73ac6e0f...`). The policy accepts the full file content as a `validate()` parameter and computes the SHA-256 itself, or it can accept only the hash and length.
 
 **Recommendation**: Accept the full content as a string. This allows the policy to independently compute the hash (trust but verify), and enables the `generatePreview()` to include the hash without the caller having to pre-compute it. The content is never included in audit events — only the hash and length.
 

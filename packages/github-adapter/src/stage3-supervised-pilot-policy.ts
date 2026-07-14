@@ -20,6 +20,8 @@ import {
 	CANONICAL_COMMIT_BODY,
 	CANONICAL_PR_TITLE,
 	CANONICAL_PR_BODY,
+	CANONICAL_COMMIT_MESSAGE_SHA256,
+	CANONICAL_PR_METADATA_SHA256,
 	FORBIDDEN_REPOSITORIES,
 	MAX_BRANCHES,
 	MAX_FILE_WRITES,
@@ -32,10 +34,7 @@ import {
 // ---------------------------------------------------------------------------
 
 /** Write operations that the Stage 3 policy governs. */
-export type Stage3WriteOperation =
-	| 'createBranch'
-	| 'commitFile'
-	| 'createPullRequest';
+export type Stage3WriteOperation = 'createBranch' | 'commitFile' | 'createPullRequest';
 
 // ---------------------------------------------------------------------------
 // Types — Configuration
@@ -297,7 +296,10 @@ export class Stage3SupervisedPilotPolicy {
 		// ── Gate 1: Operation allowlist ──
 		if (!this._isAllowedOperation(operation)) {
 			return this._deny(`Operation '${operation}' is not in the allowed Stage 3 operations`, [
-				{ gate: 'operationAllowlist', reason: `Operation '${operation}' is not allowed in Stage 3` },
+				{
+					gate: 'operationAllowlist',
+					reason: `Operation '${operation}' is not allowed in Stage 3`,
+				},
 			]);
 		}
 
@@ -305,7 +307,10 @@ export class Stage3SupervisedPilotPolicy {
 		for (const forbidden of this.config.forbiddenRepositories) {
 			if (repository === forbidden) {
 				return this._deny(`Repository '${repository}' is forbidden for Stage 3 writes`, [
-					{ gate: 'forbiddenRepository', reason: `Repository '${forbidden}' is unconditionally forbidden` },
+					{
+						gate: 'forbiddenRepository',
+						reason: `Repository '${forbidden}' is unconditionally forbidden`,
+					},
 				]);
 			}
 		}
@@ -328,7 +333,12 @@ export class Stage3SupervisedPilotPolicy {
 			if (params.baseBranch !== this.config.allowedBaseBranch) {
 				return this._deny(
 					`Base branch '${params.baseBranch}' is not the allowlisted base branch '${this.config.allowedBaseBranch}'`,
-					[{ gate: 'baseBranchAllowlist', reason: `Base branch '${params.baseBranch}' is not allowlisted` }],
+					[
+						{
+							gate: 'baseBranchAllowlist',
+							reason: `Base branch '${params.baseBranch}' is not allowlisted`,
+						},
+					],
 				);
 			}
 		}
@@ -343,7 +353,12 @@ export class Stage3SupervisedPilotPolicy {
 			if (params.targetBranch !== this.config.allowedTargetBranch) {
 				return this._deny(
 					`Target branch '${params.targetBranch}' is not the allowlisted branch '${this.config.allowedTargetBranch}'`,
-					[{ gate: 'targetBranchAllowlist', reason: `Target branch '${params.targetBranch}' is not allowlisted` }],
+					[
+						{
+							gate: 'targetBranchAllowlist',
+							reason: `Target branch '${params.targetBranch}' is not allowlisted`,
+						},
+					],
 				);
 			}
 		}
@@ -358,7 +373,12 @@ export class Stage3SupervisedPilotPolicy {
 			if (params.filePath !== this.config.allowedFilePath) {
 				return this._deny(
 					`File path '${params.filePath}' is not the allowlisted path '${this.config.allowedFilePath}'`,
-					[{ gate: 'filePathAllowlist', reason: `File path '${params.filePath}' is not allowlisted` }],
+					[
+						{
+							gate: 'filePathAllowlist',
+							reason: `File path '${params.filePath}' is not allowlisted`,
+						},
+					],
 				);
 			}
 
@@ -390,7 +410,12 @@ export class Stage3SupervisedPilotPolicy {
 			if (actualLength !== this.config.expectedFileLength) {
 				return this._deny(
 					`File length mismatch: expected ${this.config.expectedFileLength}, got ${actualLength}`,
-					[{ gate: 'fileLength', reason: `File length ${actualLength} ≠ expected ${this.config.expectedFileLength}` }],
+					[
+						{
+							gate: 'fileLength',
+							reason: `File length ${actualLength} ≠ expected ${this.config.expectedFileLength}`,
+						},
+					],
 				);
 			}
 
@@ -441,22 +466,40 @@ export class Stage3SupervisedPilotPolicy {
 		// ── Gate 15: Quantity limits (per operation) ──
 		if (operation === 'createBranch' && this.branchCount >= this.config.maxBranchCount) {
 			return this._deny(`Max branches per run (${this.config.maxBranchCount}) already reached`, [
-				{ gate: 'branchCount', reason: `Branch count ${this.branchCount} ≥ max ${this.config.maxBranchCount}` },
+				{
+					gate: 'branchCount',
+					reason: `Branch count ${this.branchCount} ≥ max ${this.config.maxBranchCount}`,
+				},
 			]);
 		}
 		if (operation === 'commitFile' && this.fileWriteCount >= this.config.maxFileWriteCount) {
-			return this._deny(`Max file writes per run (${this.config.maxFileWriteCount}) already reached`, [
-				{ gate: 'fileWriteCount', reason: `File write count ${this.fileWriteCount} ≥ max ${this.config.maxFileWriteCount}` },
-			]);
+			return this._deny(
+				`Max file writes per run (${this.config.maxFileWriteCount}) already reached`,
+				[
+					{
+						gate: 'fileWriteCount',
+						reason: `File write count ${this.fileWriteCount} ≥ max ${this.config.maxFileWriteCount}`,
+					},
+				],
+			);
 		}
 		if (operation === 'commitFile' && this.commitCount >= this.config.maxCommitCount) {
 			return this._deny(`Max commits per run (${this.config.maxCommitCount}) already reached`, [
-				{ gate: 'commitCount', reason: `Commit count ${this.commitCount} ≥ max ${this.config.maxCommitCount}` },
+				{
+					gate: 'commitCount',
+					reason: `Commit count ${this.commitCount} ≥ max ${this.config.maxCommitCount}`,
+				},
 			]);
 		}
-		if (operation === 'createPullRequest' && this.pullRequestCount >= this.config.maxPullRequestCount) {
+		if (
+			operation === 'createPullRequest' &&
+			this.pullRequestCount >= this.config.maxPullRequestCount
+		) {
 			return this._deny(`Max PRs per run (${this.config.maxPullRequestCount}) already reached`, [
-				{ gate: 'pullRequestCount', reason: `PR count ${this.pullRequestCount} ≥ max ${this.config.maxPullRequestCount}` },
+				{
+					gate: 'pullRequestCount',
+					reason: `PR count ${this.pullRequestCount} ≥ max ${this.config.maxPullRequestCount}`,
+				},
 			]);
 		}
 
@@ -699,16 +742,36 @@ export class Stage3SupervisedPilotPolicy {
 
 	// --- Getters ---
 
-	getBranchCount(): number { return this.branchCount; }
-	getFileWriteCount(): number { return this.fileWriteCount; }
-	getCommitCount(): number { return this.commitCount; }
-	getPullRequestCount(): number { return this.pullRequestCount; }
-	getWriteExecuted(): boolean { return this._writeExecuted; }
-	getPartialMutation(): boolean { return this._partialMutation; }
-	getWriteAttempted(): boolean { return this._writeAttempted; }
-	getConfirmedMutationCount(): number { return this._confirmedMutationCount; }
-	getCurrentPhase(): string | null { return this._currentPhase; }
-	isExecutionLocked(): boolean { return this._executionLocked; }
+	getBranchCount(): number {
+		return this.branchCount;
+	}
+	getFileWriteCount(): number {
+		return this.fileWriteCount;
+	}
+	getCommitCount(): number {
+		return this.commitCount;
+	}
+	getPullRequestCount(): number {
+		return this.pullRequestCount;
+	}
+	getWriteExecuted(): boolean {
+		return this._writeExecuted;
+	}
+	getPartialMutation(): boolean {
+		return this._partialMutation;
+	}
+	getWriteAttempted(): boolean {
+		return this._writeAttempted;
+	}
+	getConfirmedMutationCount(): number {
+		return this._confirmedMutationCount;
+	}
+	getCurrentPhase(): string | null {
+		return this._currentPhase;
+	}
+	isExecutionLocked(): boolean {
+		return this._executionLocked;
+	}
 
 	/** Unlock execution (called after execution completes/aborts). Only use in harness finally block. */
 	unlockExecution(): void {
@@ -786,11 +849,14 @@ export const STAGE3_CANONICAL = {
 	targetBranch: CANONICAL_TARGET_BRANCH,
 	filePath: CANONICAL_FILE_PATH,
 	fileLength: CANONICAL_FILE_LENGTH,
+	fileUtf8ByteLength: CANONICAL_FILE_LENGTH,
 	fileSha256: CANONICAL_FILE_SHA256,
 	commitMessage: CANONICAL_COMMIT_MESSAGE,
 	commitBody: CANONICAL_COMMIT_BODY,
+	commitMetadataSha256: CANONICAL_COMMIT_MESSAGE_SHA256,
 	prTitle: CANONICAL_PR_TITLE,
 	prBody: CANONICAL_PR_BODY,
+	prMetadataSha256: CANONICAL_PR_METADATA_SHA256,
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -803,10 +869,6 @@ function _sha256(input: string): string {
 
 function _containsTokenPattern(input: string): boolean {
 	// Match the same patterns as redactSecrets in @positron/shared
-	const patterns = [
-		/ghp_[a-zA-Z0-9]{36,}/,
-		/github_pat_[a-zA-Z0-9_]{82}/,
-		/gho_[a-zA-Z0-9]{36,}/,
-	];
+	const patterns = [/ghp_[a-zA-Z0-9]{36,}/, /github_pat_[a-zA-Z0-9_]{82}/, /gho_[a-zA-Z0-9]{36,}/];
 	return patterns.some((p) => p.test(input));
 }

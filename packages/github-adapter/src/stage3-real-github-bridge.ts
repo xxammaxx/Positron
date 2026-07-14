@@ -73,6 +73,9 @@ export const STAGE3_FORBIDDEN_CAPABILITIES = [
  * Implements exactly the writer and reader interfaces needed.
  */
 export interface Stage3RealGitHubBridge {
+	/** Discriminator — 'mock' for test-only, 'restricted-real-transport' for live. */
+	kind: 'mock' | 'restricted-real-transport';
+
 	/** Resolve base branch SHA read-only (TOCTOU protection). */
 	baseResolver: Stage3BaseResolver;
 
@@ -107,6 +110,8 @@ export function createMockStage3Bridge(params?: {
 	const filePath = params?.filePath ?? 'stage3/positron-supervised-pilot.md';
 
 	return {
+		kind: 'mock' as const,
+
 		baseResolver: {
 			async resolveBase(_input: {
 				owner: string;
@@ -122,7 +127,8 @@ export function createMockStage3Bridge(params?: {
 				owner: string;
 				repo: string;
 				branch: string;
-				fromBranch: string;
+				sourceBranch: string;
+				expectedSourceSha: string;
 			}) {
 				return { ref: `refs/heads/${input.branch}`, sha: 'branch-sha-from-bridge' };
 			},
@@ -206,6 +212,129 @@ export function createMockStage3Bridge(params?: {
 }
 
 // ---------------------------------------------------------------------------
+// Real Bridge Factory (Live Mode)
+// ---------------------------------------------------------------------------
+
+/**
+ * Transport interface for the real bridge — minimal graph of write-capable
+ * operations. In tests, this is replaced by a spy/mock. At runtime, it is
+ * backed by `RealGitHubAdapter` (Octokit).
+ */
+export interface Stage3GitHubTransport {
+	resolveBaseSha(owner: string, repo: string, branch: string): Promise<{ sha: string }>;
+	createBranch(owner: string, repo: string, branch: string, fromSha: string): Promise<{ ref: string; sha: string }>;
+	commitFile(owner: string, repo: string, branch: string, path: string, content: string, message: string, body?: string): Promise<{ sha: string; url: string }>;
+	createDraftPr(owner: string, repo: string, title: string, head: string, base: string, body: string): Promise<{ id?: number; number?: number; url?: string; createdAt?: string; draft?: boolean }>;
+	getDefaultBranch(owner: string, repo: string): Promise<{ name: string; sha: string }>;
+	getBranch(owner: string, repo: string, branch: string): Promise<{ name: string; sha: string; exists: boolean }>;
+	getFileContent(owner: string, repo: string, path: string, ref: string): Promise<{ content: string; sha: string; size: number; exists: boolean }>;
+	getCommit(owner: string, repo: string, sha: string): Promise<{ sha: string; message: string; authorDate: string; exists: boolean }>;
+	findOpenPr(owner: string, repo: string, head: string, base: string): Promise<{ number: number; draft: boolean; title: string; exists: boolean } | null>;
+}
+
+/**
+ * Create a real (non-mock) Stage 3 bridge backed by a transport.
+ * The transport is dependency-injected — in tests this is a spy.
+ *
+ * The bridge exposes ONLY the 5 capability groups allowed by the
+ * Stage 3 contract. No merge, delete, label, or workflow operations
+ * are accessible through this bridge.
+ */
+export function createStage3RealGitHubBridge(params: {
+	transport: Stage3GitHubTransport;
+	canonicalManifest: {
+		targetBranch: string;
+		filePath: string;
+		expectedFileContent: string;
+		expectedFileSha256: string;
+		expectedFileBytes: number;
+		commitMessage: string;
+		commitBody?: string;
+		prTitle: string;
+		prBody: string;
+	};
+}): Stage3RealGitHubBridge {
+	const { transport, canonicalManifest: m } = params;
+
+	return {
+		kind: 'restricted-real-transport' as const,
+
+		baseResolver: {
+			async resolveBase(input) {
+				const result = await transport.resolveBaseSha(input.owner, input.repo, input.branch);
+				return { branch: input.branch, sha: result.sha };
+			},
+		},
+
+		branchWriter: {
+			async createBranch(input) {
+				return transport.createBranch(
+					input.owner,
+					input.repo,
+					input.branch,
+					input.expectedSourceSha,
+				);
+			},
+		},
+
+		fileCommitWriter: {
+			async commitFile(input) {
+				return transport.commitFile(
+					input.owner,
+					input.repo,
+					input.branch,
+					input.filePath,
+					input.content,
+					input.message,
+					input.commitBody,
+				);
+			},
+		},
+
+		prWriter: {
+			async createPullRequest(input) {
+				return transport.createDraftPr(
+					input.owner,
+					input.repo,
+					input.title,
+					input.head,
+					input.base,
+					input.body,
+				);
+			},
+		},
+
+		readOnlyVerifier: {
+			repository: {
+				async getDefaultBranch(owner, repo) {
+					return transport.getDefaultBranch(owner, repo);
+				},
+			},
+			branch: {
+				async getBranch(owner, repo, branch) {
+					return transport.getBranch(owner, repo, branch);
+				},
+			},
+			content: {
+				async getFileContent(owner, repo, path, ref) {
+					return transport.getFileContent(owner, repo, path, ref);
+				},
+			},
+			commit: {
+				async getCommit(owner, repo, sha) {
+					return transport.getCommit(owner, repo, sha);
+				},
+			},
+			pullRequest: {
+				async findOpenPr(owner, repo, head, base) {
+					return transport.findOpenPr(owner, repo, head, base);
+				},
+			},
+		},
+	};
+}
+
+// ---------------------------------------------------------------------------
 // Capability Check
 // ---------------------------------------------------------------------------
 
@@ -223,6 +352,7 @@ export function verifyBridgeCapabilities(bridge: Stage3RealGitHubBridge): {
 	// Check that the bridge has only the expected properties
 	const bridgeKeys = Object.keys(bridge);
 	const allowedKeys = [
+		'kind',
 		'baseResolver',
 		'branchWriter',
 		'fileCommitWriter',

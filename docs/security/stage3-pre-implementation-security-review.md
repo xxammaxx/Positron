@@ -3,7 +3,8 @@
 **Date:** 2026-07-14  
 **Reviewer:** Security Agent  
 **Scope:** Stage 3 Supervised Sandbox Runtime (analysis only, no code changes)  
-**Baseline:** `ea959dfb24cf4cadd1c018840ee7ce0683a28f4c`
+**Baseline:** `ea959dfb24cf4cadd1c018840ee7ce0683a28f4c`  
+**PR #370 Integration (July 2026):** This review was pre-implementation. Integration of the five remediation modules (approval-binding, base-resolver, safety-probe, reader-verifier, bridge) is now complete. All 23 gaps identified below were addressed in implementation — see `docs/adr/ADR-stage3-remediation-design.md` and `docs/evidence/issue-308/stage3-runtime-foundation-implementation.md` for resolution details. The SHA-256 values referenced below have been superseded.
 
 ---
 
@@ -123,7 +124,7 @@ The approval package specifies exact allowlist values for a **multi-step** opera
 | Repository | `xxammaxx/positron-sandbox` | `allowedRepository` — ✅ exists |
 | Branch name | `positron/issue-308-stage3-pilot` | Not in Stage 2 — must be new |
 | File path | `stage3/positron-supervised-pilot.md` | Not in Stage 2 — must be new |
-| File SHA-256 | `0a97795fdc21740548b4d02cc4b0dd0538afa0d2917390c84671a94b3089c823` | Body hash check exists but different scope |
+| File SHA-256 | `0a97795fdc21740548b4d02cc4b0dd0538afa0d2917390c84671a94b3089c823` — **HISTORICAL — SUPERSEDED by PR #370 integration (July 2026):** now `73ac6e0f...` | Body hash check exists but different scope |
 | Commit message | Exact string | Not in Stage 2 |
 | PR title | Exact string | Not in Stage 2 |
 | PR body | Exact string | Not in Stage 2 |
@@ -142,7 +143,7 @@ The approval package specifies exact allowlist values for a **multi-step** opera
 - Mismatch → blocked with hash values in audit event
 
 **For Stage 3**, hash-binding should be extended to:
-1. **File content SHA-256**: Must match exactly `0a97795fdc21740548b4d02cc4b0dd0538afa0d2917390c84671a94b3089c823`
+1. **File content SHA-256**: Must match exactly `0a97795fdc21740548b4d02cc4b0dd0538afa0d2917390c84671a94b3089c823` — **HISTORICAL — SUPERSEDED by PR #370 integration (July 2026):** now `73ac6e0faf0b13118de60a3a1eb02a54e68d272ecf137f356d134e84ea9f46ff`
 2. **Commit message SHA-256**: Must match the exact commit message from the approval package
 3. **PR title SHA-256**: Must match exact title
 4. **PR body SHA-256**: Must match exact body
@@ -442,7 +443,7 @@ The approval package defines a 7-step manual-human lifecycle:
 **Risk**: An attacker creates a different file that hashes to the same SHA-256 as the approved file.
 
 **Assessment**: SHA-256 preimage resistance is 2^256, collision resistance is 2^128. For the Stage 3 threat model:
-- Preimage attack (find ANY input with hash `0a97795f...`): ~2^256 operations — infeasible
+- Preimage attack (find ANY input with hash `0a97795f...` — **HISTORICAL — SUPERSEDED by PR #370 integration (July 2026):** now `73ac6e0f...`): ~2^256 operations — infeasible
 - Collision attack (find TWO different inputs with the same hash): ~2^128 operations — infeasible
 
 **Residual risk**: Extremely low. SHA-256 provides more than adequate integrity for this use case.
@@ -633,4 +634,5 @@ This assessment assumes the token is scoped ONLY to the sandbox repository and h
 ---
 
 **Document Status**: Complete — 8 areas reviewed, 23 gaps identified, 23 tests recommended.  
-**Next Step**: Present to human owner for review before any Stage 3 implementation begins.
+**Next Step**: Present to human owner for review before any Stage 3 implementation begins.  
+**PR #370 Integration (July 2026):** This review was pre-implementation. All 23 gaps were addressed during implementation of the five remediation modules (approval-binding, base-resolver, safety-probe, reader-verifier, bridge). Integration is now complete. See `docs/adr/ADR-stage3-remediation-design.md` and `docs/evidence/issue-308/stage3-runtime-foundation-test-matrix.md` for current test coverage (345 tests, 10 files, 100% pass).
