@@ -366,6 +366,61 @@ describe('Phase C: Integrity Attestation (WeakMap Snapshot)', () => {
 		// Different bridge objects
 		expect(b1).not.toBe(b2);
 	});
+
+	it('verifyTrustedBridgeIntegrity passes with matching approval Base-SHA', () => {
+		const { bridge } = createTrustedBridge();
+		// Bridge was created with TEST_BASE_SHA — passing the same SHA should pass
+		expect(() => verifyTrustedBridgeIntegrity(bridge, TEST_BASE_SHA)).not.toThrow();
+	});
+
+	it('verifyTrustedBridgeIntegrity passes when no approval SHA is provided (backward compat)', () => {
+		const { bridge } = createTrustedBridge();
+		// Calling without expectedBaseSha should still work (backward compatibility)
+		expect(() => verifyTrustedBridgeIntegrity(bridge)).not.toThrow();
+	});
+
+	it('verifyTrustedBridgeIntegrity rejects mismatched approval Base-SHA', () => {
+		const { bridge } = createTrustedBridge();
+		// Bridge was created with TEST_BASE_SHA, but approval has WRONG_SHA
+		expect(() => verifyTrustedBridgeIntegrity(bridge, WRONG_SHA)).toThrow(GitHubValidationError);
+		expect(() => verifyTrustedBridgeIntegrity(bridge, WRONG_SHA)).toThrow('base-SHA binding mismatch');
+	});
+
+	it('SHA mismatch error includes zero-call evidence', () => {
+		const { bridge } = createTrustedBridge();
+		try {
+			verifyTrustedBridgeIntegrity(bridge, WRONG_SHA);
+			expect.fail('Should have thrown');
+		} catch (e: any) {
+			expect(e.message).toContain('phase: preflight-security');
+			expect(e.message).toContain('reason: trusted bridge base-SHA binding mismatch');
+			expect(e.message).toContain('reader calls: 0');
+			expect(e.message).toContain('writer calls: 0');
+			expect(e.message).toContain('writeAttempted: false');
+			expect(e.message).toContain('mutationState: none');
+		}
+	});
+
+	it('SHA mismatch on forged bridge still throws integrity error first', () => {
+		const forged: Stage3RealGitHubBridge = {
+			kind: 'restricted-real-transport' as const,
+			baseResolver: { resolveBase: vi.fn() },
+			branchWriter: { createBranch: vi.fn() },
+			fileCommitWriter: { commitFile: vi.fn() },
+			prWriter: { createPullRequest: vi.fn() },
+			readOnlyVerifier: {
+				repository: { getDefaultBranch: vi.fn() },
+				branch: { getBranch: vi.fn() },
+				content: { getFileContent: vi.fn() },
+				commit: { getCommit: vi.fn() },
+				pullRequest: { findOpenPr: vi.fn() },
+				compare: { compareCommits: vi.fn() },
+			},
+		};
+
+		// Forged bridge: should fail on "not found in trusted snapshot registry" BEFORE SHA comparison
+		expect(() => verifyTrustedBridgeIntegrity(forged, TEST_BASE_SHA)).toThrow('integrity violation');
+	});
 });
 
 // ═══════════════════════════════════════════════════════════════════════════

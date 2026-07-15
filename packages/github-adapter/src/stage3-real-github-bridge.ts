@@ -175,7 +175,10 @@ const trustedBridgeSnapshots = new WeakMap<object, TrustedBridgeSnapshot>();
  *
  * Throws GitHubValidationError on any mismatch.
  */
-export function verifyTrustedBridgeIntegrity(bridge: Stage3RealGitHubBridge): void {
+export function verifyTrustedBridgeIntegrity(
+	bridge: Stage3RealGitHubBridge,
+	expectedBaseSha?: string,
+): void {
 	const snapshot = trustedBridgeSnapshots.get(bridge);
 	if (!snapshot) {
 		throw new GitHubValidationError(
@@ -226,6 +229,20 @@ export function verifyTrustedBridgeIntegrity(bridge: Stage3RealGitHubBridge): vo
 	// Check expectedBaseSha is bound
 	if (snapshot.expectedBaseSha === undefined || snapshot.expectedBaseSha === null) {
 		throw integrityError('expectedBaseSha binding');
+	}
+
+	// Check expectedBaseSha matches the caller-supplied approval SHA
+	if (expectedBaseSha !== undefined) {
+		if (snapshot.expectedBaseSha !== expectedBaseSha) {
+			throw new GitHubValidationError(
+				'phase: preflight-security\n' +
+					'reason: trusted bridge base-SHA binding mismatch\n' +
+					'reader calls: 0\n' +
+					'writer calls: 0\n' +
+					'writeAttempted: false\n' +
+					'mutationState: none',
+			);
+		}
 	}
 }
 
