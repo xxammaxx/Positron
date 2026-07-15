@@ -220,7 +220,7 @@ function makeFakeInput(overrides?: Partial<Stage3FakeHarnessInput>): Stage3FakeH
 }
 
 /**
- * @deprecated — use makeFakeInput() or makeLiveInput() instead.
+ * @deprecated — use makeFakeInput() instead.
  */
 function makeValidInput(overrides?: Partial<Stage3HarnessInput>): Stage3HarnessInput {
 	return {
@@ -316,41 +316,6 @@ function createStatefulVerifier() {
 			preWriteDone = true;
 		},
 	};
-}
-
-function makeLiveInput(
-	params: {
-		approvalText?: string;
-		approvalBinding?: Stage3ApprovalBinding;
-		repository?: string;
-		fileContent?: string;
-		idempotencyKey?: string;
-		verifier?: ReturnType<typeof createStatefulVerifier>;
-	},
-	overrides?: Partial<Stage3LiveHarnessInput>,
-): Stage3LiveHarnessInput & { verifier: ReturnType<typeof createStatefulVerifier> } {
-	const verifier = params.verifier ?? createStatefulVerifier();
-	const bridge: import('../stage3-real-github-bridge.js').Stage3RealGitHubBridge = {
-		kind: 'restricted-real-transport' as const,
-		baseResolver: createFakeBaseResolver(TEST_BASE_SHA),
-		branchWriter: createSpyBranchWriter(),
-		fileCommitWriter: createSpyFileCommitWriter(),
-		prWriter: createSpyPrWriter(),
-		readOnlyVerifier: verifier,
-	};
-	return {
-		mode: 'live',
-		repository: params.repository ?? STAGE3_CANONICAL.repository,
-		fileContent: params.fileContent ?? CANONICAL_FILE_CONTENT,
-		idempotencyKey: params.idempotencyKey ?? 'test-harness-live-001',
-		approvalText: params.approvalText ?? LIVE_APPROVAL_TEXT,
-		approvalBinding: params.approvalBinding ?? LIVE_APPROVAL_BINDING,
-		runtimeSafetyProbe: createFakeRuntimeSafetyProbe(),
-		bridge,
-		auditSink: createSpyAuditSink(),
-		verifier,
-		...overrides,
-	} as Stage3LiveHarnessInput & { verifier: ReturnType<typeof createStatefulVerifier> };
 }
 
 // ---------------------------------------------------------------------------

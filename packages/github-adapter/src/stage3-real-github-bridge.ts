@@ -640,9 +640,8 @@ export function createStage3RealGitHubBridge(params: {
 		message: string;
 		commitBody?: string;
 	}): void {
-		const [owner, repo] = STAGE3_CANONICAL.repository.split('/');
-		enforce(input.owner, owner, 'fileCommitWriter.owner');
-		enforce(input.repo, repo, 'fileCommitWriter.repo');
+		enforce(input.owner, canonicalOwner, 'fileCommitWriter.owner');
+		enforce(input.repo, canonicalRepo, 'fileCommitWriter.repo');
 		enforce(input.branch, STAGE3_CANONICAL.targetBranch, 'fileCommitWriter.branch');
 		enforce(input.filePath, STAGE3_CANONICAL.filePath, 'fileCommitWriter.filePath');
 		enforce(input.message, STAGE3_CANONICAL.commitMessage, 'fileCommitWriter.message');
@@ -662,9 +661,8 @@ export function createStage3RealGitHubBridge(params: {
 		body: string;
 		draft: boolean;
 	}): void {
-		const [owner, repo] = STAGE3_CANONICAL.repository.split('/');
-		enforce(input.owner, owner, 'prWriter.owner');
-		enforce(input.repo, repo, 'prWriter.repo');
+		enforce(input.owner, canonicalOwner, 'prWriter.owner');
+		enforce(input.repo, canonicalRepo, 'prWriter.repo');
 		enforce(input.title, STAGE3_CANONICAL.prTitle, 'prWriter.title');
 		enforce(input.head, STAGE3_CANONICAL.targetBranch, 'prWriter.head');
 		enforce(input.base, STAGE3_CANONICAL.baseBranch, 'prWriter.base');
