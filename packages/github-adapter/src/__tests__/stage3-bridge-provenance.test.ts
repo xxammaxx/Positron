@@ -32,7 +32,7 @@ import type { Stage3RealGitHubBridge } from '../stage3-real-github-bridge.js';
 // Test Constants
 // ---------------------------------------------------------------------------
 
-const TEST_BASE_SHA = 'expected-base-sha-0000000000000000000000000000000000000000';
+const TEST_BASE_SHA = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -86,6 +86,7 @@ function createTrustedBridge(): Stage3RealGitHubBridge {
 			prTitle: STAGE3_CANONICAL.prTitle,
 			prBody: STAGE3_CANONICAL.prBody,
 		},
+		expectedBaseSha: TEST_BASE_SHA,
 	});
 }
 
@@ -427,6 +428,7 @@ describe('Manifest Content Hash — actual content validation', () => {
 					prTitle: STAGE3_CANONICAL.prTitle,
 					prBody: STAGE3_CANONICAL.prBody,
 				},
+				expectedBaseSha: TEST_BASE_SHA,
 			}),
 		).toThrow(GitHubValidationError);
 	});
@@ -447,6 +449,7 @@ describe('Manifest Content Hash — actual content validation', () => {
 					prTitle: STAGE3_CANONICAL.prTitle,
 					prBody: STAGE3_CANONICAL.prBody,
 				},
+				expectedBaseSha: TEST_BASE_SHA,
 			}),
 		).toThrow(GitHubValidationError);
 	});
@@ -467,6 +470,7 @@ describe('Manifest Content Hash — actual content validation', () => {
 					prTitle: STAGE3_CANONICAL.prTitle,
 					prBody: STAGE3_CANONICAL.prBody,
 				},
+				expectedBaseSha: TEST_BASE_SHA,
 			}),
 		).toThrow(GitHubValidationError);
 	});
@@ -487,6 +491,7 @@ describe('Manifest Content Hash — actual content validation', () => {
 					prTitle: STAGE3_CANONICAL.prTitle,
 					prBody: STAGE3_CANONICAL.prBody,
 				},
+				expectedBaseSha: TEST_BASE_SHA,
 			}),
 		).toThrow(GitHubValidationError);
 	});
@@ -507,6 +512,7 @@ describe('Manifest Content Hash — actual content validation', () => {
 					prTitle: 'wrong PR title',
 					prBody: STAGE3_CANONICAL.prBody,
 				},
+				expectedBaseSha: TEST_BASE_SHA,
 			}),
 		).toThrow(GitHubValidationError);
 	});
@@ -527,6 +533,7 @@ describe('Manifest Content Hash — actual content validation', () => {
 					prTitle: STAGE3_CANONICAL.prTitle,
 					prBody: 'wrong PR body',
 				},
+				expectedBaseSha: TEST_BASE_SHA,
 			}),
 		).toThrow(GitHubValidationError);
 	});
@@ -547,6 +554,7 @@ describe('Manifest Content Hash — actual content validation', () => {
 					prTitle: STAGE3_CANONICAL.prTitle,
 					prBody: STAGE3_CANONICAL.prBody,
 				},
+				expectedBaseSha: TEST_BASE_SHA,
 			}),
 		).not.toThrow();
 	});

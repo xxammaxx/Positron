@@ -164,6 +164,7 @@ function createTestBridge(params: {
 			prTitle: STAGE3_CANONICAL.prTitle,
 			prBody: STAGE3_CANONICAL.prBody,
 		},
+		expectedBaseSha: TEST_BASE_SHA,
 	});
 }
 
@@ -172,7 +173,7 @@ function createTestBridge(params: {
 // ---------------------------------------------------------------------------
 
 /** Expected base SHA used by both the fake resolver and the fake verifier. */
-const TEST_BASE_SHA = 'expected-base-sha';
+const TEST_BASE_SHA = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 
 const LIVE_APPROVAL_TEXT = generateApprovalText({
 	repository: STAGE3_CANONICAL.repository,

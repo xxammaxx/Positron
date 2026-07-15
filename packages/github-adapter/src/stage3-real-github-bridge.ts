@@ -56,6 +56,180 @@ export function isTrustedBridge(bridge: Stage3RealGitHubBridge): boolean {
 }
 
 // ---------------------------------------------------------------------------
+// SHA Validation
+// ---------------------------------------------------------------------------
+
+/**
+ * Assert that a value is a valid 40-character lowercase hex SHA-1 hash.
+ * Throws GitHubValidationError if the value is missing, empty, too short,
+ * too long, contains uppercase letters, or contains non-hex characters.
+ */
+function assertFullCommitSha(sha: string): void {
+	if (!sha || typeof sha !== 'string') {
+		throw new GitHubValidationError('expectedBaseSha is required');
+	}
+	if (sha.length !== 40) {
+		throw new GitHubValidationError(`expectedBaseSha must be 40 characters, got ${sha.length}`);
+	}
+	if (!/^[0-9a-f]{40}$/.test(sha)) {
+		throw new GitHubValidationError('expectedBaseSha must be a lowercase hex SHA-1 hash');
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Integrity Helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Create a structured integrity violation error with phase context.
+ * The error message follows the standard preflight-security format.
+ */
+function integrityError(detail: string): GitHubValidationError {
+	return new GitHubValidationError(
+		'phase: preflight-security\n' +
+			'reason: trusted bridge integrity violation\n' +
+			'reader calls: 0\n' +
+			'writer calls: 0\n' +
+			detail,
+	);
+}
+
+// ---------------------------------------------------------------------------
+// Deep Freeze
+// ---------------------------------------------------------------------------
+
+/**
+ * Recursively freeze an object and all nested objects.
+ * Prevents any property modification on the bridge and its sub-objects.
+ * Freezing a function does not prevent it from being called — only from
+ * being replaced or having its properties modified.
+ */
+function deepFreeze(obj: object): void {
+	Object.freeze(obj);
+	for (const key of Object.getOwnPropertyNames(obj)) {
+		const val = (obj as any)[key];
+		if (val !== null && typeof val === 'object' && !Object.isFrozen(val)) {
+			deepFreeze(val);
+		}
+	}
+	const proto = Object.getPrototypeOf(obj);
+	if (proto !== null && proto !== Object.prototype && !Object.isFrozen(proto)) {
+		deepFreeze(proto);
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Trusted Bridge Snapshot (WeakMap-based integrity attestation)
+// ---------------------------------------------------------------------------
+
+/**
+ * Immutable snapshot of all object and function references captured at
+ * bridge construction time. Used by verifyTrustedBridgeIntegrity to detect
+ * any post-construction tampering — property replacement, prototype
+ * manipulation, or nested object swaps.
+ */
+export interface TrustedBridgeSnapshot {
+	__root: object;
+	baseResolver: object;
+	resolveBase: Function;
+	branchWriter: object;
+	createBranch: Function;
+	fileCommitWriter: object;
+	commitFile: Function;
+	prWriter: object;
+	createPullRequest: Function;
+	readOnlyVerifier: object;
+	repositoryReader: object;
+	getDefaultBranch: Function;
+	branchReader: object;
+	getBranch: Function;
+	contentReader: object;
+	getFileContent: Function;
+	commitReader: object;
+	getCommit: Function;
+	pullRequestReader: object;
+	findOpenPr: Function;
+	compareReader: object;
+	compareCommits: Function;
+	expectedBaseSha: string;
+}
+
+/**
+ * WeakMap storing integrity snapshots for each trusted bridge.
+ * Keyed by the bridge object itself — only internally-created bridges
+ * have registered snapshots.
+ */
+const trustedBridgeSnapshots = new WeakMap<object, TrustedBridgeSnapshot>();
+
+/**
+ * Verify that a bridge has not been tampered with since construction.
+ *
+ * Checks:
+ *   1. Bridge exists in the trusted snapshot registry (WeakMap)
+ *   2. Root object identity matches the original bridge reference
+ *   3. All nested object references match the original snapshots
+ *   4. All function references match the original snapshots
+ *   5. Reader sub-object references match the original snapshots
+ *   6. Reader function references match the original snapshots
+ *   7. expectedBaseSha binding is present
+ *
+ * Throws GitHubValidationError on any mismatch.
+ */
+export function verifyTrustedBridgeIntegrity(bridge: Stage3RealGitHubBridge): void {
+	const snapshot = trustedBridgeSnapshots.get(bridge);
+	if (!snapshot) {
+		throw new GitHubValidationError(
+			'phase: preflight-security\n' +
+				'reason: trusted bridge integrity violation\n' +
+				'reader calls: 0\n' +
+				'writer calls: 0\n' +
+				'bridge not found in trusted snapshot registry',
+		);
+	}
+
+	// Check root object identity
+	if (bridge !== (snapshot as any).__root) {
+		throw new GitHubValidationError(
+			'phase: preflight-security\nreason: trusted bridge integrity violation\nreader calls: 0\nwriter calls: 0\nroot object identity mismatch',
+		);
+	}
+
+	// Check nested object identities
+	if (bridge.baseResolver !== snapshot.baseResolver) throw integrityError('baseResolver identity');
+	if (bridge.branchWriter !== snapshot.branchWriter) throw integrityError('branchWriter identity');
+	if (bridge.fileCommitWriter !== snapshot.fileCommitWriter) throw integrityError('fileCommitWriter identity');
+	if (bridge.prWriter !== snapshot.prWriter) throw integrityError('prWriter identity');
+	if (bridge.readOnlyVerifier !== snapshot.readOnlyVerifier) throw integrityError('readOnlyVerifier identity');
+
+	// Check writer function identities
+	if (bridge.baseResolver.resolveBase !== snapshot.resolveBase) throw integrityError('resolveBase function');
+	if (bridge.branchWriter.createBranch !== snapshot.createBranch) throw integrityError('createBranch function');
+	if (bridge.fileCommitWriter.commitFile !== snapshot.commitFile) throw integrityError('commitFile function');
+	if (bridge.prWriter.createPullRequest !== snapshot.createPullRequest) throw integrityError('createPullRequest function');
+
+	// Check reader sub-object identities
+	if (bridge.readOnlyVerifier.repository !== snapshot.repositoryReader) throw integrityError('repositoryReader identity');
+	if (bridge.readOnlyVerifier.branch !== snapshot.branchReader) throw integrityError('branchReader identity');
+	if (bridge.readOnlyVerifier.content !== snapshot.contentReader) throw integrityError('contentReader identity');
+	if (bridge.readOnlyVerifier.commit !== snapshot.commitReader) throw integrityError('commitReader identity');
+	if (bridge.readOnlyVerifier.pullRequest !== snapshot.pullRequestReader) throw integrityError('pullRequestReader identity');
+	if (bridge.readOnlyVerifier.compare !== snapshot.compareReader) throw integrityError('compareReader identity');
+
+	// Check reader function identities
+	if (bridge.readOnlyVerifier.repository.getDefaultBranch !== snapshot.getDefaultBranch) throw integrityError('getDefaultBranch function');
+	if (bridge.readOnlyVerifier.branch.getBranch !== snapshot.getBranch) throw integrityError('getBranch function');
+	if (bridge.readOnlyVerifier.content.getFileContent !== snapshot.getFileContent) throw integrityError('getFileContent function');
+	if (bridge.readOnlyVerifier.commit.getCommit !== snapshot.getCommit) throw integrityError('getCommit function');
+	if (bridge.readOnlyVerifier.pullRequest.findOpenPr !== snapshot.findOpenPr) throw integrityError('findOpenPr function');
+	if (bridge.readOnlyVerifier.compare.compareCommits !== snapshot.compareCommits) throw integrityError('compareCommits function');
+
+	// Check expectedBaseSha is bound
+	if (snapshot.expectedBaseSha === undefined || snapshot.expectedBaseSha === null) {
+		throw integrityError('expectedBaseSha binding');
+	}
+}
+
+// ---------------------------------------------------------------------------
 // Bridge Capability Contract
 // ---------------------------------------------------------------------------
 
@@ -376,8 +550,13 @@ export function createStage3RealGitHubBridge(params: {
 		prTitle: string;
 		prBody: string;
 	};
+	expectedBaseSha: string;
 }): Stage3RealGitHubBridge {
-	const { transport, canonicalManifest: m } = params;
+	const { transport, canonicalManifest: m, expectedBaseSha } = params;
+
+	// ── Phase E: Base-SHA Binding ──
+	// Validate the base SHA format before any bridge construction.
+	assertFullCommitSha(expectedBaseSha);
 
 	// ── Canonical Manifest Enforcement ──
 	// The manifest must match STAGE3_CANONICAL exactly — no caller override.
@@ -417,6 +596,9 @@ export function createStage3RealGitHubBridge(params: {
 	// Each writer validates its arguments against canonical values
 	// BEFORE calling the transport. Transport is never reached on mismatch.
 
+	// Canonical owner/repo extracted once for reuse
+	const [canonicalOwner, canonicalRepo] = STAGE3_CANONICAL.repository.split('/');
+
 	function assertBranchArgs(input: {
 		owner: string;
 		repo: string;
@@ -424,11 +606,12 @@ export function createStage3RealGitHubBridge(params: {
 		sourceBranch: string;
 		expectedSourceSha: string;
 	}): void {
-		const [, repo] = STAGE3_CANONICAL.repository.split('/');
-		enforce(input.owner, STAGE3_CANONICAL.repository.split('/')[0], 'branchWriter.owner');
-		enforce(input.repo, repo, 'branchWriter.repo');
+		enforce(input.owner, canonicalOwner, 'branchWriter.owner');
+		enforce(input.repo, canonicalRepo, 'branchWriter.repo');
 		enforce(input.branch, STAGE3_CANONICAL.targetBranch, 'branchWriter.branch');
 		enforce(input.sourceBranch, STAGE3_CANONICAL.baseBranch, 'branchWriter.sourceBranch');
+		// Enforce expectedSourceSha matches the bound base SHA
+		enforce(input.expectedSourceSha, expectedBaseSha, 'branchWriter.expectedSourceSha');
 	}
 
 	function assertFileCommitArgs(input: {
@@ -477,6 +660,10 @@ export function createStage3RealGitHubBridge(params: {
 
 		baseResolver: {
 			async resolveBase(input) {
+				// Defense-in-depth: validate owner, repo, branch before transport
+				enforce(input.owner, canonicalOwner, 'baseResolver.owner');
+				enforce(input.repo, canonicalRepo, 'baseResolver.repo');
+				enforce(input.branch, STAGE3_CANONICAL.baseBranch, 'baseResolver.branch');
 				const result = await transport.resolveBaseSha(input.owner, input.repo, input.branch);
 				return { branch: input.branch, sha: result.sha };
 			},
@@ -559,6 +746,39 @@ export function createStage3RealGitHubBridge(params: {
 
 	// ── Register in trusted WeakSet (non-forgeable provenance) ──
 	trustedRealBridges.add(bridge);
+
+	// ── Capture integrity snapshot BEFORE deep freeze ──
+	const snapshot: TrustedBridgeSnapshot = {
+		__root: bridge,
+		baseResolver: bridge.baseResolver,
+		resolveBase: bridge.baseResolver.resolveBase,
+		branchWriter: bridge.branchWriter,
+		createBranch: bridge.branchWriter.createBranch,
+		fileCommitWriter: bridge.fileCommitWriter,
+		commitFile: bridge.fileCommitWriter.commitFile,
+		prWriter: bridge.prWriter,
+		createPullRequest: bridge.prWriter.createPullRequest,
+		readOnlyVerifier: bridge.readOnlyVerifier,
+		repositoryReader: bridge.readOnlyVerifier.repository,
+		getDefaultBranch: bridge.readOnlyVerifier.repository.getDefaultBranch,
+		branchReader: bridge.readOnlyVerifier.branch,
+		getBranch: bridge.readOnlyVerifier.branch.getBranch,
+		contentReader: bridge.readOnlyVerifier.content,
+		getFileContent: bridge.readOnlyVerifier.content.getFileContent,
+		commitReader: bridge.readOnlyVerifier.commit,
+		getCommit: bridge.readOnlyVerifier.commit.getCommit,
+		pullRequestReader: bridge.readOnlyVerifier.pullRequest,
+		findOpenPr: bridge.readOnlyVerifier.pullRequest.findOpenPr,
+		compareReader: bridge.readOnlyVerifier.compare,
+		compareCommits: bridge.readOnlyVerifier.compare.compareCommits,
+		expectedBaseSha,
+	};
+
+	// ── Register snapshot in WeakMap (for integrity verification) ──
+	trustedBridgeSnapshots.set(bridge, snapshot);
+
+	// ── Deep freeze all objects (mutation resistance) ──
+	deepFreeze(bridge);
 
 	return bridge;
 }

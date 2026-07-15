@@ -373,6 +373,7 @@ describe('C2: Immutable Repository Binding — assertBound rejection', () => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe('C3: Canonical Manifest Enforcement — bridge rejects non-canonical manifest', () => {
+	const VALID_BASE_SHA = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 	const VALID_MANIFEST = {
 		targetBranch: STAGE3_CANONICAL.targetBranch,
 		filePath: STAGE3_CANONICAL.filePath,
@@ -394,6 +395,7 @@ describe('C3: Canonical Manifest Enforcement — bridge rejects non-canonical ma
 			createStage3RealGitHubBridge({
 				transport: makeTransport(),
 				canonicalManifest: { ...VALID_MANIFEST },
+				expectedBaseSha: VALID_BASE_SHA,
 			}),
 		).not.toThrow();
 	});
@@ -403,6 +405,7 @@ describe('C3: Canonical Manifest Enforcement — bridge rejects non-canonical ma
 			createStage3RealGitHubBridge({
 				transport: makeTransport(),
 				canonicalManifest: { ...VALID_MANIFEST, targetBranch: 'wrong-branch' },
+				expectedBaseSha: VALID_BASE_SHA,
 			}),
 		).toThrow(GitHubValidationError);
 	});
@@ -412,6 +415,7 @@ describe('C3: Canonical Manifest Enforcement — bridge rejects non-canonical ma
 			createStage3RealGitHubBridge({
 				transport: makeTransport(),
 				canonicalManifest: { ...VALID_MANIFEST, filePath: 'wrong/path.md' },
+				expectedBaseSha: VALID_BASE_SHA,
 			}),
 		).toThrow(GitHubValidationError);
 	});
@@ -424,6 +428,7 @@ describe('C3: Canonical Manifest Enforcement — bridge rejects non-canonical ma
 					...VALID_MANIFEST,
 					expectedFileSha256: '0000000000000000000000000000000000000000000000000000000000000000',
 				},
+				expectedBaseSha: VALID_BASE_SHA,
 			}),
 		).toThrow(GitHubValidationError);
 	});
@@ -433,6 +438,7 @@ describe('C3: Canonical Manifest Enforcement — bridge rejects non-canonical ma
 			createStage3RealGitHubBridge({
 				transport: makeTransport(),
 				canonicalManifest: { ...VALID_MANIFEST, expectedFileBytes: 999 },
+				expectedBaseSha: VALID_BASE_SHA,
 			}),
 		).toThrow(GitHubValidationError);
 	});
@@ -442,6 +448,7 @@ describe('C3: Canonical Manifest Enforcement — bridge rejects non-canonical ma
 			createStage3RealGitHubBridge({
 				transport: makeTransport(),
 				canonicalManifest: { ...VALID_MANIFEST, commitMessage: 'wrong commit message' },
+				expectedBaseSha: VALID_BASE_SHA,
 			}),
 		).toThrow(GitHubValidationError);
 	});
@@ -451,6 +458,7 @@ describe('C3: Canonical Manifest Enforcement — bridge rejects non-canonical ma
 			createStage3RealGitHubBridge({
 				transport: makeTransport(),
 				canonicalManifest: { ...VALID_MANIFEST, commitBody: 'wrong body' },
+				expectedBaseSha: VALID_BASE_SHA,
 			}),
 		).toThrow(GitHubValidationError);
 	});
@@ -460,6 +468,7 @@ describe('C3: Canonical Manifest Enforcement — bridge rejects non-canonical ma
 			createStage3RealGitHubBridge({
 				transport: makeTransport(),
 				canonicalManifest: { ...VALID_MANIFEST, prTitle: 'wrong PR title' },
+				expectedBaseSha: VALID_BASE_SHA,
 			}),
 		).toThrow(GitHubValidationError);
 	});
@@ -469,6 +478,7 @@ describe('C3: Canonical Manifest Enforcement — bridge rejects non-canonical ma
 			createStage3RealGitHubBridge({
 				transport: makeTransport(),
 				canonicalManifest: { ...VALID_MANIFEST, prBody: 'wrong PR body' },
+				expectedBaseSha: VALID_BASE_SHA,
 			}),
 		).toThrow(GitHubValidationError);
 	});
@@ -489,6 +499,7 @@ describe('C3: Canonical Manifest Enforcement — bridge rejects non-canonical ma
 				createStage3RealGitHubBridge({
 					transport: makeTransport(),
 					canonicalManifest: { ...VALID_MANIFEST, [key]: value },
+					expectedBaseSha: VALID_BASE_SHA,
 				}),
 			).toThrow(GitHubValidationError);
 		}
