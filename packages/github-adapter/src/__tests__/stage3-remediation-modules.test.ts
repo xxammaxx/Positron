@@ -528,7 +528,7 @@ describe('Stage3ReadOnlyVerifier', () => {
 					title: 'test',
 					body: 'test',
 					headRef: 'positron/issue-308-stage3-pilot',
-					headSha: 'head-sha',
+					headSha: 'expected-base-sha',
 					baseRef: 'main',
 					baseSha: 'expected-base-sha',
 				},

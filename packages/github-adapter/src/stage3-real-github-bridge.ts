@@ -25,6 +25,8 @@ import type {
 	Stage3CommitReader,
 	Stage3PullRequestReader,
 } from './stage3-reader-verifier.js';
+import { STAGE3_CANONICAL } from './stage3-supervised-pilot-policy.js';
+import { GitHubValidationError } from './errors.js';
 
 // ---------------------------------------------------------------------------
 // Bridge Capability Contract
@@ -301,6 +303,7 @@ export interface Stage3GitHubTransport {
 		baseRef: string;
 		baseSha: string;
 		exists: boolean;
+		totalMatches: number;
 	} | null>;
 	compareCommits(
 		owner: string,
@@ -340,6 +343,32 @@ export function createStage3RealGitHubBridge(params: {
 	};
 }): Stage3RealGitHubBridge {
 	const { transport, canonicalManifest: m } = params;
+
+	// ── Canonical Manifest Enforcement ──
+	// The manifest must match STAGE3_CANONICAL exactly — no caller override.
+	// Every field is validated before the bridge is constructed.
+	function enforce(actual: unknown, expected: unknown, field: string): void {
+		if (actual !== expected) {
+			throw new GitHubValidationError(
+				`Bridge canonical manifest mismatch for '${field}': ` +
+					`expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`,
+			);
+		}
+	}
+
+	enforce(m.targetBranch, STAGE3_CANONICAL.targetBranch, 'targetBranch');
+	enforce(m.filePath, STAGE3_CANONICAL.filePath, 'filePath');
+	enforce(m.expectedFileSha256, STAGE3_CANONICAL.fileSha256, 'expectedFileSha256');
+	enforce(m.expectedFileBytes, STAGE3_CANONICAL.fileUtf8ByteLength, 'expectedFileBytes');
+	enforce(m.commitMessage, STAGE3_CANONICAL.commitMessage, 'commitMessage');
+	enforce(m.commitBody ?? undefined, STAGE3_CANONICAL.commitBody || undefined, 'commitBody');
+	enforce(m.prTitle, STAGE3_CANONICAL.prTitle, 'prTitle');
+	enforce(m.prBody, STAGE3_CANONICAL.prBody, 'prBody');
+
+	// expectedFileContent is validated via SHA-256, not value comparison
+	if (m.expectedFileSha256 !== STAGE3_CANONICAL.fileSha256) {
+		throw new GitHubValidationError(`Bridge canonical manifest file SHA-256 mismatch`);
+	}
 
 	return {
 		kind: 'restricted-real-transport' as const,

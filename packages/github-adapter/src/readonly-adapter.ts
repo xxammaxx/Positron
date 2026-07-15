@@ -75,8 +75,6 @@ export class ReadOnlyGitHubAdapterWrapper implements ReadOnlyGitHubAdapter {
  * @param adapter - Any object implementing ReadOnlyGitHubAdapter (e.g., FakeGitHubAdapter, RealGitHubAdapter)
  * @returns A ReadOnlyGitHubAdapter with the inner adapter hidden behind a closure-private field.
  */
-export function createReadOnlyGitHubAdapter(
-	adapter: ReadOnlyGitHubAdapter,
-): ReadOnlyGitHubAdapter {
+export function createReadOnlyGitHubAdapter(adapter: ReadOnlyGitHubAdapter): ReadOnlyGitHubAdapter {
 	return new ReadOnlyGitHubAdapterWrapper(adapter);
 }

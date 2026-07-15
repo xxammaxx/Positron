@@ -111,17 +111,13 @@ describe('Stage2WriteSandboxPolicy', () => {
 
 	describe('negative — repository and issue', () => {
 		it('1. blocks non-sandbox repository', () => {
-			const result = policy.validate(
-				validValidateParams({ repository: NON_SANDBOX_REPO }),
-			);
+			const result = policy.validate(validValidateParams({ repository: NON_SANDBOX_REPO }));
 			expect(result.allowed).toBe(false);
 			expect(result.reason).toContain('not the allowlisted sandbox repository');
 		});
 
 		it('2. blocks non-sandbox issue', () => {
-			const result = policy.validate(
-				validValidateParams({ issueNumber: NON_SANDBOX_ISSUE }),
-			);
+			const result = policy.validate(validValidateParams({ issueNumber: NON_SANDBOX_ISSUE }));
 			expect(result.allowed).toBe(false);
 			expect(result.reason).toContain('not the allowlisted sandbox issue');
 		});
@@ -133,17 +129,13 @@ describe('Stage2WriteSandboxPolicy', () => {
 
 	describe('negative — missing gates', () => {
 		it('3. blocks createIssueComment without preview', () => {
-			const result = policy.validate(
-				validValidateParams({ previewGenerated: false }),
-			);
+			const result = policy.validate(validValidateParams({ previewGenerated: false }));
 			expect(result.allowed).toBe(false);
-		expect(result.reason).toContain('Pre-write preview');
-	});
+			expect(result.reason).toContain('Pre-write preview');
+		});
 
 		it('4. blocks createIssueComment without human approval', () => {
-			const result = policy.validate(
-				validValidateParams({ humanApproved: false }),
-			);
+			const result = policy.validate(validValidateParams({ humanApproved: false }));
 			expect(result.allowed).toBe(false);
 			expect(result.reason).toContain('Human approval');
 		});
@@ -164,9 +156,7 @@ describe('Stage2WriteSandboxPolicy', () => {
 			expect(policy.getWriteCount()).toBe(1);
 
 			// Second write: blocked
-			const r2 = policy.validate(
-				validValidateParams({ idempotencyKey: TEST_IDEMPOTENCY_KEY_2 }),
-			);
+			const r2 = policy.validate(validValidateParams({ idempotencyKey: TEST_IDEMPOTENCY_KEY_2 }));
 			expect(r2.allowed).toBe(false);
 			expect(r2.reason).toContain('Max writes per run');
 		});
@@ -213,9 +203,7 @@ describe('Stage2WriteSandboxPolicy', () => {
 
 		for (const op of forbiddenOps) {
 			it(`7-14. blocks ${op}`, () => {
-				const result = policy.validate(
-					validValidateParams({ operation: op, bodyText: undefined }),
-				);
+				const result = policy.validate(validValidateParams({ operation: op, bodyText: undefined }));
 				expect(result.allowed).toBe(false);
 				expect(result.reason).toContain('permanently forbidden');
 			});
@@ -283,9 +271,7 @@ describe('Stage2WriteSandboxPolicy', () => {
 			policy.recordIdempotencyKey(TEST_IDEMPOTENCY_KEY);
 
 			// Try same key again
-			const result = policy.validate(
-				validValidateParams({ idempotencyKey: TEST_IDEMPOTENCY_KEY }),
-			);
+			const result = policy.validate(validValidateParams({ idempotencyKey: TEST_IDEMPOTENCY_KEY }));
 			expect(result.allowed).toBe(false);
 			expect(result.reason).toContain('Duplicate idempotency key');
 		});
@@ -301,15 +287,11 @@ describe('Stage2WriteSandboxPolicy', () => {
 			// The actual kill-switch enforcement for PUSH and MERGE are separate.
 			// Test POSITRON_ENABLE_PUSH and POSITRON_MERGE_KILL_SWITCH enforcement.
 
-			const r1 = policy.validate(
-				validValidateParams({ pushEnabled: true }),
-			);
+			const r1 = policy.validate(validValidateParams({ pushEnabled: true }));
 			expect(r1.allowed).toBe(false);
 			expect(r1.reason).toContain('POSITRON_ENABLE_PUSH');
 
-			const r2 = policy.validate(
-				validValidateParams({ mergeKillSwitchActive: false }),
-			);
+			const r2 = policy.validate(validValidateParams({ mergeKillSwitchActive: false }));
 			expect(r2.allowed).toBe(false);
 			expect(r2.reason).toContain('POSITRON_MERGE_KILL_SWITCH');
 		});
@@ -681,9 +663,7 @@ describe('integration — full preview-validate-audit flow', () => {
 		policy.recordIdempotencyKey(TEST_IDEMPOTENCY_KEY);
 
 		// The policy should now reject duplicate key
-		const dupResult = policy.validate(
-			validValidateParams(),
-		);
+		const dupResult = policy.validate(validValidateParams());
 		expect(dupResult.allowed).toBe(false);
 		expect(dupResult.reason).toContain('Duplicate');
 	});
@@ -692,9 +672,7 @@ describe('integration — full preview-validate-audit flow', () => {
 		const policy = makePolicy();
 
 		// Try to validate without generating preview first
-		const result = policy.validate(
-			validValidateParams({ previewGenerated: false }),
-		);
+		const result = policy.validate(validValidateParams({ previewGenerated: false }));
 
 		expect(result.allowed).toBe(false);
 		expect(result.reason).toContain('Pre-write preview');

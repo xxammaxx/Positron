@@ -225,8 +225,7 @@ export class Stage2WriteSandboxPolicy {
 
 		// 5. Operation allowlist
 		const isExplicitlyAllowed = this.config.allowedOperations.includes(operation);
-		const isOptionallyAllowed =
-			this.config.optionalAllowedOperations?.includes(operation) ?? false;
+		const isOptionallyAllowed = this.config.optionalAllowedOperations?.includes(operation) ?? false;
 		if (!isExplicitlyAllowed && !isOptionallyAllowed) {
 			return {
 				allowed: false,
@@ -315,7 +314,15 @@ export class Stage2WriteSandboxPolicy {
 		idempotencyKey: string;
 		humanApproved: boolean;
 	}): Stage2PreWritePreview {
-		const { operation, repository, issueNumber, labelNames, bodyText, idempotencyKey, humanApproved } = params;
+		const {
+			operation,
+			repository,
+			issueNumber,
+			labelNames,
+			bodyText,
+			idempotencyKey,
+			humanApproved,
+		} = params;
 
 		const bodyHash = bodyText ? _sha256(bodyText) : undefined;
 		const bodyLength = bodyText?.length;

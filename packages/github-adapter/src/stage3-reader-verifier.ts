@@ -87,6 +87,8 @@ export interface Stage3PullRequestReader {
 		baseRef: string;
 		baseSha: string;
 		exists: boolean;
+		/** Total number of open PRs matching the head/base pair. MUST be exactly 1 for post-write success. */
+		totalMatches: number;
 	} | null>;
 }
 
@@ -270,6 +272,8 @@ export interface PostWriteVerificationResult {
 		draftPrExists: boolean;
 		prBaseExact: boolean;
 		prHeadExact: boolean;
+		prBaseShaExact: boolean;
+		prHeadShaExact: boolean;
 		prTitleExact: boolean;
 		prBodyExact: boolean;
 		prNotMerged: boolean;
@@ -308,6 +312,8 @@ export async function verifyPostWrite(
 		draftPrExists: false,
 		prBaseExact: false,
 		prHeadExact: false,
+		prBaseShaExact: false,
+		prHeadShaExact: false,
 		prTitleExact: false,
 		prBodyExact: false,
 		prNotMerged: false,
@@ -383,11 +389,16 @@ export async function verifyPostWrite(
 			checks.draftPrExists = pr.draft === true;
 			checks.prStateOpen = pr.state === 'open';
 			checks.prNotMerged = pr.merged === false && pr.mergedAt === null;
+			// Branch REF checks (name matching)
 			checks.prBaseExact = pr.baseRef === input.baseBranch;
 			checks.prHeadExact = pr.headRef === input.targetBranch;
+			// SHA checks (exact commit verification — NOT just ref names)
+			checks.prBaseShaExact = pr.baseSha === input.expectedBaseSha;
+			checks.prHeadShaExact = pr.headSha === branch.sha;
 			checks.prTitleExact = pr.title === input.expectedPrTitle;
 			checks.prBodyExact = pr.body === input.expectedPrBody;
-			checks.exactlyOnePr = true;
+			// Cardinality check: exactly 1 matching PR, not just any PR
+			checks.exactlyOnePr = pr.totalMatches === 1;
 		}
 
 		// ── H5: No merge capability check ──
@@ -407,6 +418,8 @@ export async function verifyPostWrite(
 			checks.draftPrExists &&
 			checks.prBaseExact &&
 			checks.prHeadExact &&
+			checks.prBaseShaExact &&
+			checks.prHeadShaExact &&
 			checks.prTitleExact &&
 			checks.prBodyExact &&
 			checks.prNotMerged &&
@@ -433,11 +446,13 @@ export async function verifyPostWrite(
 			if (!checks.draftPrExists) failures.push('draft PR missing or not draft');
 			if (!checks.prBaseExact) failures.push('PR base branch wrong');
 			if (!checks.prHeadExact) failures.push('PR head branch wrong');
+			if (!checks.prBaseShaExact) failures.push('PR base SHA mismatch');
+			if (!checks.prHeadShaExact) failures.push('PR head SHA mismatch');
 			if (!checks.prTitleExact) failures.push('PR title wrong');
 			if (!checks.prBodyExact) failures.push('PR body wrong');
 			if (!checks.prNotMerged) failures.push('PR merged');
 			if (!checks.prStateOpen) failures.push('PR not open');
-			if (!checks.exactlyOnePr) failures.push('no matching PR found');
+			if (!checks.exactlyOnePr) failures.push('PR count is not exactly 1 (totalMatches mismatch)');
 			if (!checks.noMerge) failures.push('merge detected');
 			reason = `Post-write verification failed: ${failures.join(', ')}`;
 		}
@@ -559,6 +574,7 @@ export function createFakeReadOnlyVerifier(params?: {
 						baseRef: params?.prResult?.baseRef ?? _base,
 						baseSha: params?.prResult?.baseSha ?? 'base-sha',
 						exists: true,
+						totalMatches: 1,
 					};
 				}
 				return null;

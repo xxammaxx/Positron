@@ -228,6 +228,7 @@ function createStatefulVerifier() {
 							baseRef: _base,
 							baseSha: TEST_BASE_SHA,
 							exists: true,
+							totalMatches: 1,
 						}
 					: null;
 			},
@@ -428,10 +429,11 @@ describe('Stage3RuntimeHarness — Positive: Live Mode with Spy Writers', () => 
 								title: STAGE3_CANONICAL.prTitle,
 								body: STAGE3_CANONICAL.prBody,
 								headRef: _h,
-								headSha: 'head-sha',
+								headSha: TEST_BASE_SHA,
 								baseRef: _b,
 								baseSha: TEST_BASE_SHA,
 								exists: true,
+								totalMatches: 1,
 							}
 						: null;
 				},
@@ -1031,10 +1033,11 @@ describe('Stage3RuntimeHarness — Factory', () => {
 								title: STAGE3_CANONICAL.prTitle,
 								body: STAGE3_CANONICAL.prBody,
 								headRef: _h,
-								headSha: 'head-sha',
+								headSha: TEST_BASE_SHA,
 								baseRef: _b,
 								baseSha: TEST_BASE_SHA,
 								exists: true,
+								totalMatches: 1,
 							}
 						: null;
 				},
@@ -1153,10 +1156,11 @@ describe('Stage3RuntimeHarness — Phase K: Integration Blocker Tests', () => {
 									title: STAGE3_CANONICAL.prTitle,
 									body: STAGE3_CANONICAL.prBody,
 									headRef: _head,
-									headSha: 'head-sha',
+									headSha: TEST_BASE_SHA,
 									baseRef: _base,
 									baseSha: TEST_BASE_SHA,
 									exists: true,
+									totalMatches: 1,
 								}
 							: null;
 					},

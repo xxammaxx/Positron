@@ -411,7 +411,8 @@ export class Stage2RuntimeWriteHarness {
 			// Record idempotency key (no counter increment) to prevent infinite retries
 			this.policy.recordIdempotencyKey(input.idempotencyKey);
 
-			const rawMessage = error instanceof Error ? error.message : String(error ?? 'Unknown adapter error');
+			const rawMessage =
+				error instanceof Error ? error.message : String(error ?? 'Unknown adapter error');
 			const sanitizedReason = redactValue(rawMessage);
 
 			const auditEvent = this._buildAuditEvent({

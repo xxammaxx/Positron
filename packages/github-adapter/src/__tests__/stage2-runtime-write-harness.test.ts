@@ -5,22 +5,14 @@
 // Adapter call count is asserted to be 0 for every blocked path.
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import {
-	Stage2RuntimeWriteHarness,
-	createStage2WriteHarness,
-} from '@positron/github-adapter';
+import { Stage2RuntimeWriteHarness, createStage2WriteHarness } from '@positron/github-adapter';
 import type {
 	Stage2IssueCommentWriter,
 	Stage2WriteHarnessInput,
 	Stage2AuditSink,
 } from '@positron/github-adapter';
-import type {
-	Stage2WriteOperation,
-	Stage2WriteAuditEvent,
-} from '@positron/github-adapter';
-import {
-	Stage2WriteSandboxPolicy,
-} from '@positron/github-adapter';
+import type { Stage2WriteOperation, Stage2WriteAuditEvent } from '@positron/github-adapter';
+import { Stage2WriteSandboxPolicy } from '@positron/github-adapter';
 
 // ---------------------------------------------------------------------------
 // Test Constants
@@ -235,9 +227,7 @@ describe('Stage2RuntimeWriteHarness', () => {
 
 	describe('negative — wrong repository', () => {
 		it('blocks before adapter call when repository is wrong', async () => {
-			const result = await harness.execute(
-				validInput({ repository: NON_SANDBOX_REPO }),
-			);
+			const result = await harness.execute(validInput({ repository: NON_SANDBOX_REPO }));
 
 			expect(result.success).toBe(false);
 			expect(result.policyAllowed).toBe(false);
@@ -246,9 +236,7 @@ describe('Stage2RuntimeWriteHarness', () => {
 		});
 
 		it('blocks before adapter call when issue number is wrong', async () => {
-			const result = await harness.execute(
-				validInput({ issueNumber: NON_SANDBOX_ISSUE }),
-			);
+			const result = await harness.execute(validInput({ issueNumber: NON_SANDBOX_ISSUE }));
 
 			expect(result.success).toBe(false);
 			expect(result.policyAllowed).toBe(false);
@@ -276,9 +264,7 @@ describe('Stage2RuntimeWriteHarness', () => {
 
 		for (const op of forbiddenOps) {
 			it(`blocks '${op}' before adapter call`, async () => {
-				const result = await harness.execute(
-					validInput({ operation: op, bodyText: undefined }),
-				);
+				const result = await harness.execute(validInput({ operation: op, bodyText: undefined }));
 
 				expect(result.success).toBe(false);
 				expect(result.policyAllowed).toBe(false);
@@ -293,9 +279,7 @@ describe('Stage2RuntimeWriteHarness', () => {
 
 	describe('negative — missing gates', () => {
 		it('blocks when human approval is missing', async () => {
-			const result = await harness.execute(
-				validInput({ humanApproved: false }),
-			);
+			const result = await harness.execute(validInput({ humanApproved: false }));
 
 			expect(result.success).toBe(false);
 			expect(result.reason).toContain('Human approval');
@@ -303,9 +287,7 @@ describe('Stage2RuntimeWriteHarness', () => {
 		});
 
 		it('blocks when preview is not generated', async () => {
-			const result = await harness.execute(
-				validInput({ previewGenerated: false }),
-			);
+			const result = await harness.execute(validInput({ previewGenerated: false }));
 
 			expect(result.success).toBe(false);
 			expect(result.reason).toContain('Pre-write preview');
@@ -320,7 +302,9 @@ describe('Stage2RuntimeWriteHarness', () => {
 	describe('negative — approval binding', () => {
 		it('blocks when body SHA-256 does not match expected hash', async () => {
 			const result = await harness.execute(
-				validInput({ expectedBodyHash: '0000000000000000000000000000000000000000000000000000000000000000' }),
+				validInput({
+					expectedBodyHash: '0000000000000000000000000000000000000000000000000000000000000000',
+				}),
 			);
 
 			expect(result.success).toBe(false);
@@ -331,11 +315,12 @@ describe('Stage2RuntimeWriteHarness', () => {
 		it('proceeds when body SHA-256 matches expected hash', async () => {
 			// The TEST_COMMENT_HASH is '48be36a2...' — let's compute actual for the test body
 			const crypto = await import('node:crypto');
-			const actualHash = crypto.createHash('sha256').update(TEST_COMMENT_BODY, 'utf8').digest('hex');
+			const actualHash = crypto
+				.createHash('sha256')
+				.update(TEST_COMMENT_BODY, 'utf8')
+				.digest('hex');
 
-			const result = await harness.execute(
-				validInput({ expectedBodyHash: actualHash }),
-			);
+			const result = await harness.execute(validInput({ expectedBodyHash: actualHash }));
 
 			expect(result.success).toBe(true);
 		});
@@ -375,9 +360,7 @@ describe('Stage2RuntimeWriteHarness', () => {
 			// Use different idempotency keys to bypass duplicate detection
 			const h2 = makeHarness({ maxWritesPerRun: 1 });
 			// First call: succeeds in fake mode, but doesn't increment (fake)
-			const r1 = await h2.harness.execute(
-				validInput({ idempotencyKey: TEST_IDEMPOTENCY_KEY }),
-			);
+			const r1 = await h2.harness.execute(validInput({ idempotencyKey: TEST_IDEMPOTENCY_KEY }));
 			expect(r1.success).toBe(true);
 
 			// In fake mode, writeCount stays at 0 so the harness-level maxWrites check
@@ -392,9 +375,7 @@ describe('Stage2RuntimeWriteHarness', () => {
 
 	describe('negative — kill switches', () => {
 		it('blocks when push is enabled', async () => {
-			const result = await harness.execute(
-				validInput({ pushEnabled: true }),
-			);
+			const result = await harness.execute(validInput({ pushEnabled: true }));
 
 			expect(result.success).toBe(false);
 			expect(result.reason).toContain('POSITRON_ENABLE_PUSH');
@@ -402,9 +383,7 @@ describe('Stage2RuntimeWriteHarness', () => {
 		});
 
 		it('blocks when merge kill-switch is inactive', async () => {
-			const result = await harness.execute(
-				validInput({ mergeKillSwitchActive: false }),
-			);
+			const result = await harness.execute(validInput({ mergeKillSwitchActive: false }));
 
 			expect(result.success).toBe(false);
 			expect(result.reason).toContain('POSITRON_MERGE_KILL_SWITCH');
@@ -696,9 +675,7 @@ describe('non-fake mode — green path', () => {
 describe('non-fake mode — red blocked paths', () => {
 	it('blocks wrong repository before writer call', async () => {
 		const { harness, adapter } = makeNonFakeHarness();
-		const result = await harness.execute(
-			validInput({ repository: NON_SANDBOX_REPO }),
-		);
+		const result = await harness.execute(validInput({ repository: NON_SANDBOX_REPO }));
 
 		expect(result.success).toBe(false);
 		expect(result.policyAllowed).toBe(false);
@@ -707,9 +684,7 @@ describe('non-fake mode — red blocked paths', () => {
 
 	it('blocks wrong issue before writer call', async () => {
 		const { harness, adapter } = makeNonFakeHarness();
-		const result = await harness.execute(
-			validInput({ issueNumber: NON_SANDBOX_ISSUE }),
-		);
+		const result = await harness.execute(validInput({ issueNumber: NON_SANDBOX_ISSUE }));
 
 		expect(result.success).toBe(false);
 		expect(result.policyAllowed).toBe(false);
@@ -729,9 +704,7 @@ describe('non-fake mode — red blocked paths', () => {
 
 	it('blocks missing approval before writer call', async () => {
 		const { harness, adapter } = makeNonFakeHarness();
-		const result = await harness.execute(
-			validInput({ humanApproved: false }),
-		);
+		const result = await harness.execute(validInput({ humanApproved: false }));
 
 		expect(result.success).toBe(false);
 		expect(result.reason).toContain('Human approval');
@@ -740,9 +713,7 @@ describe('non-fake mode — red blocked paths', () => {
 
 	it('blocks missing preview before writer call', async () => {
 		const { harness, adapter } = makeNonFakeHarness();
-		const result = await harness.execute(
-			validInput({ previewGenerated: false }),
-		);
+		const result = await harness.execute(validInput({ previewGenerated: false }));
 
 		expect(result.success).toBe(false);
 		expect(result.reason).toContain('Pre-write preview');
@@ -752,7 +723,9 @@ describe('non-fake mode — red blocked paths', () => {
 	it('blocks hash mismatch before writer call', async () => {
 		const { harness, adapter } = makeNonFakeHarness();
 		const result = await harness.execute(
-			validInput({ expectedBodyHash: '0000000000000000000000000000000000000000000000000000000000000000' }),
+			validInput({
+				expectedBodyHash: '0000000000000000000000000000000000000000000000000000000000000000',
+			}),
 		);
 
 		expect(result.success).toBe(false);
@@ -781,16 +754,12 @@ describe('non-fake mode — red blocked paths', () => {
 	it('blocks maxWrites exceeded before writer call', async () => {
 		const { harness, adapter } = makeNonFakeHarness({ maxWritesPerRun: 1 });
 		// First call: succeed
-		const r1 = await harness.execute(
-			validInput({ idempotencyKey: 'maxwrites-test-1' }),
-		);
+		const r1 = await harness.execute(validInput({ idempotencyKey: 'maxwrites-test-1' }));
 		expect(r1.success).toBe(true);
 		expect(adapter.getCallCount()).toBe(1);
 
 		// Second call: blocked by maxWritesPerRun
-		const r2 = await harness.execute(
-			validInput({ idempotencyKey: 'maxwrites-test-2' }),
-		);
+		const r2 = await harness.execute(validInput({ idempotencyKey: 'maxwrites-test-2' }));
 		expect(r2.success).toBe(false);
 		expect(r2.reason).toContain('Max writes');
 		expect(adapter.getCallCount()).toBe(1); // no additional call
@@ -842,7 +811,9 @@ describe('non-fake mode — error handling', () => {
 
 	it('adapter error does not leak token in result', async () => {
 		// Use a properly-formatted 36-char GitHub token that matches the regex
-		const errorWriter = new ErrorThrowingWriter('Token ghp_abcdefghijklmnopqrstuvwxyz1234567890 leaked');
+		const errorWriter = new ErrorThrowingWriter(
+			'Token ghp_abcdefghijklmnopqrstuvwxyz1234567890 leaked',
+		);
 		const harness = createStage2WriteHarness({
 			allowedRepository: SANDBOX_REPO,
 			allowedIssueNumber: SANDBOX_ISSUE,
@@ -881,18 +852,14 @@ describe('non-fake mode — second write blocked', () => {
 		const { harness, adapter } = makeNonFakeHarness();
 
 		// First call: succeed in non-fake mode
-		const r1 = await harness.execute(
-			validInput({ idempotencyKey: 'second-write-test-1' }),
-		);
+		const r1 = await harness.execute(validInput({ idempotencyKey: 'second-write-test-1' }));
 		expect(r1.success).toBe(true);
 		expect(r1.writeExecuted).toBe(true);
 		expect(r1.writeCount).toBe(1);
 		expect(adapter.getCallCount()).toBe(1);
 
 		// Second call with different idempotency key: blocked by maxWritesPerRun
-		const r2 = await harness.execute(
-			validInput({ idempotencyKey: 'second-write-test-2' }),
-		);
+		const r2 = await harness.execute(validInput({ idempotencyKey: 'second-write-test-2' }));
 		expect(r2.success).toBe(false);
 		expect(r2.reason).toContain('Max writes');
 		expect(adapter.getCallCount()).toBe(1); // no additional call

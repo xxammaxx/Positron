@@ -47,16 +47,33 @@ export function createStage3OctokitTransport(
 		throw new GitHubValidationError('Transport repo must be a non-empty string');
 	}
 
+	// ── Immutable repository binding ──
+	// The factory-bound owner/repo are the ONLY values ever sent to Octokit.
+	// Caller-supplied _owner/_repo parameters are validated against the bound
+	// values and rejected if they differ — this prevents repository drift.
+	const boundOwner = owner;
+	const boundRepo = repo;
+
+	function assertBound(_callerOwner: string, _callerRepo: string, operation: string): void {
+		if (_callerOwner !== boundOwner || _callerRepo !== boundRepo) {
+			throw new GitHubValidationError(
+				`Stage 3 transport is bound to '${boundOwner}/${boundRepo}' — ` +
+					`cannot execute '${operation}' against '${_callerOwner}/${_callerRepo}'`,
+			);
+		}
+	}
+
 	return {
 		// -------------------------------------------------------------------
 		// Write Operations (3)
 		// -------------------------------------------------------------------
 
 		async resolveBaseSha(_owner, _repo, branch) {
+			assertBound(_owner, _repo, 'resolveBaseSha');
 			try {
 				const { data } = await octokit.rest.git.getRef({
-					owner: _owner,
-					repo: _repo,
+					owner: boundOwner,
+					repo: boundRepo,
 					ref: `heads/${branch}`,
 				});
 				return { sha: data.object.sha };
@@ -67,10 +84,11 @@ export function createStage3OctokitTransport(
 		},
 
 		async createBranch(_owner, _repo, branch, fromSha) {
+			assertBound(_owner, _repo, 'createBranch');
 			try {
 				const { data } = await octokit.rest.git.createRef({
-					owner: _owner,
-					repo: _repo,
+					owner: boundOwner,
+					repo: boundRepo,
 					ref: `refs/heads/${branch}`,
 					sha: fromSha,
 				});
@@ -82,12 +100,13 @@ export function createStage3OctokitTransport(
 		},
 
 		async commitFile(_owner, _repo, branch, path, content, message, body) {
+			assertBound(_owner, _repo, 'commitFile');
 			try {
 				// compose full commit message
 				const fullMessage = body ? `${message}\n\n${body}` : message;
 				const { data } = await octokit.rest.repos.createOrUpdateFileContents({
-					owner: _owner,
-					repo: _repo,
+					owner: boundOwner,
+					repo: boundRepo,
 					path,
 					message: fullMessage,
 					content: Buffer.from(content, 'utf8').toString('base64'),
@@ -104,10 +123,11 @@ export function createStage3OctokitTransport(
 		},
 
 		async createDraftPr(_owner, _repo, title, head, base, body) {
+			assertBound(_owner, _repo, 'createDraftPr');
 			try {
 				const { data } = await octokit.rest.pulls.create({
-					owner: _owner,
-					repo: _repo,
+					owner: boundOwner,
+					repo: boundRepo,
 					title,
 					head,
 					base,
@@ -132,16 +152,17 @@ export function createStage3OctokitTransport(
 		// -------------------------------------------------------------------
 
 		async getDefaultBranch(_owner, _repo) {
+			assertBound(_owner, _repo, 'getDefaultBranch');
 			try {
 				const { data } = await octokit.rest.repos.get({
-					owner: _owner,
-					repo: _repo,
+					owner: boundOwner,
+					repo: boundRepo,
 				});
 				// Default branch name is known, but we need its SHA
 				const defaultBranch = data.default_branch;
 				const refData = await octokit.rest.git.getRef({
-					owner: _owner,
-					repo: _repo,
+					owner: boundOwner,
+					repo: boundRepo,
 					ref: `heads/${defaultBranch}`,
 				});
 				return {
@@ -155,10 +176,11 @@ export function createStage3OctokitTransport(
 		},
 
 		async getBranch(_owner, _repo, branch) {
+			assertBound(_owner, _repo, 'getBranch');
 			try {
 				const { data } = await octokit.rest.git.getRef({
-					owner: _owner,
-					repo: _repo,
+					owner: boundOwner,
+					repo: boundRepo,
 					ref: `heads/${branch}`,
 				});
 				return {
@@ -178,10 +200,11 @@ export function createStage3OctokitTransport(
 		},
 
 		async getFileContent(_owner, _repo, path, ref) {
+			assertBound(_owner, _repo, 'getFileContent');
 			try {
 				const { data } = await octokit.rest.repos.getContent({
-					owner: _owner,
-					repo: _repo,
+					owner: boundOwner,
+					repo: boundRepo,
 					path,
 					ref,
 				});
@@ -212,10 +235,11 @@ export function createStage3OctokitTransport(
 		},
 
 		async getCommit(_owner, _repo, sha) {
+			assertBound(_owner, _repo, 'getCommit');
 			try {
 				const { data } = await octokit.rest.repos.getCommit({
-					owner: _owner,
-					repo: _repo,
+					owner: boundOwner,
+					repo: boundRepo,
 					ref: sha,
 				});
 				return {
@@ -248,12 +272,13 @@ export function createStage3OctokitTransport(
 		},
 
 		async findOpenPr(_owner, _repo, head, base) {
+			assertBound(_owner, _repo, 'findOpenPr');
 			try {
 				const { data } = await octokit.rest.pulls.list({
-					owner: _owner,
-					repo: _repo,
+					owner: boundOwner,
+					repo: boundRepo,
 					state: 'open',
-					head: `${_owner}:${head}`,
+					head: `${boundOwner}:${head}`,
 					base,
 				});
 				if (data.length === 0) return null;
@@ -271,6 +296,7 @@ export function createStage3OctokitTransport(
 					baseRef: pr.base.ref,
 					baseSha: pr.base.sha,
 					exists: true,
+					totalMatches: data.length,
 				};
 			} catch (err) {
 				if (err instanceof RequestError) throw mapRequestError(err);
@@ -279,10 +305,11 @@ export function createStage3OctokitTransport(
 		},
 
 		async compareCommits(_owner, _repo, base, head) {
+			assertBound(_owner, _repo, 'compareCommits');
 			try {
 				const { data } = await octokit.rest.repos.compareCommits({
-					owner: _owner,
-					repo: _repo,
+					owner: boundOwner,
+					repo: boundRepo,
 					base,
 					head,
 				});
