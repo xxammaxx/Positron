@@ -27,6 +27,33 @@ import type {
 } from './stage3-reader-verifier.js';
 import { STAGE3_CANONICAL } from './stage3-supervised-pilot-policy.js';
 import { GitHubValidationError } from './errors.js';
+import { sha256Utf8, utf8ByteLength } from './stage3-canonical-manifest.js';
+
+// ---------------------------------------------------------------------------
+// Bridge Provenance Registry (WeakSet-based, non-forgeable)
+// ---------------------------------------------------------------------------
+//
+// PROVENANCE MECHANISM:
+// Only bridges registered through the internal createStage3RealGitHubBridge()
+// factory are trusted. The WeakSet stores object identity references — a
+// forged bridge constructed by a caller will NEVER be in this set, regardless
+// of its shape, kind string, or property names.
+//
+// WeakSet provides:
+//   - No iteration (attacker cannot enumerate registered bridges)
+//   - No serialization (attacker cannot reconstruct the set)
+//   - GC-safe (bridges can be collected when no longer referenced)
+//   - Object identity check (structural copies fail)
+
+const trustedRealBridges = new WeakSet<object>();
+
+/**
+ * Check if a bridge is a genuinely trusted, internally-constructed bridge.
+ * Uses object identity via WeakSet — not structural comparison.
+ */
+export function isTrustedBridge(bridge: Stage3RealGitHubBridge): boolean {
+	return trustedRealBridges.has(bridge);
+}
 
 // ---------------------------------------------------------------------------
 // Bridge Capability Contract
@@ -327,6 +354,14 @@ export interface Stage3GitHubTransport {
  * The bridge exposes ONLY the 5 capability groups allowed by the
  * Stage 3 contract. No merge, delete, label, or workflow operations
  * are accessible through this bridge.
+ *
+ * PROVENANCE: The created bridge is registered in a WeakSet — only
+ * bridges produced by this factory function are trusted. The caller
+ * cannot forge a trusted bridge by constructing one manually.
+ *
+ * DEFENSE-IN-DEPTH: All writer arguments are validated against the
+ * canonical manifest before transport calls. The actual file content
+ * is SHA-256 hashed and UTF-8 byte length verified.
  */
 export function createStage3RealGitHubBridge(params: {
 	transport: Stage3GitHubTransport;
@@ -365,12 +400,79 @@ export function createStage3RealGitHubBridge(params: {
 	enforce(m.prTitle, STAGE3_CANONICAL.prTitle, 'prTitle');
 	enforce(m.prBody, STAGE3_CANONICAL.prBody, 'prBody');
 
-	// expectedFileContent is validated via SHA-256, not value comparison
-	if (m.expectedFileSha256 !== STAGE3_CANONICAL.fileSha256) {
-		throw new GitHubValidationError(`Bridge canonical manifest file SHA-256 mismatch`);
+	// ── Phase G: Actual content hash + UTF-8 byte validation ──
+	// The caller-declared SHA-256 must match the actual content hash,
+	// and the declared byte count must match the actual UTF-8 byte length.
+	// This prevents an attacker from passing correct declared hashes while
+	// providing different actual content.
+	const actualContentSha256 = sha256Utf8(m.expectedFileContent);
+	const actualContentBytes = utf8ByteLength(m.expectedFileContent);
+
+	enforce(actualContentSha256, STAGE3_CANONICAL.fileSha256, 'actualContent.sha256');
+	enforce(actualContentBytes, STAGE3_CANONICAL.fileUtf8ByteLength, 'actualContent.utf8Bytes');
+	enforce(m.expectedFileSha256, actualContentSha256, 'declaredFileSha256');
+	enforce(m.expectedFileBytes, actualContentBytes, 'declaredFileBytes');
+
+	// ── Phase F: Defense-in-Depth Writer Argument Validators ──
+	// Each writer validates its arguments against canonical values
+	// BEFORE calling the transport. Transport is never reached on mismatch.
+
+	function assertBranchArgs(input: {
+		owner: string;
+		repo: string;
+		branch: string;
+		sourceBranch: string;
+		expectedSourceSha: string;
+	}): void {
+		const [, repo] = STAGE3_CANONICAL.repository.split('/');
+		enforce(input.owner, STAGE3_CANONICAL.repository.split('/')[0], 'branchWriter.owner');
+		enforce(input.repo, repo, 'branchWriter.repo');
+		enforce(input.branch, STAGE3_CANONICAL.targetBranch, 'branchWriter.branch');
+		enforce(input.sourceBranch, STAGE3_CANONICAL.baseBranch, 'branchWriter.sourceBranch');
 	}
 
-	return {
+	function assertFileCommitArgs(input: {
+		owner: string;
+		repo: string;
+		branch: string;
+		filePath: string;
+		content: string;
+		message: string;
+		commitBody?: string;
+	}): void {
+		const [owner, repo] = STAGE3_CANONICAL.repository.split('/');
+		enforce(input.owner, owner, 'fileCommitWriter.owner');
+		enforce(input.repo, repo, 'fileCommitWriter.repo');
+		enforce(input.branch, STAGE3_CANONICAL.targetBranch, 'fileCommitWriter.branch');
+		enforce(input.filePath, STAGE3_CANONICAL.filePath, 'fileCommitWriter.filePath');
+		enforce(input.message, STAGE3_CANONICAL.commitMessage, 'fileCommitWriter.message');
+		enforce(input.commitBody ?? undefined, STAGE3_CANONICAL.commitBody || undefined, 'fileCommitWriter.commitBody');
+		// Validate actual content matches canonical
+		const contentSha = sha256Utf8(input.content);
+		enforce(contentSha, STAGE3_CANONICAL.fileSha256, 'fileCommitWriter.content.sha256');
+		enforce(utf8ByteLength(input.content), STAGE3_CANONICAL.fileUtf8ByteLength, 'fileCommitWriter.content.utf8Bytes');
+	}
+
+	function assertPrArgs(input: {
+		owner: string;
+		repo: string;
+		title: string;
+		head: string;
+		base: string;
+		body: string;
+		draft: boolean;
+	}): void {
+		const [owner, repo] = STAGE3_CANONICAL.repository.split('/');
+		enforce(input.owner, owner, 'prWriter.owner');
+		enforce(input.repo, repo, 'prWriter.repo');
+		enforce(input.title, STAGE3_CANONICAL.prTitle, 'prWriter.title');
+		enforce(input.head, STAGE3_CANONICAL.targetBranch, 'prWriter.head');
+		enforce(input.base, STAGE3_CANONICAL.baseBranch, 'prWriter.base');
+		enforce(input.body, STAGE3_CANONICAL.prBody, 'prWriter.body');
+		enforce(input.draft, true, 'prWriter.draft');
+	}
+
+	const bridge: Stage3RealGitHubBridge = {
 		kind: 'restricted-real-transport' as const,
 
 		baseResolver: {
@@ -382,6 +484,7 @@ export function createStage3RealGitHubBridge(params: {
 
 		branchWriter: {
 			async createBranch(input) {
+				assertBranchArgs(input);
 				return transport.createBranch(
 					input.owner,
 					input.repo,
@@ -393,6 +496,7 @@ export function createStage3RealGitHubBridge(params: {
 
 		fileCommitWriter: {
 			async commitFile(input) {
+				assertFileCommitArgs(input);
 				return transport.commitFile(
 					input.owner,
 					input.repo,
@@ -407,6 +511,7 @@ export function createStage3RealGitHubBridge(params: {
 
 		prWriter: {
 			async createPullRequest(input) {
+				assertPrArgs(input);
 				return transport.createDraftPr(
 					input.owner,
 					input.repo,
@@ -451,6 +556,11 @@ export function createStage3RealGitHubBridge(params: {
 			},
 		},
 	};
+
+	// ── Register in trusted WeakSet (non-forgeable provenance) ──
+	trustedRealBridges.add(bridge);
+
+	return bridge;
 }
 
 // ---------------------------------------------------------------------------
@@ -461,14 +571,29 @@ export function createStage3RealGitHubBridge(params: {
  * Verify that a bridge does not expose any forbidden capabilities.
  * This is a runtime check — the bridge must be constructed to only
  * implement allowed operations.
+ *
+ * Enhanced checks:
+ *   - Exact expected top-level properties
+ *   - All required nested properties exist
+ *   - All required methods are functions
+ *   - No merge/delete/label/workflow/close methods
+ *   - Trusted runtime provenance (WeakSet check)
  */
 export function verifyBridgeCapabilities(bridge: Stage3RealGitHubBridge): {
 	valid: boolean;
+	trusted: boolean;
 	exposedForbidden: string[];
+	missingCapabilities: string[];
+	malformedCapabilities: string[];
 } {
 	const exposedForbidden: string[] = [];
+	const missingCapabilities: string[] = [];
+	const malformedCapabilities: string[] = [];
 
-	// Check that the bridge has only the expected properties
+	// --- Provenance check (non-forgeable) ---
+	const trusted = isTrustedBridge(bridge);
+
+	// --- Check that the bridge has only the expected top-level properties ---
 	const bridgeKeys = Object.keys(bridge);
 	const allowedKeys = [
 		'kind',
@@ -485,5 +610,66 @@ export function verifyBridgeCapabilities(bridge: Stage3RealGitHubBridge): {
 		}
 	}
 
-	return { valid: exposedForbidden.length === 0, exposedForbidden };
+	// --- Check required top-level properties exist ---
+	for (const key of allowedKeys) {
+		if (!(key in bridge)) {
+			missingCapabilities.push(`Missing top-level property: ${key}`);
+		}
+	}
+
+	// --- Check nested properties are functions ---
+	if (typeof bridge.baseResolver?.resolveBase !== 'function') {
+		malformedCapabilities.push('baseResolver.resolveBase is not a function');
+	}
+	if (typeof bridge.branchWriter?.createBranch !== 'function') {
+		malformedCapabilities.push('branchWriter.createBranch is not a function');
+	}
+	if (typeof bridge.fileCommitWriter?.commitFile !== 'function') {
+		malformedCapabilities.push('fileCommitWriter.commitFile is not a function');
+	}
+	if (typeof bridge.prWriter?.createPullRequest !== 'function') {
+		malformedCapabilities.push('prWriter.createPullRequest is not a function');
+	}
+
+	// --- Check readOnlyVerifier nested readers ---
+	const verifier = bridge.readOnlyVerifier;
+	if (!verifier) {
+		missingCapabilities.push('Missing readOnlyVerifier');
+	} else {
+		if (typeof verifier.repository?.getDefaultBranch !== 'function') {
+			malformedCapabilities.push('readOnlyVerifier.repository.getDefaultBranch is not a function');
+		}
+		if (typeof verifier.branch?.getBranch !== 'function') {
+			malformedCapabilities.push('readOnlyVerifier.branch.getBranch is not a function');
+		}
+		if (typeof verifier.content?.getFileContent !== 'function') {
+			malformedCapabilities.push('readOnlyVerifier.content.getFileContent is not a function');
+		}
+		if (typeof verifier.commit?.getCommit !== 'function') {
+			malformedCapabilities.push('readOnlyVerifier.commit.getCommit is not a function');
+		}
+		if (typeof verifier.pullRequest?.findOpenPr !== 'function') {
+			malformedCapabilities.push('readOnlyVerifier.pullRequest.findOpenPr is not a function');
+		}
+		if (typeof verifier.compare?.compareCommits !== 'function') {
+			malformedCapabilities.push('readOnlyVerifier.compare.compareCommits is not a function');
+		}
+	}
+
+	// --- Check forbidden methods are NOT present on bridge ---
+	const forbiddenMethods = ['merge', 'delete', 'deleteBranch', 'addLabels', 'removeLabels',
+		'closeIssue', 'requestReviewers', 'workflowDispatch', 'createRelease'];
+	for (const method of forbiddenMethods) {
+		if (typeof (bridge as any)[method] === 'function') {
+			exposedForbidden.push(`Forbidden method exposed: ${method}`);
+		}
+	}
+
+	return {
+		valid: exposedForbidden.length === 0 && missingCapabilities.length === 0 && malformedCapabilities.length === 0,
+		trusted,
+		exposedForbidden,
+		missingCapabilities,
+		malformedCapabilities,
+	};
 }

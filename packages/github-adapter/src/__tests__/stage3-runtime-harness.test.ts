@@ -17,7 +17,8 @@ import {
 	createFakeRuntimeSafetyProbe,
 } from '../stage3-runtime-safety-probe.js';
 import { createFakeReadOnlyVerifier } from '../stage3-reader-verifier.js';
-import { createMockStage3Bridge } from '../stage3-real-github-bridge.js';
+import { createMockStage3Bridge, createStage3RealGitHubBridge } from '../stage3-real-github-bridge.js';
+import type { Stage3GitHubTransport } from '../stage3-real-github-bridge.js';
 import type {
 	Stage3BranchWriter,
 	Stage3FileCommitWriter,
@@ -83,6 +84,7 @@ function createSpyAuditSink(): Stage3AuditSink {
 
 /**
  * Create a test bridge that wraps spy writers and a fake verifier.
+ * Uses createStage3RealGitHubBridge to register in the trusted WeakSet.
  * Used to construct live-mode harness inputs with the mandatory bridge requirement.
  */
 function createTestBridge(params: {
@@ -92,14 +94,77 @@ function createTestBridge(params: {
 	verifier: ReturnType<typeof createFakeReadOnlyVerifier>;
 	baseSha?: string;
 }): import('../stage3-real-github-bridge.js').Stage3RealGitHubBridge {
-	return {
-		kind: 'restricted-real-transport' as const,
-		baseResolver: createFakeBaseResolver(params.baseSha ?? TEST_BASE_SHA),
-		branchWriter: params.branchWriter,
-		fileCommitWriter: params.fileCommitWriter,
-		prWriter: params.prWriter,
-		readOnlyVerifier: params.verifier,
+	const { branchWriter, fileCommitWriter, prWriter, verifier } = params;
+
+	// Create a transport that delegates to the spy writers and verifier
+	const transport: Stage3GitHubTransport = {
+		resolveBaseSha: vi.fn().mockResolvedValue({ sha: params.baseSha ?? TEST_BASE_SHA }),
+		createBranch: vi.fn().mockImplementation(async (owner, repo, branch, fromSha) => {
+			return branchWriter.createBranch({
+				owner,
+				repo,
+				branch,
+				sourceBranch: STAGE3_CANONICAL.baseBranch,
+				expectedSourceSha: fromSha,
+			});
+		}),
+		commitFile: vi.fn().mockImplementation(async (owner, repo, branch, path, content, message, body) => {
+			return fileCommitWriter.commitFile({
+				owner,
+				repo,
+				branch,
+				filePath: path,
+				content,
+				message,
+				commitBody: body,
+			});
+		}),
+		createDraftPr: vi.fn().mockImplementation(async (owner, repo, title, head, base, body) => {
+			return prWriter.createPullRequest({
+				owner,
+				repo,
+				title,
+				head,
+				base,
+				body,
+				draft: true,
+			});
+		}),
+		getDefaultBranch: vi.fn().mockImplementation(async (owner, repo) => {
+			return verifier.repository.getDefaultBranch(owner, repo);
+		}),
+		getBranch: vi.fn().mockImplementation(async (owner, repo, branch) => {
+			return verifier.branch.getBranch(owner, repo, branch);
+		}),
+		getFileContent: vi.fn().mockImplementation(async (owner, repo, path, ref) => {
+			return verifier.content.getFileContent(owner, repo, path, ref);
+		}),
+		getCommit: vi.fn().mockImplementation(async (owner, repo, sha) => {
+			return verifier.commit.getCommit(owner, repo, sha);
+		}),
+		findOpenPr: vi.fn().mockImplementation(async (owner, repo, head, base) => {
+			return verifier.pullRequest.findOpenPr(owner, repo, head, base);
+		}),
+		compareCommits: vi.fn().mockImplementation(async (owner, repo, base, head) => {
+			return verifier.compare.compareCommits(owner, repo, base, head);
+		}),
 	};
+
+	// Use the factory to create a trusted bridge (registered in WeakSet)
+	return createStage3RealGitHubBridge({
+		transport,
+		canonicalManifest: {
+			targetBranch: STAGE3_CANONICAL.targetBranch,
+			filePath: STAGE3_CANONICAL.filePath,
+			expectedFileContent: CANONICAL_FILE_CONTENT,
+			expectedFileSha256: STAGE3_CANONICAL.fileSha256,
+			expectedFileBytes: STAGE3_CANONICAL.fileUtf8ByteLength,
+			commitMessage: STAGE3_CANONICAL.commitMessage,
+			commitBody: STAGE3_CANONICAL.commitBody,
+			prTitle: STAGE3_CANONICAL.prTitle,
+			prBody: STAGE3_CANONICAL.prBody,
+		},
+	});
 }
 
 // ---------------------------------------------------------------------------
@@ -1213,19 +1278,18 @@ describe('Stage3RuntimeHarness — Phase K: Integration Blocker Tests', () => {
 			approvalTextSha256:
 				'bad-hash-0000000000000000000000000000000000000000000000000000000000000000',
 		};
-		const bridge: import('../stage3-real-github-bridge.js').Stage3RealGitHubBridge = {
-			kind: 'restricted-real-transport' as const,
-			baseResolver: createFakeBaseResolver(TEST_BASE_SHA),
+		// Use createTestBridge to get a trusted bridge (passes provenance check)
+		const bridge = createTestBridge({
 			branchWriter: {
 				createBranch: vi.fn().mockImplementation(() => {
 					simulateWrite();
 					return Promise.resolve({ ref: 'ref', sha: 'sha' });
 				}),
 			},
-			fileCommitWriter: createSpyFileCommitWriter() as any,
-			prWriter: createSpyPrWriter() as any,
-			readOnlyVerifier: verifier,
-		};
+			fileCommitWriter: createSpyFileCommitWriter(),
+			prWriter: createSpyPrWriter(),
+			verifier: verifier as any,
+		});
 		const input = {
 			mode: 'live' as const,
 			repository: STAGE3_CANONICAL.repository,

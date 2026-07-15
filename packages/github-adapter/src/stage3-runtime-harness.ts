@@ -23,7 +23,7 @@ import { computeApprovalTextSha256, validateApprovalBinding } from './stage3-app
 import { checkBaseDrift } from './stage3-base-resolver.js';
 import { validateSafetySnapshot } from './stage3-runtime-safety-probe.js';
 import { verifyPreWrite, verifyPostWrite } from './stage3-reader-verifier.js';
-import { verifyBridgeCapabilities } from './stage3-real-github-bridge.js';
+import { verifyBridgeCapabilities, isTrustedBridge } from './stage3-real-github-bridge.js';
 import type { Stage3ApprovalBinding } from './stage3-approval-binding.js';
 import type { Stage3BaseResolver } from './stage3-base-resolver.js';
 import type { Stage3RuntimeSafetyProbe } from './stage3-runtime-safety-probe.js';
@@ -486,7 +486,7 @@ export class Stage3RuntimeHarness {
 					'createBranch',
 					input.repository,
 					'blocked',
-					`Bridge capability check failed: ${capCheck.exposedForbidden.join(', ')}`,
+					`Bridge capability check failed: ${capCheck.exposedForbidden.join(', ')}${capCheck.missingCapabilities.length ? ` missing: ${capCheck.missingCapabilities.join(', ')}` : ''}${capCheck.malformedCapabilities.length ? ` malformed: ${capCheck.malformedCapabilities.join(', ')}` : ''}`,
 					undefined,
 					undefined,
 					idempotencyKey,
@@ -497,6 +497,46 @@ export class Stage3RuntimeHarness {
 				return this._result(
 					false,
 					'Bridge capability validation failed',
+					false,
+					false,
+					auditEvents,
+					'live',
+					false,
+					false,
+					'preflight-security',
+					undefined,
+					undefined,
+					undefined,
+					false,
+					false,
+					false,
+					false,
+					undefined,
+					false,
+					'none',
+				);
+			}
+
+			// 1a-ii-b: Bridge PROVENANCE check — must be internally-created, not caller-forged
+			// Uses WeakSet object identity — a structurally identical but externally
+			// constructed bridge will be rejected regardless of kind/shape/properties.
+			if (!capCheck.trusted) {
+				const auditEvent = this._audit(
+					'live',
+					'createBranch',
+					input.repository,
+					'blocked',
+					'Untrusted bridge provenance — bridge was not created by the internal factory',
+					undefined,
+					undefined,
+					idempotencyKey,
+					'preflight-security',
+				);
+				auditEvents.push(auditEvent);
+				await _emit(auditEvent);
+				return this._result(
+					false,
+					'Untrusted bridge provenance',
 					false,
 					false,
 					auditEvents,
