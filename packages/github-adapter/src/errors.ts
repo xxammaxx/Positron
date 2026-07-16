@@ -27,7 +27,9 @@ export class GitHubCapabilityError extends GitHubPermissionError {
 	public readonly requiredCapability = 'github:write' as const;
 
 	constructor(operation: string) {
-		super(`GitHub operation '${operation}' requires write capability — blocked by read-only adapter`);
+		super(
+			`GitHub operation '${operation}' requires write capability — blocked by read-only adapter`,
+		);
 		this.name = 'GitHubCapabilityError';
 		this.operation = operation;
 	}

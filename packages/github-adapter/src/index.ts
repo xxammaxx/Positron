@@ -199,16 +199,30 @@ export type {
 } from './stage3-reader-verifier.js';
 
 // --- Stage 3 Real GitHub Bridge ---
+// NOTE: createStage3RealGitHubBridge and Stage3GitHubTransport are INTERNAL.
+// They are NOT exported from the package root to prevent direct write bypass.
+// Only mock bridges and capability verification are publicly accessible.
 export {
 	createMockStage3Bridge,
 	verifyBridgeCapabilities,
 	STAGE3_ALLOWED_CAPABILITIES,
 	STAGE3_FORBIDDEN_CAPABILITIES,
 } from './stage3-real-github-bridge.js';
-export type {
-	Stage3RealGitHubBridge,
-	Stage3AllowedCapability,
-} from './stage3-real-github-bridge.js';
+export type { Stage3AllowedCapability } from './stage3-real-github-bridge.js';
+
+// --- Stage 3 Canonical Manifest ---
+export {
+	sha256Utf8,
+	sha256Bytes,
+	utf8ByteLength,
+	computeManifestSha256,
+} from './stage3-canonical-manifest.js';
+
+// --- Stage 3 Octokit Transport ---
+// NOTE: createStage3OctokitTransport and STAGE3_FORBIDDEN_OCTOKIT_ENDPOINTS are INTERNAL.
+// They are NOT exported from the package root to prevent direct write bypass.
+// verifyNoForbiddenEndpointsCalled is test-only and also not publicly exported.
+// The transport is only constructable internally via the harness/bridge assembly chain.
 
 // --- Label Lifecycle ---
 export { getLabelsForPhase, LABEL_LIFECYCLE } from './label-lifecycle.js';

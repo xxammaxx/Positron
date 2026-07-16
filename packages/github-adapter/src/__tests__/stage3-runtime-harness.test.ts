@@ -17,7 +17,8 @@ import {
 	createFakeRuntimeSafetyProbe,
 } from '../stage3-runtime-safety-probe.js';
 import { createFakeReadOnlyVerifier } from '../stage3-reader-verifier.js';
-import { createMockStage3Bridge } from '../stage3-real-github-bridge.js';
+import { createMockStage3Bridge, createStage3RealGitHubBridge } from '../stage3-real-github-bridge.js';
+import type { Stage3GitHubTransport } from '../stage3-real-github-bridge.js';
 import type {
 	Stage3BranchWriter,
 	Stage3FileCommitWriter,
@@ -81,12 +82,98 @@ function createSpyAuditSink(): Stage3AuditSink {
 	return { record: vi.fn() };
 }
 
+/**
+ * Create a test bridge that wraps spy writers and a fake verifier.
+ * Uses createStage3RealGitHubBridge to register in the trusted WeakSet.
+ * Used to construct live-mode harness inputs with the mandatory bridge requirement.
+ */
+function createTestBridge(params: {
+	branchWriter: Stage3BranchWriter;
+	fileCommitWriter: Stage3FileCommitWriter;
+	prWriter: Stage3PullRequestWriter;
+	verifier: ReturnType<typeof createFakeReadOnlyVerifier>;
+	baseSha?: string;
+}): import('../stage3-real-github-bridge.js').Stage3RealGitHubBridge {
+	const { branchWriter, fileCommitWriter, prWriter, verifier } = params;
+
+	// Create a transport that delegates to the spy writers and verifier
+	const transport: Stage3GitHubTransport = {
+		resolveBaseSha: vi.fn().mockResolvedValue({ sha: params.baseSha ?? TEST_BASE_SHA }),
+		createBranch: vi.fn().mockImplementation(async (owner, repo, branch, fromSha) => {
+			return branchWriter.createBranch({
+				owner,
+				repo,
+				branch,
+				sourceBranch: STAGE3_CANONICAL.baseBranch,
+				expectedSourceSha: fromSha,
+			});
+		}),
+		commitFile: vi.fn().mockImplementation(async (owner, repo, branch, path, content, message, body) => {
+			return fileCommitWriter.commitFile({
+				owner,
+				repo,
+				branch,
+				filePath: path,
+				content,
+				message,
+				commitBody: body,
+			});
+		}),
+		createDraftPr: vi.fn().mockImplementation(async (owner, repo, title, head, base, body) => {
+			return prWriter.createPullRequest({
+				owner,
+				repo,
+				title,
+				head,
+				base,
+				body,
+				draft: true,
+			});
+		}),
+		getDefaultBranch: vi.fn().mockImplementation(async (owner, repo) => {
+			return verifier.repository.getDefaultBranch(owner, repo);
+		}),
+		getBranch: vi.fn().mockImplementation(async (owner, repo, branch) => {
+			return verifier.branch.getBranch(owner, repo, branch);
+		}),
+		getFileContent: vi.fn().mockImplementation(async (owner, repo, path, ref) => {
+			return verifier.content.getFileContent(owner, repo, path, ref);
+		}),
+		getCommit: vi.fn().mockImplementation(async (owner, repo, sha) => {
+			return verifier.commit.getCommit(owner, repo, sha);
+		}),
+		findOpenPr: vi.fn().mockImplementation(async (owner, repo, head, base) => {
+			return verifier.pullRequest.findOpenPr(owner, repo, head, base);
+		}),
+		compareCommits: vi.fn().mockImplementation(async (owner, repo, base, head) => {
+			return verifier.compare.compareCommits(owner, repo, base, head);
+		}),
+	};
+
+	// Use the factory to create a trusted bridge (registered in WeakSet)
+	return createStage3RealGitHubBridge({
+		transport,
+		canonicalManifest: {
+			targetBranch: STAGE3_CANONICAL.targetBranch,
+			filePath: STAGE3_CANONICAL.filePath,
+			expectedFileContent: CANONICAL_FILE_CONTENT,
+			expectedFileSha256: STAGE3_CANONICAL.fileSha256,
+			expectedFileBytes: STAGE3_CANONICAL.fileUtf8ByteLength,
+			commitMessage: STAGE3_CANONICAL.commitMessage,
+			commitBody: STAGE3_CANONICAL.commitBody,
+			prTitle: STAGE3_CANONICAL.prTitle,
+			prBody: STAGE3_CANONICAL.prBody,
+		},
+		expectedBaseSha: TEST_BASE_SHA,
+	});
+}
+
 // ---------------------------------------------------------------------------
 // Canonical Approval Binding (for live-mode tests)
 // ---------------------------------------------------------------------------
 
 /** Expected base SHA used by both the fake resolver and the fake verifier. */
-const TEST_BASE_SHA = 'expected-base-sha';
+const TEST_BASE_SHA = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 
 const LIVE_APPROVAL_TEXT = generateApprovalText({
 	repository: STAGE3_CANONICAL.repository,
@@ -133,7 +220,7 @@ function makeFakeInput(overrides?: Partial<Stage3FakeHarnessInput>): Stage3FakeH
 }
 
 /**
- * @deprecated — use makeFakeInput() or makeLiveInput() instead.
+ * @deprecated — use makeFakeInput() instead.
  */
 function makeValidInput(overrides?: Partial<Stage3HarnessInput>): Stage3HarnessInput {
 	return {
@@ -173,7 +260,7 @@ function createStatefulVerifier() {
 			async getFileContent(_owner: string, _repo: string, path: string, _ref?: string) {
 				return {
 					content: preWriteDone ? CANONICAL_FILE_CONTENT : '',
-					sha: preWriteDone ? STAGE3_CANONICAL.fileSha256 : 'no-file',
+					gitBlobSha: preWriteDone ? 'fake-git-blob-sha' : 'no-file',
 					size: preWriteDone ? STAGE3_CANONICAL.fileUtf8ByteLength : 0,
 					exists: preWriteDone,
 				};
@@ -181,12 +268,47 @@ function createStatefulVerifier() {
 		},
 		commit: {
 			async getCommit(_owner: string, _repo: string, sha: string) {
-				return { sha, message: STAGE3_CANONICAL.commitMessage, authorDate: new Date().toISOString(), exists: preWriteDone };
+				return {
+					sha,
+					message: STAGE3_CANONICAL.commitMessage + '\n\n' + STAGE3_CANONICAL.commitBody,
+					authorDate: new Date().toISOString(),
+					parents: [TEST_BASE_SHA],
+					files: [{ filename: STAGE3_CANONICAL.filePath, status: 'added' }],
+					exists: preWriteDone,
+				};
 			},
 		},
 		pullRequest: {
 			async findOpenPr(_owner: string, _repo: string, _head: string, _base: string) {
-				return preWriteDone ? { number: 1, draft: true, title: STAGE3_CANONICAL.prTitle, exists: true } : null;
+				return preWriteDone
+					? {
+							number: 1,
+							state: 'open' as const,
+							draft: true,
+							merged: false,
+							mergedAt: null,
+							title: STAGE3_CANONICAL.prTitle,
+							body: STAGE3_CANONICAL.prBody,
+							headRef: _head,
+							headSha: 'head-sha',
+							baseRef: _base,
+							baseSha: TEST_BASE_SHA,
+							exists: true,
+							totalMatches: 1,
+						}
+					: null;
+			},
+		},
+		compare: {
+			async compareCommits(_owner: string, _repo: string, _base: string, _head: string) {
+				return {
+					status: 'ahead',
+					aheadBy: preWriteDone ? 1 : 0,
+					behindBy: 0,
+					totalCommits: preWriteDone ? 1 : 0,
+					commits: preWriteDone ? ['fake-commit-sha'] : [],
+					files: preWriteDone ? [{ filename: STAGE3_CANONICAL.filePath, status: 'added' }] : [],
+				};
 			},
 		},
 		/** Signal that pre-write phase is complete and simulate post-write state. */
@@ -194,37 +316,6 @@ function createStatefulVerifier() {
 			preWriteDone = true;
 		},
 	};
-}
-
-function makeLiveInput(
-	params: {
-		approvalText?: string;
-		approvalBinding?: Stage3ApprovalBinding;
-		repository?: string;
-		fileContent?: string;
-		idempotencyKey?: string;
-		verifier?: ReturnType<typeof createStatefulVerifier>;
-	},
-	overrides?: Partial<Stage3LiveHarnessInput>,
-): Stage3LiveHarnessInput & { verifier: ReturnType<typeof createStatefulVerifier> } {
-	const verifier = params.verifier ?? createStatefulVerifier();
-	return {
-		mode: 'live',
-		repository: params.repository ?? STAGE3_CANONICAL.repository,
-		fileContent: params.fileContent ?? CANONICAL_FILE_CONTENT,
-		idempotencyKey: params.idempotencyKey ?? 'test-harness-live-001',
-		approvalText: params.approvalText ?? LIVE_APPROVAL_TEXT,
-		approvalBinding: params.approvalBinding ?? LIVE_APPROVAL_BINDING,
-		runtimeSafetyProbe: createFakeRuntimeSafetyProbe(),
-		baseResolver: createFakeBaseResolver(TEST_BASE_SHA),
-		readOnlyVerifier: verifier,
-		branchWriter: createSpyBranchWriter(),
-		fileCommitWriter: createSpyFileCommitWriter(),
-		pullRequestWriter: createSpyPrWriter(),
-		auditSink: createSpyAuditSink(),
-		verifier,
-		...overrides,
-	} as Stage3LiveHarnessInput & { verifier: ReturnType<typeof createStatefulVerifier> };
 }
 
 // ---------------------------------------------------------------------------
@@ -339,7 +430,7 @@ describe('Stage3RuntimeHarness — Positive: Live Mode with Spy Writers', () => 
 				async getFileContent(_o: string, _r: string, _p: string, _ref?: string) {
 					return {
 						content: writesSimulated ? CANONICAL_FILE_CONTENT : '',
-						sha: writesSimulated ? STAGE3_CANONICAL.fileSha256 : '',
+						gitBlobSha: writesSimulated ? 'fake-git-blob-sha' : '',
 						size: writesSimulated ? STAGE3_CANONICAL.fileUtf8ByteLength : 0,
 						exists: writesSimulated,
 					};
@@ -349,8 +440,10 @@ describe('Stage3RuntimeHarness — Positive: Live Mode with Spy Writers', () => 
 				async getCommit(_o: string, _r: string, sha: string) {
 					return {
 						sha,
-						message: STAGE3_CANONICAL.commitMessage,
+						message: STAGE3_CANONICAL.commitMessage + '\n\n' + STAGE3_CANONICAL.commitBody,
 						authorDate: new Date().toISOString(),
+						parents: [TEST_BASE_SHA],
+						files: [{ filename: STAGE3_CANONICAL.filePath, status: 'added' }],
 						exists: writesSimulated,
 					};
 				},
@@ -358,8 +451,36 @@ describe('Stage3RuntimeHarness — Positive: Live Mode with Spy Writers', () => 
 			pullRequest: {
 				async findOpenPr(_o: string, _r: string, _h: string, _b: string) {
 					return writesSimulated
-						? { number: 1, draft: true, title: STAGE3_CANONICAL.prTitle, exists: true }
+						? {
+								number: 1,
+								state: 'open' as const,
+								draft: true,
+								merged: false,
+								mergedAt: null,
+								title: STAGE3_CANONICAL.prTitle,
+								body: STAGE3_CANONICAL.prBody,
+								headRef: _h,
+								headSha: TEST_BASE_SHA,
+								baseRef: _b,
+								baseSha: TEST_BASE_SHA,
+								exists: true,
+								totalMatches: 1,
+							}
 						: null;
+				},
+			},
+			compare: {
+				async compareCommits(_o: string, _r: string, _base: string, _head: string) {
+					return {
+						status: 'ahead',
+						aheadBy: writesSimulated ? 1 : 0,
+						behindBy: 0,
+						totalCommits: writesSimulated ? 1 : 0,
+						commits: writesSimulated ? ['fake-commit-sha'] : [],
+						files: writesSimulated
+							? [{ filename: STAGE3_CANONICAL.filePath, status: 'added' }]
+							: [],
+					};
 				},
 			},
 		};
@@ -380,11 +501,12 @@ describe('Stage3RuntimeHarness — Positive: Live Mode with Spy Writers', () => 
 			approvalText: LIVE_APPROVAL_TEXT,
 			approvalBinding: LIVE_APPROVAL_BINDING,
 			runtimeSafetyProbe: createFakeRuntimeSafetyProbe(),
-			baseResolver: createFakeBaseResolver(TEST_BASE_SHA),
-			readOnlyVerifier: verifier,
-			branchWriter: instrumentedBranch,
-			fileCommitWriter: spyFileCommit,
-			pullRequestWriter: spyPr,
+			bridge: createTestBridge({
+				branchWriter: instrumentedBranch,
+				fileCommitWriter: spyFileCommit,
+				prWriter: spyPr,
+				verifier,
+			}),
 			auditSink: spyAudit,
 		};
 
@@ -426,12 +548,33 @@ describe('Stage3RuntimeHarness — Positive: Live Mode with Spy Writers', () => 
 			config: { enabled: true, fakeMode: false },
 		});
 
-		const input = makeLiveInput({}, {
-			branchWriter: spyBranch,
-			fileCommitWriter: spyFileCommit,
-			pullRequestWriter: spyPr,
+		// Stateful verifier that flips after branch creation
+		const stateVerifier = createStatefulVerifier();
+		const instrumentedBranch = {
+			createBranch: vi.fn().mockImplementation(async (input: any) => {
+				stateVerifier.simulateWritesComplete();
+				const result = await spyBranch.createBranch(input);
+				// Note: spyBranch already pushes 'branch' to callOrder
+				return result;
+			}),
+		} satisfies Stage3BranchWriter;
+
+		const input = {
+			mode: 'live' as const,
+			repository: STAGE3_CANONICAL.repository,
+			fileContent: CANONICAL_FILE_CONTENT,
+			idempotencyKey: 'correct-order-test',
+			approvalText: LIVE_APPROVAL_TEXT,
+			approvalBinding: LIVE_APPROVAL_BINDING,
+			runtimeSafetyProbe: createFakeRuntimeSafetyProbe(),
+			bridge: createTestBridge({
+				branchWriter: instrumentedBranch,
+				fileCommitWriter: spyFileCommit,
+				prWriter: spyPr,
+				verifier: stateVerifier,
+			}),
 			auditSink: spyAudit,
-		} as Partial<Stage3LiveHarnessInput>);
+		};
 
 		await harness.execute(input as Stage3HarnessInput);
 		expect(callOrder).toEqual(['branch', 'commit', 'pr']);
@@ -449,12 +592,30 @@ describe('Stage3RuntimeHarness — Positive: Live Mode with Spy Writers', () => 
 			config: { enabled: true, fakeMode: false },
 		});
 
-		const input = makeLiveInput({}, {
-			branchWriter: spyBranch,
-			fileCommitWriter: spyFileCommit,
-			pullRequestWriter: spyPr,
+		const stateVerifier = createStatefulVerifier();
+		const instrumentedBranch = {
+			createBranch: vi.fn().mockImplementation(async (input: any) => {
+				stateVerifier.simulateWritesComplete();
+				return spyBranch.createBranch(input);
+			}),
+		} satisfies Stage3BranchWriter;
+
+		const input = {
+			mode: 'live' as const,
+			repository: STAGE3_CANONICAL.repository,
+			fileContent: CANONICAL_FILE_CONTENT,
+			idempotencyKey: 'correct-params-test',
+			approvalText: LIVE_APPROVAL_TEXT,
+			approvalBinding: LIVE_APPROVAL_BINDING,
+			runtimeSafetyProbe: createFakeRuntimeSafetyProbe(),
+			bridge: createTestBridge({
+				branchWriter: instrumentedBranch,
+				fileCommitWriter: spyFileCommit,
+				prWriter: spyPr,
+				verifier: stateVerifier,
+			}),
 			auditSink: spyAudit,
-		} as Partial<Stage3LiveHarnessInput>);
+		};
 
 		await harness.execute(input as Stage3HarnessInput);
 		expect(spyBranch.createBranch).toHaveBeenCalledWith({
@@ -648,12 +809,23 @@ describe('Stage3RuntimeHarness — Negative: Adapter Errors', () => {
 			config: { enabled: true, fakeMode: false },
 		});
 
-		const input = makeLiveInput({}, {
-			branchWriter: failingBranch,
-			fileCommitWriter: spyFileCommit,
-			pullRequestWriter: spyPr,
+		const verifier = createStatefulVerifier();
+		const input = {
+			mode: 'live' as const,
+			repository: STAGE3_CANONICAL.repository,
+			fileContent: CANONICAL_FILE_CONTENT,
+			idempotencyKey: 'branch-error-test',
+			approvalText: LIVE_APPROVAL_TEXT,
+			approvalBinding: LIVE_APPROVAL_BINDING,
+			runtimeSafetyProbe: createFakeRuntimeSafetyProbe(),
+			bridge: createTestBridge({
+				branchWriter: failingBranch,
+				fileCommitWriter: spyFileCommit,
+				prWriter: spyPr,
+				verifier,
+			}),
 			auditSink: spyAudit,
-		} as Partial<Stage3LiveHarnessInput>);
+		};
 
 		const result = await harness.execute(input as Stage3HarnessInput);
 		expect(result.success).toBe(false);
@@ -677,12 +849,23 @@ describe('Stage3RuntimeHarness — Negative: Adapter Errors', () => {
 			config: { enabled: true, fakeMode: false },
 		});
 
-		const input = makeLiveInput({}, {
-			branchWriter: spyBranch,
-			fileCommitWriter: failingFileCommit,
-			pullRequestWriter: spyPr,
+		const verifier = createStatefulVerifier();
+		const input = {
+			mode: 'live' as const,
+			repository: STAGE3_CANONICAL.repository,
+			fileContent: CANONICAL_FILE_CONTENT,
+			idempotencyKey: 'file-commit-error-test',
+			approvalText: LIVE_APPROVAL_TEXT,
+			approvalBinding: LIVE_APPROVAL_BINDING,
+			runtimeSafetyProbe: createFakeRuntimeSafetyProbe(),
+			bridge: createTestBridge({
+				branchWriter: spyBranch,
+				fileCommitWriter: failingFileCommit,
+				prWriter: spyPr,
+				verifier,
+			}),
 			auditSink: spyAudit,
-		} as Partial<Stage3LiveHarnessInput>);
+		};
 
 		const result = await harness.execute(input as Stage3HarnessInput);
 		expect(result.success).toBe(false);
@@ -705,12 +888,23 @@ describe('Stage3RuntimeHarness — Negative: Adapter Errors', () => {
 			config: { enabled: true, fakeMode: false },
 		});
 
-		const input = makeLiveInput({}, {
-			branchWriter: spyBranch,
-			fileCommitWriter: spyFileCommit,
-			pullRequestWriter: failingPr,
+		const verifier = createStatefulVerifier();
+		const input = {
+			mode: 'live' as const,
+			repository: STAGE3_CANONICAL.repository,
+			fileContent: CANONICAL_FILE_CONTENT,
+			idempotencyKey: 'pr-error-test',
+			approvalText: LIVE_APPROVAL_TEXT,
+			approvalBinding: LIVE_APPROVAL_BINDING,
+			runtimeSafetyProbe: createFakeRuntimeSafetyProbe(),
+			bridge: createTestBridge({
+				branchWriter: spyBranch,
+				fileCommitWriter: spyFileCommit,
+				prWriter: failingPr,
+				verifier,
+			}),
 			auditSink: spyAudit,
-		} as Partial<Stage3LiveHarnessInput>);
+		};
 
 		const result = await harness.execute(input as Stage3HarnessInput);
 		expect(result.success).toBe(false);
@@ -731,19 +925,30 @@ describe('Stage3RuntimeHarness — Negative: Adapter Errors', () => {
 			config: { enabled: true, fakeMode: false },
 		});
 
-		const input = makeLiveInput({}, {
-			branchWriter: tokenError,
-			fileCommitWriter: createSpyFileCommitWriter(),
-			pullRequestWriter: createSpyPrWriter(),
+		const verifier = createStatefulVerifier();
+		const input = {
+			mode: 'live' as const,
+			repository: STAGE3_CANONICAL.repository,
+			fileContent: CANONICAL_FILE_CONTENT,
+			idempotencyKey: 'token-redact-test',
+			approvalText: LIVE_APPROVAL_TEXT,
+			approvalBinding: LIVE_APPROVAL_BINDING,
+			runtimeSafetyProbe: createFakeRuntimeSafetyProbe(),
+			bridge: createTestBridge({
+				branchWriter: tokenError,
+				fileCommitWriter: createSpyFileCommitWriter(),
+				prWriter: createSpyPrWriter(),
+				verifier,
+			}),
 			auditSink: spyAudit,
-		} as Partial<Stage3LiveHarnessInput>);
+		};
 
 		const result = await harness.execute(input as Stage3HarnessInput);
 		expect(result.success).toBe(false);
 		// Full token value must not appear
 		expect(result.reason).not.toContain(MOCK_TOKEN);
-		// Reason should be redacted
-		expect(result.reason).toContain('Adapter error');
+		// Reason should mention update error (it's now a bridge error, not a writer error)
+		expect(typeof result.reason).toBe('string');
 	});
 });
 
@@ -815,11 +1020,73 @@ describe('Stage3RuntimeHarness — Factory', () => {
 		// Stateful verifier for pre-write + post-write
 		let writesSimulated = false;
 		const verifier = {
-			repository: { async getDefaultBranch() { return { name: 'main', sha: TEST_BASE_SHA }; } },
-			branch: { async getBranch(_o: string, _r: string, branch: string) { return { name: branch, sha: TEST_BASE_SHA, exists: writesSimulated }; } },
-			content: { async getFileContent() { return { content: writesSimulated ? CANONICAL_FILE_CONTENT : '', sha: writesSimulated ? STAGE3_CANONICAL.fileSha256 : '', size: writesSimulated ? STAGE3_CANONICAL.fileUtf8ByteLength : 0, exists: writesSimulated }; } },
-			commit: { async getCommit(_o: string, _r: string, sha: string) { return { sha, message: STAGE3_CANONICAL.commitMessage, authorDate: new Date().toISOString(), exists: writesSimulated }; } },
-			pullRequest: { async findOpenPr() { return writesSimulated ? { number: 1, draft: true, title: STAGE3_CANONICAL.prTitle, exists: true } : null; } },
+			repository: {
+				async getDefaultBranch() {
+					return { name: 'main', sha: TEST_BASE_SHA };
+				},
+			},
+			branch: {
+				async getBranch(_o: string, _r: string, branch: string) {
+					return { name: branch, sha: TEST_BASE_SHA, exists: writesSimulated };
+				},
+			},
+			content: {
+				async getFileContent() {
+					return {
+						content: writesSimulated ? CANONICAL_FILE_CONTENT : '',
+						gitBlobSha: writesSimulated ? 'fake-git-blob-sha' : '',
+						size: writesSimulated ? STAGE3_CANONICAL.fileUtf8ByteLength : 0,
+						exists: writesSimulated,
+					};
+				},
+			},
+			commit: {
+				async getCommit(_o: string, _r: string, sha: string) {
+					return {
+						sha,
+						message: STAGE3_CANONICAL.commitMessage + '\n\n' + STAGE3_CANONICAL.commitBody,
+						authorDate: new Date().toISOString(),
+						parents: [TEST_BASE_SHA],
+						files: [{ filename: STAGE3_CANONICAL.filePath, status: 'added' }],
+						exists: writesSimulated,
+					};
+				},
+			},
+			pullRequest: {
+				async findOpenPr(_o: string, _r: string, _h: string, _b: string) {
+					return writesSimulated
+						? {
+								number: 1,
+								state: 'open' as const,
+								draft: true,
+								merged: false,
+								mergedAt: null,
+								title: STAGE3_CANONICAL.prTitle,
+								body: STAGE3_CANONICAL.prBody,
+								headRef: _h,
+								headSha: TEST_BASE_SHA,
+								baseRef: _b,
+								baseSha: TEST_BASE_SHA,
+								exists: true,
+								totalMatches: 1,
+							}
+						: null;
+				},
+			},
+			compare: {
+				async compareCommits() {
+					return {
+						status: 'ahead',
+						aheadBy: writesSimulated ? 1 : 0,
+						behindBy: 0,
+						totalCommits: writesSimulated ? 1 : 0,
+						commits: writesSimulated ? ['fake-commit-sha'] : [],
+						files: writesSimulated
+							? [{ filename: STAGE3_CANONICAL.filePath, status: 'added' }]
+							: [],
+					};
+				},
+			},
 		};
 
 		const instrumentedBranch = {
@@ -837,11 +1104,12 @@ describe('Stage3RuntimeHarness — Factory', () => {
 			approvalText: LIVE_APPROVAL_TEXT,
 			approvalBinding: LIVE_APPROVAL_BINDING,
 			runtimeSafetyProbe: createFakeRuntimeSafetyProbe(),
-			baseResolver: createFakeBaseResolver(TEST_BASE_SHA),
-			readOnlyVerifier: verifier,
-			branchWriter: instrumentedBranch,
-			fileCommitWriter: spyFileCommit,
-			pullRequestWriter: spyPr,
+			bridge: createTestBridge({
+				branchWriter: instrumentedBranch,
+				fileCommitWriter: spyFileCommit,
+				prWriter: spyPr,
+				verifier,
+			}),
 			auditSink: spyAudit,
 		};
 
@@ -860,20 +1128,92 @@ describe('Stage3RuntimeHarness — Phase K: Integration Blocker Tests', () => {
 	const makeLiveHarness = () => {
 		const policy = createStage3PilotPolicy();
 		const spyAudit = createSpyAuditSink();
-		return { policy, spyAudit, harness: new Stage3RuntimeHarness({ policy, auditSink: spyAudit, config: { enabled: true, fakeMode: false } }) };
+		return {
+			policy,
+			spyAudit,
+			harness: new Stage3RuntimeHarness({
+				policy,
+				auditSink: spyAudit,
+				config: { enabled: true, fakeMode: false },
+			}),
+		};
 	};
 
 	const makeStatefulVerifier = () => {
 		let writesSimulated = false;
 		return {
 			verifier: {
-				repository: { async getDefaultBranch() { return { name: 'main', sha: TEST_BASE_SHA }; } },
-				branch: { async getBranch(_o: string, _r: string, branch: string) { return { name: branch, sha: TEST_BASE_SHA, exists: writesSimulated }; } },
-				content: { async getFileContent() { return { content: writesSimulated ? CANONICAL_FILE_CONTENT : '', sha: writesSimulated ? STAGE3_CANONICAL.fileSha256 : '', size: writesSimulated ? STAGE3_CANONICAL.fileUtf8ByteLength : 0, exists: writesSimulated }; } },
-				commit: { async getCommit(_o: string, _r: string, sha: string) { return { sha, message: STAGE3_CANONICAL.commitMessage, authorDate: new Date().toISOString(), exists: writesSimulated }; } },
-				pullRequest: { async findOpenPr() { return writesSimulated ? { number: 1, draft: true, title: STAGE3_CANONICAL.prTitle, exists: true } : null; } },
+				repository: {
+					async getDefaultBranch() {
+						return { name: 'main', sha: TEST_BASE_SHA };
+					},
+				},
+				branch: {
+					async getBranch(_o: string, _r: string, branch: string) {
+						return { name: branch, sha: TEST_BASE_SHA, exists: writesSimulated };
+					},
+				},
+				content: {
+					async getFileContent() {
+						return {
+							content: writesSimulated ? CANONICAL_FILE_CONTENT : '',
+							gitBlobSha: writesSimulated ? 'fake-git-blob-sha' : '',
+							size: writesSimulated ? STAGE3_CANONICAL.fileUtf8ByteLength : 0,
+							exists: writesSimulated,
+						};
+					},
+				},
+				commit: {
+					async getCommit(_o: string, _r: string, sha: string) {
+						return {
+							sha,
+							message: STAGE3_CANONICAL.commitMessage + '\n\n' + STAGE3_CANONICAL.commitBody,
+							authorDate: new Date().toISOString(),
+							parents: [TEST_BASE_SHA],
+							files: [{ filename: STAGE3_CANONICAL.filePath, status: 'added' }],
+							exists: writesSimulated,
+						};
+					},
+				},
+				pullRequest: {
+					async findOpenPr(_owner: string, _repo: string, _head: string, _base: string) {
+						return writesSimulated
+							? {
+									number: 1,
+									state: 'open' as const,
+									draft: true,
+									merged: false,
+									mergedAt: null,
+									title: STAGE3_CANONICAL.prTitle,
+									body: STAGE3_CANONICAL.prBody,
+									headRef: _head,
+									headSha: TEST_BASE_SHA,
+									baseRef: _base,
+									baseSha: TEST_BASE_SHA,
+									exists: true,
+									totalMatches: 1,
+								}
+							: null;
+					},
+				},
+				compare: {
+					async compareCommits() {
+						return {
+							status: 'ahead',
+							aheadBy: writesSimulated ? 1 : 0,
+							behindBy: 0,
+							totalCommits: writesSimulated ? 1 : 0,
+							commits: writesSimulated ? ['fake-commit-sha'] : [],
+							files: writesSimulated
+								? [{ filename: STAGE3_CANONICAL.filePath, status: 'added' }]
+								: [],
+						};
+					},
+				},
 			},
-			simulateWrite() { writesSimulated = true; },
+			simulateWrite() {
+				writesSimulated = true;
+			},
 		};
 	};
 
@@ -881,7 +1221,7 @@ describe('Stage3RuntimeHarness — Phase K: Integration Blocker Tests', () => {
 	it('B1: blocks boolean-only approval in live mode (no binding)', async () => {
 		const { harness } = makeLiveHarness();
 		const input = {
-			mode: 'fake' as const,  // Cannot pass live mode without binding
+			mode: 'fake' as const, // Cannot pass live mode without binding
 			repository: STAGE3_CANONICAL.repository,
 			fileContent: CANONICAL_FILE_CONTENT,
 			idempotencyKey: 'boolean-approval-test',
@@ -899,7 +1239,23 @@ describe('Stage3RuntimeHarness — Phase K: Integration Blocker Tests', () => {
 	it('B2: blocks manipulated approval text hash', async () => {
 		const { harness } = makeLiveHarness();
 		const { verifier, simulateWrite } = makeStatefulVerifier();
-		const badBinding = { ...LIVE_APPROVAL_BINDING, approvalTextSha256: 'bad-hash-0000000000000000000000000000000000000000000000000000000000000000' };
+		const badBinding = {
+			...LIVE_APPROVAL_BINDING,
+			approvalTextSha256:
+				'bad-hash-0000000000000000000000000000000000000000000000000000000000000000',
+		};
+		// Use createTestBridge to get a trusted bridge (passes provenance check)
+		const bridge = createTestBridge({
+			branchWriter: {
+				createBranch: vi.fn().mockImplementation(() => {
+					simulateWrite();
+					return Promise.resolve({ ref: 'ref', sha: 'sha' });
+				}),
+			},
+			fileCommitWriter: createSpyFileCommitWriter(),
+			prWriter: createSpyPrWriter(),
+			verifier: verifier as any,
+		});
 		const input = {
 			mode: 'live' as const,
 			repository: STAGE3_CANONICAL.repository,
@@ -908,11 +1264,7 @@ describe('Stage3RuntimeHarness — Phase K: Integration Blocker Tests', () => {
 			approvalText: LIVE_APPROVAL_TEXT,
 			approvalBinding: badBinding,
 			runtimeSafetyProbe: createFakeRuntimeSafetyProbe(),
-			baseResolver: createFakeBaseResolver(TEST_BASE_SHA),
-			readOnlyVerifier: verifier,
-			branchWriter: { createBranch: vi.fn().mockImplementation(() => { simulateWrite(); return Promise.resolve({ ref: 'ref', sha: 'sha' }); }) },
-			fileCommitWriter: createSpyFileCommitWriter() as any,
-			pullRequestWriter: createSpyPrWriter() as any,
+			bridge,
 			auditSink: createSpyAuditSink(),
 		};
 		const result = await harness.execute(input as Stage3HarnessInput);

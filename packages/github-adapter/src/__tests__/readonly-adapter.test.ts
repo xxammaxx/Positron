@@ -8,7 +8,12 @@ import {
 	GitHubCapabilityError,
 } from '@positron/github-adapter';
 import type { ReadOnlyGitHubAdapter, GitHubAdapter } from '@positron/github-adapter';
-import type { GitHubRepositorySummary, GitHubIssueSummary, GitHubIssueRef, GitHubPullRequest } from '@positron/github-adapter';
+import type {
+	GitHubRepositorySummary,
+	GitHubIssueSummary,
+	GitHubIssueRef,
+	GitHubPullRequest,
+} from '@positron/github-adapter';
 
 // ---------------------------------------------------------------------------
 // Test Helpers

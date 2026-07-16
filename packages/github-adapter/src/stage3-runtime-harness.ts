@@ -23,6 +23,7 @@ import { computeApprovalTextSha256, validateApprovalBinding } from './stage3-app
 import { checkBaseDrift } from './stage3-base-resolver.js';
 import { validateSafetySnapshot } from './stage3-runtime-safety-probe.js';
 import { verifyPreWrite, verifyPostWrite } from './stage3-reader-verifier.js';
+import { verifyBridgeCapabilities, isTrustedBridge, verifyTrustedBridgeIntegrity } from './stage3-real-github-bridge.js';
 import type { Stage3ApprovalBinding } from './stage3-approval-binding.js';
 import type { Stage3BaseResolver } from './stage3-base-resolver.js';
 import type { Stage3RuntimeSafetyProbe } from './stage3-runtime-safety-probe.js';
@@ -132,26 +133,17 @@ export interface Stage3LiveHarnessInput extends Stage3HarnessInputBase {
 	/** Trusted runtime safety probe — NOT caller-supplied booleans. */
 	runtimeSafetyProbe: Stage3RuntimeSafetyProbe;
 
-	/** Base branch SHA resolver for TOCTOU protection. */
-	baseResolver: Stage3BaseResolver;
-
-	/** Read-only verifier for pre-write and post-write checks. */
-	readOnlyVerifier: Stage3ReadOnlyVerifier;
-
-	/** Branch creation writer (dependency-injected, restricted-capability). */
-	branchWriter: Stage3BranchWriter;
-
-	/** File commit writer (dependency-injected, restricted-capability). */
-	fileCommitWriter: Stage3FileCommitWriter;
-
-	/** Draft PR writer (dependency-injected, restricted-capability). */
-	pullRequestWriter: Stage3PullRequestWriter;
+	/**
+	 * Restricted GitHub bridge — MANDATORY in live mode.
+	 * All write AND read operations flow exclusively through this bridge.
+	 * Individual writers (branch/file/PR) are no longer accepted alongside the bridge.
+	 * The bridge must have kind: 'restricted-real-transport' and pass
+	 * verifyBridgeCapabilities() before any writes are attempted.
+	 */
+	bridge: Stage3RealGitHubBridge;
 
 	/** Audit event sink (must persist events, fail-closed). */
 	auditSink: Stage3AuditSink;
-
-	/** Optional: bridge used (checked for kind: 'mock' rejection in live mode). */
-	bridge?: Stage3RealGitHubBridge;
 }
 
 /** Discriminated union — fake or live, never both. */
@@ -316,6 +308,20 @@ export class Stage3RuntimeHarness {
 		const timestamp = new Date().toISOString();
 		const idempotencyKey = input.idempotencyKey;
 
+		// In live mode, the input's auditSink is the authoritative one.
+		// The constructor's auditSink is a fallback for fake mode only.
+		// This closure captures the effective sink for the duration of execute().
+		const _effectiveSink = isLive ? input.auditSink : this.auditSink;
+		const _emit = async (event: Stage3PilotAuditEvent): Promise<boolean> => {
+			if (!_effectiveSink) return false;
+			try {
+				await _effectiveSink.record(event);
+				return true;
+			} catch {
+				return false;
+			}
+		};
+
 		// Effective policy values: in live mode, these are always satisfied
 		// (approval binding already validated, preview generated internally,
 		// safety probe already passed). In fake mode, caller may override.
@@ -329,7 +335,7 @@ export class Stage3RuntimeHarness {
 					noOtherActiveRun: true,
 					mergeKillSwitchActive: true,
 					pushDisabled: true,
-			  }
+				}
 			: (input.processSafety ?? {
 					queueDisabled: true,
 					singleProcess: true,
@@ -337,7 +343,7 @@ export class Stage3RuntimeHarness {
 					noOtherActiveRun: true,
 					mergeKillSwitchActive: true,
 					pushDisabled: true,
-			  });
+				});
 
 		// ── Phase 0: Harness-level gate ──
 		if (!this.config.enabled) {
@@ -353,7 +359,7 @@ export class Stage3RuntimeHarness {
 				'harness-gate',
 			);
 			auditEvents.push(auditEvent);
-			await this._emitAudit(auditEvent);
+			await _emit(auditEvent);
 
 			return this._result(
 				false,
@@ -382,7 +388,7 @@ export class Stage3RuntimeHarness {
 				'preflight',
 			);
 			auditEvents.push(auditEvent);
-			await this._emitAudit(auditEvent);
+			await _emit(auditEvent);
 
 			return this._result(
 				false,
@@ -412,7 +418,7 @@ export class Stage3RuntimeHarness {
 				'preflight',
 			);
 			auditEvents.push(auditEvent);
-			await this._emitAudit(auditEvent);
+			await _emit(auditEvent);
 
 			return this._result(
 				false,
@@ -434,24 +440,24 @@ export class Stage3RuntimeHarness {
 		let resolvedBaseSha: string | undefined;
 
 		if (input.mode === 'live') {
-			// 1a-i: Reject mock bridge in live mode
-			if (input.bridge && input.bridge.kind === 'mock') {
+			// 1a-i: Bridge MUST be present and have kind 'restricted-real-transport'
+			if (!input.bridge || input.bridge.kind !== 'restricted-real-transport') {
 				const auditEvent = this._audit(
 					'live',
 					'createBranch',
 					input.repository,
 					'blocked',
-					'Mock bridge (kind: mock) rejected in live mode — use a real transport bridge',
+					'Bridge missing or wrong kind — live mode requires a bridge with kind: restricted-real-transport',
 					undefined,
 					undefined,
 					idempotencyKey,
 					'preflight-security',
 				);
 				auditEvents.push(auditEvent);
-				await this._emitAudit(auditEvent);
+				await _emit(auditEvent);
 				return this._result(
 					false,
-					'Mock bridge rejected in live mode',
+					'Bridge missing or wrong kind',
 					false,
 					false,
 					auditEvents,
@@ -459,6 +465,95 @@ export class Stage3RuntimeHarness {
 					false,
 					false,
 					'preflight-security',
+					undefined,
+					undefined,
+					undefined,
+					false,
+					false,
+					false,
+					false,
+					undefined,
+					false,
+					'none',
+				);
+			}
+
+			// 1a-ii: Verify bridge capabilities — MUST pass before any write
+			const capCheck = verifyBridgeCapabilities(input.bridge);
+			if (!capCheck.valid) {
+				const auditEvent = this._audit(
+					'live',
+					'createBranch',
+					input.repository,
+					'blocked',
+					`Bridge capability check failed: ${capCheck.exposedForbidden.join(', ')}${capCheck.missingCapabilities.length ? ` missing: ${capCheck.missingCapabilities.join(', ')}` : ''}${capCheck.malformedCapabilities.length ? ` malformed: ${capCheck.malformedCapabilities.join(', ')}` : ''}`,
+					undefined,
+					undefined,
+					idempotencyKey,
+					'preflight-security',
+				);
+				auditEvents.push(auditEvent);
+				await _emit(auditEvent);
+				return this._result(
+					false,
+					'Bridge capability validation failed',
+					false,
+					false,
+					auditEvents,
+					'live',
+					false,
+					false,
+					'preflight-security',
+					undefined,
+					undefined,
+					undefined,
+					false,
+					false,
+					false,
+					false,
+					undefined,
+					false,
+					'none',
+				);
+			}
+
+			// 1a-ii-b: Bridge PROVENANCE check — must be internally-created, not caller-forged
+			// Uses WeakSet object identity — a structurally identical but externally
+			// constructed bridge will be rejected regardless of kind/shape/properties.
+			if (!capCheck.trusted) {
+				const auditEvent = this._audit(
+					'live',
+					'createBranch',
+					input.repository,
+					'blocked',
+					'Untrusted bridge provenance — bridge was not created by the internal factory',
+					undefined,
+					undefined,
+					idempotencyKey,
+					'preflight-security',
+				);
+				auditEvents.push(auditEvent);
+				await _emit(auditEvent);
+				return this._result(
+					false,
+					'Untrusted bridge provenance',
+					false,
+					false,
+					auditEvents,
+					'live',
+					false,
+					false,
+					'preflight-security',
+					undefined,
+					undefined,
+					undefined,
+					false,
+					false,
+					false,
+					false,
+					undefined,
+					false,
+					'none',
 				);
 			}
 
@@ -477,7 +572,7 @@ export class Stage3RuntimeHarness {
 					'preflight-security',
 				);
 				auditEvents.push(auditEvent);
-				await this._emitAudit(auditEvent);
+				await _emit(auditEvent);
 				return this._result(
 					false,
 					'Approval text hash mismatch: binding integrity violated',
@@ -501,10 +596,7 @@ export class Stage3RuntimeHarness {
 				commitMetadataSha256: STAGE3_CANONICAL.commitMetadataSha256,
 				prMetadataSha256: STAGE3_CANONICAL.prMetadataSha256,
 			};
-			const validationResult = validateApprovalBinding(
-				input.approvalBinding,
-				canonicalValidation,
-			);
+			const validationResult = validateApprovalBinding(input.approvalBinding, canonicalValidation);
 			if (!validationResult.valid) {
 				const auditEvent = this._audit(
 					'live',
@@ -518,7 +610,7 @@ export class Stage3RuntimeHarness {
 					'preflight-security',
 				);
 				auditEvents.push(auditEvent);
-				await this._emitAudit(auditEvent);
+				await _emit(auditEvent);
 				return this._result(
 					false,
 					`Approval binding invalid: ${validationResult.reason}`,
@@ -529,6 +621,53 @@ export class Stage3RuntimeHarness {
 					false,
 					false,
 					'preflight-security',
+				);
+			}
+
+			// 1a-ii-c: Trusted bridge integrity + exact approval Base-SHA binding
+			// This verifies that the bridge has not been tampered with since
+			// construction AND that the snapshot's bound Base-SHA matches the
+			// validated owner approval SHA. This MUST succeed before any
+			// resolver, reader, or writer is invoked.
+			try {
+				verifyTrustedBridgeIntegrity(
+					input.bridge,
+					input.approvalBinding.expectedBaseSha,
+				);
+			} catch (error) {
+				const auditEvent = this._audit(
+					'live',
+					'createBranch',
+					input.repository,
+					'blocked',
+					'Trusted bridge integrity validation failed',
+					undefined,
+					undefined,
+					idempotencyKey,
+					'preflight-security',
+				);
+				auditEvents.push(auditEvent);
+				await _emit(auditEvent);
+				return this._result(
+					false,
+					'Trusted bridge integrity validation failed',
+					false,
+					false,
+					auditEvents,
+					'live',
+					false,
+					false,
+					'preflight-security',
+					undefined,
+					undefined,
+					undefined,
+					false,
+					false,
+					false,
+					false,
+					undefined,
+					false,
+					'none',
 				);
 			}
 
@@ -548,7 +687,7 @@ export class Stage3RuntimeHarness {
 					'preflight-security',
 				);
 				auditEvents.push(auditEvent);
-				await this._emitAudit(auditEvent);
+				await _emit(auditEvent);
 				return this._result(
 					false,
 					`Runtime safety failed: ${safetyResult.reason}`,
@@ -562,8 +701,8 @@ export class Stage3RuntimeHarness {
 				);
 			}
 
-			// 1a-iv: Base SHA resolution (TOCTOU protection)
-			const resolved = await input.baseResolver.resolveBase({
+			// 1a-iv: Base SHA resolution (TOCTOU protection) — via bridge
+			const resolved = await input.bridge.baseResolver.resolveBase({
 				owner: ownerRepo.owner,
 				repo: ownerRepo.repo,
 				branch: STAGE3_CANONICAL.baseBranch,
@@ -582,7 +721,7 @@ export class Stage3RuntimeHarness {
 					'preflight-security',
 				);
 				auditEvents.push(auditEvent);
-				await this._emitAudit(auditEvent);
+				await _emit(auditEvent);
 				return this._result(
 					false,
 					`Base SHA drift detected on '${STAGE3_CANONICAL.baseBranch}'`,
@@ -624,7 +763,7 @@ export class Stage3RuntimeHarness {
 				'policy-branch',
 			);
 			auditEvents.push(auditEvent);
-			await this._emitAudit(auditEvent);
+			await _emit(auditEvent);
 
 			return this._result(
 				false,
@@ -668,7 +807,7 @@ export class Stage3RuntimeHarness {
 			'audit-pre-write',
 		);
 		auditEvents.push(preWriteAudit);
-		const preWriteAuditOk = await this._emitAudit(preWriteAudit);
+		const preWriteAuditOk = await _emit(preWriteAudit);
 		if (!preWriteAuditOk) {
 			return this._result(
 				false,
@@ -695,7 +834,7 @@ export class Stage3RuntimeHarness {
 		// ── Phase 4a: Live Mode — Pre-Write Verification ──
 		let preWriteVerified = false;
 		if (isLive) {
-			const preWriteResult = await verifyPreWrite(input.readOnlyVerifier, {
+			const preWriteResult = await verifyPreWrite(input.bridge.readOnlyVerifier, {
 				owner: ownerRepo.owner,
 				repo: ownerRepo.repo,
 				baseBranch: STAGE3_CANONICAL.baseBranch,
@@ -717,7 +856,7 @@ export class Stage3RuntimeHarness {
 					'pre-write-verify',
 				);
 				auditEvents.push(auditEvent);
-				await this._emitAudit(auditEvent);
+				await _emit(auditEvent);
 				return this._result(
 					false,
 					preWriteResult.reason ?? 'Pre-write verification failed — ZERO WRITES',
@@ -756,7 +895,7 @@ export class Stage3RuntimeHarness {
 				'create-branch',
 			);
 			auditEvents.push(auditEvent);
-			const branchAuditOk = await this._emitAudit(auditEvent);
+			const branchAuditOk = await _emit(auditEvent);
 			if (!branchAuditOk) {
 				return this._result(
 					false,
@@ -780,8 +919,8 @@ export class Stage3RuntimeHarness {
 				);
 			}
 		} else if (isLive) {
-			// Live mode: call the injected branch writer from input
-			const writer = input.branchWriter;
+			// Live mode: call the bridge's branch writer
+			const writer = input.bridge.branchWriter;
 			this.policy.markWriteAttempted();
 			try {
 				const result = await writer.createBranch({
@@ -789,8 +928,7 @@ export class Stage3RuntimeHarness {
 					repo: ownerRepo.repo,
 					branch: STAGE3_CANONICAL.targetBranch,
 					sourceBranch: STAGE3_CANONICAL.baseBranch,
-					expectedSourceSha:
-						resolvedBaseSha ?? input.approvalBinding.expectedBaseSha,
+					expectedSourceSha: resolvedBaseSha ?? input.approvalBinding.expectedBaseSha,
 				});
 				this.policy.recordBranchCreated();
 				branchResult = result;
@@ -808,7 +946,7 @@ export class Stage3RuntimeHarness {
 					'create-branch',
 				);
 				auditEvents.push(auditEvent);
-				const branchAuditOk = await this._emitAudit(auditEvent);
+				const branchAuditOk = await _emit(auditEvent);
 				if (!branchAuditOk) {
 					this.policy.markPartialMutation();
 					return this._result(
@@ -851,7 +989,7 @@ export class Stage3RuntimeHarness {
 					'create-branch',
 				);
 				auditEvents.push(auditEvent);
-				await this._emitAudit(auditEvent); // best-effort audit for error
+				await _emit(auditEvent); // best-effort audit for error
 
 				return this._result(
 					false,
@@ -886,7 +1024,7 @@ export class Stage3RuntimeHarness {
 				'create-branch',
 			);
 			auditEvents.push(auditEvent);
-			await this._emitAudit(auditEvent);
+			await _emit(auditEvent);
 
 			return this._result(
 				false,
@@ -930,7 +1068,7 @@ export class Stage3RuntimeHarness {
 				'policy-commit',
 			);
 			auditEvents.push(auditEvent);
-			await this._emitAudit(auditEvent);
+			await _emit(auditEvent);
 
 			return this._result(
 				false,
@@ -978,7 +1116,7 @@ export class Stage3RuntimeHarness {
 				'commit-file',
 			);
 			auditEvents.push(auditEvent);
-			const commitAuditOk = await this._emitAudit(auditEvent);
+			const commitAuditOk = await _emit(auditEvent);
 			if (!commitAuditOk) {
 				return this._result(
 					false,
@@ -1002,7 +1140,7 @@ export class Stage3RuntimeHarness {
 				);
 			}
 		} else if (isLive) {
-			const writer = input.fileCommitWriter;
+			const writer = input.bridge.fileCommitWriter;
 			this.policy.markWriteAttempted();
 			try {
 				const result = await writer.commitFile({
@@ -1030,7 +1168,7 @@ export class Stage3RuntimeHarness {
 					'commit-file',
 				);
 				auditEvents.push(auditEvent);
-				const commitAuditOk = await this._emitAudit(auditEvent);
+				const commitAuditOk = await _emit(auditEvent);
 				if (!commitAuditOk) {
 					this.policy.markPartialMutation();
 					return this._result(
@@ -1072,7 +1210,7 @@ export class Stage3RuntimeHarness {
 					'commit-file',
 				);
 				auditEvents.push(auditEvent);
-				await this._emitAudit(auditEvent); // best-effort for error
+				await _emit(auditEvent); // best-effort for error
 
 				return this._result(
 					false,
@@ -1106,7 +1244,7 @@ export class Stage3RuntimeHarness {
 				'commit-file',
 			);
 			auditEvents.push(auditEvent);
-			await this._emitAudit(auditEvent);
+			await _emit(auditEvent);
 
 			return this._result(
 				false,
@@ -1156,7 +1294,7 @@ export class Stage3RuntimeHarness {
 				'policy-pr',
 			);
 			auditEvents.push(auditEvent);
-			await this._emitAudit(auditEvent);
+			await _emit(auditEvent);
 
 			return this._result(
 				false,
@@ -1215,7 +1353,7 @@ export class Stage3RuntimeHarness {
 				'create-pr',
 			);
 			auditEvents.push(auditEvent);
-			const prAuditOk = await this._emitAudit(auditEvent);
+			const prAuditOk = await _emit(auditEvent);
 			if (!prAuditOk) {
 				return this._result(
 					false,
@@ -1239,7 +1377,7 @@ export class Stage3RuntimeHarness {
 				);
 			}
 		} else if (isLive) {
-			const writer = input.pullRequestWriter;
+			const writer = input.bridge.prWriter;
 			this.policy.markWriteAttempted();
 			try {
 				const result = await writer.createPullRequest({
@@ -1267,7 +1405,7 @@ export class Stage3RuntimeHarness {
 					'create-pr',
 				);
 				auditEvents.push(auditEvent);
-				const prAuditOk = await this._emitAudit(auditEvent);
+				const prAuditOk = await _emit(auditEvent);
 				if (!prAuditOk) {
 					this.policy.markPartialMutation();
 					return this._result(
@@ -1309,7 +1447,7 @@ export class Stage3RuntimeHarness {
 					'create-pr',
 				);
 				auditEvents.push(auditEvent);
-				await this._emitAudit(auditEvent);
+				await _emit(auditEvent);
 
 				return this._result(
 					false,
@@ -1343,7 +1481,7 @@ export class Stage3RuntimeHarness {
 				'create-pr',
 			);
 			auditEvents.push(auditEvent);
-			await this._emitAudit(auditEvent);
+			await _emit(auditEvent);
 
 			return this._result(
 				false,
@@ -1372,19 +1510,20 @@ export class Stage3RuntimeHarness {
 		let postWritePassed = false;
 
 		if (isLive) {
-			const postWriteResult = await verifyPostWrite(input.readOnlyVerifier, {
+			const postWriteResult = await verifyPostWrite(input.bridge.readOnlyVerifier, {
 				owner: ownerRepo.owner,
 				repo: ownerRepo.repo,
 				baseBranch: STAGE3_CANONICAL.baseBranch,
-				expectedBaseSha:
-					resolvedBaseSha ?? input.approvalBinding.expectedBaseSha,
+				expectedBaseSha: resolvedBaseSha ?? input.approvalBinding.expectedBaseSha,
 				targetBranch: STAGE3_CANONICAL.targetBranch,
 				filePath: STAGE3_CANONICAL.filePath,
 				expectedFileContent: input.fileContent,
 				expectedFileSha256: STAGE3_CANONICAL.fileSha256,
 				expectedFileBytes: STAGE3_CANONICAL.fileUtf8ByteLength,
 				expectedCommitMessage: STAGE3_CANONICAL.commitMessage,
+				expectedCommitBody: STAGE3_CANONICAL.commitBody,
 				expectedPrTitle: STAGE3_CANONICAL.prTitle,
+				expectedPrBody: STAGE3_CANONICAL.prBody,
 				expectedPrDraft: true,
 			});
 
@@ -1398,14 +1537,14 @@ export class Stage3RuntimeHarness {
 				postWritePassed ? 'allowed_executed' : 'blocked',
 				postWritePassed
 					? 'Post-write verification passed — all checks confirmed'
-					: postWriteResult.reason ?? 'Post-write verification failed',
+					: (postWriteResult.reason ?? 'Post-write verification failed'),
 				preview.fileSha256,
 				preview.fileLength,
 				idempotencyKey,
 				'verify',
 			);
 			auditEvents.push(verifyAudit);
-			const verifyAuditOk = await this._emitAudit(verifyAudit);
+			const verifyAuditOk = await _emit(verifyAudit);
 			if (!verifyAuditOk) {
 				return this._result(
 					false,
@@ -1467,7 +1606,7 @@ export class Stage3RuntimeHarness {
 				'verify',
 			);
 			auditEvents.push(verifyAudit);
-			const verifyAuditOk = await this._emitAudit(verifyAudit);
+			const verifyAuditOk = await _emit(verifyAudit);
 			if (!verifyAuditOk) {
 				return this._result(
 					false,
@@ -1507,7 +1646,7 @@ export class Stage3RuntimeHarness {
 			'audit-success',
 		);
 		auditEvents.push(successAudit);
-		const successAuditOk = await this._emitAudit(successAudit);
+		const successAuditOk = await _emit(successAudit);
 
 		// ── Complete Success or Audit-Broken Failure ──
 		const auditBroken = !successAuditOk;
@@ -1606,16 +1745,22 @@ export class Stage3RuntimeHarness {
 
 	/**
 	 * Emit an audit event to the configured sink.
+	 * If an override sink is provided (e.g., from live mode input), it takes priority.
+	 * Otherwise falls back to the constructor-configured sink.
 	 * Returns true if audit was successfully recorded, false if it failed or no sink is configured.
 	 * Fail-closed: failures are NOT silently swallowed.
 	 */
-	private async _emitAudit(event: Stage3PilotAuditEvent): Promise<boolean> {
-		if (!this.auditSink) {
-			// No audit sink configured — fail-closed in live mode
+	private async _emitAudit(
+		event: Stage3PilotAuditEvent,
+		overrideSink?: Stage3AuditSink,
+	): Promise<boolean> {
+		const sink = overrideSink ?? this.auditSink;
+		if (!sink) {
+			// No audit sink configured — fail-closed
 			return false;
 		}
 		try {
-			await this.auditSink.record(event);
+			await sink.record(event);
 			return true;
 		} catch {
 			// Audit sink failure detected — fail-closed

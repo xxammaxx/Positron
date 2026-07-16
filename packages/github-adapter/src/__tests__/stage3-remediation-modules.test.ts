@@ -35,6 +35,8 @@ import {
 } from '../stage3-reader-verifier.js';
 import type { Stage3ReadOnlyVerifier } from '../stage3-reader-verifier.js';
 
+import { sha256Utf8, utf8ByteLength } from '../stage3-canonical-manifest.js';
+
 import {
 	createMockStage3Bridge,
 	verifyBridgeCapabilities,
@@ -510,10 +512,26 @@ describe('Stage3ReadOnlyVerifier', () => {
 
 	describe('verifyPostWrite', () => {
 		it('passes when all post-write conditions met (simulated)', async () => {
+			const testContent = 'test-content-for-post-write';
+			const testSha256 = sha256Utf8(testContent);
+			const testBytes = utf8ByteLength(testContent);
 			const verifier = createFakeReadOnlyVerifier({
 				targetBranchExists: true,
 				targetFileExists: true,
 				openPrExists: true,
+				fileContent: testContent,
+				prResult: {
+					state: 'open',
+					draft: true,
+					merged: false,
+					mergedAt: null,
+					title: 'test',
+					body: 'test',
+					headRef: 'positron/issue-308-stage3-pilot',
+					headSha: 'expected-base-sha',
+					baseRef: 'main',
+					baseSha: 'expected-base-sha',
+				},
 			});
 			const result = await verifyPostWrite(verifier, {
 				owner: 'x',
@@ -522,18 +540,19 @@ describe('Stage3ReadOnlyVerifier', () => {
 				expectedBaseSha: 'expected-base-sha',
 				targetBranch: 'positron/issue-308-stage3-pilot',
 				filePath: 'stage3/positron-supervised-pilot.md',
-				expectedFileContent: 'test',
-				expectedFileSha256: 'content-sha',
-				expectedFileBytes: 1724,
+				expectedFileContent: testContent,
+				expectedFileSha256: testSha256,
+				expectedFileBytes: testBytes,
 				expectedCommitMessage: 'test',
 				expectedPrTitle: 'test',
+				expectedPrBody: 'test',
 				expectedPrDraft: true,
 			});
-			// Verify checks individually — SHA check may differ based on verifier implementation
+			expect(result.passed).toBe(true);
 			expect(result.checks.targetBranchExists).toBe(true);
 			expect(result.checks.fileByteSizeExact).toBe(true);
+			expect(result.checks.fileSha256Exact).toBe(true);
 			expect(result.checks.draftPrExists).toBe(true);
-			// Overall pass depends on all checks including SHA
 		});
 
 		it('fails when target branch does not exist', async () => {
@@ -553,6 +572,7 @@ describe('Stage3ReadOnlyVerifier', () => {
 				expectedFileBytes: 1724,
 				expectedCommitMessage: 'test',
 				expectedPrTitle: 'test',
+				expectedPrBody: 'test',
 				expectedPrDraft: true,
 			});
 			expect(result.passed).toBe(false);

@@ -7,7 +7,8 @@
 // ALL constants below are byte-exact — no dynamic placeholders.
 // The SHA-256 values are computed over the exact strings in this file.
 //
-// Version: 1 — 2026-07-14 (Remediation: no placeholders, truthful PR body)
+// Version: 2 — 2026-07-14 (Execution-blocker remediation: fixed PR body formatting,
+//   added centralized SHA-256 helpers, documented Git-blob-SHA vs canonical SHA-256.)
 
 import crypto from 'node:crypto';
 
@@ -77,6 +78,16 @@ export const CANONICAL_FILE_CONTENT = [
 ].join('\n');
 
 // ---------------------------------------------------------------------------
+// Repository and Branch (must precede PR body which references them)
+// ---------------------------------------------------------------------------
+
+export const CANONICAL_REPOSITORY = 'xxammaxx/positron-sandbox';
+export const FORBIDDEN_REPOSITORIES = ['xxammaxx/Positron'] as const;
+export const CANONICAL_BASE_BRANCH = 'main';
+export const CANONICAL_TARGET_BRANCH = 'positron/issue-308-stage3-pilot';
+export const CANONICAL_FILE_PATH = 'stage3/positron-supervised-pilot.md';
+
+// ---------------------------------------------------------------------------
 // Canonical PR Body
 // ---------------------------------------------------------------------------
 
@@ -105,22 +116,25 @@ export const CANONICAL_PR_BODY = [
 	'',
 	'### Verification',
 	'',
-	`- SHA-256 of file: \`${_sha256(CANONICAL_FILE_CONTENT)}\``,
-	`- File size: ${Buffer.byteLength(CANONICAL_FILE_CONTENT, 'utf8')} bytes`,
-	'`- Branch: `positron/issue-308-stage3-pilot`',
-	'- No other mutations were performed',
-	'',
-	'### Do Not Merge',
-	'',
-	'This is a supervised pilot PR. Merge requires separate owner approval.',
-	'The Stage 3 credential must be revoked immediately after read-only',
-	'verification. Revocation is not asserted by this pull request and',
-	'requires separate owner confirmation.',
-	'',
-	'### Related',
-	'- Issue: #308 (Full Real Mode Pilot)',
-	'- Approval Package: `docs/evidence/issue-308/stage3-supervised-pilot-approval-package.md`',
-].join('\n');
+]
+	.concat([
+		`- SHA-256 of file: \`${crypto.createHash('sha256').update(CANONICAL_FILE_CONTENT, 'utf8').digest('hex')}\``,
+		`- File size: ${Buffer.byteLength(CANONICAL_FILE_CONTENT, 'utf8')} bytes`,
+		`- Branch: \`${CANONICAL_TARGET_BRANCH}\``,
+		'- No other mutations were performed',
+		'',
+		'### Do Not Merge',
+		'',
+		'This is a supervised pilot PR. Merge requires separate owner approval.',
+		'The Stage 3 credential must be revoked immediately after read-only',
+		'verification. Revocation is not asserted by this pull request and',
+		'requires separate owner confirmation.',
+		'',
+		'### Related',
+		'- Issue: #308 (Full Real Mode Pilot)',
+		'- Approval Package: `docs/evidence/issue-308/stage3-supervised-pilot-approval-package.md`',
+	])
+	.join('\n');
 
 // ---------------------------------------------------------------------------
 // Canonical Commit Message
@@ -139,17 +153,8 @@ export const CANONICAL_COMMIT_BODY = [
 // Canonical PR Title
 // ---------------------------------------------------------------------------
 
-export const CANONICAL_PR_TITLE = 'feat(issue-308): Stage 3 supervised real mode pilot — sandbox marker';
-
-// ---------------------------------------------------------------------------
-// Repository and Branch
-// ---------------------------------------------------------------------------
-
-export const CANONICAL_REPOSITORY = 'xxammaxx/positron-sandbox';
-export const FORBIDDEN_REPOSITORIES = ['xxammaxx/Positron'] as const;
-export const CANONICAL_BASE_BRANCH = 'main';
-export const CANONICAL_TARGET_BRANCH = 'positron/issue-308-stage3-pilot';
-export const CANONICAL_FILE_PATH = 'stage3/positron-supervised-pilot.md';
+export const CANONICAL_PR_TITLE =
+	'feat(issue-308): Stage 3 supervised real mode pilot — sandbox marker';
 
 // ---------------------------------------------------------------------------
 // Quantity Limits
@@ -164,23 +169,62 @@ export const PRODUCTION_REPOSITORY_FORBIDDEN = true as const;
 export const REQUIRE_DRAFT_PR = true as const;
 
 // ---------------------------------------------------------------------------
-// Computed Hashes and Lengths
+// Centralized SHA-256 Helpers
+// ---------------------------------------------------------------------------
+//
+// IMPORTANT: GitHub's git blob SHA is NOT the same as canonical SHA-256.
+// GitHub computes git blob SHA using `git hash-object` which prepends
+// "blob <size>\0" before the content and uses SHA-1 (historically) or SHA-256
+// (in new repositories). The canonical SHA-256 used by Positron is a
+// plain SHA-256 hash over the exact UTF-8 bytes of the content ONLY.
+//
+// Source of truth: this module. All other modules and tests MUST import
+// these helpers from here — no independent hash computations.
+
+/**
+ * Compute SHA-256 hex digest of a UTF-8 string.
+ * This is the canonical Positron SHA-256 — plain SHA-256 over the exact bytes.
+ */
+export function sha256Utf8(content: string): string {
+	return crypto.createHash('sha256').update(content, 'utf8').digest('hex');
+}
+
+/**
+ * Compute SHA-256 hex digest of raw bytes.
+ */
+export function sha256Bytes(content: Uint8Array): string {
+	return crypto.createHash('sha256').update(content).digest('hex');
+}
+
+/**
+ * Compute UTF-8 byte length of a string.
+ */
+export function utf8ByteLength(content: string): number {
+	return Buffer.byteLength(content, 'utf8');
+}
+
+// ---------------------------------------------------------------------------
+// Computed Hashes and Lengths (using centralized helpers)
 // ---------------------------------------------------------------------------
 
 /** UTF-8 byte length of CANONICAL_FILE_CONTENT. */
-export const CANONICAL_FILE_LENGTH = Buffer.byteLength(CANONICAL_FILE_CONTENT, 'utf8');
+export const CANONICAL_FILE_LENGTH = utf8ByteLength(CANONICAL_FILE_CONTENT);
 
 /** SHA-256 hex digest of CANONICAL_FILE_CONTENT. */
-export const CANONICAL_FILE_SHA256 = _sha256(CANONICAL_FILE_CONTENT);
+export const CANONICAL_FILE_SHA256 = sha256Utf8(CANONICAL_FILE_CONTENT);
 
 /** SHA-256 hex digest of CANONICAL_PR_BODY. */
-export const CANONICAL_PR_BODY_SHA256 = _sha256(CANONICAL_PR_BODY);
+export const CANONICAL_PR_BODY_SHA256 = sha256Utf8(CANONICAL_PR_BODY);
 
 /** SHA-256 hex digest of commit message + body for approval binding. */
-export const CANONICAL_COMMIT_MESSAGE_SHA256 = _sha256(CANONICAL_COMMIT_MESSAGE + '\n\n' + CANONICAL_COMMIT_BODY);
+export const CANONICAL_COMMIT_MESSAGE_SHA256 = sha256Utf8(
+	CANONICAL_COMMIT_MESSAGE + '\n\n' + CANONICAL_COMMIT_BODY,
+);
 
 /** SHA-256 hex digest of PR title + body for approval binding. */
-export const CANONICAL_PR_METADATA_SHA256 = _sha256(CANONICAL_PR_TITLE + '\n' + CANONICAL_PR_BODY);
+export const CANONICAL_PR_METADATA_SHA256 = sha256Utf8(
+	CANONICAL_PR_TITLE + '\n' + CANONICAL_PR_BODY,
+);
 
 // ---------------------------------------------------------------------------
 // Manifest (self-describing)
@@ -213,13 +257,5 @@ export const STAGE3_MANIFEST = {
  */
 export function computeManifestSha256(): string {
 	const serialized = JSON.stringify(STAGE3_MANIFEST, null, 2);
-	return _sha256(serialized);
-}
-
-// ---------------------------------------------------------------------------
-// Internal Helper
-// ---------------------------------------------------------------------------
-
-function _sha256(input: string): string {
-	return crypto.createHash('sha256').update(input, 'utf8').digest('hex');
+	return sha256Utf8(serialized);
 }
