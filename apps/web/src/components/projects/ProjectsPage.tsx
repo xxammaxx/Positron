@@ -42,10 +42,7 @@ function SafetyCheckRow({ check }: { check: SafetyCheck }): React.ReactElement {
 			<span>
 				<span className="font-medium">{check.label}</span>
 				{check.description && (
-					<span className="text-slate-400 dark:text-slate-500">
-						{' '}
-						&mdash; {check.description}
-					</span>
+					<span className="text-slate-400 dark:text-slate-500"> &mdash; {check.description}</span>
 				)}
 			</span>
 		</li>
@@ -63,9 +60,7 @@ function ProjectCard({ project }: { project: ManagedTargetProject }): React.Reac
 			<div className="flex items-start justify-between mb-3">
 				<div>
 					<div className="flex items-center gap-3">
-						<h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-							{project.name}
-						</h3>
+						<h3 className="text-lg font-semibold text-slate-900 dark:text-white">{project.name}</h3>
 						<span
 							className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_STYLE[project.status] ?? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}
 						>
@@ -214,8 +209,8 @@ export default function ProjectsPage(): React.ReactElement {
 				<h1>Managed Target Projects</h1>
 				<p className="text-sm text-slate-400 mt-1">
 					Positron tracks external target projects. Each project below is a data entry in the
-					registry — Positron orchestrates runs against their repositories. Target project code
-					and business logic live in their own repositories, not in Positron.
+					registry — Positron orchestrates runs against their repositories. Target project code and
+					business logic live in their own repositories, not in Positron.
 				</p>
 			</div>
 
@@ -258,9 +253,8 @@ export default function ProjectsPage(): React.ReactElement {
 			{/* Footer Note */}
 			{!loading && projects.length > 0 && (
 				<p className="text-xs text-slate-400 dark:text-slate-500 mt-6 border-t border-slate-100 dark:border-slate-800 pt-4">
-					Positron is a build/agent/evidence orchestrator. Target projects are external
-					repositories tracked in this registry. No target project business logic is embedded in
-					Positron.
+					Positron is a build/agent/evidence orchestrator. Target projects are external repositories
+					tracked in this registry. No target project business logic is embedded in Positron.
 				</p>
 			)}
 		</div>

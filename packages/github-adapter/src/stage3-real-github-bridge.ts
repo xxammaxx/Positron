@@ -200,31 +200,49 @@ export function verifyTrustedBridgeIntegrity(
 	// Check nested object identities
 	if (bridge.baseResolver !== snapshot.baseResolver) throw integrityError('baseResolver identity');
 	if (bridge.branchWriter !== snapshot.branchWriter) throw integrityError('branchWriter identity');
-	if (bridge.fileCommitWriter !== snapshot.fileCommitWriter) throw integrityError('fileCommitWriter identity');
+	if (bridge.fileCommitWriter !== snapshot.fileCommitWriter)
+		throw integrityError('fileCommitWriter identity');
 	if (bridge.prWriter !== snapshot.prWriter) throw integrityError('prWriter identity');
-	if (bridge.readOnlyVerifier !== snapshot.readOnlyVerifier) throw integrityError('readOnlyVerifier identity');
+	if (bridge.readOnlyVerifier !== snapshot.readOnlyVerifier)
+		throw integrityError('readOnlyVerifier identity');
 
 	// Check writer function identities
-	if (bridge.baseResolver.resolveBase !== snapshot.resolveBase) throw integrityError('resolveBase function');
-	if (bridge.branchWriter.createBranch !== snapshot.createBranch) throw integrityError('createBranch function');
-	if (bridge.fileCommitWriter.commitFile !== snapshot.commitFile) throw integrityError('commitFile function');
-	if (bridge.prWriter.createPullRequest !== snapshot.createPullRequest) throw integrityError('createPullRequest function');
+	if (bridge.baseResolver.resolveBase !== snapshot.resolveBase)
+		throw integrityError('resolveBase function');
+	if (bridge.branchWriter.createBranch !== snapshot.createBranch)
+		throw integrityError('createBranch function');
+	if (bridge.fileCommitWriter.commitFile !== snapshot.commitFile)
+		throw integrityError('commitFile function');
+	if (bridge.prWriter.createPullRequest !== snapshot.createPullRequest)
+		throw integrityError('createPullRequest function');
 
 	// Check reader sub-object identities
-	if (bridge.readOnlyVerifier.repository !== snapshot.repositoryReader) throw integrityError('repositoryReader identity');
-	if (bridge.readOnlyVerifier.branch !== snapshot.branchReader) throw integrityError('branchReader identity');
-	if (bridge.readOnlyVerifier.content !== snapshot.contentReader) throw integrityError('contentReader identity');
-	if (bridge.readOnlyVerifier.commit !== snapshot.commitReader) throw integrityError('commitReader identity');
-	if (bridge.readOnlyVerifier.pullRequest !== snapshot.pullRequestReader) throw integrityError('pullRequestReader identity');
-	if (bridge.readOnlyVerifier.compare !== snapshot.compareReader) throw integrityError('compareReader identity');
+	if (bridge.readOnlyVerifier.repository !== snapshot.repositoryReader)
+		throw integrityError('repositoryReader identity');
+	if (bridge.readOnlyVerifier.branch !== snapshot.branchReader)
+		throw integrityError('branchReader identity');
+	if (bridge.readOnlyVerifier.content !== snapshot.contentReader)
+		throw integrityError('contentReader identity');
+	if (bridge.readOnlyVerifier.commit !== snapshot.commitReader)
+		throw integrityError('commitReader identity');
+	if (bridge.readOnlyVerifier.pullRequest !== snapshot.pullRequestReader)
+		throw integrityError('pullRequestReader identity');
+	if (bridge.readOnlyVerifier.compare !== snapshot.compareReader)
+		throw integrityError('compareReader identity');
 
 	// Check reader function identities
-	if (bridge.readOnlyVerifier.repository.getDefaultBranch !== snapshot.getDefaultBranch) throw integrityError('getDefaultBranch function');
-	if (bridge.readOnlyVerifier.branch.getBranch !== snapshot.getBranch) throw integrityError('getBranch function');
-	if (bridge.readOnlyVerifier.content.getFileContent !== snapshot.getFileContent) throw integrityError('getFileContent function');
-	if (bridge.readOnlyVerifier.commit.getCommit !== snapshot.getCommit) throw integrityError('getCommit function');
-	if (bridge.readOnlyVerifier.pullRequest.findOpenPr !== snapshot.findOpenPr) throw integrityError('findOpenPr function');
-	if (bridge.readOnlyVerifier.compare.compareCommits !== snapshot.compareCommits) throw integrityError('compareCommits function');
+	if (bridge.readOnlyVerifier.repository.getDefaultBranch !== snapshot.getDefaultBranch)
+		throw integrityError('getDefaultBranch function');
+	if (bridge.readOnlyVerifier.branch.getBranch !== snapshot.getBranch)
+		throw integrityError('getBranch function');
+	if (bridge.readOnlyVerifier.content.getFileContent !== snapshot.getFileContent)
+		throw integrityError('getFileContent function');
+	if (bridge.readOnlyVerifier.commit.getCommit !== snapshot.getCommit)
+		throw integrityError('getCommit function');
+	if (bridge.readOnlyVerifier.pullRequest.findOpenPr !== snapshot.findOpenPr)
+		throw integrityError('findOpenPr function');
+	if (bridge.readOnlyVerifier.compare.compareCommits !== snapshot.compareCommits)
+		throw integrityError('compareCommits function');
 
 	// Check expectedBaseSha is bound
 	if (snapshot.expectedBaseSha === undefined || snapshot.expectedBaseSha === null) {
@@ -645,11 +663,19 @@ export function createStage3RealGitHubBridge(params: {
 		enforce(input.branch, STAGE3_CANONICAL.targetBranch, 'fileCommitWriter.branch');
 		enforce(input.filePath, STAGE3_CANONICAL.filePath, 'fileCommitWriter.filePath');
 		enforce(input.message, STAGE3_CANONICAL.commitMessage, 'fileCommitWriter.message');
-		enforce(input.commitBody ?? undefined, STAGE3_CANONICAL.commitBody || undefined, 'fileCommitWriter.commitBody');
+		enforce(
+			input.commitBody ?? undefined,
+			STAGE3_CANONICAL.commitBody || undefined,
+			'fileCommitWriter.commitBody',
+		);
 		// Validate actual content matches canonical
 		const contentSha = sha256Utf8(input.content);
 		enforce(contentSha, STAGE3_CANONICAL.fileSha256, 'fileCommitWriter.content.sha256');
-		enforce(utf8ByteLength(input.content), STAGE3_CANONICAL.fileUtf8ByteLength, 'fileCommitWriter.content.utf8Bytes');
+		enforce(
+			utf8ByteLength(input.content),
+			STAGE3_CANONICAL.fileUtf8ByteLength,
+			'fileCommitWriter.content.utf8Bytes',
+		);
 	}
 
 	function assertPrArgs(input: {
@@ -892,8 +918,17 @@ export function verifyBridgeCapabilities(bridge: Stage3RealGitHubBridge): {
 	}
 
 	// --- Check forbidden methods are NOT present on bridge ---
-	const forbiddenMethods = ['merge', 'delete', 'deleteBranch', 'addLabels', 'removeLabels',
-		'closeIssue', 'requestReviewers', 'workflowDispatch', 'createRelease'];
+	const forbiddenMethods = [
+		'merge',
+		'delete',
+		'deleteBranch',
+		'addLabels',
+		'removeLabels',
+		'closeIssue',
+		'requestReviewers',
+		'workflowDispatch',
+		'createRelease',
+	];
 	for (const method of forbiddenMethods) {
 		if (typeof (bridge as any)[method] === 'function') {
 			exposedForbidden.push(`Forbidden method exposed: ${method}`);
@@ -901,7 +936,10 @@ export function verifyBridgeCapabilities(bridge: Stage3RealGitHubBridge): {
 	}
 
 	return {
-		valid: exposedForbidden.length === 0 && missingCapabilities.length === 0 && malformedCapabilities.length === 0,
+		valid:
+			exposedForbidden.length === 0 &&
+			missingCapabilities.length === 0 &&
+			malformedCapabilities.length === 0,
 		trusted,
 		exposedForbidden,
 		missingCapabilities,

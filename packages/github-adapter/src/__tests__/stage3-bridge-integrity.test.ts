@@ -227,19 +227,33 @@ describe('Phase B: In-Place Mutation Resistance', () => {
 		const { bridge, transport } = createTrustedBridge();
 
 		// Attempt multiple mutations
-		const fns = [
-			vi.fn(),
-			vi.fn(),
-			vi.fn(),
-			vi.fn(),
-			vi.fn(),
-		];
+		const fns = [vi.fn(), vi.fn(), vi.fn(), vi.fn(), vi.fn()];
 
-		try { (bridge.branchWriter as any).createBranch = fns[0]; } catch { /* expected */ }
-		try { (bridge.fileCommitWriter as any).commitFile = fns[1]; } catch { /* expected */ }
-		try { (bridge.prWriter as any).createPullRequest = fns[2]; } catch { /* expected */ }
-		try { (bridge as any).baseResolver = { resolveBase: fns[3] }; } catch { /* expected */ }
-		try { (bridge as any).readOnlyVerifier = { repository: { getDefaultBranch: fns[4] } }; } catch { /* expected */ }
+		try {
+			(bridge.branchWriter as any).createBranch = fns[0];
+		} catch {
+			/* expected */
+		}
+		try {
+			(bridge.fileCommitWriter as any).commitFile = fns[1];
+		} catch {
+			/* expected */
+		}
+		try {
+			(bridge.prWriter as any).createPullRequest = fns[2];
+		} catch {
+			/* expected */
+		}
+		try {
+			(bridge as any).baseResolver = { resolveBase: fns[3] };
+		} catch {
+			/* expected */
+		}
+		try {
+			(bridge as any).readOnlyVerifier = { repository: { getDefaultBranch: fns[4] } };
+		} catch {
+			/* expected */
+		}
 
 		// Verify no malicious or transport calls
 		for (const fn of fns) {
@@ -383,7 +397,9 @@ describe('Phase C: Integrity Attestation (WeakMap Snapshot)', () => {
 		const { bridge } = createTrustedBridge();
 		// Bridge was created with TEST_BASE_SHA, but approval has WRONG_SHA
 		expect(() => verifyTrustedBridgeIntegrity(bridge, WRONG_SHA)).toThrow(GitHubValidationError);
-		expect(() => verifyTrustedBridgeIntegrity(bridge, WRONG_SHA)).toThrow('base-SHA binding mismatch');
+		expect(() => verifyTrustedBridgeIntegrity(bridge, WRONG_SHA)).toThrow(
+			'base-SHA binding mismatch',
+		);
 	});
 
 	it('SHA mismatch error includes zero-call evidence', () => {
@@ -419,7 +435,9 @@ describe('Phase C: Integrity Attestation (WeakMap Snapshot)', () => {
 		};
 
 		// Forged bridge: should fail on "not found in trusted snapshot registry" BEFORE SHA comparison
-		expect(() => verifyTrustedBridgeIntegrity(forged, TEST_BASE_SHA)).toThrow('integrity violation');
+		expect(() => verifyTrustedBridgeIntegrity(forged, TEST_BASE_SHA)).toThrow(
+			'integrity violation',
+		);
 	});
 });
 

@@ -77,17 +77,15 @@ function createMockOctokit() {
 				}),
 			},
 			pulls: {
-				create: vi
-					.fn()
-					.mockResolvedValue({
-						data: {
-							id: 1,
-							number: 1,
-							html_url: 'https://example.com/pr/1',
-							created_at: '',
-							draft: true,
-						},
-					}),
+				create: vi.fn().mockResolvedValue({
+					data: {
+						id: 1,
+						number: 1,
+						html_url: 'https://example.com/pr/1',
+						created_at: '',
+						draft: true,
+					},
+				}),
 				list: vi.fn().mockResolvedValue({ data: [] }),
 			},
 		},
@@ -102,35 +100,29 @@ function createSpyBridge(): Stage3GitHubTransport {
 		createDraftPr: vi.fn().mockResolvedValue({ number: 1, url: 'https://example.com/pr/1' }),
 		getDefaultBranch: vi.fn().mockResolvedValue({ name: 'main', sha: 'base-sha' }),
 		getBranch: vi.fn().mockResolvedValue({ name: 'main', sha: 'base-sha', exists: true }),
-		getFileContent: vi
-			.fn()
-			.mockResolvedValue({
-				content: CANONICAL_FILE_CONTENT,
-				gitBlobSha: 'blob-sha',
-				size: CANONICAL_FILE_CONTENT.length,
-				exists: true,
-			}),
-		getCommit: vi
-			.fn()
-			.mockResolvedValue({
-				sha: 'commit-sha',
-				message: 'test',
-				authorDate: '',
-				parents: ['base-sha'],
-				files: [{ filename: 'test.md', status: 'added' }],
-				exists: true,
-			}),
+		getFileContent: vi.fn().mockResolvedValue({
+			content: CANONICAL_FILE_CONTENT,
+			gitBlobSha: 'blob-sha',
+			size: CANONICAL_FILE_CONTENT.length,
+			exists: true,
+		}),
+		getCommit: vi.fn().mockResolvedValue({
+			sha: 'commit-sha',
+			message: 'test',
+			authorDate: '',
+			parents: ['base-sha'],
+			files: [{ filename: 'test.md', status: 'added' }],
+			exists: true,
+		}),
 		findOpenPr: vi.fn().mockResolvedValue(null),
-		compareCommits: vi
-			.fn()
-			.mockResolvedValue({
-				status: 'ahead',
-				aheadBy: 1,
-				behindBy: 0,
-				totalCommits: 1,
-				commits: ['c1'],
-				files: [{ filename: 'test.md', status: 'added' }],
-			}),
+		compareCommits: vi.fn().mockResolvedValue({
+			status: 'ahead',
+			aheadBy: 1,
+			behindBy: 0,
+			totalCommits: 1,
+			commits: ['c1'],
+			files: [{ filename: 'test.md', status: 'added' }],
+		}),
 	};
 }
 
