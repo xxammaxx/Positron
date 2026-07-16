@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import type React from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../api.js';
-import type { ManagedProject } from '../../types.js';
+import type { ManagedTargetProject } from '../../types.js';
 import { useDashboardSSE } from '../../hooks/useDashboardSSE.js';
 import VoiceStatusIndicator from '../VoiceStatusIndicator.jsx';
 import EmptyState from '../shared/EmptyState.js';
@@ -18,11 +19,11 @@ export default function DashboardPage(): React.ReactElement {
 	const navigate = useNavigate();
 	const { metrics, runs, evidence, isConnected } = useDashboardSSE();
 	const [isNewRunModalOpen, setIsNewRunModalOpen] = useState(false);
-	const [managedProjects, setManagedProjects] = useState<ManagedProject[]>([]);
+	const [managedProjects, setManagedProjects] = useState<ManagedTargetProject[]>([]);
 
 	useEffect(() => {
 		api
-			.getProjects()
+			.getManagedTargetProjects()
 			.then((data) => setManagedProjects(data.projects))
 			.catch(() => {});
 	}, []);

@@ -96,10 +96,10 @@ function parseArgs() {
 				options.output = args[++i] ?? null;
 				break;
 			case '--target-pr':
-				options.targetPr = parseInt(args[++i] ?? '0', 10) || null;
+				options.targetPr = Number.parseInt(args[++i] ?? '0', 10) || null;
 				break;
 			case '--target-issue':
-				options.targetIssue = parseInt(args[++i] ?? '0', 10) || null;
+				options.targetIssue = Number.parseInt(args[++i] ?? '0', 10) || null;
 				break;
 			case '--help':
 			case '-h':

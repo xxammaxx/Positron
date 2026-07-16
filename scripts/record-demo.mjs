@@ -13,7 +13,7 @@ import { chromium } from '@playwright/test';
 const OUT_DIR = 'docs/release/video-demo';
 const BASE_URL = 'http://localhost:5173';
 const HEADED = process.env.HEADED === '1';
-const SLOWMO = parseInt(process.env.PW_SLOWMO ?? '0', 10);
+const SLOWMO = Number.parseInt(process.env.PW_SLOWMO ?? '0', 10);
 
 let scenesFailed = 0;
 const MAX_SCENE_FAILURES = 3;

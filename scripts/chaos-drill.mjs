@@ -96,7 +96,7 @@ async function checkSkip(name, reason) {
 function getMetricValue(metricText, name) {
 	const regex = new RegExp(`^${name}(?:\\{[^}]*\\})?\\s+([\\d.e+]+)`, 'm');
 	const match = metricText.match(regex);
-	return match ? parseFloat(match[1]) : null;
+	return match ? Number.parseFloat(match[1]) : null;
 }
 
 // ── Drill Steps ────────────────────────────────────────────────────────────

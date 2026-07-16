@@ -25,7 +25,7 @@ import http from 'node:http';
 
 // ── Configuration ──────────────────────────────────────────────────────────
 const SERVER_URL = process.env.POSITRON_SERVER_URL ?? 'http://localhost:3000';
-const JOB_COUNT = parseInt(process.env.POSITRON_DRILL_JOB_COUNT ?? '60', 10);
+const JOB_COUNT = Number.parseInt(process.env.POSITRON_DRILL_JOB_COUNT ?? '60', 10);
 const PROMETHEUS_URL = process.env.POSITRON_PROMETHEUS_URL ?? 'http://localhost:9090';
 const MOCK_URL = process.env.POSITRON_MOCK_URL ?? 'http://localhost:5001';
 const REDIS_URL = process.env.POSITRON_REDIS_URL ?? 'redis://localhost:6379';
@@ -71,12 +71,12 @@ function getMetricValue(metricText, name, labelFilter) {
 		for (const line of metricText.split('\n')) {
 			if (line.startsWith(name + '{') && line.includes(labelFilter)) {
 				const match = line.match(/\s+([\d.e+]+)$/m);
-				return match ? parseFloat(match[1]) : null;
+				return match ? Number.parseFloat(match[1]) : null;
 			}
 		}
 	}
 	const match = metricText.match(regex);
-	return match ? parseFloat(match[1]) : null;
+	return match ? Number.parseFloat(match[1]) : null;
 }
 
 function log(level, message) {
@@ -95,7 +95,7 @@ async function main() {
 	let jobCount = JOB_COUNT;
 	for (const arg of args) {
 		if (arg.startsWith('--jobs=')) {
-			jobCount = parseInt(arg.slice(7), 10);
+			jobCount = Number.parseInt(arg.slice(7), 10);
 		} else if (arg.startsWith('--help') || arg === '-h') {
 			console.log('Usage: node scripts/queue-backlog-drill.mjs [--jobs=N]');
 			console.log('  --jobs=N   Number of drill jobs (default: 60, min: 55, max: 75)');

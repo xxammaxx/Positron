@@ -5,7 +5,7 @@
 // Adapter call count is asserted to be 0 for every blocked path.
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Stage2RuntimeWriteHarness, createStage2WriteHarness } from '@positron/github-adapter';
+import { type Stage2RuntimeWriteHarness, createStage2WriteHarness } from '@positron/github-adapter';
 import type {
 	Stage2IssueCommentWriter,
 	Stage2WriteHarnessInput,

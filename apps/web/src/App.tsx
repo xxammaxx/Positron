@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import NotFound from './components/NotFound.jsx';
 import ProjectsPage from './components/projects/ProjectsPage.jsx';

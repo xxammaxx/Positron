@@ -16,7 +16,7 @@ import {
 	createSafeSnapshot,
 	createFakeRuntimeSafetyProbe,
 } from '../stage3-runtime-safety-probe.js';
-import { createFakeReadOnlyVerifier } from '../stage3-reader-verifier.js';
+import type { createFakeReadOnlyVerifier } from '../stage3-reader-verifier.js';
 import {
 	createMockStage3Bridge,
 	createStage3RealGitHubBridge,

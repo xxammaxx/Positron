@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import type React from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import type { Phase, Run } from '../types.js';
@@ -95,7 +96,7 @@ export default function Dashboard(): React.ReactElement {
 		try {
 			const { run: startedRun } = await api.startRun(
 				selectedRepo,
-				parseInt(issueNumber, 10),
+				Number.parseInt(issueNumber, 10),
 				autonomyLevel,
 			);
 			setIsNewRunModalOpen(false);

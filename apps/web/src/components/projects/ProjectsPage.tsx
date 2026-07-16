@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import type React from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../../api.js';
 import type { ManagedTargetProject, SafetyCheck } from '../../types.jsx';
 import ErrorBanner from '../shared/ErrorBanner.js';
