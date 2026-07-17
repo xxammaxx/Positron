@@ -130,7 +130,7 @@ export const api = {
 	},
 
 	createRun(issueUrl: string): Promise<{ run: Run; runId: string }> {
-		return request<{ run: Run; runId: string }>('/runs', {
+		return adminRequest<{ run: Run; runId: string }>('/runs', {
 			method: 'POST',
 			body: JSON.stringify({ issueUrl }),
 		});

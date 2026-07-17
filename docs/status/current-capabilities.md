@@ -51,9 +51,10 @@ Project closeout state as of the latest local verification on main (post PR #309
 ### Post-Merge Quality Gates Fix (#371/#372/#373, OPEN)
 
 - **#371:** DashboardPage crash (TypeError on `undefined.replace()`) caused by incomplete `ManagedProject` → `ManagedTargetProject` migration. Repaired 5 field accesses in `DashboardPage.tsx` and added 9 regression tests in `DashboardPage-contract.test.tsx`.
-- **#373 (Auth):** `POST /api/demo-runs` returned 401 because `api.startDemoRun()` used `request()` (no auth headers). Fixed by switching to `adminRequest()` (sends `X-Admin-Token`). Added Playwright token injection in 3 E2E test files and `playwright.config.ts`.
+- **#373 (Auth):** `POST /api/demo-runs` returned 401 because `api.startDemoRun()` used `request()` (no auth headers). Fixed by switching to `adminRequest()` (sends `X-Admin-Token`). Added Playwright token injection in 3 E2E test files and `playwright.config.ts`. Token fixture hardened: centralized in `e2e/fixtures/admin-auth.ts`, fallback defaults removed, CI workflow token aligned to `positron-test-token-dev`.
+- **E2E Runtime Proof (head `1aa2e43`, 2026-07-17):** Local Playwright run with live Server/Redis confirmed auth contract end-to-end: no-token → 401, wrong-token → 401, valid test-token → 201. Demo-workflow verified: `POST /api/demo-runs` 2xx, Run ID created, "Demo run started" visible, navigation to run detail, end state DONE. Suite: 24/26 passed (1 pre-existing full-run-lifecycle timeout, 1 skip). Zero 4xx/5xx on demo-runs. Zero uncaught errors or unhandled rejections.
 - Web tests: 196/196 → 205/205; Total suite: 2141/2141 → 2326/2326 (2121 server + 205 web).
-- Evidence: `docs/evidence/issue-373/run-report.md` (DashboardPage) and `docs/evidence/issue-373/demo-run-admin-auth-contract-repair.md` (Auth).
+- Evidence: `docs/evidence/issue-373/run-report.md` (DashboardPage) and `docs/evidence/issue-373/demo-run-admin-auth-contract-repair.md` (Auth + Runtime Proof).
 
 ### Portfolio Gap Discovery (PR #309, MERGED)
 
@@ -172,7 +173,7 @@ Project closeout state as of the latest local verification on main (post PR #309
 | #306 | Backlog Hygiene | OPEN |
 | #307 | Docs Reality Sync | OPEN |
 | #308 | Full Real Mode Pilot | OPEN |
-| #372 / #373 | Demo-Run Admin Auth Contract Repair + DashboardPage Contract Repair | OPEN (Draft) |
+| #372 / #373 | Demo-Run Admin Auth Contract Repair + DashboardPage Contract Repair + E2E Runtime Proof | OPEN (Draft) |
 <!-- positron:auto-generated:end evidence-refs -->
 
 ## Test Breakdown

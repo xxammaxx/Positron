@@ -42,6 +42,30 @@ GitHub Actions remains advisory-only. Workflow YAML files are syntactically vali
 - E2E tests are advisory-only for now.
 - Tracked in Issue #304 (YELLOW, P2).
 
+### E2E Runtime Proof — Auth Contract Verified (Issue #373)
+
+- **2026-07-17: E2E Runtime Proof completed at head `1aa2e43`.**
+- Auth contract confirmed: no-token → 401, wrong-token → 401, valid token → 201 (POST /api/demo-runs).
+- Demo workflow verified end-to-end with live Server/Redis.
+- Suite: 24/26 passed; `full-run-lifecycle.spec.ts` has a pre-existing timeout (not related to auth).
+- Token fixture hardened: centralized in `e2e/fixtures/admin-auth.ts`, CI token aligned.
+- CI verification pending: token mismatch between CI environment and test-worker was fixed in code but CI has not re-run.
+
+### Pending Admin Auth Mismatches
+
+The following frontend API methods use `request()` (no admin token) but hit server endpoints protected by `requireAdmin`. These remain unfixed since Issue #373 only scoped `startDemoRun()`:
+
+| Frontend Method | Endpoint | Server Middleware |
+|----------------|----------|-------------------|
+| `createRepo` | `POST /api/repos` | `requireAdmin` |
+| `createRun` | `POST /api/runs` | `requireAdmin` |
+| `startRun` | `POST /api/repos/:repoId/runs` | `requireAdmin` |
+| `saveEvidence` | `POST /api/evidence` | `requireAdmin` |
+| `updateSafety` | `POST /api/safety` | `requireAdmin` |
+| `cancelRun` | `POST /api/runs/:id/cancel` | `requireAdmin` |
+
+These 6 endpoints are potential auth failures in admin-authenticated flows. Evaluate for a follow-up issue.
+
 ## Open Issues / PRs
 
 - **0 open PRs**: All blocker PRs (#218, #314, #315, #316) merged. No open PRs at audit time.
@@ -101,6 +125,7 @@ These must not be applied, popped, or dropped without explicit human instruction
 | CHANGELOG v0.2.0/v0.3.0 | Being created | #307 |
 | Stage 3 real GitHub write | Implemented and tested, not executed | #308 |
 | Multi-process workspace lock | Not implemented at runtime | #324 |
+| Remaining admin auth mismatches (6 endpoints) | Identified in #373 — frontend uses `request()` but server requires `requireAdmin` | — |
 <!-- positron:auto-generated:end active-limitations -->
 
 ## Stage 3 Runtime Foundation
@@ -119,6 +144,8 @@ These must not be applied, popped, or dropped without explicit human instruction
 | #297 Flaky E2E test | Stabilized and CLOSED |
 | #298 Biome JSON formatting | Resolved and CLOSED |
 | #299 Windows module resolution | Resolved and CLOSED |
-| apps/web JSX/TSX test failures | Resolved (all 196 web tests pass) |
+| apps/web JSX/TSX test failures | Resolved (all 205 web tests pass) |
+| Demo-run admin auth contract (`POST /api/demo-runs` 401) | Fixed and verified at runtime — `startDemoRun()` now uses `adminRequest()` (head `1aa2e43`). |
+| CI Playwright token mismatch | Fixed — CI workflow token aligned to `positron-test-token-dev` matching playwright.config.ts. |
 <!-- positron:auto-generated:end resolved-limitations -->
 | CodeRabbit automation | Decommissioned (internal), external pending owner |

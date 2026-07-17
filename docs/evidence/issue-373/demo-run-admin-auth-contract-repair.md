@@ -56,20 +56,97 @@ Server-Security unverändert, fail-closed bleibt bestehen.
 
 ## Playwright-Evidence
 
-- Playwright-Tests NICHT in diesem Lauf ausgeführt (benötigt separate Server/Webserver-Instanz)
-- Token-Injection-Code ist in den Spec-Dateien vorhanden
+### Commit c364dff (Auth Fix)
+- Playwright-Tests in diesem Lauf nicht ausgeführt (benötigt separate Server/Webserver-Instanz)
+- Token-Injection-Code in den Spec-Dateien vorhanden
 - `POSITRON_ADMIN_TOKEN` in `playwright.config.ts` konfiguriert
+
+### Commit 1aa2e43 (Token-Fixture-Härtung + Runtime Proof)
+
+## Runtime Proof
+
+- **Head:** `1aa2e43dcfdf9e2a8d9cb0dddf72efd71cb5805e`
+- **Date:** 2026-07-17T11:45:00Z
+- **Environment:** Local (Linux, Node.js v22)
+- **Redis:** Docker (redis:7-alpine, PONG confirmed, healthy)
+- **Server:** Auto-started by Playwright webServer, mode=fake, killSwitch=true
+- **Worker:** Inline pipeline (POSITRON_DISABLE_QUEUE=true)
+- **Browser:** Chromium (Playwright, headless)
+
+## Auth Contract
+
+| Prüfung | Ergebnis |
+|---------|----------|
+| No token → 401 | Confirmed (server integration tests) |
+| Wrong token → 401 | Confirmed (server integration tests) |
+| Valid test token → 2xx | Confirmed (POST /api/demo-runs → 201) |
+| Header X-Admin-Token present | YES |
+| Header value captured | NO (not logged) |
+
+## Playwright (Lokal, HEAD 1aa2e43)
+
+| Suite | Passed | Failed | Skipped | Duration |
+|-------|--------|--------|---------|----------|
+| diagnostic-reality-check | 6 | 0 | 0 | ~29s |
+| ui-workflow-trace | 1 | 0 | 0 | ~28s |
+| workflow-proof (14 steps) | 14 | 0 | 0 | ~29s |
+| smoke | 3 | 0 | 0 | included |
+| full-run-lifecycle | 0 | 1 | 1 | ~15s (timeout) |
+| **Total** | **24** | **1** | **1** | **~1.6m** |
+
+## Demo Workflow
+
+| Phase | Status |
+|-------|--------|
+| POST /api/demo-runs | 2xx ✅ |
+| Run ID erzeugt | YES |
+| "Demo run started" visible | YES |
+| Navigation to run detail | YES |
+| Run end state | DONE |
+| Duration | <30s |
+
+## Console and Network
+
+| Type | Count |
+|------|-------|
+| Uncaught errors | 0 |
+| Unhandled rejections | 0 |
+| 401 on demo-runs | 0 |
+| Redis errors | 0 |
+| Vite HMR noise | Present but non-blocking |
+| Failed requests (4xx/5xx) | 0 (except pre-existing full-run-lifecycle) |
+
+## Token-Fixture-Härtung (Commit 1aa2e43)
+
+| Prüfung | Ergebnis |
+|---------|----------|
+| Source of Truth | SINGLE (`playwright.config.ts:42`) |
+| Token-Duplikation entfernt | YES (3 Specs → 1 Shared Fixture) |
+| Fallback `|| 'positron-test-token-dev'` entfernt | YES (alle 3 Specs) |
+| CI-Workflow Token aligned | YES (`positron-admin-dev` → `positron-test-token-dev`) |
+| Token-Propagation an Test-Worker | YES (`process.env` in playwright config) |
+| Shared Fixture | `e2e/fixtures/admin-auth.ts` |
+| Fail-fast bei fehlendem Token | YES |
+| Token statisch, test-only, non-secret | YES |
+
+## CI Token Mismatch (Root Cause für CI-Fehler)
+
+- CI-Workflow (`quality-gates.yml:230`) setzte: `POSITRON_ADMIN_TOKEN=positron-admin-dev`
+- Playwright-Config (`FAKE_MODE_ENV`) setzt: `POSITRON_ADMIN_TOKEN=positron-test-token-dev`
+- Server (via `webServer.env` → `FAKE_MODE_ENV`): `positron-test-token-dev`
+- Test-Worker (erben CI-Env): `positron-admin-dev`
+- Browser injected: `positron-admin-dev` → Server validiert: `positron-test-token-dev` → **401**
+- **Fix**: CI-Workflow auf `positron-test-token-dev` geändert + `process.env`-Propagation
 
 ## Verbleibende Risiken
 
-- **9 weitere Write-Methoden** (`createRepo`, `createRun`, `startRun`, etc.) verwenden ebenfalls `request()` statt `adminRequest()`
+- **9 weitere Write-Methoden** (`createRepo`, `createRun`, `startRun`, etc.) verwenden ebenfalls `request()` statt `adminRequest()`. `full-run-lifecycle.spec.ts` scheitert an `createRun()`.
 - Biome-Backlog #340 weiterhin offen
-- Redis ECONNREFUSED in E2E-Umgebung (pre-existing infra)
-- Playwright-Tests müssen in separatem Lauf mit gestarteten Servern ausgeführt werden
+- `docker-compose.test.yml` verwendet noch `positron-admin-dev` (eigenes Test-Environment, P2)
 
 ## Klassifikation
 
-**AMBER_REVIEW** — Auth-Vertrag repariert, Tests grün, E2E-Token-Injection vorhanden, aber Playwright-E2E-Lauf mit Servern steht noch aus.
+**AMBER_REVIEW_CI_POLICY_BLOCKED** — Lokaler E2E-Baseline GREEN (24/26, Demo-POST 2xx). CI-Playwright wird beim nächsten Run gegen Head `1aa2e43` verifiziert. Gesamt-CI bleibt rot durch separates Biome-Governance-Problem (#340).
 
 ## Cross-Reference
 

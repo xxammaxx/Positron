@@ -35,7 +35,18 @@ export async function installAdminToken(page: Page): Promise<void> {
 		);
 	}
 
-	await page.evaluate((t) => {
+	// Inject on all future page navigations (works when called before page.goto())
+	await page.addInitScript((t) => {
 		window.localStorage.setItem('positron_admin_token', t);
 	}, token);
+
+	// Also inject on the currently loaded page if one exists (needed when called
+	// after page.goto() — addInitScript only runs on the next navigation).
+	try {
+		await page.evaluate((t) => {
+			window.localStorage.setItem('positron_admin_token', t);
+		}, token);
+	} catch {
+		// No document loaded yet — addInitScript above will handle the first navigation.
+	}
 }
