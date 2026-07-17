@@ -44,27 +44,27 @@ GitHub Actions remains advisory-only. Workflow YAML files are syntactically vali
 
 ### E2E Runtime Proof — Auth Contract Verified (Issue #373)
 
-- **2026-07-17: E2E Runtime Proof completed at head `1aa2e43`.**
-- Auth contract confirmed: no-token → 401, wrong-token → 401, valid token → 201 (POST /api/demo-runs).
-- Demo workflow verified end-to-end with live Server/Redis.
-- Suite: 24/26 passed; `full-run-lifecycle.spec.ts` has a pre-existing timeout (not related to auth).
-- Token fixture hardened: centralized in `e2e/fixtures/admin-auth.ts`, CI token aligned.
-- CI verification pending: token mismatch between CI environment and test-worker was fixed in code but CI has not re-run.
+- **2026-07-17: E2E Runtime Proof completed at head `872f6de`.**
+- Auth contract confirmed: no-token → 401, wrong-token → 401, valid token → 201 (POST /api/demo-runs + POST /api/runs).
+- Demo workflow and normal run workflow verified end-to-end with live Server/Redis (local + CI).
+- CI Playwright (run 29574452503): **26/26 PASS** (1.4 min) — `e2e-playwright` job GREEN.
+- `startDemoRun()` and `createRun()` both now use `adminRequest()`.
+- Token fixture hardened: centralized in `e2e/fixtures/admin-auth.ts`, dual-mode (addInitScript + evaluate), CI token aligned.
+- Regression tests: 5 auth contract tests in `api-createRun-auth.test.ts`.
 
 ### Pending Admin Auth Mismatches
 
-The following frontend API methods use `request()` (no admin token) but hit server endpoints protected by `requireAdmin`. These remain unfixed since Issue #373 only scoped `startDemoRun()`:
+The following frontend API methods use `request()` (no admin token) but hit server endpoints protected by `requireAdmin`. `createRun()` and `startDemoRun()` were fixed in Issue #373. These remain unfixed:
 
 | Frontend Method | Endpoint | Server Middleware |
 |----------------|----------|-------------------|
 | `createRepo` | `POST /api/repos` | `requireAdmin` |
-| `createRun` | `POST /api/runs` | `requireAdmin` |
 | `startRun` | `POST /api/repos/:repoId/runs` | `requireAdmin` |
 | `saveEvidence` | `POST /api/evidence` | `requireAdmin` |
 | `updateSafety` | `POST /api/safety` | `requireAdmin` |
 | `cancelRun` | `POST /api/runs/:id/cancel` | `requireAdmin` |
 
-These 6 endpoints are potential auth failures in admin-authenticated flows. Evaluate for a follow-up issue.
+These 5 endpoints are potential auth failures in admin-authenticated flows. Evaluate for a follow-up issue.
 
 ## Open Issues / PRs
 

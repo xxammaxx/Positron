@@ -138,15 +138,92 @@ Server-Security unverändert, fail-closed bleibt bestehen.
 - Browser injected: `positron-admin-dev` → Server validiert: `positron-test-token-dev` → **401**
 - **Fix**: CI-Workflow auf `positron-test-token-dev` geändert + `process.env`-Propagation
 
+## Normal Run Auth Fix (Commit 872f6de, 2026-07-17)
+
+### Runtime Proof
+
+- **Head:** `872f6de37c4f7ec652a4ad75ec482ab318cd1825`
+- **Date:** 2026-07-17T12:44:00Z
+- **Environment:** Local (Linux, Node.js v22) + CI (GitHub Actions, ubuntu-latest)
+- **Root Cause:** `api.createRun()` used `request()` (no auth headers) while server `POST /api/runs` is protected by `requireAdmin`. Additionally, `full-run-lifecycle.spec.ts` never imported `installAdminToken`.
+- **Fix:** Changed `createRun()` to `adminRequest()`. Fixed `installAdminToken` fixture for dual-mode (addInitScript + evaluate). Integrated fixture into `full-run-lifecycle.spec.ts` `beforeEach`.
+
+### Auth Contract (Normal Run)
+
+| Prüfung | Ergebnis |
+|---------|----------|
+| No token → 401 | Confirmed (regression tests) |
+| Wrong token → 401 | Confirmed (regression tests) |
+| Valid test token → 2xx | Confirmed (POST /api/runs → 201, local + CI) |
+| Header X-Admin-Token present | YES |
+| Header value captured | NO (not logged) |
+
+### Playwright (Lokal + CI, HEAD 872f6de)
+
+| Suite | Passed | Failed | Skipped | Duration |
+|-------|--------|--------|---------|----------|
+| diagnostic-reality-check | 6 | 0 | 0 | ~29s |
+| ui-workflow-trace | 1 | 0 | 0 | ~28s |
+| workflow-proof (14 steps) | 14 | 0 | 0 | ~29s |
+| smoke | 3 | 0 | 0 | included |
+| full-run-lifecycle | 2 | 0 | 0 | ~9s |
+| **Total** | **26** | **0** | **0** | **~1.5m** |
+
+### Full-Run-Lifecycle Workflow
+
+| Phase | Status |
+|-------|--------|
+| POST /api/runs | 2xx ✅ |
+| Run ID erzeugt | YES |
+| Navigation to /runs/:id | YES |
+| Pipeline sichtbar | YES |
+| Run end state | DONE |
+| No 401 | YES |
+| No waitForURL timeout | YES |
+| Duration | <10s |
+
+### CI Status (Run 29574452503, Head 872f6de)
+
+| Job | Result |
+|-----|--------|
+| e2e-playwright | **PASS (26/26, 1.4m)** |
+| build-and-test | FAIL (Biome #340 only) |
+| mutation-fast/safety | PASS |
+| observability | PASS |
+| tool-gateway-windows | PASS |
+
+### Normal Run Auth Proof
+
+| Field | Value |
+|-------|-------|
+| Local test | 26/26 PASS |
+| CI run | 29574452503 |
+| POST /api/runs status | 2xx |
+| Admin header present | YES |
+| Token value captured | NO |
+| Run ID | erzeugt |
+| Navigation | /runs/:id |
+| Final phase | DONE |
+
+### Regression Tests (api-createRun-auth.test.ts)
+
+| # | Case | Assertion |
+|---|------|-----------|
+| 1 | Valid token → 2xx, header present | `tokenSent === TEST_TOKEN` |
+| 2 | No token → throws 401 | `rejects.toThrow()` |
+| 3 | Wrong token → throws 401 | `rejects.toThrow()` |
+| 4 | URL forwarded in body | `body.issueUrl` matches |
+| 5 | POST method + endpoint correct | `url === '/api/runs'` |
+
 ## Verbleibende Risiken
 
-- **9 weitere Write-Methoden** (`createRepo`, `createRun`, `startRun`, etc.) verwenden ebenfalls `request()` statt `adminRequest()`. `full-run-lifecycle.spec.ts` scheitert an `createRun()`.
-- Biome-Backlog #340 weiterhin offen
+- **6 weitere Write-Methoden** (`createRepo`, `startRun`, `saveEvidence`, `updateSafety`, `cancelRun`, controlRun/approveGate/reviseGate) verwenden ebenfalls `request()` statt `adminRequest()`. `createRun()` ist in diesem Commit gefixt.
+- Biome-Backlog #340 weiterhin offen (blockiert `build-and-test` CI-Job)
 - `docker-compose.test.yml` verwendet noch `positron-admin-dev` (eigenes Test-Environment, P2)
 
 ## Klassifikation
 
-**AMBER_REVIEW_CI_POLICY_BLOCKED** — Lokaler E2E-Baseline GREEN (24/26, Demo-POST 2xx). CI-Playwright wird beim nächsten Run gegen Head `1aa2e43` verifiziert. Gesamt-CI bleibt rot durch separates Biome-Governance-Problem (#340).
+**AMBER_REVIEW_CI_POLICY_BLOCKED** — Functional E2E: GREEN (26/26, local + CI). Gesamt-CI: RED nur durch separates Biome-Governance-Problem (#340).
 
 ## Cross-Reference
 
