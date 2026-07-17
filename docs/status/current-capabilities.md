@@ -13,8 +13,8 @@ Project closeout state as of the latest local verification on main (post PR #309
 | `npm run build` | PASS |
 | `npm run typecheck` | PASS (9 projects up to date) |
 | `npm test` (root/packages) | PASS — **~1897/1897** (78 test files) |
-| `npm test` (apps/web) | PASS — **196/196** (8 test files, JSX/TSX resolved) |
-| **Total Tests** | **~2141/2141** (86 test files — Stage 3 PR #370 added ~48 tests to github-adapter) |
+| `npm test` (apps/web) | PASS — **205/205** (9 test files, JSX/TSX resolved) |
+| **Total Tests** | **2326/2326** (94 test files — Issue #373 auth contract fix + Playwright token injection) |
 | `npx biome check .` | advisory-only (known lint backlog) |
 
 ## Implemented Capabilities
@@ -47,6 +47,13 @@ Project closeout state as of the latest local verification on main (post PR #309
 - **#298:** Biome JSON formatting warnings resolved.
 - **#299:** Windows runner module resolution fixed (PR #303).
 - All three issues closed; evidence trail complete in `docs/evidence/post-268/`.
+
+### Post-Merge Quality Gates Fix (#371/#372/#373, OPEN)
+
+- **#371:** DashboardPage crash (TypeError on `undefined.replace()`) caused by incomplete `ManagedProject` → `ManagedTargetProject` migration. Repaired 5 field accesses in `DashboardPage.tsx` and added 9 regression tests in `DashboardPage-contract.test.tsx`.
+- **#373 (Auth):** `POST /api/demo-runs` returned 401 because `api.startDemoRun()` used `request()` (no auth headers). Fixed by switching to `adminRequest()` (sends `X-Admin-Token`). Added Playwright token injection in 3 E2E test files and `playwright.config.ts`.
+- Web tests: 196/196 → 205/205; Total suite: 2141/2141 → 2326/2326 (2121 server + 205 web).
+- Evidence: `docs/evidence/issue-373/run-report.md` (DashboardPage) and `docs/evidence/issue-373/demo-run-admin-auth-contract-repair.md` (Auth).
 
 ### Portfolio Gap Discovery (PR #309, MERGED)
 
@@ -165,6 +172,7 @@ Project closeout state as of the latest local verification on main (post PR #309
 | #306 | Backlog Hygiene | OPEN |
 | #307 | Docs Reality Sync | OPEN |
 | #308 | Full Real Mode Pilot | OPEN |
+| #372 / #373 | Demo-Run Admin Auth Contract Repair + DashboardPage Contract Repair | OPEN (Draft) |
 <!-- positron:auto-generated:end evidence-refs -->
 
 ## Test Breakdown
@@ -179,6 +187,6 @@ Project closeout state as of the latest local verification on main (post PR #309
 | packages/opencode-adapter | fake-adapter, smoke, frontend-design-skill | PASS |
 | packages/tool-gateway | red-team (shell-inject, path-traversal, secret-leak, egress, autonomy, approval-bypass), scanner, github tools, evidence tools, repo tools | PASS |
 | packages/benchmark-rudolph | controlled-real-probe, red-negative tests | PASS |
-| apps/server | observability/queue | PASS |
-| apps/web | voice, voice-output, voice-settings, smoke, PhasePipeline, BlueprintPanel, VoiceControls | PASS (196/196) |
-| **Total** | **86 files** | **~2141/2141 PASS** (Stage 3 github-adapter: 345 across 10 test files) |
+| apps/server | integration, gate-approve, observability/metrics, observability/instrumentation, observability/queue, observability/telemetry | PASS (2121/2121) |
+| apps/web | voice, voice-output, voice-settings, voice-smoke, smoke, PhasePipeline, BlueprintPanel, VoiceControls, DashboardPage-contract | PASS (205/205) |
+| **Total** | **94 files** | **2326/2326 PASS** (2121 server + 205 web — Issue #373 auth contract repair) |
