@@ -227,7 +227,7 @@ jobs:
           POSITRON_REPO_NAME: test-repo
           POSITRON_REPO_DEFAULT_BRANCH: main
           # Admin token (used for protected endpoints in test mode)
-          POSITRON_ADMIN_TOKEN: positron-admin-dev
+          POSITRON_ADMIN_TOKEN: positron-test-token-dev
 
       - name: Upload Playwright report
         if: always()
