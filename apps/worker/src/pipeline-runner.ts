@@ -6,7 +6,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { GitHubStatusSyncService } from '@positron/github-adapter';
+import type { GitHubStatusSyncService } from '@positron/github-adapter';
 import type {
 	EvidenceItem,
 	GitHubAdapter,
@@ -42,7 +42,7 @@ import type {
 	SpecKitAdapter,
 } from '@positron/shared';
 import type { GatewayService } from '@positron/tool-gateway';
-import Database from 'better-sqlite3';
+import type Database from 'better-sqlite3';
 
 // ---------------------------------------------------------------------------
 // Dependency Injection Interface
@@ -1374,7 +1374,7 @@ export async function runPipeline(run: RunState, deps: PipelineDeps): Promise<Ru
 	let attempt = 0;
 
 	const envMaxRetries = process.env.POSITRON_MAX_FIX_LOOPS
-		? parseInt(process.env.POSITRON_MAX_FIX_LOOPS, 10)
+		? Number.parseInt(process.env.POSITRON_MAX_FIX_LOOPS, 10)
 		: undefined;
 	const maxAttempts = envMaxRetries && !isNaN(envMaxRetries) ? envMaxRetries : MAX_FIX_LOOPS;
 	const fixLoopEnabled = process.env.POSITRON_ENABLE_FIX_LOOP === 'true';

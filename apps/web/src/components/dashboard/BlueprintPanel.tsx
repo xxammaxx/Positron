@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import type React from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../api.js';
 
@@ -17,7 +18,7 @@ export default function BlueprintPanel(): React.ReactElement {
 	/** Fetch blueprint from the API for a given repo + issue */
 	const generateBlueprint = async () => {
 		const trimmedRepo = repoId.trim();
-		const issueNum = parseInt(issueNumber.trim(), 10);
+		const issueNum = Number.parseInt(issueNumber.trim(), 10);
 
 		if (!trimmedRepo || isNaN(issueNum) || issueNum < 1) {
 			setError('Enter a valid repository (owner/repo) and issue number');

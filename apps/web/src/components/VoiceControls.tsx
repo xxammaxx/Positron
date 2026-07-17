@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import type React from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
 	getAvailableVoices,
 	getLastSpoken,
@@ -240,7 +241,7 @@ export default function VoiceControls(): React.ReactElement {
 						max="2.0"
 						step="0.1"
 						value={rate}
-						onChange={(e) => handleRateChange(parseFloat(e.target.value))}
+						onChange={(e) => handleRateChange(Number.parseFloat(e.target.value))}
 						className="w-full accent-purple-500"
 						aria-label="Speech rate"
 					/>
@@ -266,7 +267,7 @@ export default function VoiceControls(): React.ReactElement {
 						max="1"
 						step="0.05"
 						value={volume}
-						onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+						onChange={(e) => handleVolumeChange(Number.parseFloat(e.target.value))}
 						className="w-full accent-purple-500"
 						aria-label="Speech volume"
 					/>

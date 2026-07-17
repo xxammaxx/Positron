@@ -89,7 +89,7 @@ import type {
 	SpecKitAdapter,
 } from '@positron/shared';
 import { FakeSpecKitAdapter, RealSpecKitAdapter } from '@positron/speckit-adapter';
-import Database from 'better-sqlite3';
+import type Database from 'better-sqlite3';
 import express from 'express';
 import { getManagedTargetProjects } from './data/managed-target-projects.js';
 import { createDemoLiveRunHandler } from './demo/live-run-handler.js';
@@ -1735,7 +1735,7 @@ async function runFullPipeline(
 	}
 	// Configurable max retries: env var overrides constant (Issue #31)
 	const envMaxRetries = process.env.POSITRON_MAX_FIX_LOOPS
-		? parseInt(process.env.POSITRON_MAX_FIX_LOOPS, 10)
+		? Number.parseInt(process.env.POSITRON_MAX_FIX_LOOPS, 10)
 		: undefined;
 	const maxAttempts = envMaxRetries && !isNaN(envMaxRetries) ? envMaxRetries : MAX_FIX_LOOPS;
 	const fixLoopEnabled = process.env.POSITRON_ENABLE_FIX_LOOP === 'true';
@@ -2711,7 +2711,7 @@ export function createApp(options: ServerOptions = {}) {
 	// GET /api/repos/:owner/:repo/issues/:issueNumber/blueprint — Dynamic Blueprint
 	app.get('/api/repos/:owner/:repo/issues/:issueNumber/blueprint', async (req, res) => {
 		try {
-			const issueNumber = parseInt(req.params.issueNumber, 10);
+			const issueNumber = Number.parseInt(req.params.issueNumber, 10);
 			if (isNaN(issueNumber) || issueNumber < 1) {
 				res.status(400).json({ error: 'issueNumber must be a positive integer' });
 				return;
@@ -2754,7 +2754,7 @@ export function createApp(options: ServerOptions = {}) {
 				return;
 			}
 			const [, owner, repo, issueNumberStr] = match;
-			const issueNumber = parseInt(issueNumberStr!, 10);
+			const issueNumber = Number.parseInt(issueNumberStr!, 10);
 
 			// Find or create repository
 			const repoId = `${owner}/${repo}`;
@@ -2972,8 +2972,8 @@ export function createApp(options: ServerOptions = {}) {
 	// Runs auflisten (mit Pagination)
 	app.get('/api/runs', (req, res) => {
 		try {
-			const page = Math.max(1, parseInt(req.query.page as string) || 1);
-			const limit = Math.min(100, parseInt(req.query.limit as string) || 20);
+			const page = Math.max(1, Number.parseInt(req.query.page as string) || 1);
+			const limit = Math.min(100, Number.parseInt(req.query.limit as string) || 20);
 			const repoId = req.query.repoId as string | undefined;
 			const offset = (page - 1) * limit;
 
@@ -3096,7 +3096,7 @@ export function createApp(options: ServerOptions = {}) {
 
 		// Check for W3C Last-Event-ID reconnection support (Issue #66)
 		const lastEventId = req.headers['last-event-id'];
-		const lastSeq = lastEventId ? parseInt(String(lastEventId), 10) : 0;
+		const lastSeq = lastEventId ? Number.parseInt(String(lastEventId), 10) : 0;
 
 		// Get all events and filter by Last-Event-ID if reconnecting
 		const allEvents = getEvents(runId);
@@ -3269,7 +3269,7 @@ export function createApp(options: ServerOptions = {}) {
 			return;
 		}
 		// issueNumber optional — auf positive Ganzzahl prüfen
-		let issueNum = parseInt(process.env.POSITRON_DEFAULT_ISSUE_NUMBER ?? '56', 10);
+		let issueNum = Number.parseInt(process.env.POSITRON_DEFAULT_ISSUE_NUMBER ?? '56', 10);
 		if (issueNumber !== undefined && issueNumber !== null) {
 			const parsed = Number(issueNumber);
 			if (!Number.isInteger(parsed) || parsed < 1 || parsed > 999999) {
@@ -3328,7 +3328,7 @@ export function createApp(options: ServerOptions = {}) {
   app.post('/api/demo-runs', requireAdmin, async (req, res) => {
 		const { blueprint, issueNumber } =
 			(req.body as { blueprint?: string; issueNumber?: number }) ?? {};
-		let issueNum = parseInt(process.env.POSITRON_DEFAULT_ISSUE_NUMBER ?? '56', 10);
+		let issueNum = Number.parseInt(process.env.POSITRON_DEFAULT_ISSUE_NUMBER ?? '56', 10);
 		if (issueNumber !== undefined && issueNumber !== null) {
 			const parsed = Number(issueNumber);
 			if (!Number.isInteger(parsed) || parsed < 1 || parsed > 999999) {
@@ -4474,7 +4474,7 @@ const isDirectRun =
 		process.argv[1].endsWith(`${path.sep}src${path.sep}index.ts`) ||
 		process.argv[1].includes(`${path.sep}src${path.sep}index.ts`));
 if (isDirectRun) {
-	const port = parseInt(process.env['PORT'] ?? '3000', 10);
+	const port = Number.parseInt(process.env['PORT'] ?? '3000', 10);
 	const server = createServer();
 	server.listen(port, () => {
 		const ghMode = process.env['POSITRON_GITHUB_MODE'] ?? process.env['GITHUB_MODE'] ?? 'fake';

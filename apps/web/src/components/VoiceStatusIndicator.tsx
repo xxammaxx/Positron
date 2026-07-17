@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import type React from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getLastSpoken, isSpeechSupported } from '../voice/voice-output.js';
 import { loadVoiceSettings, toggleVoiceEnabled } from '../voice/voice-settings.js';
 
