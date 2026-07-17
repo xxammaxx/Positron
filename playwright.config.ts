@@ -37,6 +37,9 @@ const FAKE_MODE_ENV = {
 	POSITRON_REPO_DEFAULT_BRANCH: 'main',
 	// Prevent real token usage
 	GITHUB_TOKEN: '',
+	// QA-069: Admin token for E2E write operations (demo runs, etc.)
+	// Must match the token injected into browser localStorage by test setup
+	POSITRON_ADMIN_TOKEN: 'positron-test-token-dev',
 };
 
 export default defineConfig({

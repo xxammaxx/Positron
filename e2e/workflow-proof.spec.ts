@@ -186,6 +186,12 @@ test.describe
 				})
 				.toMatch(/.{50,}/s);
 
+			// QA-069: Inject admin token before write operations
+			const ADMIN_TOKEN = process.env.POSITRON_ADMIN_TOKEN || 'positron-test-token-dev';
+			await page.evaluate((token) => {
+				localStorage.setItem('positron_admin_token', token);
+			}, ADMIN_TOKEN);
+
 			// Click Start Demo Run
 			const startBtn = page.getByRole('button', {
 				name: /Start Demo Run/i,

@@ -362,7 +362,7 @@ export const api = {
 		message: string;
 		blueprint: string;
 	}> {
-		return request('/demo-runs', {
+		return adminRequest('/demo-runs', {
 			method: 'POST',
 			body: JSON.stringify({ blueprint, issueNumber }),
 		});
