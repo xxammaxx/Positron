@@ -161,6 +161,151 @@ Full list of **24 source files** modified (verified from `git diff --name-only`,
 
 ---
 
+---
+
+## PR Publication CI (2026-07-17)
+
+| Context | Value |
+|---------|-------|
+| PR | [#374](https://github.com/xxammaxx/Positron/pull/374) |
+| Branch | `chore/issue-340-track-b-green-safe-errors` |
+| Head (before repair) | `994b4217efc932ea76b03506ac0a2ea86cc2acff` |
+| Head (after repair) | `<pending commit>` |
+| Workflow (before) | [29597275470](https://github.com/xxammaxx/Positron/actions/runs/29597275470) |
+| Format status (before) | ❌ FAIL — 12 format errors |
+| Format status (after repair, local) | ✅ All Track B files formatted; 9 remaining errors are main-inherited files outside PR diff |
+| Playwright/E2E status | ❌ FAIL — inherited base-main `ProjectsPage` duplicate import |
+
+### CI Job Summary (Run 29597275470)
+
+| Job | Result |
+|-----|--------|
+| `build-and-test` | FAIL at format check |
+| `e2e-playwright` | FAIL (cascading from frontend parse error) |
+| `mutation-fast` | PASS |
+| `mutation-safety` | PASS |
+| `observability-config-check` | PASS |
+| `tool-gateway-windows` | PASS |
+
+---
+
+## Format Repair
+
+### Diagnosis
+
+`npx biome format .` (the CI command in `.github/workflows/quality-gates.yml`) reported **12 format errors** on the Track B head. Cross-referencing with the PR diff (`git diff --name-only origin/main...HEAD`):
+
+| File | In PR Diff? | Action |
+|------|-------------|--------|
+| `apps/server/src/index.ts` | ✅ Yes | Formatted |
+| `apps/web/src/components/Dashboard.tsx` | ✅ Yes | Already OK (no changes needed) |
+| `apps/web/src/components/dashboard/DashboardPage.tsx` | ✅ Yes | Formatted |
+| `apps/web/src/components/projects/ProjectsPage.tsx` | ✅ Yes | Formatted |
+| `apps/web/src/types.ts` | ❌ No | Skipped (main backlog) |
+| `apps/server/src/data/managed-target-projects.ts` | ❌ No | Skipped (main backlog) |
+| `apps/server/src/__tests__/integration.test.ts` | ❌ No | Skipped (main backlog) |
+| `packages/github-adapter/src/stage3-real-github-bridge.ts` | ❌ No | Skipped (main backlog) |
+| `packages/github-adapter/src/stage3-runtime-harness.ts` | ❌ No | Skipped (main backlog) |
+| `packages/github-adapter/src/__tests__/stage3-adversarial-gates.test.ts` | ❌ No | Skipped (main backlog) |
+| `packages/github-adapter/src/__tests__/stage3-bridge-integrity.test.ts` | ❌ No | Skipped (main backlog) |
+| `packages/github-adapter/src/__tests__/stage3-bridge-provenance.test.ts` | ❌ No | Skipped (main backlog) |
+| `packages/github-adapter/src/__tests__/stage3-runtime-harness.test.ts` | ❌ No | Skipped (main backlog) |
+| `docs/evidence/issue-340/track-a-biome-check-before.json` | ❌ No | Skipped (exceeds 1 MiB limit; main backlog) |
+
+### Repair Applied
+
+```bash
+npx biome format --write \
+  apps/server/src/index.ts \
+  apps/web/src/components/Dashboard.tsx \
+  apps/web/src/components/dashboard/DashboardPage.tsx \
+  apps/web/src/components/projects/ProjectsPage.tsx
+```
+
+Result: 4 files checked, 3 files fixed (`index.ts`, `DashboardPage.tsx`, `ProjectsPage.tsx`).
+
+### Diff Verification
+
+| File | Semantik geändert? |
+|------|--------------------|
+| `apps/server/src/index.ts` | NO — whitespace/indentation only (tabs, line breaks) |
+| `apps/web/src/components/dashboard/DashboardPage.tsx` | NO — JSX attribute line breaking only |
+| `apps/web/src/components/projects/ProjectsPage.tsx` | NO — JSX text wrapping only |
+
+Verified: `git diff --check` passes. No `import type` changes, no `Number.parseInt` conversions, no deleted code, no changed strings, no changed assertions.
+
+### Remaining Format Errors (Post-Repair, Local)
+
+After repair, `npx biome format .` reports **9 remaining format errors**, all in files **outside the PR #374 diff** — these are inherited from `origin/main` and not caused by Track B. The intersection between remaining format errors and the Track B diff is **empty**.
+
+**Note:** The CI will still report `format` as FAIL because the repo-wide `npx biome format .` check includes these main-inherited files. This is expected and does not indicate a Track B regression.
+
+---
+
+## E2E Provenance
+
+### Root Cause: Duplicate `ProjectsPage` Import in `apps/web/src/App.tsx`
+
+| Ref | Line 4 Import | Line 11 Import | Route 23 | Route 25 | Duplicate? |
+|-----|:---:|:---:|:---:|:---:|:---:|
+| `origin/main` | `import ProjectsPage from '...'` | `import ProjectsPage from '...'` | `<ProjectsPage />` | `<ProjectsPage />` | **YES** |
+| PR #374 HEAD | `import ProjectsPage from '...'` | `import ProjectsPage from '...'` | `<ProjectsPage />` | `<ProjectsPage />` | **YES** |
+| PR #372 HEAD | `import ProjectsPage from '...'` | *(none)* | `<ProjectsPage />` | *(none)* | **NO** |
+
+### Track B Changed `App.tsx`?
+
+```bash
+git diff origin/main...HEAD -- apps/web/src/App.tsx
+```
+
+Result: **No output** — Track B does not modify `App.tsx` at all.
+
+### Classification
+
+```
+PR374_E2E_ROOT_CAUSE: BASE_BRANCH_DEFECT_NOT_TRACK_B_REGRESSION
+PR374_E2E_FAILURE_CLASSIFICATION: BASE_MAIN_DEFECT_FIXED_BY_DEPENDENCY_PR372
+```
+
+The E2E failures are caused by the duplicate `ProjectsPage` import in `App.tsx` which:
+1. Exists on `origin/main` (84e0dcb)
+2. Is inherited **unchanged** by PR #374 (Track B never touches App.tsx)
+3. Is already fixed on PR #372 (unmerged)
+
+### Dependency
+
+```
+PR374_DEPENDS_ON_PR372_FOR_E2E_BASELINE: YES
+MERGE_AUTHORIZED: NO
+REBASE_AUTHORIZED: NO
+TRACK_B_CHANGED_APP_TSX: NO
+```
+
+Correct resolution sequence:
+1. PR #372 reviewed and merged by owner
+2. PR #374 rebased onto updated main
+3. PR #374 CI re-run
+
+This repair run does NOT perform any merge or rebase.
+
+---
+
+## Post-Repair Gates (Local)
+
+| Gate | Result |
+|------|--------|
+| `git diff --check` | ✅ PASS |
+| `npx biome format .` (Track B files only) | ✅ All 4 Track B files properly formatted |
+| `npx biome lint .` | ⚠️ 210 errors / 862 warnings (unchanged from pre-repair) |
+| `npm run typecheck` | ✅ PASS |
+| `npm run build` | ✅ PASS |
+| `npm test` | ✅ PASS (2317 tests) |
+| `npm run test:e2e` | ⚠️ FAIL — inherited base-main duplicate import defect (as expected) |
+| New lint errors introduced | **0** (210 errors both before and after) |
+| Semantic changes | **None** — diff is whitespace/formatting only |
+
+---
+
 ## Boundaries
 
 - No behavior changes.
