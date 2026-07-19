@@ -25,7 +25,7 @@ services:
       - POSITRON_REPO_OWNER=test-owner
       - POSITRON_REPO_NAME=test-repo
       - POSITRON_REPO_DEFAULT_BRANCH=main
-      - POSITRON_ADMIN_TOKEN=positron-admin-dev
+      - POSITRON_ADMIN_TOKEN=positron-test-token-dev
       - GITHUB_TOKEN=
     command: npx vitest run
 
@@ -44,7 +44,7 @@ services:
       - POSITRON_REPO_OWNER=test-owner
       - POSITRON_REPO_NAME=test-repo
       - POSITRON_REPO_DEFAULT_BRANCH=main
-      - POSITRON_ADMIN_TOKEN=positron-admin-dev
+      - POSITRON_ADMIN_TOKEN=positron-test-token-dev
       - GITHUB_TOKEN=
     command: npx playwright test
 

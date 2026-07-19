@@ -96,7 +96,7 @@ export const api = {
 	},
 
 	createRepo(owner: string, name: string): Promise<Repository> {
-		return request<Repository>('/repos', {
+		return adminRequest<Repository>('/repos', {
 			method: 'POST',
 			body: JSON.stringify({ owner, name }),
 		});
@@ -141,17 +141,20 @@ export const api = {
 		issueNumber: number,
 		autonomyLevel?: number,
 	): Promise<{ run: Run; events: RunEvent[]; eventCount: number }> {
-		return request<{ run: Run; events: RunEvent[]; eventCount: number }>(`/repos/${repoId}/runs`, {
-			method: 'POST',
-			body: JSON.stringify({ issueNumber, autonomyLevel }),
-		});
+		return adminRequest<{ run: Run; events: RunEvent[]; eventCount: number }>(
+			`/repos/${repoId}/runs`,
+			{
+				method: 'POST',
+				body: JSON.stringify({ issueNumber, autonomyLevel }),
+			},
+		);
 	},
 
 	controlRun(
 		runId: string,
 		action: 'pause' | 'resume' | 'abort' | 'retry',
 	): Promise<{ success: boolean }> {
-		return request<{ success: boolean }>(`/runs/${runId}/control`, {
+		return adminRequest<{ success: boolean }>(`/runs/${runId}/control`, {
 			method: 'POST',
 			body: JSON.stringify({ action }),
 		});
@@ -159,14 +162,14 @@ export const api = {
 
 	// Gates
 	approveGate(runId: string, reason?: string): Promise<{ success: boolean }> {
-		return request<{ success: boolean }>(`/runs/${runId}/gate`, {
+		return adminRequest<{ success: boolean }>(`/runs/${runId}/gate`, {
 			method: 'POST',
 			body: JSON.stringify({ action: 'approve', reason }),
 		});
 	},
 
 	reviseGate(runId: string, reason: string): Promise<{ success: boolean }> {
-		return request<{ success: boolean }>(`/runs/${runId}/gate`, {
+		return adminRequest<{ success: boolean }>(`/runs/${runId}/gate`, {
 			method: 'POST',
 			body: JSON.stringify({ action: 'revise', reason }),
 		});
@@ -258,7 +261,7 @@ export const api = {
 		kind: string,
 		content: string,
 	): Promise<{ success: boolean; kind: string; createdAt: string }> {
-		return request('/evidence', {
+		return adminRequest('/evidence', {
 			method: 'POST',
 			body: JSON.stringify({ runId, kind, content }),
 		});
@@ -320,7 +323,7 @@ export const api = {
 		value: boolean;
 		all: Record<string, boolean>;
 	}> {
-		return request('/safety', {
+		return adminRequest('/safety', {
 			method: 'POST',
 			body: JSON.stringify({ key, value }),
 		});
@@ -334,7 +337,7 @@ export const api = {
 		previousStatus?: string;
 		status: string;
 	}> {
-		return request(`/runs/${runId}/cancel`, { method: 'POST' });
+		return adminRequest(`/runs/${runId}/cancel`, { method: 'POST' });
 	},
 
 	// Test Report (Issue #68)
