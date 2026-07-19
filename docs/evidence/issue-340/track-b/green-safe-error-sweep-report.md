@@ -1,8 +1,9 @@
 # Issue #340 — Track B GREEN_SAFE Error Sweep Report
 
-**Date:** 2026-07-17
+**Date:** 2026-07-17 (original) / 2026-07-19 (post-PR372 sync)
 **Branch:** `chore/issue-340-track-b-green-safe-errors`
-**Base:** `origin/main` (84e0dcb)
+**Base (original):** `origin/main` (84e0dcb)
+**Base (post-sync):** `origin/main` (ccffb2a6 — after PR #372 merge)
 
 ---
 
@@ -11,13 +12,15 @@
 | Context | Value |
 |---------|-------|
 | Main HEAD at worktree creation | `84e0dcbd095879706d7d1de5d86d379488da0317` |
-| Main current HEAD | `e65b29e38890d74e5be2dc7abedff2e4475ad1e4` (PR #372 ahead) |
-| Worktree branch ref | `84e0dcbd095879706d7d1de5d86d379488da0317` |
+| Main HEAD before PR372 merge | `e65b29e38890d74e5be2dc7abedff2e4475ad1e4` (PR #372 ahead) |
+| Main HEAD after PR372 merge | `ccffb2a6a8db736683b0fca6ea964f7840f29ed1` |
+| PR #372 state | **MERGED** as of 2026-07-19 |
+| Issue #373 state | **CLOSED** (completed) |
 | Worktree branch | `chore/issue-340-track-b-green-safe-errors` |
+| PR #374 original head | `83761cf0240faeb280bb52918f16a678d20f53ad` |
+| PR #374 post-sync head | `e7b1c262e71346717ea4698c099f02b06133b1e8` |
 | Node.js | v22.22.0 |
 | Biome | 1.9.4 |
-| Lint command | `npx biome lint . --reporter=json` |
-| Fix applied | `npx biome lint --write` (safe fixes only) |
 | Policy | `--unsafe` prohibited per GREEN_SAFE policy |
 
 ### Provenienz (from Research-Agent findings)
@@ -317,6 +320,88 @@ This repair run does NOT perform any merge or rebase.
 - Issue #308 remains open.
 - Issue #340 remains open pending tracks C, D, E.
 - Full Issue #340 resolution blocked on RED_BLOCK rules and `--unsafe` policy decision.
+
+---
+
+## Post-PR372 Sync (2026-07-19)
+
+### Sync Method
+
+Normal merge of `origin/main` (ccffb2a6) into PR #374 branch.
+
+### Merge Commit
+
+`e7b1c262e71346717ea4698c099f02b06133b1e8`
+
+### Hunk Classification
+
+All 24 source-file Track-B hunks (useImportType + useNumberNamespace) were classified against the new `origin/main`:
+
+| Class | Count | Description |
+|-------|------:|-------------|
+| **Total hunks** | ~130 | Across 24 source files + 4 scripts |
+| **ALREADY_IN_MAIN** | ~130 | All Track-B hunks absorbed by PR #372 |
+| **STILL_REQUIRED** | 0 | Nothing remaining |
+| **SUPERSEDED** | 0 | - |
+| **ADAPTATION_REQUIRED** | 0 | - |
+| **UNKNOWN** | 0 | - |
+
+### Result
+
+PR #374's Track-B source code changes are **entirely superseded by main**. All `useImportType` and `useNumberNamespace` changes applied by PR #374 were independently duplicated in PR #372 (merged as `ccffb2a6`). After merging `origin/main` into the PR branch, the diff against `origin/main` contains **only the 2 evidence files** (0 source code changes).
+
+### Conflicts
+
+| File | Conflict | Resolution |
+|------|----------|------------|
+| `apps/server/src/index.ts` | `isNaN` vs `Number.isNaN` | Main version (PR #372) kept — `Number.isNaN` |
+| `apps/web/src/components/dashboard/DashboardPage.tsx` | `ManagedProject` vs `ManagedTargetProject` contract | Main version (PR #372) kept — `ManagedTargetProject` with all new fields |
+
+### Main Baseline (post-PR372)
+
+| Metric | Value |
+|--------|------:|
+| Main HEAD | `ccffb2a6` |
+| Lint errors | 178 |
+| Lint warnings | 864 |
+| Format | PASS |
+| Typecheck | PASS |
+| Build | PASS |
+| Tests | 272/272 PASS |
+| E2E | 26/26 PASS |
+
+### PR #374 Post-Sync Gates
+
+| Gate | Result |
+|------|--------|
+| Format | PASS |
+| Lint errors | 178 (matches main) |
+| Lint warnings | 864 (matches main) |
+| Typecheck | PASS |
+| Build | PASS |
+| Tests | 272/272 PASS |
+| E2E | 26/26 PASS |
+| Net new lint errors | 0 |
+
+### Security
+
+| Check | Status |
+|-------|--------|
+| Auth parity preserved | YES |
+| `requireAdmin` fail-closed | YES |
+| No default token | YES |
+| Stage 3 executed | NO |
+| Force push used | NO |
+| Rebase used | NO |
+
+### PR Status
+
+| Attribute | Value |
+|-----------|-------|
+| PR remains Draft | YES |
+| Merge authorized | NO |
+| Ready for review | NO |
+| PR #374 superseded by main | YES (source changes only; evidence remains unique) |
 
 ---
 
