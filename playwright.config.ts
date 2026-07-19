@@ -37,7 +37,17 @@ const FAKE_MODE_ENV = {
 	POSITRON_REPO_DEFAULT_BRANCH: 'main',
 	// Prevent real token usage
 	GITHUB_TOKEN: '',
+	// QA-069: Admin token for E2E write operations (demo runs, etc.)
+	// Must match the token injected into browser localStorage by test setup
+	POSITRON_ADMIN_TOKEN: 'positron-test-token-dev',
 };
+
+// QA-069: Propagate admin token to test worker processes.
+// Test workers inherit parent process.env, so setting it here ensures
+// server (via webServer.env → FAKE_MODE_ENV) and test workers use the
+// same value. No fallbacks needed in spec files.
+process.env.POSITRON_ADMIN_TOKEN =
+	process.env.POSITRON_ADMIN_TOKEN || FAKE_MODE_ENV.POSITRON_ADMIN_TOKEN;
 
 export default defineConfig({
 	testDir: './e2e',

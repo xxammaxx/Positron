@@ -56,7 +56,7 @@ export function createDemoLiveRunHandler(deps: DemoLiveRunDeps) {
 		try {
 			const { blueprint, issueNumber } =
 				(req.body as { blueprint?: string; issueNumber?: number }) ?? {};
-			let issueNum = parseInt(process.env.POSITRON_DEFAULT_ISSUE_NUMBER ?? '56', 10);
+			let issueNum = Number.parseInt(process.env.POSITRON_DEFAULT_ISSUE_NUMBER ?? '56', 10);
 			if (issueNumber !== undefined && issueNumber !== null) {
 				const parsed = Number(issueNumber);
 				if (Number.isInteger(parsed) && parsed >= 1 && parsed <= 999999) {

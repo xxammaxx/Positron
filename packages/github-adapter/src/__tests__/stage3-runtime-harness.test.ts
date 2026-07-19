@@ -16,8 +16,11 @@ import {
 	createSafeSnapshot,
 	createFakeRuntimeSafetyProbe,
 } from '../stage3-runtime-safety-probe.js';
-import { createFakeReadOnlyVerifier } from '../stage3-reader-verifier.js';
-import { createMockStage3Bridge, createStage3RealGitHubBridge } from '../stage3-real-github-bridge.js';
+import type { createFakeReadOnlyVerifier } from '../stage3-reader-verifier.js';
+import {
+	createMockStage3Bridge,
+	createStage3RealGitHubBridge,
+} from '../stage3-real-github-bridge.js';
 import type { Stage3GitHubTransport } from '../stage3-real-github-bridge.js';
 import type {
 	Stage3BranchWriter,
@@ -108,17 +111,19 @@ function createTestBridge(params: {
 				expectedSourceSha: fromSha,
 			});
 		}),
-		commitFile: vi.fn().mockImplementation(async (owner, repo, branch, path, content, message, body) => {
-			return fileCommitWriter.commitFile({
-				owner,
-				repo,
-				branch,
-				filePath: path,
-				content,
-				message,
-				commitBody: body,
-			});
-		}),
+		commitFile: vi
+			.fn()
+			.mockImplementation(async (owner, repo, branch, path, content, message, body) => {
+				return fileCommitWriter.commitFile({
+					owner,
+					repo,
+					branch,
+					filePath: path,
+					content,
+					message,
+					commitBody: body,
+				});
+			}),
 		createDraftPr: vi.fn().mockImplementation(async (owner, repo, title, head, base, body) => {
 			return prWriter.createPullRequest({
 				owner,

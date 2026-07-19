@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 import type { Phase } from '../types.js';
 import { PHASE_LABELS } from '../types.js';
 

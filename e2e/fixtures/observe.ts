@@ -5,7 +5,7 @@
 import { type Page, test as base, expect } from '@playwright/test';
 
 const OBSERVE = process.env.PW_OBSERVE === '1';
-const OBSERVE_TIMEOUT = parseInt(process.env.PW_OBSERVE_TIMEOUT ?? '30000', 10);
+const OBSERVE_TIMEOUT = Number.parseInt(process.env.PW_OBSERVE_TIMEOUT ?? '30000', 10);
 
 async function observe(page: Page): Promise<void> {
 	if (!OBSERVE) return;

@@ -18,7 +18,7 @@ import http from 'node:http';
 
 // ── Configuration ────────────────────────────────────────────────────────
 const SERVER_URL = process.env.POSITRON_SERVER_URL ?? 'http://localhost:3000';
-const RUN_COUNT = parseInt(process.env.POSITRON_DRILL_COUNT ?? '10', 10);
+const RUN_COUNT = Number.parseInt(process.env.POSITRON_DRILL_COUNT ?? '10', 10);
 const DELAY_MS = 500; // Delay between runs to allow pipeline progress
 
 // ── Helpers ──────────────────────────────────────────────────────────────
@@ -70,7 +70,7 @@ async function getMetric(name) {
 		const text = typeof res.body === 'string' ? res.body : JSON.stringify(res.body);
 		const regex = new RegExp(`^${name}(?:\\{[^}]*\\})?\\s+([\\d.e+]+)`, 'm');
 		const match = text.match(regex);
-		return match ? parseFloat(match[1]) : null;
+		return match ? Number.parseFloat(match[1]) : null;
 	} catch {
 		return null;
 	}

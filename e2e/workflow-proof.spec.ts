@@ -12,6 +12,7 @@ import path from 'node:path';
  * Artifacts saved to: docs/release/ui-workflow-proof/
  */
 import { expect, test } from './fixtures/observe';
+import { installAdminToken } from './fixtures/admin-auth';
 
 const ARTIFACT_DIR = 'docs/release/ui-workflow-proof';
 const BACKEND_URL = 'http://localhost:3000';
@@ -185,6 +186,9 @@ test.describe
 					timeout: 15_000,
 				})
 				.toMatch(/.{50,}/s);
+
+			// QA-069: Inject admin token before write operations
+			await installAdminToken(page);
 
 			// Click Start Demo Run
 			const startBtn = page.getByRole('button', {

@@ -325,7 +325,7 @@ export function validateApprovalBinding(
 /** Check whether an approval binding has expired. */
 export function isApprovalExpired(binding: Stage3ApprovalBinding): boolean {
 	const expiresDate = new Date(binding.expiresAt);
-	if (isNaN(expiresDate.getTime())) {
+	if (Number.isNaN(expiresDate.getTime())) {
 		return true; // Invalid date → expired (fail-closed)
 	}
 	return Date.now() > expiresDate.getTime();

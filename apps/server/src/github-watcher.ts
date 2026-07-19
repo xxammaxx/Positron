@@ -152,8 +152,8 @@ export function startWatcher(options: WatcherOptions): () => void {
 
 	// Intervall validieren
 	const rawInterval = process.env['POSITRON_WATCHER_INTERVAL_MS'] ?? '60000';
-	const intervalMs = parseInt(rawInterval, 10);
-	const safeInterval = isNaN(intervalMs) || intervalMs < 1000 ? 60000 : intervalMs;
+	const intervalMs = Number.parseInt(rawInterval, 10);
+	const safeInterval = Number.isNaN(intervalMs) || intervalMs < 1000 ? 60000 : intervalMs;
 	if (safeInterval !== intervalMs) {
 		log.warn(`Invalid POSITRON_WATCHER_INTERVAL_MS="${rawInterval}", using default 60000ms`);
 	}

@@ -17,6 +17,7 @@ import path from 'node:path';
  * Artifacts saved to: test-results/positron-ui-workflow/
  */
 import { type BrowserContext, type Page, expect, test } from '@playwright/test';
+import { installAdminToken } from './fixtures/admin-auth';
 
 const ARTIFACT_DIR = 'test-results/positron-ui-workflow';
 const BACKEND_URL = 'http://localhost:3000';
@@ -119,6 +120,9 @@ test.describe('UI Workflow Trace & Network Proof', () => {
 
 			// ── Step 4: Start Demo Run ─────────────────────────
 			await test.step('S04: Start demo run', async () => {
+				// QA-069: Inject admin token before write operations
+				await installAdminToken(page);
+
 				const startBtn = page.getByRole('button', { name: /Start Demo Run/i });
 				await expect(startBtn).toBeVisible({ timeout: 10_000 });
 				await startBtn.click();

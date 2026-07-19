@@ -279,7 +279,7 @@ if (mode === 'all') {
 	}
 } else if (/^\d+$/.test(mode)) {
 	// Einzelnen Issue pruefen
-	const result = verifyIssue(parseInt(mode));
+	const result = verifyIssue(Number.parseInt(mode));
 	if (result) {
 		results.push(result);
 	}

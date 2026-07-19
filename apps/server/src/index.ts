@@ -89,7 +89,7 @@ import type {
 	SpecKitAdapter,
 } from '@positron/shared';
 import { FakeSpecKitAdapter, RealSpecKitAdapter } from '@positron/speckit-adapter';
-import Database from 'better-sqlite3';
+import type Database from 'better-sqlite3';
 import express from 'express';
 import { getManagedTargetProjects } from './data/managed-target-projects.js';
 import { createDemoLiveRunHandler } from './demo/live-run-handler.js';
@@ -1735,9 +1735,9 @@ async function runFullPipeline(
 	}
 	// Configurable max retries: env var overrides constant (Issue #31)
 	const envMaxRetries = process.env.POSITRON_MAX_FIX_LOOPS
-		? parseInt(process.env.POSITRON_MAX_FIX_LOOPS, 10)
+		? Number.parseInt(process.env.POSITRON_MAX_FIX_LOOPS, 10)
 		: undefined;
-	const maxAttempts = envMaxRetries && !isNaN(envMaxRetries) ? envMaxRetries : MAX_FIX_LOOPS;
+	const maxAttempts = envMaxRetries && !Number.isNaN(envMaxRetries) ? envMaxRetries : MAX_FIX_LOOPS;
 	const fixLoopEnabled = process.env.POSITRON_ENABLE_FIX_LOOP === 'true';
 	let lastRetryTime = 0;
 
@@ -1899,7 +1899,7 @@ async function runFullPipeline(
 					failedPhase && failedPhase !== 'FAILED_TRANSIENT' ? failedPhase : 'TEST';
 
 				// Exponential backoff: 1s, 2s, 4s, 8s... max 30s
-				const backoffMs = Math.min(1000 * Math.pow(2, attempt - 1), 30000);
+				const backoffMs = Math.min(1000 * 2 ** (attempt - 1), 30000);
 				const now = Date.now();
 				const timeSinceLastRetry = now - lastRetryTime;
 				if (timeSinceLastRetry < backoffMs) {
@@ -2609,39 +2609,41 @@ export function createApp(options: ServerOptions = {}) {
 		next();
 	});
 
-  // -----------------------------------------------------------------------
-  // Admin Auth Middleware (RED_HOLD remediation: centralized, fail-closed)
-  // -----------------------------------------------------------------------
-  const ADMIN_TOKEN =
-    secretManager.getSecret('POSITRON_ADMIN_TOKEN') ?? undefined;
-  // RED_HOLD remediation: No default token. Admin endpoints are fail-closed
-  // if POSITRON_ADMIN_TOKEN is not explicitly set by the operator.
-  const requireAdmin = (
-    req: import('express').Request,
-    res: import('express').Response,
-    next: import('express').NextFunction,
-  ) => {
-    // Support both Authorization: Bearer <token> and X-Admin-Token header
-    const authHeader = req.headers['authorization'] as string | undefined;
-    const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
-    const legacyToken = req.headers['x-admin-token'] as string | undefined;
-    const token = bearerToken ?? legacyToken;
+	// -----------------------------------------------------------------------
+	// Admin Auth Middleware (RED_HOLD remediation: centralized, fail-closed)
+	// -----------------------------------------------------------------------
+	const ADMIN_TOKEN = secretManager.getSecret('POSITRON_ADMIN_TOKEN') ?? undefined;
+	// RED_HOLD remediation: No default token. Admin endpoints are fail-closed
+	// if POSITRON_ADMIN_TOKEN is not explicitly set by the operator.
+	const requireAdmin = (
+		req: import('express').Request,
+		res: import('express').Response,
+		next: import('express').NextFunction,
+	) => {
+		// Support both Authorization: Bearer <token> and X-Admin-Token header
+		const authHeader = req.headers['authorization'] as string | undefined;
+		const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
+		const legacyToken = req.headers['x-admin-token'] as string | undefined;
+		const token = bearerToken ?? legacyToken;
 
-    if (!ADMIN_TOKEN) {
-      res.status(503).json({
-        error: 'Admin API disabled: set POSITRON_ADMIN_TOKEN in production',
-      });
-      return;
-    }
-    if (!token || token !== ADMIN_TOKEN) {
-      res.status(401).json({ error: 'Invalid admin token. Provide Authorization: Bearer <token> or X-Admin-Token header.' });
-      return;
-    }
-    next();
-  };
+		if (!ADMIN_TOKEN) {
+			res.status(503).json({
+				error: 'Admin API disabled: set POSITRON_ADMIN_TOKEN in production',
+			});
+			return;
+		}
+		if (!token || token !== ADMIN_TOKEN) {
+			res.status(401).json({
+				error:
+					'Invalid admin token. Provide Authorization: Bearer <token> or X-Admin-Token header.',
+			});
+			return;
+		}
+		next();
+	};
 
-  // Repository registrieren (write endpoint — requires admin auth)
-  app.post('/api/repos', requireAdmin, (req, res) => {
+	// Repository registrieren (write endpoint — requires admin auth)
+	app.post('/api/repos', requireAdmin, (req, res) => {
 		try {
 			validateRepoRegistration(req.body ?? {});
 			const repoId = `${repository.owner}/${repository.repo}`;
@@ -2711,8 +2713,8 @@ export function createApp(options: ServerOptions = {}) {
 	// GET /api/repos/:owner/:repo/issues/:issueNumber/blueprint — Dynamic Blueprint
 	app.get('/api/repos/:owner/:repo/issues/:issueNumber/blueprint', async (req, res) => {
 		try {
-			const issueNumber = parseInt(req.params.issueNumber, 10);
-			if (isNaN(issueNumber) || issueNumber < 1) {
+			const issueNumber = Number.parseInt(req.params.issueNumber, 10);
+			if (Number.isNaN(issueNumber) || issueNumber < 1) {
 				res.status(400).json({ error: 'issueNumber must be a positive integer' });
 				return;
 			}
@@ -2735,8 +2737,8 @@ export function createApp(options: ServerOptions = {}) {
 		}
 	});
 
-  // POST /api/runs — Start a run from a GitHub issue URL (write endpoint — requires admin auth)
-  app.post('/api/runs', requireAdmin, async (req, res) => {
+	// POST /api/runs — Start a run from a GitHub issue URL (write endpoint — requires admin auth)
+	app.post('/api/runs', requireAdmin, async (req, res) => {
 		try {
 			const { issueUrl } = (req.body as { issueUrl?: string }) ?? {};
 			if (!issueUrl || typeof issueUrl !== 'string') {
@@ -2754,7 +2756,7 @@ export function createApp(options: ServerOptions = {}) {
 				return;
 			}
 			const [, owner, repo, issueNumberStr] = match;
-			const issueNumber = parseInt(issueNumberStr!, 10);
+			const issueNumber = Number.parseInt(issueNumberStr!, 10);
 
 			// Find or create repository
 			const repoId = `${owner}/${repo}`;
@@ -2861,8 +2863,8 @@ export function createApp(options: ServerOptions = {}) {
 		}
 	});
 
-  // Run starten (write endpoint — requires admin auth)
-  app.post('/api/repos/:repoId/runs', requireAdmin, async (req, res) => {
+	// Run starten (write endpoint — requires admin auth)
+	app.post('/api/repos/:repoId/runs', requireAdmin, async (req, res) => {
 		try {
 			const { issueNumber, autonomyLevel } = validateRunRequest(req.body);
 			const run = createRun(repository.repo, issueNumber, autonomyLevel ?? 2);
@@ -2972,8 +2974,8 @@ export function createApp(options: ServerOptions = {}) {
 	// Runs auflisten (mit Pagination)
 	app.get('/api/runs', (req, res) => {
 		try {
-			const page = Math.max(1, parseInt(req.query.page as string) || 1);
-			const limit = Math.min(100, parseInt(req.query.limit as string) || 20);
+			const page = Math.max(1, Number.parseInt(req.query.page as string) || 1);
+			const limit = Math.min(100, Number.parseInt(req.query.limit as string) || 20);
 			const repoId = req.query.repoId as string | undefined;
 			const offset = (page - 1) * limit;
 
@@ -3096,7 +3098,7 @@ export function createApp(options: ServerOptions = {}) {
 
 		// Check for W3C Last-Event-ID reconnection support (Issue #66)
 		const lastEventId = req.headers['last-event-id'];
-		const lastSeq = lastEventId ? parseInt(String(lastEventId), 10) : 0;
+		const lastSeq = lastEventId ? Number.parseInt(String(lastEventId), 10) : 0;
 
 		// Get all events and filter by Last-Event-ID if reconnecting
 		const allEvents = getEvents(runId);
@@ -3261,15 +3263,15 @@ export function createApp(options: ServerOptions = {}) {
 		}
 	});
 
-  // --- Blueprint Demo Endpoint (Issue #56) — write endpoint, requires admin auth
-  app.post('/api/demo/blueprint', requireAdmin, async (req, res) => {
+	// --- Blueprint Demo Endpoint (Issue #56) — write endpoint, requires admin auth
+	app.post('/api/demo/blueprint', requireAdmin, async (req, res) => {
 		const { blueprint, issueNumber } = req.body;
 		if (!blueprint || typeof blueprint !== 'string') {
 			res.status(400).json({ error: 'blueprint (string) is required' });
 			return;
 		}
 		// issueNumber optional — auf positive Ganzzahl prüfen
-		let issueNum = parseInt(process.env.POSITRON_DEFAULT_ISSUE_NUMBER ?? '56', 10);
+		let issueNum = Number.parseInt(process.env.POSITRON_DEFAULT_ISSUE_NUMBER ?? '56', 10);
 		if (issueNumber !== undefined && issueNumber !== null) {
 			const parsed = Number(issueNumber);
 			if (!Number.isInteger(parsed) || parsed < 1 || parsed > 999999) {
@@ -3324,11 +3326,11 @@ export function createApp(options: ServerOptions = {}) {
 			});
 	});
 
-  // Demo Runs — create a demo run (write endpoint, requires admin auth)
-  app.post('/api/demo-runs', requireAdmin, async (req, res) => {
+	// Demo Runs — create a demo run (write endpoint, requires admin auth)
+	app.post('/api/demo-runs', requireAdmin, async (req, res) => {
 		const { blueprint, issueNumber } =
 			(req.body as { blueprint?: string; issueNumber?: number }) ?? {};
-		let issueNum = parseInt(process.env.POSITRON_DEFAULT_ISSUE_NUMBER ?? '56', 10);
+		let issueNum = Number.parseInt(process.env.POSITRON_DEFAULT_ISSUE_NUMBER ?? '56', 10);
 		if (issueNumber !== undefined && issueNumber !== null) {
 			const parsed = Number(issueNumber);
 			if (!Number.isInteger(parsed) || parsed < 1 || parsed > 999999) {
@@ -3407,10 +3409,10 @@ export function createApp(options: ServerOptions = {}) {
 		});
 	});
 
-  // Demo Live Run — Visual validation seed (Issue #66) — write endpoint, requires admin auth
-  app.post(
-    '/api/demo/live-run',
-    requireAdmin,
+	// Demo Live Run — Visual validation seed (Issue #66) — write endpoint, requires admin auth
+	app.post(
+		'/api/demo/live-run',
+		requireAdmin,
 		createDemoLiveRunHandler({
 			createRun,
 			saveRunToDb,
@@ -3484,23 +3486,23 @@ export function createApp(options: ServerOptions = {}) {
 		res.json(getSafetyState());
 	});
 
-  app.post('/api/safety', requireAdmin, (req, res) => {
-    try {
-      // Admin token already validated by requireAdmin middleware
+	app.post('/api/safety', requireAdmin, (req, res) => {
+		try {
+			// Admin token already validated by requireAdmin middleware
 
-      const { key, value } = (req.body as { key?: string; value?: boolean }) ?? {};
-      if (!key || typeof key !== 'string') {
-        res.status(400).json({ error: 'key (string) is required' });
-        return;
-      }
-      if (typeof value !== 'boolean') {
-        res.status(400).json({ error: 'value (boolean) is required' });
-        return;
-      }
-      if (!(SAFETY_KEYS as readonly string[]).includes(key)) {
-        res.status(400).json({ error: `Invalid key. Allowed: ${SAFETY_KEYS.join(', ')}` });
-        return;
-      }
+			const { key, value } = (req.body as { key?: string; value?: boolean }) ?? {};
+			if (!key || typeof key !== 'string') {
+				res.status(400).json({ error: 'key (string) is required' });
+				return;
+			}
+			if (typeof value !== 'boolean') {
+				res.status(400).json({ error: 'value (boolean) is required' });
+				return;
+			}
+			if (!(SAFETY_KEYS as readonly string[]).includes(key)) {
+				res.status(400).json({ error: `Invalid key. Allowed: ${SAFETY_KEYS.join(', ')}` });
+				return;
+			}
 
 			// Store in settings table
 			const dbKey = `safety.${key}`;
@@ -3552,9 +3554,9 @@ export function createApp(options: ServerOptions = {}) {
 		});
 	});
 
-  // Gate-Entscheidung (approve / revise) — write endpoint, requires admin auth
-  app.post('/api/runs/:id/gate', requireAdmin, express.json(), async (req, res) => {
-    const { id } = req.params as { id: string };
+	// Gate-Entscheidung (approve / revise) — write endpoint, requires admin auth
+	app.post('/api/runs/:id/gate', requireAdmin, express.json(), async (req, res) => {
+		const { id } = req.params as { id: string };
 		// Unterstützt beide Namenskonventionen: decision (Backend) und action (Frontend)
 		const bodyDecision = req.body.decision ?? req.body.action;
 		const { reason } = req.body as {
@@ -3745,8 +3747,8 @@ export function createApp(options: ServerOptions = {}) {
 	// Evidence API — Aggregated evidence across runs (Issue #65, #85)
 	// -----------------------------------------------------------------------
 
-  // POST evidence — Agent writes artifacts (write endpoint, requires admin auth)
-  app.post('/api/evidence', requireAdmin, (req, res) => {
+	// POST evidence — Agent writes artifacts (write endpoint, requires admin auth)
+	app.post('/api/evidence', requireAdmin, (req, res) => {
 		try {
 			const { runId, kind, content } = req.body as {
 				runId?: string;
@@ -4102,9 +4104,9 @@ export function createApp(options: ServerOptions = {}) {
 		}
 	});
 
-  // Run Control (Issue #30) — write endpoint, requires admin auth
-  app.post('/api/runs/:id/control', requireAdmin, (req, res) => {
-    const runId = req.params.id as string;
+	// Run Control (Issue #30) — write endpoint, requires admin auth
+	app.post('/api/runs/:id/control', requireAdmin, (req, res) => {
+		const runId = req.params.id as string;
 		const run = loadRunFromDb(runId);
 		if (!run) {
 			res.status(404).json({ error: 'Run not found' });
@@ -4289,11 +4291,11 @@ export function createApp(options: ServerOptions = {}) {
 	});
 
 	// -----------------------------------------------------------------------
-  // Cancel Endpoint — Safe run cancellation (Issue #66) — write endpoint, requires admin auth
-  app.post(
-    '/api/runs/:id/cancel',
-    requireAdmin,
-    createCancelHandler({
+	// Cancel Endpoint — Safe run cancellation (Issue #66) — write endpoint, requires admin auth
+	app.post(
+		'/api/runs/:id/cancel',
+		requireAdmin,
+		createCancelHandler({
 			loadRunFromDb,
 			getDb,
 			setRunSignal,
@@ -4303,13 +4305,13 @@ export function createApp(options: ServerOptions = {}) {
 		}),
 	);
 
-  // -----------------------------------------------------------------------
-  // Admin API (Issue #87)
-  // Admin auth is handled by the global requireAdmin middleware defined above.
-  // Routes under /api/admin use the same requireAdmin middleware.
-  // -----------------------------------------------------------------------
+	// -----------------------------------------------------------------------
+	// Admin API (Issue #87)
+	// Admin auth is handled by the global requireAdmin middleware defined above.
+	// Routes under /api/admin use the same requireAdmin middleware.
+	// -----------------------------------------------------------------------
 
-  app.use('/api/admin', requireAdmin);
+	app.use('/api/admin', requireAdmin);
 
 	app.get('/api/admin/stats', (_req, res) => {
 		try {
@@ -4406,8 +4408,8 @@ export function createApp(options: ServerOptions = {}) {
 		}
 	});
 
-  // Webhook notifications (Issue #92) — write endpoint, requires admin auth
-  app.post('/api/webhook/test', requireAdmin, async (req, res) => {
+	// Webhook notifications (Issue #92) — write endpoint, requires admin auth
+	app.post('/api/webhook/test', requireAdmin, async (req, res) => {
 		const webhookUrl = process.env.POSITRON_WEBHOOK_URL;
 		if (!webhookUrl) {
 			res.status(400).json({ error: 'POSITRON_WEBHOOK_URL not configured' });
@@ -4474,7 +4476,7 @@ const isDirectRun =
 		process.argv[1].endsWith(`${path.sep}src${path.sep}index.ts`) ||
 		process.argv[1].includes(`${path.sep}src${path.sep}index.ts`));
 if (isDirectRun) {
-	const port = parseInt(process.env['PORT'] ?? '3000', 10);
+	const port = Number.parseInt(process.env['PORT'] ?? '3000', 10);
 	const server = createServer();
 	server.listen(port, () => {
 		const ghMode = process.env['POSITRON_GITHUB_MODE'] ?? process.env['GITHUB_MODE'] ?? 'fake';

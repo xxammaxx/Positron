@@ -23,7 +23,11 @@ import { computeApprovalTextSha256, validateApprovalBinding } from './stage3-app
 import { checkBaseDrift } from './stage3-base-resolver.js';
 import { validateSafetySnapshot } from './stage3-runtime-safety-probe.js';
 import { verifyPreWrite, verifyPostWrite } from './stage3-reader-verifier.js';
-import { verifyBridgeCapabilities, isTrustedBridge, verifyTrustedBridgeIntegrity } from './stage3-real-github-bridge.js';
+import {
+	verifyBridgeCapabilities,
+	isTrustedBridge,
+	verifyTrustedBridgeIntegrity,
+} from './stage3-real-github-bridge.js';
 import type { Stage3ApprovalBinding } from './stage3-approval-binding.js';
 import type { Stage3BaseResolver } from './stage3-base-resolver.js';
 import type { Stage3RuntimeSafetyProbe } from './stage3-runtime-safety-probe.js';
@@ -630,10 +634,7 @@ export class Stage3RuntimeHarness {
 			// validated owner approval SHA. This MUST succeed before any
 			// resolver, reader, or writer is invoked.
 			try {
-				verifyTrustedBridgeIntegrity(
-					input.bridge,
-					input.approvalBinding.expectedBaseSha,
-				);
+				verifyTrustedBridgeIntegrity(input.bridge, input.approvalBinding.expectedBaseSha);
 			} catch (error) {
 				const auditEvent = this._audit(
 					'live',
