@@ -14,6 +14,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { expect, test } from '@playwright/test';
+import { installAdminToken } from './fixtures/admin-auth';
 
 const API_BASE = 'http://localhost:3000';
 const DIAG_DIR = 'test-results/positron-reality-check';
@@ -220,6 +221,9 @@ test.describe('Positron Reality Check', () => {
 
 		// If the button is not disabled, try clicking it
 		if (!isDisabled) {
+			// QA-069: Inject admin token before write operations
+			await installAdminToken(page);
+
 			await demoRunBtn.click();
 			console.log('[Diagnostic] Start Demo Run clicked');
 			// Wait for navigation to run detail

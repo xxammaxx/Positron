@@ -20,7 +20,7 @@ export default function BlueprintPanel(): React.ReactElement {
 		const trimmedRepo = repoId.trim();
 		const issueNum = Number.parseInt(issueNumber.trim(), 10);
 
-		if (!trimmedRepo || isNaN(issueNum) || issueNum < 1) {
+		if (!trimmedRepo || Number.isNaN(issueNum) || issueNum < 1) {
 			setError('Enter a valid repository (owner/repo) and issue number');
 			return;
 		}

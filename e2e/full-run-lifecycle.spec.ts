@@ -40,6 +40,7 @@
  */
 
 import { expect, test } from '@playwright/test';
+import { installAdminToken } from './fixtures/admin-auth';
 
 const BACKEND_URL = 'http://localhost:3000';
 const FRONTEND_URL = 'http://localhost:5173';
@@ -50,6 +51,8 @@ test.describe('Full Run Lifecycle E2E (QA-028)', () => {
 	const consoleErrors: string[] = [];
 
 	test.beforeEach(async ({ page }) => {
+		await installAdminToken(page);
+
 		page.on('console', (msg) => {
 			if (msg.type() === 'error') consoleErrors.push(msg.text());
 		});

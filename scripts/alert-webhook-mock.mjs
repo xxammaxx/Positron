@@ -28,7 +28,7 @@
 import http from 'node:http';
 
 // ── Configuration ──────────────────────────────────────────────────────────
-const PORT = parseInt(process.env.PORT ?? '5001', 10);
+const PORT = Number.parseInt(process.env.PORT ?? '5001', 10);
 const HOST = process.env.HOST ?? '0.0.0.0';
 const startedAt = new Date().toISOString();
 

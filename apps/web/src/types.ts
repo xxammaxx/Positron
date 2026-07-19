@@ -131,10 +131,7 @@ export interface SafetyCheck {
 	description?: string;
 }
 
-export type TargetProjectRole =
-	| 'external_target_project'
-	| 'proof_project'
-	| 'candidate_project';
+export type TargetProjectRole = 'external_target_project' | 'proof_project' | 'candidate_project';
 
 export type TargetProjectStatus =
 	| 'LOCAL_GATES_REPRODUCIBLE'

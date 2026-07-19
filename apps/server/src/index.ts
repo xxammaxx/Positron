@@ -1737,7 +1737,7 @@ async function runFullPipeline(
 	const envMaxRetries = process.env.POSITRON_MAX_FIX_LOOPS
 		? Number.parseInt(process.env.POSITRON_MAX_FIX_LOOPS, 10)
 		: undefined;
-	const maxAttempts = envMaxRetries && !isNaN(envMaxRetries) ? envMaxRetries : MAX_FIX_LOOPS;
+	const maxAttempts = envMaxRetries && !Number.isNaN(envMaxRetries) ? envMaxRetries : MAX_FIX_LOOPS;
 	const fixLoopEnabled = process.env.POSITRON_ENABLE_FIX_LOOP === 'true';
 	let lastRetryTime = 0;
 
@@ -1899,7 +1899,7 @@ async function runFullPipeline(
 					failedPhase && failedPhase !== 'FAILED_TRANSIENT' ? failedPhase : 'TEST';
 
 				// Exponential backoff: 1s, 2s, 4s, 8s... max 30s
-				const backoffMs = Math.min(1000 * Math.pow(2, attempt - 1), 30000);
+				const backoffMs = Math.min(1000 * 2 ** (attempt - 1), 30000);
 				const now = Date.now();
 				const timeSinceLastRetry = now - lastRetryTime;
 				if (timeSinceLastRetry < backoffMs) {
@@ -2714,7 +2714,7 @@ export function createApp(options: ServerOptions = {}) {
 	app.get('/api/repos/:owner/:repo/issues/:issueNumber/blueprint', async (req, res) => {
 		try {
 			const issueNumber = Number.parseInt(req.params.issueNumber, 10);
-			if (isNaN(issueNumber) || issueNumber < 1) {
+			if (Number.isNaN(issueNumber) || issueNumber < 1) {
 				res.status(400).json({ error: 'issueNumber must be a positive integer' });
 				return;
 			}

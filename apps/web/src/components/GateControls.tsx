@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import type React from 'react';
+import { useState } from 'react';
 import { api } from '../api.js';
 import type { Phase } from '../types.js';
 

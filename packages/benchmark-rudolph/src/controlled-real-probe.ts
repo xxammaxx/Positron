@@ -177,7 +177,7 @@ export function isRedHoldAction(action: string): boolean {
  * @returns ControlledRealProbeResult
  */
 export async function runControlledRealModeProbe(
-	evidenceDir: string = 'docs/evidence/rudolph-beacon/',
+	evidenceDir = 'docs/evidence/rudolph-beacon/',
 	timestampProvider: () => string = () => new Date().toISOString(),
 ): Promise<ControlledRealProbeResult> {
 	const warnings: string[] = [];

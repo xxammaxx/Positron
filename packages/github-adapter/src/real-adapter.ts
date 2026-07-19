@@ -8,7 +8,7 @@ import { createGitHubClient } from './client.js';
 import { writeComment } from './comments.js';
 import {
 	GitHubAuthError,
-	GitHubError,
+	type GitHubError,
 	GitHubIssuesDisabledError,
 	GitHubNetworkError,
 	GitHubNotFoundError,

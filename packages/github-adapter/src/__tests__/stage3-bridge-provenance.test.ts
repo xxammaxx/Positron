@@ -8,7 +8,11 @@
 // No real network access. No real tokens. No real writes.
 
 import { describe, it, expect, vi } from 'vitest';
-import { createStage3RealGitHubBridge, verifyBridgeCapabilities, isTrustedBridge } from '../stage3-real-github-bridge.js';
+import {
+	createStage3RealGitHubBridge,
+	verifyBridgeCapabilities,
+	isTrustedBridge,
+} from '../stage3-real-github-bridge.js';
 import { Stage3RuntimeHarness, createStage3Harness } from '../stage3-runtime-harness.js';
 import { createStage3PilotPolicy, STAGE3_CANONICAL } from '../stage3-supervised-pilot-policy.js';
 import { CANONICAL_FILE_CONTENT } from '../stage3-canonical-manifest.js';
@@ -672,37 +676,79 @@ describe('Zero-Call Evidence — forged bridge blocked before any transport call
 			},
 			branchWriter: {
 				createBranch: vi.fn().mockImplementation(async (input: any) => {
-					return transport.createBranch(input.owner, input.repo, input.branch, input.expectedSourceSha);
+					return transport.createBranch(
+						input.owner,
+						input.repo,
+						input.branch,
+						input.expectedSourceSha,
+					);
 				}),
 			},
 			fileCommitWriter: {
 				commitFile: vi.fn().mockImplementation(async (input: any) => {
-					return transport.commitFile(input.owner, input.repo, input.branch, input.filePath, input.content, input.message, input.commitBody);
+					return transport.commitFile(
+						input.owner,
+						input.repo,
+						input.branch,
+						input.filePath,
+						input.content,
+						input.message,
+						input.commitBody,
+					);
 				}),
 			},
 			prWriter: {
 				createPullRequest: vi.fn().mockImplementation(async (input: any) => {
-					return transport.createDraftPr(input.owner, input.repo, input.title, input.head, input.base, input.body);
+					return transport.createDraftPr(
+						input.owner,
+						input.repo,
+						input.title,
+						input.head,
+						input.base,
+						input.body,
+					);
 				}),
 			},
 			readOnlyVerifier: {
 				repository: {
-					getDefaultBranch: vi.fn().mockImplementation(async (o: string, r: string) => transport.getDefaultBranch(o, r)),
+					getDefaultBranch: vi
+						.fn()
+						.mockImplementation(async (o: string, r: string) => transport.getDefaultBranch(o, r)),
 				},
 				branch: {
-					getBranch: vi.fn().mockImplementation(async (o: string, r: string, b: string) => transport.getBranch(o, r, b)),
+					getBranch: vi
+						.fn()
+						.mockImplementation(async (o: string, r: string, b: string) =>
+							transport.getBranch(o, r, b),
+						),
 				},
 				content: {
-					getFileContent: vi.fn().mockImplementation(async (o: string, r: string, p: string, ref?: string) => transport.getFileContent(o, r, p, ref ?? 'main')),
+					getFileContent: vi
+						.fn()
+						.mockImplementation(async (o: string, r: string, p: string, ref?: string) =>
+							transport.getFileContent(o, r, p, ref ?? 'main'),
+						),
 				},
 				commit: {
-					getCommit: vi.fn().mockImplementation(async (o: string, r: string, s: string) => transport.getCommit(o, r, s)),
+					getCommit: vi
+						.fn()
+						.mockImplementation(async (o: string, r: string, s: string) =>
+							transport.getCommit(o, r, s),
+						),
 				},
 				pullRequest: {
-					findOpenPr: vi.fn().mockImplementation(async (o: string, r: string, h: string, b: string) => transport.findOpenPr(o, r, h, b)),
+					findOpenPr: vi
+						.fn()
+						.mockImplementation(async (o: string, r: string, h: string, b: string) =>
+							transport.findOpenPr(o, r, h, b),
+						),
 				},
 				compare: {
-					compareCommits: vi.fn().mockImplementation(async (o: string, r: string, base: string, head: string) => transport.compareCommits(o, r, base, head)),
+					compareCommits: vi
+						.fn()
+						.mockImplementation(async (o: string, r: string, base: string, head: string) =>
+							transport.compareCommits(o, r, base, head),
+						),
 				},
 			},
 		};

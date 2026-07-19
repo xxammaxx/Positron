@@ -21,10 +21,7 @@ export interface SafetyCheck {
 	description?: string;
 }
 
-export type TargetProjectRole =
-	| 'external_target_project'
-	| 'proof_project'
-	| 'candidate_project';
+export type TargetProjectRole = 'external_target_project' | 'proof_project' | 'candidate_project';
 
 export type TargetProjectStatus =
 	| 'LOCAL_GATES_REPRODUCIBLE'
@@ -130,10 +127,16 @@ export const MANAGED_TARGET_PROJECTS: ManagedTargetProject[] = [
 		status: 'LOCAL_GATES_REPRODUCIBLE',
 		description:
 			'Local-first Android test app for preparing manual Kleinanzeigen listing drafts with local photo attachments, local draft persistence, and deterministic German listing template quality. No scraping, no login automation, no auto-posting, no AI generation.',
-		techStack: ['Flutter', 'Dart', 'Android', 'image_picker', 'shared_preferences', 'Local-first storage'],
+		techStack: [
+			'Flutter',
+			'Dart',
+			'Android',
+			'image_picker',
+			'shared_preferences',
+			'Local-first storage',
+		],
 		lastEvidence: '2026-07-06',
-		lastRunRef:
-			'https://github.com/xxammaxx/KleinPilot/pull/6 (Draft Persistence Pass)',
+		lastRunRef: 'https://github.com/xxammaxx/KleinPilot/pull/6 (Draft Persistence Pass)',
 		blockers: [],
 		nextRecommendedRuns: [
 			'APPROVE FINAL AUDIT AND MERGE KLEINPILOT DRAFT PERSISTENCE PR #6',
@@ -145,36 +148,31 @@ export const MANAGED_TARGET_PROJECTS: ManagedTargetProject[] = [
 				id: 'no_auto_posting',
 				label: 'No automatic posting',
 				status: 'pass',
-				description:
-					'KleinPilot is scoped as a manual draft helper only.',
+				description: 'KleinPilot is scoped as a manual draft helper only.',
 			},
 			{
 				id: 'no_scraping',
 				label: 'No scraping',
 				status: 'pass',
-				description:
-					'No Kleinanzeigen.de scraping or automated platform access is allowed.',
+				description: 'No Kleinanzeigen.de scraping or automated platform access is allowed.',
 			},
 			{
 				id: 'no_login_automation',
 				label: 'No login automation',
 				status: 'pass',
-				description:
-					'No account login or session management for any third-party platform.',
+				description: 'No account login or session management for any third-party platform.',
 			},
 			{
 				id: 'manual_review',
 				label: 'Manual owner review required',
 				status: 'pass',
-				description:
-					'All listing text must be reviewed and copied/exported manually.',
+				description: 'All listing text must be reviewed and copied/exported manually.',
 			},
 			{
 				id: 'no_telemetry',
 				label: 'No telemetry',
 				status: 'pass',
-				description:
-					'No usage data collection, analytics, or crash reporting.',
+				description: 'No usage data collection, analytics, or crash reporting.',
 			},
 			{
 				id: 'photo_local_only',

@@ -77,8 +77,8 @@ function parseArgs(argv: string[]): ParseResult {
 		switch (key) {
 			case '--issueNumber':
 				if (val) {
-					args.issueNumber = parseInt(val, 10);
-					if (isNaN(args.issueNumber) || args.issueNumber < 1) {
+					args.issueNumber = Number.parseInt(val, 10);
+					if (Number.isNaN(args.issueNumber) || args.issueNumber < 1) {
 						return { kind: 'error', message: '--issueNumber muss eine positive Zahl sein' };
 					}
 					i += 2;
@@ -96,8 +96,12 @@ function parseArgs(argv: string[]): ParseResult {
 				break;
 			case '--autonomyLevel':
 				if (val) {
-					args.autonomyLevel = parseInt(val, 10);
-					if (isNaN(args.autonomyLevel!) || args.autonomyLevel! < 0 || args.autonomyLevel! > 2) {
+					args.autonomyLevel = Number.parseInt(val, 10);
+					if (
+						Number.isNaN(args.autonomyLevel!) ||
+						args.autonomyLevel! < 0 ||
+						args.autonomyLevel! > 2
+					) {
 						return { kind: 'error', message: '--autonomyLevel muss 0, 1 oder 2 sein' };
 					}
 					i += 2;

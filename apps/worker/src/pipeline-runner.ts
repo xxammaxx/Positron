@@ -1376,7 +1376,7 @@ export async function runPipeline(run: RunState, deps: PipelineDeps): Promise<Ru
 	const envMaxRetries = process.env.POSITRON_MAX_FIX_LOOPS
 		? Number.parseInt(process.env.POSITRON_MAX_FIX_LOOPS, 10)
 		: undefined;
-	const maxAttempts = envMaxRetries && !isNaN(envMaxRetries) ? envMaxRetries : MAX_FIX_LOOPS;
+	const maxAttempts = envMaxRetries && !Number.isNaN(envMaxRetries) ? envMaxRetries : MAX_FIX_LOOPS;
 	const fixLoopEnabled = process.env.POSITRON_ENABLE_FIX_LOOP === 'true';
 	let lastRetryTime = 0;
 
