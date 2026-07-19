@@ -140,8 +140,7 @@ describe('Auth Contract: Protected Write Endpoints (Issue #373)', () => {
 		},
 		{
 			name: 'saveEvidence',
-			call: (api: ApiType) =>
-				api.saveEvidence('run-1', 'test-report', '{"pass":true}'),
+			call: (api: ApiType) => api.saveEvidence('run-1', 'test-report', '{"pass":true}'),
 			endpoint: '/api/evidence',
 			method: 'POST',
 			bodyKeys: ['runId', 'kind', 'content'],
