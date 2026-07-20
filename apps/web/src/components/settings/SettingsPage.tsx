@@ -230,24 +230,24 @@ export default function SettingsPage(): React.ReactElement {
 
 				{/* ── MCP Configuration ── */}
 				<div className="card">
-				<h3 className="text-sm font-medium text-slate-800 dark:text-slate-300 mb-1 flex items-center gap-2 font-['Space_Grotesk']">
-					<svg
-						width="16"
-						height="16"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						strokeWidth="2"
-						className="text-sky-400"
-						aria-hidden="true"
-						focusable="false"
-					>
-						<rect x="2" y="2" width="20" height="8" rx="2" ry="2" />
-						<rect x="2" y="14" width="20" height="8" rx="2" ry="2" />
-						<line x1="6" y1="6" x2="6.01" y2="6" />
-						<line x1="6" y1="18" x2="6.01" y2="18" />
-					</svg>
-					MCP Servers
+					<h3 className="text-sm font-medium text-slate-800 dark:text-slate-300 mb-1 flex items-center gap-2 font-['Space_Grotesk']">
+						<svg
+							width="16"
+							height="16"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							className="text-sky-400"
+							aria-hidden="true"
+							focusable="false"
+						>
+							<rect x="2" y="2" width="20" height="8" rx="2" ry="2" />
+							<rect x="2" y="14" width="20" height="8" rx="2" ry="2" />
+							<line x1="6" y1="6" x2="6.01" y2="6" />
+							<line x1="6" y1="18" x2="6.01" y2="18" />
+						</svg>
+						MCP Servers
 					</h3>
 					<p className="text-xs text-slate-500 dark:text-slate-500 mb-4">
 						Model Context Protocol servers. Secrets are masked — only structure is visible.
@@ -350,22 +350,22 @@ export default function SettingsPage(): React.ReactElement {
 
 				{/* ── Test Modes ── */}
 				<div className="card">
-				<h3 className="text-sm font-medium text-slate-800 dark:text-slate-300 mb-1 flex items-center gap-2 font-['Space_Grotesk']">
-					<svg
-						width="16"
-						height="16"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						strokeWidth="2"
-						className="text-amber-400"
-						aria-hidden="true"
-						focusable="false"
-					>
-						<path d="M9 11l3 3L22 4" />
-						<path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-					</svg>
-					Test Modes
+					<h3 className="text-sm font-medium text-slate-800 dark:text-slate-300 mb-1 flex items-center gap-2 font-['Space_Grotesk']">
+						<svg
+							width="16"
+							height="16"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							className="text-amber-400"
+							aria-hidden="true"
+							focusable="false"
+						>
+							<path d="M9 11l3 3L22 4" />
+							<path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+						</svg>
+						Test Modes
 					</h3>
 					<p className="text-xs text-slate-500 dark:text-slate-500 mb-4">
 						Available test modes for different observation levels.
