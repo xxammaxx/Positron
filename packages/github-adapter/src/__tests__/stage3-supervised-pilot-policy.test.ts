@@ -1,23 +1,23 @@
 // Positron — Stage 3 Supervised Pilot Policy Tests
 // Uses canonical values from the single-source-of-truth manifest.
 
-import { describe, it, expect } from 'vitest';
 import crypto from 'node:crypto';
+import { describe, expect, it } from 'vitest';
 import {
-	Stage3SupervisedPilotPolicy,
-	createStage3PilotPolicy,
-	STAGE3_CANONICAL,
-} from '../stage3-supervised-pilot-policy.js';
-import {
+	CANONICAL_COMMIT_BODY,
+	CANONICAL_COMMIT_MESSAGE,
 	CANONICAL_FILE_CONTENT,
 	CANONICAL_FILE_LENGTH,
 	CANONICAL_FILE_SHA256,
-	CANONICAL_COMMIT_MESSAGE,
-	CANONICAL_COMMIT_BODY,
-	CANONICAL_PR_TITLE,
 	CANONICAL_PR_BODY,
+	CANONICAL_PR_TITLE,
 	CANONICAL_REPOSITORY,
 } from '../stage3-canonical-manifest.js';
+import {
+	STAGE3_CANONICAL,
+	Stage3SupervisedPilotPolicy,
+	createStage3PilotPolicy,
+} from '../stage3-supervised-pilot-policy.js';
 import type { Stage3ProcessSafety } from '../stage3-supervised-pilot-policy.js';
 
 // Canonical file content imported from stage3-canonical-manifest.ts (single source of truth).

@@ -11,7 +11,7 @@
  */
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, test, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import DashboardPage from '../components/dashboard/DashboardPage.js';
 
 // ── Valid ManagedTargetProject fixtures inlined in vi.mock below ─────

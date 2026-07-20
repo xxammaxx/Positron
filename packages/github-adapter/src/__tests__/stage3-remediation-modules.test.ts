@@ -2,57 +2,57 @@
 // Tests for: ApprovalBinding, BaseResolver, RuntimeSafetyProbe,
 // ReaderVerifier, RealGitHubBridge, and harness integration.
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
+	computeApprovalTextSha256,
 	createApprovalBinding,
 	createApprovalBindingPreview,
-	validateApprovalBinding,
-	isApprovalExpired,
-	generateApprovalText,
-	computeApprovalTextSha256,
 	createSyntheticApprovalBinding,
+	generateApprovalText,
+	isApprovalExpired,
+	validateApprovalBinding,
 } from '../stage3-approval-binding.js';
 import type { Stage3ApprovalBinding } from '../stage3-approval-binding.js';
 
 import {
-	checkBaseDrift,
 	Stage3BaseShaDriftError,
+	checkBaseDrift,
 	createFakeBaseResolver,
 } from '../stage3-base-resolver.js';
 import type { Stage3BaseResolver } from '../stage3-base-resolver.js';
 
 import {
-	validateSafetySnapshot,
 	createFakeRuntimeSafetyProbe,
 	createSafeSnapshot,
+	validateSafetySnapshot,
 } from '../stage3-runtime-safety-probe.js';
 import type { Stage3RuntimeSafetyProbe } from '../stage3-runtime-safety-probe.js';
 
 import {
-	verifyPreWrite,
-	verifyPostWrite,
 	createFakeReadOnlyVerifier,
+	verifyPostWrite,
+	verifyPreWrite,
 } from '../stage3-reader-verifier.js';
 import type { Stage3ReadOnlyVerifier } from '../stage3-reader-verifier.js';
 
 import { sha256Utf8, utf8ByteLength } from '../stage3-canonical-manifest.js';
 
 import {
+	STAGE3_FORBIDDEN_CAPABILITIES,
 	createMockStage3Bridge,
 	verifyBridgeCapabilities,
-	STAGE3_FORBIDDEN_CAPABILITIES,
 } from '../stage3-real-github-bridge.js';
 import type { Stage3RealGitHubBridge } from '../stage3-real-github-bridge.js';
 
 import {
-	CANONICAL_REPOSITORY,
 	CANONICAL_BASE_BRANCH,
-	CANONICAL_TARGET_BRANCH,
-	CANONICAL_FILE_PATH,
-	CANONICAL_FILE_LENGTH,
-	CANONICAL_FILE_SHA256,
 	CANONICAL_COMMIT_MESSAGE_SHA256,
+	CANONICAL_FILE_LENGTH,
+	CANONICAL_FILE_PATH,
+	CANONICAL_FILE_SHA256,
 	CANONICAL_PR_METADATA_SHA256,
+	CANONICAL_REPOSITORY,
+	CANONICAL_TARGET_BRANCH,
 } from '../stage3-canonical-manifest.js';
 
 // ---------------------------------------------------------------------------

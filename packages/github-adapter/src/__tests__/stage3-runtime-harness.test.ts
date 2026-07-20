@@ -2,37 +2,37 @@
 // Uses exact canonical file content from the canonical manifest.
 // No independent copies of canonical values are permitted.
 
-import { describe, it, expect, vi } from 'vitest';
-import { Stage3RuntimeHarness, createStage3Harness } from '../stage3-runtime-harness.js';
-import { createStage3PilotPolicy, STAGE3_CANONICAL } from '../stage3-supervised-pilot-policy.js';
-import { CANONICAL_FILE_CONTENT } from '../stage3-canonical-manifest.js';
+import { describe, expect, it, vi } from 'vitest';
 import {
-	generateApprovalText,
 	createApprovalBinding,
 	createSyntheticApprovalBinding,
+	generateApprovalText,
 } from '../stage3-approval-binding.js';
+import type { Stage3ApprovalBinding } from '../stage3-approval-binding.js';
 import { createFakeBaseResolver } from '../stage3-base-resolver.js';
-import {
-	createSafeSnapshot,
-	createFakeRuntimeSafetyProbe,
-} from '../stage3-runtime-safety-probe.js';
+import { CANONICAL_FILE_CONTENT } from '../stage3-canonical-manifest.js';
 import type { createFakeReadOnlyVerifier } from '../stage3-reader-verifier.js';
 import {
 	createMockStage3Bridge,
 	createStage3RealGitHubBridge,
 } from '../stage3-real-github-bridge.js';
 import type { Stage3GitHubTransport } from '../stage3-real-github-bridge.js';
+import { Stage3RuntimeHarness, createStage3Harness } from '../stage3-runtime-harness.js';
 import type {
-	Stage3BranchWriter,
-	Stage3FileCommitWriter,
-	Stage3PullRequestWriter,
-	Stage3HarnessInput,
-	Stage3FakeHarnessInput,
-	Stage3LiveHarnessInput,
 	Stage3AuditSink,
+	Stage3BranchWriter,
+	Stage3FakeHarnessInput,
+	Stage3FileCommitWriter,
+	Stage3HarnessInput,
+	Stage3LiveHarnessInput,
+	Stage3PullRequestWriter,
 } from '../stage3-runtime-harness.js';
+import {
+	createFakeRuntimeSafetyProbe,
+	createSafeSnapshot,
+} from '../stage3-runtime-safety-probe.js';
+import { STAGE3_CANONICAL, createStage3PilotPolicy } from '../stage3-supervised-pilot-policy.js';
 import type { Stage3ProcessSafety } from '../stage3-supervised-pilot-policy.js';
-import type { Stage3ApprovalBinding } from '../stage3-approval-binding.js';
 
 const SAFE_PROCESS_SAFETY: Stage3ProcessSafety = {
 	queueDisabled: true,

@@ -44,25 +44,24 @@ import { renderAccepted } from '@positron/github-adapter';
 import { FakeOpenCodeAdapter, RealOpenCodeAdapter } from '@positron/opencode-adapter';
 import {
 	createRun,
+	getRequiredGates,
 	markFailed,
 	openDatabase,
+	phaseRequiresGates,
+	registerFakeGateEvaluators,
+	registerWorkspaceCleanup,
 	resolveDatabasePath,
 	resumeFromEvents,
 	retry,
-	transition,
-	registerWorkspaceCleanup,
 	runCleanup,
+	transition,
 	tryTransitionWithGates,
-	phaseRequiresGates,
-	getRequiredGates,
-	registerFakeGateEvaluators,
 } from '@positron/run-state';
 import type { RunEventData, RunState } from '@positron/run-state';
 import { FakeGitWorkspaceAdapter, RealGitWorkspaceAdapter } from '@positron/sandbox';
 import type { GitWorkspaceAdapter } from '@positron/sandbox';
 import { TestCommandDetector, TestRunner } from '@positron/sandbox';
 import type { TestReport } from '@positron/sandbox';
-import { GatewayService, ToolRegistry, createAuditSink } from '@positron/tool-gateway';
 import {
 	MAX_FIX_LOOPS,
 	buildRemoteUrl,
@@ -89,6 +88,7 @@ import type {
 	SpecKitAdapter,
 } from '@positron/shared';
 import { FakeSpecKitAdapter, RealSpecKitAdapter } from '@positron/speckit-adapter';
+import { GatewayService, ToolRegistry, createAuditSink } from '@positron/tool-gateway';
 import type Database from 'better-sqlite3';
 import express from 'express';
 import { getManagedTargetProjects } from './data/managed-target-projects.js';

@@ -10,14 +10,14 @@
 import crypto from 'node:crypto';
 import { redactValue } from '@positron/shared';
 import {
-	Stage2WriteSandboxPolicy,
 	STAGE2_PERMANENTLY_FORBIDDEN,
+	Stage2WriteSandboxPolicy,
 } from './stage2-write-sandbox-policy.js';
 import type {
-	Stage2WriteOperation,
-	Stage2WriteSandboxConfig,
 	Stage2PreWritePreview,
 	Stage2WriteAuditEvent,
+	Stage2WriteOperation,
+	Stage2WriteSandboxConfig,
 } from './stage2-write-sandbox-policy.js';
 
 // ---------------------------------------------------------------------------

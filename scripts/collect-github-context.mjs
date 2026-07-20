@@ -8,7 +8,7 @@
 //   node scripts/collect-github-context.mjs --repo xxammaxx/Positron --output ".local-release/snapshot.json"
 
 import { spawnSync } from 'node:child_process';
-import { writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 
 // ---------------------------------------------------------------------------

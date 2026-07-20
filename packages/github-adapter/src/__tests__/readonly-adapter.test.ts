@@ -1,19 +1,19 @@
 // Positron — ReadOnly GitHub Adapter Tests (Contract + Negative)
 
-import { describe, it, expect, beforeEach } from 'vitest';
 import {
 	FakeGitHubAdapter,
+	GitHubCapabilityError,
 	ReadOnlyGitHubAdapterWrapper,
 	createReadOnlyGitHubAdapter,
-	GitHubCapabilityError,
 } from '@positron/github-adapter';
-import type { ReadOnlyGitHubAdapter, GitHubAdapter } from '@positron/github-adapter';
+import type { GitHubAdapter, ReadOnlyGitHubAdapter } from '@positron/github-adapter';
 import type {
-	GitHubRepositorySummary,
-	GitHubIssueSummary,
 	GitHubIssueRef,
+	GitHubIssueSummary,
 	GitHubPullRequest,
+	GitHubRepositorySummary,
 } from '@positron/github-adapter';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // Test Helpers

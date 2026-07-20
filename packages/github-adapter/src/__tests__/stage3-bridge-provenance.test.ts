@@ -7,30 +7,30 @@
 //
 // No real network access. No real tokens. No real writes.
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { GitHubValidationError } from '../errors.js';
 import {
-	createStage3RealGitHubBridge,
-	verifyBridgeCapabilities,
-	isTrustedBridge,
-} from '../stage3-real-github-bridge.js';
-import { Stage3RuntimeHarness, createStage3Harness } from '../stage3-runtime-harness.js';
-import { createStage3PilotPolicy, STAGE3_CANONICAL } from '../stage3-supervised-pilot-policy.js';
-import { CANONICAL_FILE_CONTENT } from '../stage3-canonical-manifest.js';
-import {
-	generateApprovalText,
-	createSyntheticApprovalBinding,
 	createApprovalBinding,
+	createSyntheticApprovalBinding,
+	generateApprovalText,
 } from '../stage3-approval-binding.js';
 import { createFakeBaseResolver } from '../stage3-base-resolver.js';
-import {
-	createSafeSnapshot,
-	createFakeRuntimeSafetyProbe,
-} from '../stage3-runtime-safety-probe.js';
+import { CANONICAL_FILE_CONTENT } from '../stage3-canonical-manifest.js';
 import { createFakeReadOnlyVerifier } from '../stage3-reader-verifier.js';
-import { GitHubValidationError } from '../errors.js';
+import {
+	createStage3RealGitHubBridge,
+	isTrustedBridge,
+	verifyBridgeCapabilities,
+} from '../stage3-real-github-bridge.js';
 import type { Stage3GitHubTransport } from '../stage3-real-github-bridge.js';
-import type { Stage3LiveHarnessInput, Stage3AuditSink } from '../stage3-runtime-harness.js';
 import type { Stage3RealGitHubBridge } from '../stage3-real-github-bridge.js';
+import { Stage3RuntimeHarness, createStage3Harness } from '../stage3-runtime-harness.js';
+import type { Stage3AuditSink, Stage3LiveHarnessInput } from '../stage3-runtime-harness.js';
+import {
+	createFakeRuntimeSafetyProbe,
+	createSafeSnapshot,
+} from '../stage3-runtime-safety-probe.js';
+import { STAGE3_CANONICAL, createStage3PilotPolicy } from '../stage3-supervised-pilot-policy.js';
 
 // ---------------------------------------------------------------------------
 // Test Constants

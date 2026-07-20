@@ -3,19 +3,19 @@
 // All tests are FAKE/LOCAL — no network, no token, no GitHub API call.
 // The policy module itself never makes API calls; it only validates.
 
-import { describe, it, expect, beforeEach } from 'vitest';
 import {
-	Stage2WriteSandboxPolicy,
-	createStage2SandboxPolicy,
 	STAGE2_DEFAULT_CONFIG,
 	STAGE2_PERMANENTLY_FORBIDDEN,
+	Stage2WriteSandboxPolicy,
+	createStage2SandboxPolicy,
 } from '@positron/github-adapter';
 import type {
-	Stage2WriteOperation,
-	Stage2WriteSandboxConfig,
 	Stage2PreWritePreview,
 	Stage2WriteAuditEvent,
+	Stage2WriteOperation,
+	Stage2WriteSandboxConfig,
 } from '@positron/github-adapter';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // Test Constants

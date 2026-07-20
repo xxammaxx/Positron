@@ -15,12 +15,12 @@ import type {
 } from '@positron/github-adapter';
 import {
 	createRun,
-	markFailed,
-	transition,
-	runCleanup,
-	tryTransitionWithGates,
-	phaseRequiresGates,
 	getRequiredGates,
+	markFailed,
+	phaseRequiresGates,
+	runCleanup,
+	transition,
+	tryTransitionWithGates,
 } from '@positron/run-state';
 import type { RunEventData, RunState } from '@positron/run-state';
 import { TestCommandDetector, TestRunner } from '@positron/sandbox';

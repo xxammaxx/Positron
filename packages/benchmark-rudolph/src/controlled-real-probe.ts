@@ -6,11 +6,11 @@
 //
 // Issue: BENCH-004 (erweitert), Phase 4
 
-import { validateRunSummary, createIssueResult } from './evidence-contract.js';
+import { createIssueResult, validateRunSummary } from './evidence-contract.js';
 import type {
-	RudolphBenchmarkRunSummary,
 	BenchmarkConclusion,
 	BenchmarkIssueResult,
+	RudolphBenchmarkRunSummary,
 } from './evidence-contract.js';
 
 // =============================================================================

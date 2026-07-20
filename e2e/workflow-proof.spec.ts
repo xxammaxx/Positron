@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { installAdminToken } from './fixtures/admin-auth';
 /**
  * UI Workflow Proof — 16-Step Acceptance Test (Issue #53, #56, #68)
  *
@@ -12,7 +13,6 @@ import path from 'node:path';
  * Artifacts saved to: docs/release/ui-workflow-proof/
  */
 import { expect, test } from './fixtures/observe';
-import { installAdminToken } from './fixtures/admin-auth';
 
 const ARTIFACT_DIR = 'docs/release/ui-workflow-proof';
 const BACKEND_URL = 'http://localhost:3000';
