@@ -6,7 +6,7 @@
  * - 2 CLASS E fixes: fieldset + legend for radio/checkbox groups
  * - All labels have accessible text, all controls have unique IDs
  * - getByLabelText works for all labeled controls
- * - No duplicate IDs across components
+ * - All five D2b-declared static ID literals are mutually unique (namespace check only — no multi-instance rendering claim)
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
@@ -320,10 +320,19 @@ describe('VoiceControls.tsx — Speak These Events Checkbox Group (Class E)', ()
 });
 
 // ═══════════════════════════════════════════════════════════════
-// Cross-component ID uniqueness
+// Static D2b ID namespace verification
 // ═══════════════════════════════════════════════════════════════
-describe('Cross-component ID uniqueness', () => {
-	test('All D2b-added IDs are unique', () => {
+// NOTE: This test verifies the five declared static ID literals
+// are mutually unique. It does NOT perform a multi-instance render
+// test. Production safety is additionally justified by the current
+// routing and component architecture:
+// - Repositories renders as a separate /repos route.
+// - Dashboard.tsx is not in the active app router.
+// - DashboardPage mounts exactly one NewRunModal instance.
+// - VoiceControls received no new static control IDs in Track D2b.
+// MULTI_INSTANCE_RENDER_TEST: NOT_APPLICABLE_TO_CURRENT_PRODUCTION_TOPOLOGY
+describe('Static D2b ID namespace', () => {
+	test('declared D2b ID literals contain no duplicates', () => {
 		const d2bIds = [
 			'repo-owner',
 			'repo-name',

@@ -138,7 +138,18 @@ Tailwind Preflight resets `<fieldset>` (border:0, padding:0, margin:0) and `<leg
 
 ## 12. ID Strategy
 
-All IDs are static kebab-case strings. No `useId` needed — all affected components are single-instance route-based components (verified by architecture-agent). IDs follow existing convention (`voice-select`, `rate-slider`, `volume-slider`).
+Die fünf in Track D2b eingeführten statischen ID-Literale sind untereinander eindeutig.
+
+Dieser Test rendert keine mehrfachen Komponenteninstanzen. Die Produktionssicherheit der statischen IDs wird zusätzlich durch die aktuelle Router- und Komponentenarchitektur begründet:
+
+- Repositories wird als separate /repos-Route gerendert.
+- Dashboard.tsx ist nicht im aktuellen App-Router eingebunden.
+- DashboardPage mountet genau eine NewRunModal-Instanz.
+- VoiceControls erhielt durch Track D2b keine neuen statischen Control-IDs (bestehende IDs aus D2a).
+
+MULTI_INSTANCE_RENDER_TEST: NOT_APPLICABLE_TO_CURRENT_PRODUCTION_TOPOLOGY
+STATIC_ID_NAMESPACE_DUPLICATES: 0
+PRODUCTION_ID_COLLISION_PATH: NONE_FOUND
 
 ## 13. Targeted Accessibility Tests
 
@@ -152,7 +163,7 @@ Test suites:
 - Dashboard.tsx Autonomie-Level Radio Group (3 tests)
 - NewRunModal.tsx Label-Control Association (2 tests)
 - VoiceControls.tsx Speak These Events Checkbox Group (6 tests)
-- Cross-component ID uniqueness (1 test)
+- Static D2b ID namespace verification (1 test)
 ```
 
 Key verifications:
@@ -160,7 +171,7 @@ Key verifications:
 - All labels have `for` attribute matching control `id`
 - Radio group uses `<fieldset>` + `<legend>` semantics
 - Checkbox group uses `<fieldset>` + `<legend>` semantics
-- No duplicate IDs across components
+- Five declared D2b static ID literals are mutually unique (namespace check — no multi-instance render claim)
 - Existing voice-select, rate-slider, volume-slider labels still work (no regression)
 
 ## 14. Rule Delta
@@ -228,8 +239,18 @@ SECRETS_DISCLOSED: NO
 ```
 NO_LABEL_WITHOUT_CONTROL_IN_SCOPE: 0 ✅
 UNLABELED_CONTROLS_INTRODUCED: 0 ✅
-DUPLICATE_CONTROL_IDS: 0 ✅
+STATIC_ID_NAMESPACE_DUPLICATES: 0 ✅ (declared literals mutually unique)
 LABEL_TARGET_MISMATCHES: 0 ✅
 NEW_BIOME_DIAGNOSTICS: 0 ✅
 ISSUE340: OPEN (not closed) ✅
+MULTI_INSTANCE_RENDER_TEST: NOT_APPLICABLE_TO_CURRENT_PRODUCTION_TOPOLOGY ✅
+PRODUCTION_ID_COLLISION_PATH: NONE_FOUND ✅
+```
+
+## 19. Merge-Closure Metadata
+
+```
+PR_INITIAL_HEAD: 9f3c94bc3979409a5544dba6011d2e791b4e0556
+
+FINAL_SOURCE_FILES_CHANGED_IN_CLOSURE: 0
 ```
