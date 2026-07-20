@@ -11,23 +11,23 @@
 //   workflow dispatch, release, repository settings, arbitrary
 //   file update.
 
+import { GitHubValidationError } from './errors.js';
 import type { Stage3BaseResolver, Stage3ResolvedBase } from './stage3-base-resolver.js';
+import { sha256Utf8, utf8ByteLength } from './stage3-canonical-manifest.js';
+import type {
+	Stage3BranchReader,
+	Stage3CommitReader,
+	Stage3ContentReader,
+	Stage3PullRequestReader,
+	Stage3ReadOnlyVerifier,
+	Stage3RepositoryReader,
+} from './stage3-reader-verifier.js';
 import type {
 	Stage3BranchWriter,
 	Stage3FileCommitWriter,
 	Stage3PullRequestWriter,
 } from './stage3-runtime-harness.js';
-import type {
-	Stage3ReadOnlyVerifier,
-	Stage3RepositoryReader,
-	Stage3BranchReader,
-	Stage3ContentReader,
-	Stage3CommitReader,
-	Stage3PullRequestReader,
-} from './stage3-reader-verifier.js';
 import { STAGE3_CANONICAL } from './stage3-supervised-pilot-policy.js';
-import { GitHubValidationError } from './errors.js';
-import { sha256Utf8, utf8ByteLength } from './stage3-canonical-manifest.js';
 
 // ---------------------------------------------------------------------------
 // Bridge Provenance Registry (WeakSet-based, non-forgeable)

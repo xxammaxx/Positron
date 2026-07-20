@@ -1,6 +1,6 @@
 import { parsePhase } from '@positron/shared';
 import type React from 'react';
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../api.js';
 import { useRun } from '../hooks/useRun.js';

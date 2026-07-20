@@ -11,17 +11,17 @@
 //
 // No real network access. No real tokens. No real writes.
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { GitHubValidationError } from '../errors.js';
+import { CANONICAL_FILE_CONTENT } from '../stage3-canonical-manifest.js';
 import {
 	createStage3RealGitHubBridge,
-	verifyTrustedBridgeIntegrity,
 	isTrustedBridge,
+	verifyTrustedBridgeIntegrity,
 } from '../stage3-real-github-bridge.js';
-import { STAGE3_CANONICAL } from '../stage3-supervised-pilot-policy.js';
-import { CANONICAL_FILE_CONTENT } from '../stage3-canonical-manifest.js';
-import { GitHubValidationError } from '../errors.js';
 import type { Stage3GitHubTransport } from '../stage3-real-github-bridge.js';
 import type { Stage3RealGitHubBridge } from '../stage3-real-github-bridge.js';
+import { STAGE3_CANONICAL } from '../stage3-supervised-pilot-policy.js';
 
 // ---------------------------------------------------------------------------
 // Test Constants

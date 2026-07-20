@@ -4,37 +4,37 @@
 // These tests verify that security gates REJECT adversarial inputs.
 // No real network access. No real tokens. No real writes.
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-// ── Internal imports (NOT from package root — tests internal modules directly) ──
+import { GitHubValidationError } from '../errors.js';
 import {
-	createStage3OctokitTransport,
-	verifyNoForbiddenEndpointsCalled,
-	STAGE3_FORBIDDEN_OCTOKIT_ENDPOINTS,
-} from '../stage3-octokit-transport.js';
-import {
-	createStage3RealGitHubBridge,
-	createMockStage3Bridge,
-	verifyBridgeCapabilities,
-} from '../stage3-real-github-bridge.js';
-import { STAGE3_CANONICAL } from '../stage3-supervised-pilot-policy.js';
-import { Stage3RuntimeHarness, createStage3Harness } from '../stage3-runtime-harness.js';
-import { createStage3PilotPolicy } from '../stage3-supervised-pilot-policy.js';
-import { createFakeReadOnlyVerifier, verifyPostWrite } from '../stage3-reader-verifier.js';
-import { CANONICAL_FILE_CONTENT } from '../stage3-canonical-manifest.js';
-import {
+	createApprovalBinding,
 	createSyntheticApprovalBinding,
 	generateApprovalText,
-	createApprovalBinding,
 } from '../stage3-approval-binding.js';
 import { createFakeBaseResolver } from '../stage3-base-resolver.js';
+import { CANONICAL_FILE_CONTENT } from '../stage3-canonical-manifest.js';
+// ── Internal imports (NOT from package root — tests internal modules directly) ──
 import {
-	createSafeSnapshot,
-	createFakeRuntimeSafetyProbe,
-} from '../stage3-runtime-safety-probe.js';
-import { GitHubValidationError } from '../errors.js';
+	STAGE3_FORBIDDEN_OCTOKIT_ENDPOINTS,
+	createStage3OctokitTransport,
+	verifyNoForbiddenEndpointsCalled,
+} from '../stage3-octokit-transport.js';
+import { createFakeReadOnlyVerifier, verifyPostWrite } from '../stage3-reader-verifier.js';
+import {
+	createMockStage3Bridge,
+	createStage3RealGitHubBridge,
+	verifyBridgeCapabilities,
+} from '../stage3-real-github-bridge.js';
 import type { Stage3GitHubTransport } from '../stage3-real-github-bridge.js';
-import type { Stage3LiveHarnessInput, Stage3AuditSink } from '../stage3-runtime-harness.js';
+import { Stage3RuntimeHarness, createStage3Harness } from '../stage3-runtime-harness.js';
+import type { Stage3AuditSink, Stage3LiveHarnessInput } from '../stage3-runtime-harness.js';
+import {
+	createFakeRuntimeSafetyProbe,
+	createSafeSnapshot,
+} from '../stage3-runtime-safety-probe.js';
+import { STAGE3_CANONICAL } from '../stage3-supervised-pilot-policy.js';
+import { createStage3PilotPolicy } from '../stage3-supervised-pilot-policy.js';
 
 // ---------------------------------------------------------------------------
 // Helpers

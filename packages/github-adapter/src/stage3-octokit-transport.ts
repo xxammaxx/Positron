@@ -17,8 +17,8 @@
 
 import { RequestError } from '@octokit/request-error';
 import type { Octokit } from '@octokit/rest';
-import { mapRequestError } from './real-adapter.js';
 import { GitHubNetworkError, GitHubValidationError } from './errors.js';
+import { mapRequestError } from './real-adapter.js';
 import type { Stage3GitHubTransport } from './stage3-real-github-bridge.js';
 
 // ---------------------------------------------------------------------------
