@@ -154,15 +154,17 @@ export default function VoiceControls(): React.ReactElement {
 			<div className="flex items-center justify-between mb-4">
 				<div>
 					<h3 className="text-sm font-medium text-slate-800 dark:text-slate-300 flex items-center gap-2 font-['Space_Grotesk']">
-						<svg
-							width="16"
-							height="16"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2"
-							className="text-purple-400"
-						>
+					<svg
+						width="16"
+						height="16"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2"
+						className="text-purple-400"
+						aria-hidden="true"
+						focusable="false"
+					>
 							<path d="M11 5L6 9H2v6h4l5 4V5z" />
 							<path
 								d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"

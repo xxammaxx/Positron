@@ -53,17 +53,19 @@ export default function SystemHealth(): React.ReactElement {
 	return (
 		<div className="card">
 			<h3 className="text-sm font-medium text-slate-300 mb-3 flex items-center gap-2">
-				<svg
-					width="16"
-					height="16"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="2"
-					strokeLinecap="round"
-					strokeLinejoin="round"
-					className="text-slate-500"
-				>
+			<svg
+				width="16"
+				height="16"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				strokeWidth="2"
+				strokeLinecap="round"
+				strokeLinejoin="round"
+				className="text-slate-500"
+				aria-hidden="true"
+				focusable="false"
+			>
 					<path d="M22 12h-4l-3 9L9 3l-3 9H2" />
 				</svg>
 				System Health
