@@ -290,10 +290,10 @@ export default function VoiceControls(): React.ReactElement {
 				</div>
 
 				{/* Event Type Checkboxes */}
-				<div className="pt-3 border-t border-slate-200 dark:border-slate-800">
-					<label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-2">
+				<fieldset className="pt-3 border-t border-slate-200 dark:border-slate-800">
+					<legend className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-2">
 						Speak these events:
-					</label>
+					</legend>
 					<div className="space-y-1.5">
 						{Object.entries(EVENT_LABELS).map(([type, label]) => (
 							<label
@@ -310,7 +310,7 @@ export default function VoiceControls(): React.ReactElement {
 							</label>
 						))}
 					</div>
-				</div>
+				</fieldset>
 
 				{/* Last Spoken Status */}
 				{lastSpoken && (
