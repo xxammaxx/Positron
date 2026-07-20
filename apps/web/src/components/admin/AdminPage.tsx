@@ -101,7 +101,11 @@ export default function AdminPage(): React.ReactElement {
 						className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
 					/>
 					{authStatus === 'valid' ? (
-						<button type="button" onClick={handleDisconnect} className="btn-ghost text-sm whitespace-nowrap">
+						<button
+							type="button"
+							onClick={handleDisconnect}
+							className="btn-ghost text-sm whitespace-nowrap"
+						>
 							Disconnect
 						</button>
 					) : (

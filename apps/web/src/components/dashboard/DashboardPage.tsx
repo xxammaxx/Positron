@@ -103,7 +103,11 @@ export default function DashboardPage(): React.ReactElement {
 									</svg>
 									Managed External Projects
 								</h3>
-								<button type="button" onClick={() => navigate('/projects')} className="btn-ghost text-xs">
+								<button
+									type="button"
+									onClick={() => navigate('/projects')}
+									className="btn-ghost text-xs"
+								>
 									View All →
 								</button>
 							</div>

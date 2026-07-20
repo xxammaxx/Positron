@@ -126,7 +126,11 @@ export default function Dashboard(): React.ReactElement {
 			{error && (
 				<div className="mb-4 p-3 bg-red-900/50 border border-red-700 rounded-lg text-red-200 text-sm">
 					{error}
-					<button type="button" onClick={() => setError(null)} className="ml-2 text-red-300 hover:text-red-100">
+					<button
+						type="button"
+						onClick={() => setError(null)}
+						className="ml-2 text-red-300 hover:text-red-100"
+					>
 						✕
 					</button>
 				</div>
@@ -194,7 +198,11 @@ export default function Dashboard(): React.ReactElement {
 							: 'Keine Runs gefunden, die den Filtern entsprechen'}
 					</p>
 					{runs.length === 0 && (
-						<button type="button" onClick={() => setIsNewRunModalOpen(true)} className="btn-primary mt-4">
+						<button
+							type="button"
+							onClick={() => setIsNewRunModalOpen(true)}
+							className="btn-primary mt-4"
+						>
 							Ersten Run erstellen
 						</button>
 					)}

@@ -88,7 +88,11 @@ export default function Repositories(): React.ReactElement {
 			{error && (
 				<div className="mb-4 p-3 bg-red-900/50 border border-red-700 rounded-lg text-red-200 text-sm">
 					{error}
-					<button type="button" onClick={() => setError(null)} className="ml-2 text-red-300 hover:text-red-100">
+					<button
+						type="button"
+						onClick={() => setError(null)}
+						className="ml-2 text-red-300 hover:text-red-100"
+					>
 						✕
 					</button>
 				</div>
