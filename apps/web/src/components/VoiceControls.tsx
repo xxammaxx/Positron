@@ -33,6 +33,7 @@ function ToggleSwitch({
 }) {
 	return (
 		<button
+			type="button"
 			onClick={() => onChange(!enabled)}
 			role="switch"
 			aria-checked={enabled}
@@ -276,6 +277,7 @@ export default function VoiceControls(): React.ReactElement {
 				{/* Test Voice Button */}
 				<div>
 					<button
+						type="button"
 						onClick={handleTestVoice}
 						disabled={testStatus === 'speaking'}
 						className="btn-secondary text-xs py-1.5 px-3"

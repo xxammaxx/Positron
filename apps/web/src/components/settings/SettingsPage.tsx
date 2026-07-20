@@ -29,6 +29,7 @@ function ToggleSwitch({
 }: { enabled: boolean; onChange: (v: boolean) => void; label: string }) {
 	return (
 		<button
+			type="button"
 			onClick={() => onChange(!enabled)}
 			role="switch"
 			aria-checked={enabled}

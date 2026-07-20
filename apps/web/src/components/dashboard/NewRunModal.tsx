@@ -39,6 +39,7 @@ export default function NewRunModal({ isOpen, onClose }: NewRunModalProps): Reac
 				<div className="flex items-center justify-between mb-4">
 					<h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200">New Run</h2>
 					<button
+						type="button"
 						onClick={onClose}
 						className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
 					>
@@ -72,10 +73,11 @@ export default function NewRunModal({ isOpen, onClose }: NewRunModalProps): Reac
 					)}
 
 					<div className="flex items-center justify-end gap-3 pt-2">
-						<button onClick={onClose} className="btn-secondary text-sm">
+						<button type="button" onClick={onClose} className="btn-secondary text-sm">
 							Cancel
 						</button>
 						<button
+							type="button"
 							onClick={handleCreate}
 							disabled={creating || !issueUrl.trim()}
 							className="btn-primary text-sm disabled:opacity-50"

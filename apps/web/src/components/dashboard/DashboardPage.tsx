@@ -56,7 +56,7 @@ export default function DashboardPage(): React.ReactElement {
 				</div>
 				<div className="flex items-center gap-3">
 					<VoiceStatusIndicator />
-					<button onClick={() => setIsNewRunModalOpen(true)} className="btn-primary">
+					<button type="button" onClick={() => setIsNewRunModalOpen(true)} className="btn-primary">
 						+ New Run
 					</button>
 				</div>
@@ -103,7 +103,11 @@ export default function DashboardPage(): React.ReactElement {
 									</svg>
 									Managed External Projects
 								</h3>
-								<button onClick={() => navigate('/projects')} className="btn-ghost text-xs">
+								<button
+									type="button"
+									onClick={() => navigate('/projects')}
+									className="btn-ghost text-xs"
+								>
 									View All →
 								</button>
 							</div>

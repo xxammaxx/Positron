@@ -57,6 +57,7 @@ export default function VoiceStatusIndicator(): React.ReactElement {
 
 	return (
 		<button
+			type="button"
 			onClick={handleToggle}
 			className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-colors cursor-pointer ${
 				enabled

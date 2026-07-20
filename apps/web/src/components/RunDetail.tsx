@@ -123,6 +123,7 @@ export default function RunDetail(): React.ReactElement {
 				<div className="mb-4 p-3 bg-red-900/50 border border-red-700 rounded-lg text-red-200 text-sm flex items-center justify-between">
 					<span>{cancelError ?? run.lastError ?? errorBanner}</span>
 					<button
+						type="button"
 						onClick={() => {
 							setErrorBanner(null);
 							setCancelError(null);
@@ -228,6 +229,7 @@ export default function RunDetail(): React.ReactElement {
 							<>
 								{!showCancelConfirm ? (
 									<button
+										type="button"
 										onClick={() => setShowCancelConfirm(true)}
 										className="btn-danger text-xs py-1 px-3"
 									>
@@ -236,6 +238,7 @@ export default function RunDetail(): React.ReactElement {
 								) : (
 									<div className="flex items-center gap-2">
 										<button
+											type="button"
 											onClick={() => setShowCancelConfirm(false)}
 											className="btn-secondary text-xs py-1 px-3"
 											disabled={cancelling}
@@ -243,6 +246,7 @@ export default function RunDetail(): React.ReactElement {
 											Keep
 										</button>
 										<button
+											type="button"
 											onClick={handleCancel}
 											className="btn-danger text-xs py-1 px-3"
 											disabled={cancelling}
@@ -256,6 +260,7 @@ export default function RunDetail(): React.ReactElement {
 
 						{/* Copy Run ID */}
 						<button
+							type="button"
 							onClick={handleCopyRunId}
 							className="btn-ghost text-xs py-1 px-2"
 							title="Copy Run ID"

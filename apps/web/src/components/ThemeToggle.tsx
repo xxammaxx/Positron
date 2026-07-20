@@ -7,6 +7,7 @@ export default function ThemeToggle(): React.ReactElement {
 
 	return (
 		<button
+			type="button"
 			onClick={toggleTheme}
 			className="flex items-center justify-center w-8 h-8 rounded-lg
         hover:bg-slate-800 dark:hover:bg-slate-800
