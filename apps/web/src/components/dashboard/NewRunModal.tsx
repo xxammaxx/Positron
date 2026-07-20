@@ -53,10 +53,14 @@ export default function NewRunModal({ isOpen, onClose }: NewRunModalProps): Reac
 
 				<div className="space-y-3">
 					<div>
-						<label className="text-xs font-medium text-slate-600 dark:text-slate-400 block mb-1">
+						<label
+							htmlFor="new-run-issue-url"
+							className="text-xs font-medium text-slate-600 dark:text-slate-400 block mb-1"
+						>
 							Issue URL
 						</label>
 						<input
+							id="new-run-issue-url"
 							type="text"
 							placeholder="https://github.com/owner/repo/issues/123"
 							value={issueUrl}

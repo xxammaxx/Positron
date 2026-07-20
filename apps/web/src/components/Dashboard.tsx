@@ -307,8 +307,11 @@ export default function Dashboard(): React.ReactElement {
 
 						<div className="space-y-4">
 							<div>
-								<label className="block text-sm text-slate-300 mb-1">Repository</label>
+								<label htmlFor="dashboard-repo" className="block text-sm text-slate-300 mb-1">
+									Repository
+								</label>
 								<input
+									id="dashboard-repo"
 									type="text"
 									placeholder="z.B. Positron"
 									value={selectedRepo}
@@ -318,8 +321,11 @@ export default function Dashboard(): React.ReactElement {
 							</div>
 
 							<div>
-								<label className="block text-sm text-slate-300 mb-1">Issue-Nummer</label>
+								<label htmlFor="dashboard-issue" className="block text-sm text-slate-300 mb-1">
+									Issue-Nummer
+								</label>
 								<input
+									id="dashboard-issue"
 									type="number"
 									min={1}
 									placeholder="z.B. 42"
@@ -329,8 +335,8 @@ export default function Dashboard(): React.ReactElement {
 								/>
 							</div>
 
-							<div>
-								<label className="block text-sm text-slate-300 mb-2">Autonomie-Level</label>
+							<fieldset>
+								<legend className="block text-sm text-slate-300 mb-2">Autonomie-Level</legend>
 								<div className="flex gap-3">
 									{[
 										{ value: 0, label: 'Full' },
@@ -357,7 +363,7 @@ export default function Dashboard(): React.ReactElement {
 										</label>
 									))}
 								</div>
-							</div>
+							</fieldset>
 
 							<button
 								type="button"

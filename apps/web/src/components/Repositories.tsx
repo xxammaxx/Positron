@@ -198,8 +198,11 @@ export default function Repositories(): React.ReactElement {
 
 						<div className="space-y-4">
 							<div>
-								<label className="block text-sm text-slate-300 mb-1">Owner</label>
+								<label htmlFor="repo-owner" className="block text-sm text-slate-300 mb-1">
+									Owner
+								</label>
 								<input
+									id="repo-owner"
 									type="text"
 									placeholder="z.B. xxammaxx"
 									value={newOwner}
@@ -208,8 +211,11 @@ export default function Repositories(): React.ReactElement {
 								/>
 							</div>
 							<div>
-								<label className="block text-sm text-slate-300 mb-1">Repository-Name</label>
+								<label htmlFor="repo-name" className="block text-sm text-slate-300 mb-1">
+									Repository-Name
+								</label>
 								<input
+									id="repo-name"
 									type="text"
 									placeholder="z.B. Positron"
 									value={newName}
