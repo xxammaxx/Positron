@@ -162,6 +162,8 @@ export default function VoiceControls(): React.ReactElement {
 							stroke="currentColor"
 							strokeWidth="2"
 							className="text-purple-400"
+							aria-hidden="true"
+							focusable="false"
 						>
 							<path d="M11 5L6 9H2v6h4l5 4V5z" />
 							<path
