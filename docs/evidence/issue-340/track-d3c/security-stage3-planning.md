@@ -4,7 +4,7 @@
 
 EVIDENCE_TYPE: PLANNING_CAPTURED
 IMPLEMENTATION_EVIDENCE: NO
-INDEPENDENT_REVIEW_EVIDENCE: NO
+INDEPENDENT_REVIEW_EVIDENCE: PARTIAL (see §2.1, §13, §13.1, §16)
 RUN_TYPE: Security-/Stage-3-gated planning only
 DATE: 2026-07-21
 
@@ -24,7 +24,8 @@ This was a READ-ONLY planning run authorized by Owner. No source code, test code
 | RUN_TYPE | Security-/Stage-3-gated planning only |
 | ORIGIN_MAIN_SHA | 936fc57ee4279702b2abfd3a9dca04d095b3f656 |
 | BASE_SHA | 936fc57ee4279702b2abfd3a9dca04d095b3f656 |
-| HEAD_SHA | 531ddb82a966adc3618fb5b3962d6b26c8b58a29 |
+| PRIMARY_WORKSPACE_HEAD_AT_RUN_START | 531ddb82a966adc3618fb5b3962d6b26c8b58a29 |
+| INITIAL_PLANNING_PR_HEAD_SHA | ab9b01c0f5b518fee30e1abfa4a28f157c325cfa |
 | ISSUE340_STATE | OPEN |
 | OS | Linux |
 | NODE_VERSION | v22.22.0 |
@@ -34,6 +35,21 @@ This was a READ-ONLY planning run authorized by Owner. No source code, test code
 | D3B_MERGED | YES |
 | D3B_PR | #381 |
 | D3B_MERGE_SHA | 936fc57ee4279702b2abfd3a9dca04d095b3f656 |
+
+### 2.1 Commit SHA Discrepancy Recorded During Independent Review
+
+| Field | Value |
+|-------|-------|
+| REPORTED_COMMIT_SHA_IN_PLANNING_LOG | ab9b01c39a21aa9e097bf273f45b9b71a520d6b8 |
+| REPORTED_SHA_RESOLUTION | NOT_FOUND (does not resolve to commit, tree, blob, or tag) |
+| REPORTED_SHA_CLASSIFICATION | TRANSCRIPTION_ERROR_ONLY |
+| GITHUB_PR_HEAD_SHA | ab9b01c0f5b518fee30e1abfa4a28f157c325cfa |
+| REPORTED_VS_GITHUB_FIRST_7_CHARS | ab9b01c (match, then divergent) |
+| LOCAL_HEAD_EQUALS_GITHUB_PR_HEAD | YES (verified in planning worktree) |
+| REMOTE_BRANCH_HEAD_EQUALS_GITHUB_PR_HEAD | YES |
+| ROOT_CAUSE | Likely copy-paste or transcription error — SHAs share prefix ab9b01c but diverge after character 7 |
+
+The reported commit SHA in the original planning run's completion report (`ab9b01c39a21aa9e097bf273f45b9b71a520d6b8`) does not exist in the repository. The actual GitHub PR head is `ab9b01c0f5b518fee30e1abfa4a28f157c325cfa`. Both SHAs share the prefix `ab9b01c` but diverge at character 8. This is classified as a transcription error with no security or integrity impact — the GitHub source of truth (PR #382) was never compromised.
 
 ## 3. D3c Baseline
 
@@ -75,10 +91,10 @@ allGates.push({
 - The `SCHEMA_VALIDATION` gate is set AFTER all security decisions (approval gates, env checks, schema validation, secret detection) are complete
 - The `detail` field is purely diagnostic — never read by any control flow
 - `ProbeGateCheck.detail` is typed as `string` — no enum, regex, or format constraint
-- Zero consumers perform exact string comparison on `detail`
+- No repository consumer was found that performs exact string comparison on `detail`
 - The detail string NEVER passes through `containsSecrets()`
 - No kill-switch interaction
-- Not serialized to JSON or audit events
+- Within the inspected runtime paths of this file, the `detail` field is not serialized to JSON or audit events (note: this is a code-flow property, not a type-system guarantee; `ProbeGateCheck.detail` is typed as `string` with no serialization blocker)
 
 ## 5. Diagnostic Detail — D3c-S3 (Stage-3 Policy)
 
@@ -109,7 +125,7 @@ if (actualSha256 !== this.config.expectedFileSha256) {
 - `Stage3FailedGate.reason` is typed as `string` — no enum, regex, or format constraint
 - `_deny()` always returns `{ allowed: false }` — boolean is hardcoded, not derived from string comparison
 - Gate priority chain (Token → SHA-256 → Length) is code-order based, not string-content based
-- Gate-level `reason` is NEVER serialized to audit events (only the dynamic main `reason` reaches audit)
+- Within the inspected runtime paths, gate-level `reason` is not serialized to audit events (only the dynamic main `reason` reaches audit via `createAuditEvent()`). Note: `failedGates` structure is present in `Stage3PilotPolicyResult` but the harness never accesses `failedGates[].reason`, and `createAuditEvent()` receives only the main `reason` parameter.
 - The harness never accesses `failedGates` — only `.allowed` and `.reason`
 - Tests use `toContain('SHA-256 mismatch')` — substring matching, not exact
 
@@ -124,7 +140,7 @@ if (actualSha256 !== this.config.expectedFileSha256) {
 | validateRunSummary() callers | Runtime — errors.length | No — checks error count, not detail | No | No |
 | index.ts re-exports | Type export | No | No | No |
 
-**Verdict**: Zero consumers perform exact string comparison. Changing to plain string is behaviorally transparent.
+**Verdict**: No repository consumer was found that performs exact string comparison on `detail`. Changing to plain string is behaviorally transparent within the inspected codebase surface.
 
 ## 7. Consumer Matrix — D3c-S3
 
@@ -138,7 +154,7 @@ if (actualSha256 !== this.config.expectedFileSha256) {
 | Policy test (line 348) | Test — toContain('SHA-256 mismatch') | Substring | No | No |
 | Adversarial test | Test — checks fileSha256Exact boolean | No — boolean check | No | No |
 
-**Verdict**: Zero consumers perform exact string comparison on the gate-level `reason`. The gate-level reason field is an internal diagnostic never serialized or consumed.
+**Verdict**: No repository consumer was found that performs exact string comparison on the gate-level `reason`. The content of the gate-level reason field is an internal diagnostic whose value is not consumed by any consumer or test. (Note: the `failedGates` array structure IS consumed for `.length` in tests, but the individual `.reason` string values within are never accessed.)
 
 ## 8. Test Inventory and Baseline Runs
 
@@ -244,23 +260,69 @@ OTHER_RULE_REGRESSIONS: 0
 
 ## 13. Later Owner Authorization Template
 
+> **⚠️ TEMPLATE — NOT AUTHORIZED IN THIS RUN**
+>
+> This section is a **fill-in form** for a human Owner to complete in a future
+> implementation run. **No value below is currently active or authorized.**
+> The placeholder values are pre-filled as *recommendations* based on this
+> planning run's analysis — they do **not** constitute authorization.
+>
+> **Implementation agents MUST NOT act on this template until all fields
+> have been explicitly filled by the Owner in a dedicated implementation run.**
+> **All entries marked `<OWNER_DECISION_REQUIRED>` must be explicitly set by the Owner.**
+
+### Template Block (Non-Operative)
+
 ```text
-OWNER_IMPLEMENTATION_AUTHORIZED: YES
-AUTHORIZED_BASE_SHA: 936fc57ee4279702b2abfd3a9dca04d095b3f656
+AUTHORIZATION_TEMPLATE_STATUS: NON_OPERATIVE_EXAMPLE
+
+THIS_BLOCK_GRANTS_AUTHORIZATION: NO
+
+OWNER_IMPLEMENTATION_AUTHORIZED: <OWNER_DECISION_REQUIRED>
+
+AUTHORIZED_BASE_SHA: <CURRENT_ORIGIN_MAIN_SHA_AT_IMPLEMENTATION_START>
+
 AUTHORIZED_FILES:
-  - packages/benchmark-rudolph/src/controlled-real-probe.ts
-  - packages/github-adapter/src/stage3-supervised-pilot-policy.ts
-AUTHORIZED_LITERAL_IDS: D3c-RP, D3c-S3
-AUTHORIZED_SOURCE_CHANGES:
-  - controlled-real-probe.ts:325: \`validateRunSummary...\` → 'validateRunSummary...'
-  - stage3-supervised-pilot-policy.ts:404: \`SHA-256 mismatch\` → 'SHA-256 mismatch'
-AUTHORIZED_TEST_CHANGES: NONE
+  - <OWNER_MUST_CONFIRM_FILE_1>
+  - <OWNER_MUST_CONFIRM_FILE_2>
+
+AUTHORIZED_LITERAL_IDS:
+  - D3c-RP
+  - D3c-S3
+
+AUTHORIZED_SOURCE_CHANGES: <OWNER_DECISION_REQUIRED>
+
+AUTHORIZED_TEST_CHANGES: <OWNER_DECISION_REQUIRED_OR_NONE>
+
 REAL_MODE_EXECUTION_AUTHORIZED: NO
+
 STAGE3_LIVE_EXECUTION_AUTHORIZED: NO
+
 EXTERNAL_GITHUB_WRITES_AUTHORIZED: NO
-COMMIT_AND_DRAFT_PR_AUTHORIZED: YES
+
+COMMIT_AND_DRAFT_PR_AUTHORIZED: <OWNER_DECISION_REQUIRED>
+
 MERGE_AUTHORIZED: NO
 ```
+
+### Planning Recommendations (for reference when Owner fills template)
+
+| Field | Recommended Value | Rationale |
+|-------|-------------------|-----------|
+| AUTHORIZED_FILES | controlled-real-probe.ts, stage3-supervised-pilot-policy.ts | 2 files, 2 lines, independent packages |
+| AUTHORIZED_SOURCE_CHANGES | Template literal → plain string (line 325 and line 404) | Byte-identical, no interpolation |
+| AUTHORIZED_TEST_CHANGES | NONE | All 803+ tests pass without modification |
+| MERGE_AUTHORIZED | NO | Constitutional requirement (Principle V) |
+
+## 13.1 Implementation Authorization Status (This Planning Run)
+
+| Field | Value |
+|-------|-------|
+| IMPLEMENTATION_AUTHORIZED_IN_THIS_PLANNING_RUN | NO |
+| IMPLEMENTATION_EXECUTED | NO |
+| THIS_DOCUMENT_GRANTS_IMPLEMENTATION_AUTHORIZATION | NO |
+| THIS_DOCUMENT_GRANTS_MERGE_AUTHORIZATION | NO |
+| AUTHORIZATION_TEMPLATE_STATUS | NON_OPERATIVE_EXAMPLE |
 
 ## 14. Security Sentinel
 
@@ -302,6 +364,11 @@ MERGE_AUTHORIZED: NO
 | COMPLIANCE_AGENT | PASS — YELLOW_REVIEW, compliant with human approval gate, no GDPR impact |
 | REVIEWER_AGENT | PASS — All 14 verification questions independently confirmed |
 | DOCUMENTATION_AGENT | PASS — This evidence document |
+| INDEPENDENT_REVIEW_EXPLORE | WARN — Bogus SHA NOT_FOUND; HEAD_SHA divergence; 0 exact string consumers |
+| INDEPENDENT_REVIEW_SECURITY | WARN — Authorization template operative ambiguity; technical claims VERIFIED |
+| INDEPENDENT_REVIEW_ARCHITECTURE | PASS — 1 overstated claim narrowed; ONE_PR debatable but acceptable |
+| INDEPENDENT_REVIEW_QA | WARN — Test count discrepancy 506 vs 521 (15); no run logs; tree identity pristine |
+| INDEPENDENT_REVIEW_COMPLIANCE | WARN — Template ambiguity at MEDIUM risk; placeholder hardening recommended |
 
 ## 17. Git and Draft PR Status
 
@@ -340,8 +407,34 @@ PRIMARY: GREEN_D3C_PLAN_PR_READY
 TRACK: GREEN_SAFE_TRACK_D3C_PLANNED
 ```
 
+```text
+INDEPENDENT_REVIEW_CLASSIFICATION:
+  PRIMARY: AMBER_REVIEW_D3C_PLAN_AUTHORIZATION_HARDENED
+  TRACK: GREEN_SAFE_TRACK_D3C_PLAN_REPAIRED
+  SHA_DISCREPANCY: TRANSCRIPTION_ERROR_ONLY
+  AUTHORIZATION_TEMPLATE: HARDENED_NON_OPERATIVE
+  TRUTH_MIRROR_REPAIRED: YES
+```
+
 ## 21. NEXT Actions
 
 1. Human Review of D3c Security Plan (this document)
 2. Owner Authorization for D3c implementation (use template in §13)
 3. Implementation in a new, exactly bounded run: change 2 lines, run all tests, create D3c implementation PR
+
+## 22. Truth Mirror Repair Record
+
+| Field | Value |
+|-------|-------|
+| REPAIR_DATE | 2026-07-21 |
+| REPAIR_TYPE | Truth Mirror Authorization Hardening Only |
+| REPAIR_RUN | Independent Docs-Only Review and Correction |
+| SOURCE_FILES_CHANGED | 0 |
+| TEST_FILES_CHANGED | 0 |
+| EVIDENCE_FILES_CHANGED | 1 (this file) |
+| IMPLEMENTATION_AUTHORIZED | NO |
+| IMPLEMENTATION_EXECUTED | NO |
+| REAL_MODE_EXECUTED | NO |
+| STAGE3_EXECUTED | NO |
+| MERGE_AUTHORIZED | NO |
+| CORRECTIONS_APPLIED | 10 (SHA ambiguity, discrepancy doc, consumer claim narrowing, authorization template hardening, implementation status, agent review evidence, metadata, classification) |
