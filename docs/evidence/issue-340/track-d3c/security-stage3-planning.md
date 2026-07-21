@@ -174,6 +174,54 @@ if (actualSha256 !== this.config.expectedFileSha256) {
 - `red-negative-tests.test.ts`: "all safety gates satisfied → real mode proceeds" — verifies probe flow
 - `red-negative-tests.test.ts`: "valid real-mode probe summary passes schema validation" — schema gate
 
+## 8.1 Test Count Reconciliation (2026-07-21 Final Run)
+
+### Historical Discrepancy
+
+| Claim | Source | Count | Reproduced? |
+|-------|--------|-------|-------------|
+| github-adapter = 521 | Original Planning Report (§8) | 521 | YES — current run confirms |
+| github-adapter = 506 | Independent Review Observation | 506 | NO — cannot reproduce 506 |
+
+### Current Reproducible Run
+
+| Test Suite | Command | Exit | Test Files | Tests Passed | Tests Failed | Tests Skipped | Runtime Mode |
+|------------|---------|------|------------|-------------|-------------|---------------|-------------|
+| benchmark-rudolph | `npx vitest run packages/benchmark-rudolph/src/ --reporter=verbose` | 0 | 7 | 282 | 0 | 0 | Fake/offline |
+| github-adapter | `npx vitest run packages/github-adapter/src/ --reporter=verbose` | 0 | 13 | 521 | 0 | 0 | Fake/offline |
+
+| Metric | Value |
+|--------|-------|
+| CURRENT_VERIFIED_BENCHMARK_COUNT | 282 |
+| CURRENT_VERIFIED_GITHUB_ADAPTER_COUNT | 521 |
+| CURRENT_VERIFIED_TOTAL_FOCUSED_COUNT | 803 |
+| BENCHMARK_EXIT | 0 |
+| GITHUB_ADAPTER_EXIT | 0 |
+| BENCHMARK_LOG_SHA256 | 19c1af5dcff89f6a135ae47c2b2b807b5f515bd15a7c19151c19658677ca5c82 |
+| GITHUB_ADAPTER_LOG_SHA256 | 1499282f3144d52dcc46855029cbc1ef5f96b597bec7b45059e7a26a7bd4926c |
+| LOGS_COMMITTED | NO (temporary, under /tmp) |
+| ORIGINAL_LOGS_AVAILABLE | NO |
+| NEW_REPRODUCIBLE_LOGS_CREATED | YES |
+
+### Discrepancy Classification
+
+```text
+COUNT_DISCREPANCY_CLASSIFICATION: COUNTING_METHOD_OR_REPOSITORY_STATE_DIFFERENCE
+ORIGINAL_521_CLAIM_REPRODUCED: YES
+ORIGINAL_506_OBSERVATION_REPRODUCED: NO
+CURRENT_VERIFIED_GITHUB_ADAPTER_COUNT: 521
+CURRENT_VERIFIED_TOTAL_FOCUSED_COUNT: 803
+ORIGINAL_LOGS_AVAILABLE: NO
+NEW_REPRODUCIBLE_LOGS_CREATED: YES
+```
+
+The 506 observation from the independent review cannot be reproduced. The original test logs are not available. The current run consistently produces 521 tests across 13 test files for github-adapter. Without the original logs, the exact cause of the 506 count remains unresolved — possible explanations include a different repository state, a different vitest configuration, or a counting method error. The current count of 521 is the verified source of truth.
+
+### Vitest Configuration Context
+Root vitest.config.ts include pattern: `packages/*/src/__tests__/**/*.test.ts`
+github-adapter test files: 13 (stage3-adversarial-gates, stage3-supervised-pilot-policy, stage3-bridge-provenance, stage3-bridge-integrity, stage3-remediation-modules, stage3-runtime-harness, readonly-adapter, stage2-runtime-write-harness, stage2-write-sandbox-policy, templates, sync-templates, github-adapter.contract, smoke)
+benchmark-rudolph test files: 7 (red-negative-tests, benchmark-runner, evidence-contract, evidence-schema-validation, beacon-domain, traceability, beacon-fixtures)
+
 ## 9. Risk Classification
 
 | Diagnostic | Classification | Rationale |
@@ -251,6 +299,8 @@ Both changes are fully validatable with: `npm run build && npm run typecheck && 
 - [ ] Security Agent review
 - [ ] Reviewer Agent review
 
+**Note on Historical Count**: The independent review observed 506 github-adapter tests but this count could not be reproduced. All three reconciliation test runs produced 521 tests. The implementation test contract uses the current verified count of 521.
+
 ### Expected Post-Implementation State
 ```
 TOTAL_D3_DIAGNOSTICS: 0
@@ -311,7 +361,7 @@ MERGE_AUTHORIZED: NO
 |-------|-------------------|-----------|
 | AUTHORIZED_FILES | controlled-real-probe.ts, stage3-supervised-pilot-policy.ts | 2 files, 2 lines, independent packages |
 | AUTHORIZED_SOURCE_CHANGES | Template literal → plain string (line 325 and line 404) | Byte-identical, no interpolation |
-| AUTHORIZED_TEST_CHANGES | NONE | All 803+ tests pass without modification |
+| AUTHORIZED_TEST_CHANGES | NONE | All 803 tests pass without modification (282 benchmark-rudolph + 521 github-adapter, verified 2026-07-21) |
 | MERGE_AUTHORIZED | NO | Constitutional requirement (Principle V) |
 
 ## 13.1 Implementation Authorization Status (This Planning Run)
@@ -355,20 +405,38 @@ MERGE_AUTHORIZED: NO
 
 ## 16. Agent Verdicts
 
-| Agent | Verdict |
-|-------|---------|
-| EXPLORE_AGENT | PASS — Complete consumer analysis, zero exact string comparison found |
-| SECURITY_AGENT | PASS — GREEN_MECHANICAL_SECURITY_REVIEWED for both, no runtime needed |
-| ARCHITECTURE_AGENT | PASS — Purely syntactic, no API/type/contract impact |
-| QA_AGENT | PASS — Test coverage adequate, all 803 tests pass safely offline |
-| COMPLIANCE_AGENT | PASS — YELLOW_REVIEW, compliant with human approval gate, no GDPR impact |
-| REVIEWER_AGENT | PASS — All 14 verification questions independently confirmed |
-| DOCUMENTATION_AGENT | PASS — This evidence document |
-| INDEPENDENT_REVIEW_EXPLORE | WARN — Bogus SHA NOT_FOUND; HEAD_SHA divergence; 0 exact string consumers |
-| INDEPENDENT_REVIEW_SECURITY | WARN — Authorization template operative ambiguity; technical claims VERIFIED |
-| INDEPENDENT_REVIEW_ARCHITECTURE | PASS — 1 overstated claim narrowed; ONE_PR debatable but acceptable |
-| INDEPENDENT_REVIEW_QA | WARN — Test count discrepancy 506 vs 521 (15); no run logs; tree identity pristine |
-| INDEPENDENT_REVIEW_COMPLIANCE | WARN — Template ambiguity at MEDIUM risk; placeholder hardening recommended |
+### Original Planning Agent Verdicts (Run 1 — ab9b01c)
+
+| Agent | Verdict | Classification |
+|-------|---------|---------------|
+| EXPLORE_AGENT | PASS — Complete consumer analysis, zero exact string comparison found | HISTORICAL_SELF_REPORTED |
+| SECURITY_AGENT | PASS — GREEN_MECHANICAL_SECURITY_REVIEWED for both, no runtime needed | HISTORICAL_SELF_REPORTED |
+| ARCHITECTURE_AGENT | PASS — Purely syntactic, no API/type/contract impact | HISTORICAL_SELF_REPORTED |
+| QA_AGENT | PASS — Test coverage adequate, all 803 tests pass safely offline | HISTORICAL_SELF_REPORTED |
+| COMPLIANCE_AGENT | PASS — YELLOW_REVIEW, compliant with human approval gate, no GDPR impact | HISTORICAL_SELF_REPORTED |
+| REVIEWER_AGENT | PASS — All 14 verification questions independently confirmed | HISTORICAL_SELF_REPORTED |
+| DOCUMENTATION_AGENT | PASS — This evidence document | HISTORICAL_SELF_REPORTED |
+
+### Independent Review Agent Verdicts (Run 2 — e554060)
+
+| Agent | Verdict | Issue |
+|-------|---------|-------|
+| INDEPENDENT_REVIEW_EXPLORE | WARN | Bogus SHA NOT_FOUND; HEAD_SHA divergence; 0 exact string consumers |
+| INDEPENDENT_REVIEW_SECURITY | WARN | Authorization template operative ambiguity; technical claims VERIFIED |
+| INDEPENDENT_REVIEW_ARCHITECTURE | PASS | 1 overstated claim narrowed; ONE_PR debatable but acceptable |
+| INDEPENDENT_REVIEW_QA | WARN | Test count discrepancy 506 vs 521 (15); no run logs; tree identity pristine |
+| INDEPENDENT_REVIEW_COMPLIANCE | WARN | Template ambiguity at MEDIUM risk; placeholder hardening recommended |
+
+### Current Reconciliation Agent Verdicts (Run 3 — Final Reconciliation)
+
+| Agent | Verdict | Notes |
+|-------|---------|-------|
+| ORCHESTRATOR | PASS | All Phase A-M gates verified; scope and sentinels clean |
+| QA (reproduced) | PASS | 282 + 521 = 803; exit 0; logs hashed; 506 not reproducible |
+| ARCHITECTURE_AGENT | <pending> | Consumer claims, data flow, ONE-PR recommendation |
+| SECURITY_AGENT | <pending> | Sentinel verification, no runtime/leak |
+| DOCUMENTATION_AGENT | PASS | Evidence corrected; this reconciliation recorded |
+| REVIEWER_AGENT | <pending> | Final independent verification of corrected evidence |
 
 ## 17. Git and Draft PR Status
 
@@ -397,30 +465,42 @@ MERGE_AUTHORIZED: NO
 ## 19. Open Gaps
 
 1. **D3c-B Investigation Deferred**: Whether backtick form was intentionally chosen for testability was investigated and found irrelevant — no test reads the detail/reason field content.
-2. **Full Regression Not Run**: Only focused package tests were run (803 total). Full 2451-test regression is required before D3c implementation PR merge.
+2. **Full Regression Not Run**: Only focused package tests were run (803 total = 282 benchmark-rudolph + 521 github-adapter). Full 2451-test regression is required before D3c implementation PR merge.
 3. **No Existing Test for SCHEMA_VALIDATION Gate Detail**: The detail field has zero direct test consumers — this is a coverage gap but does not block the string change.
 
 ## 20. Final Classification
 
-```text
-PRIMARY: GREEN_D3C_PLAN_PR_READY
-TRACK: GREEN_SAFE_TRACK_D3C_PLANNED
-```
+### Current Primary Classification (2026-07-21 Reconciliation Run)
 
 ```text
-INDEPENDENT_REVIEW_CLASSIFICATION:
+PRIMARY: AMBER_REVIEW_HISTORICAL_TEST_COUNT_UNRESOLVED
+TRACK: GREEN_SAFE_TRACK_D3C_PLAN_RECONCILED
+```
+
+**Rationale**: All tests pass cleanly (282 benchmark-rudolph + 521 github-adapter = 803, exit code 0). The historical independent review observation of 506 github-adapter tests cannot be reproduced and cannot be explained without the original test logs. The test count discrepancy does not block D3c planning — the D3c changes are purely mechanical (template literal → plain string, byte-identical, no interpolation in either target). However, the unexplained historical count prevents a full GREEN classification at the evidence level.
+
+### Historical Run Classifications
+
+```text
+HISTORICAL_RUN_1 — ORIGINAL_PLANNING (ab9b01c):
+  PRIMARY: GREEN_D3C_PLAN_PR_READY
+  TRACK: GREEN_SAFE_TRACK_D3C_PLANNED
+  NOTE: Self-reported by planning agents. Test counts claimed but not independently verified at that time.
+
+HISTORICAL_RUN_2 — INDEPENDENT_REVIEW (e554060):
   PRIMARY: AMBER_REVIEW_D3C_PLAN_AUTHORIZATION_HARDENED
   TRACK: GREEN_SAFE_TRACK_D3C_PLAN_REPAIRED
   SHA_DISCREPANCY: TRANSCRIPTION_ERROR_ONLY
   AUTHORIZATION_TEMPLATE: HARDENED_NON_OPERATIVE
-  TRUTH_MIRROR_REPAIRED: YES
+  NOTE: Identified SHA discrepancy, authorization template issues, and test count discrepancy (506 vs 521).
 ```
 
 ## 21. NEXT Actions
 
-1. Human Review of D3c Security Plan (this document)
-2. Owner Authorization for D3c implementation (use template in §13)
-3. Implementation in a new, exactly bounded run: change 2 lines, run all tests, create D3c implementation PR
+1. Human Review of the final reconciled D3c Security Plan (this document, HEAD after reconciliation commit)
+2. Owner Authorization for D3c implementation — using the template in §13, bound to the exact reconciled HEAD SHA
+3. After PR #382 merge to main: separate D3c implementation run, bound to the then-current main SHA
+4. No D3c implementation and no merge in this reconciliation run
 
 ## 22. Truth Mirror Repair Record
 
@@ -437,4 +517,5 @@ INDEPENDENT_REVIEW_CLASSIFICATION:
 | REAL_MODE_EXECUTED | NO |
 | STAGE3_EXECUTED | NO |
 | MERGE_AUTHORIZED | NO |
-| CORRECTIONS_APPLIED | 10 (SHA ambiguity, discrepancy doc, consumer claim narrowing, authorization template hardening, implementation status, agent review evidence, metadata, classification) |
+| CORRECTIONS_APPLIED | 10 (Run 2: SHA ambiguity, discrepancy doc, consumer claim narrowing, authorization template hardening, implementation status, agent review evidence, metadata, classification) |
+| RECONCILIATION_CORRECTIONS_APPLIED | 5 (Run 3: test count reconciliation, historical claims marking, classification merge, agent verdict separation, PR body synchronization) |
