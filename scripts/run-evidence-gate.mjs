@@ -204,7 +204,7 @@ function loadSnapshotFromFile(filePath) {
 	const snapshot = parsed.snapshot ?? parsed;
 
 	if (!snapshot.pullRequests || !snapshot.issues) {
-		throw new Error(`Snapshot file missing required fields: pullRequests, issues`);
+		throw new Error('Snapshot file missing required fields: pullRequests, issues');
 	}
 
 	return snapshot;
