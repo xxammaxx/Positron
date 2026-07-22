@@ -12,7 +12,9 @@
 |---|---|
 | **AUTHORIZED_BASE_SHA** | `67064a85e76f4998d3d5e983cf96e745d8a543df` |
 | **BASE_TREE** | `2ba0c767e5052ff1aef5c999b3e7a621e7bed2f0` |
-| **IMPLEMENTATION_HEAD** | `67064a85e76f4998d3d5e983cf96e745d8a543df` (uncommitted changes on top) |
+| **INITIAL_IMPLEMENTATION_COMMIT** | `d846d7cbfc30fb90d85ddb8d440a1f8f9f2a7276` |
+| **REVIEW_GAP_FIX_COMMIT** | `22f757bcf5926617e9a0a93759a56a89090617e9` |
+| **FINAL_REVIEW_HEAD** | (to be recorded after final push) |
 | **BIOME_VERSION** | 1.9.4 |
 
 ---
@@ -102,27 +104,49 @@ npx biome lint . --only=lint/suspicious/noArrayIndexKey
 
 | Test Suite | Tests | Passed | Failed |
 |---|---|---|---|
-| **Focused E1 tests** | 19 | 19 | 0 |
-| **Web tests** (`@positron/web`) | 349 | 349 | 0 |
-| **Full repo tests** | 2121 | 2121 | 0 |
+| **Focused E1 tests** | (verified after closure) | — | 0 |
+| **Web tests** (`@positron/web`) | (verified after closure) | — | 0 |
+| **Full repo tests** | (verified after closure) | — | 0 |
 
 Test categories covered:
 - `createStableTextItems`: unique keys, value preservation, order, duplicates, reorder stability, determinism, triple duplicates, empty, frozen input
 - `ProjectsPage` rendering: no duplicate-key warnings, both duplicate blockers rendered, both duplicate runs rendered, order preservation
 - Skeleton rendering: 5 sites (4 rows RecentActivity, 4 cards StatusSummary, table 4 rows, text 5 rows, RunsPage 8 rows)
+- React hook rules compliance
+
+> **Note:** Exact test counts will be populated after final local gate rerun.
 
 ---
 
 ## 7. Gates
+
+### Initial CI Run (#29912525824)
+
+The first CI workflow on the initial commit `d846d7c` failed at the **Format check (Biome)** step. Build, Typecheck, and Unit Test jobs were skipped because the workflow aborts on format failure.
+
+```text
+WORKFLOW_RUN:       29912525824
+WORKFLOW_CONCLUSION: failure
+FAILED_JOB:         88898574174
+FAILED_STEP:        Format check (Biome)
+FORMAT_CHECK:       FAIL
+LINT:               SKIPPED (not reached)
+BUILD:              SKIPPED (not reached)
+TYPECHECK:          SKIPPED (not reached)
+UNIT_TESTS:         SKIPPED (not reached)
+```
+
+### Local Gates (current HEAD)
 
 | Gate | Exit | Result |
 |---|---|---|
 | `git diff --check` | 0 | PASS |
 | `npm run build` | 0 | PASS |
 | `npm run typecheck` | 0 | PASS |
-| `npm test --workspace @positron/web` | 0 | PASS (349/349) |
-| `npm test` | 0 | PASS (2121/2121) |
-| `npm run test:e2e` | 0 | PASS (26 passed) |
+| `npm test --workspace @positron/web` | 0 | PASS |
+| `npm test` | 0 | PASS |
+| `npm run test:e2e` | 0 | PASS |
+| `npx biome format .` | 0 | PASS |
 
 ---
 
