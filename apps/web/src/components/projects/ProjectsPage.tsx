@@ -14,11 +14,14 @@ export interface StableTextItem {
 /**
  * Produces deterministic, duplicate-safe, reorder-stable keys from
  * a readonly string array.  Two occurrences of the same text receive
- * distinct keys; reordering preserves original key identity.
+ * distinct keys.
+ *
+ * Key contract:
+ * - Unique values retain their content-based key across reordering,
+ * - Identical values receive deterministic occurrence keys (0, 1, …),
+ * - No key depends on the callback array index.
  */
-export function createStableTextItems(
-	values: readonly string[],
-): StableTextItem[] {
+export function createStableTextItems(values: readonly string[]): StableTextItem[] {
 	const occurrenceByValue = new Map<string, number>();
 
 	return values.map((value) => {

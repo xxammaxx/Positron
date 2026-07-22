@@ -6,13 +6,10 @@
  * regressions, or index-based key strategies.
  */
 
-import { render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, test, vi } from 'vitest';
-import ProjectsPage, {
-	createStableTextItems,
-	type StableTextItem,
-} from '../components/projects/ProjectsPage.js';
+import { createStableTextItems } from '../components/projects/ProjectsPage.js';
 
 // -----------------------------------------------------------------------
 // Helper: createStableTextItems
@@ -97,9 +94,10 @@ describe('createStableTextItems', () => {
 describe('ProjectsPage with duplicate blockers and recommended runs', () => {
 	beforeEach(() => {
 		vi.resetModules();
+		vi.restoreAllMocks();
 	});
 
-	test('renders without React duplicate-key warnings for duplicate blockers', () => {
+	test('renders without React duplicate-key warnings for duplicate blockers', async () => {
 		const warnSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
 		vi.doMock('../api.js', () => ({
@@ -127,35 +125,34 @@ describe('ProjectsPage with duplicate blockers and recommended runs', () => {
 			},
 		}));
 
-		// Re-import so the mock is picked up
-		return import('../components/projects/ProjectsPage.js').then(
-			async (mod) => {
-				const Page = mod.default as React.FC;
+		try {
+			// Re-import so the mock is picked up
+			const mod = await import('../components/projects/ProjectsPage.js');
+			const Page = mod.default as React.FC;
 
-				render(
-					<MemoryRouter>
-						<Page />
-					</MemoryRouter>,
+			render(
+				<MemoryRouter>
+					<Page />
+				</MemoryRouter>,
+			);
+
+			// Wait for data to resolve
+			await vi.waitFor(() => {
+				expect(screen.getByText('TestProjectA')).toBeDefined();
+			});
+
+			// Check for React duplicate-key warnings
+			const duplicateKeyCalls = warnSpy.mock.calls.filter((call) => {
+				const msg = String(call[0]);
+				return (
+					msg.includes('Encountered two children with the same key') ||
+					msg.includes('duplicate key')
 				);
-
-				// Wait for data to resolve
-				await vi.waitFor(() => {
-					expect(screen.getByText('TestProjectA')).toBeDefined();
-				});
-
-				// Check for React duplicate-key warnings
-				const duplicateKeyCalls = warnSpy.mock.calls.filter((call) => {
-					const msg = String(call[0]);
-					return (
-						msg.includes('Encountered two children with the same key') ||
-						msg.includes('duplicate key')
-					);
-				});
-				expect(duplicateKeyCalls).toHaveLength(0);
-
-				warnSpy.mockRestore();
-			},
-		);
+			});
+			expect(duplicateKeyCalls).toHaveLength(0);
+		} finally {
+			warnSpy.mockRestore();
+		}
 	});
 
 	test('both duplicate blockers are rendered', async () => {
@@ -313,9 +310,7 @@ describe('ProjectsPage with duplicate blockers and recommended runs', () => {
 
 describe('Skeleton rendering — fixed-size groups and suppression sites', () => {
 	test('RecentActivity skeleton renders 4 rows', async () => {
-		const { default: RecentActivity } = await import(
-			'../components/dashboard/RecentActivity.js'
-		);
+		const { default: RecentActivity } = await import('../components/dashboard/RecentActivity.js');
 
 		const { container } = render(
 			<MemoryRouter>
@@ -324,29 +319,21 @@ describe('Skeleton rendering — fixed-size groups and suppression sites', () =>
 		);
 
 		// Each skeleton row has "skeleton" class on inner elements
-		const skeletonRows = container.querySelectorAll(
-			'[class*="skeleton"][class*="rounded-full"]',
-		);
+		const skeletonRows = container.querySelectorAll('[class*="skeleton"][class*="rounded-full"]');
 		expect(skeletonRows).toHaveLength(4);
 	});
 
 	test('StatusSummary skeleton renders 4 cards', async () => {
-		const { default: StatusSummary } = await import(
-			'../components/dashboard/StatusSummary.js'
-		);
+		const { default: StatusSummary } = await import('../components/dashboard/StatusSummary.js');
 
-		const { container } = render(
-			<StatusSummary metrics={null} isLoading={true} />,
-		);
+		const { container } = render(<StatusSummary metrics={null} isLoading={true} />);
 
 		const skeletonCards = container.querySelectorAll('.card.animate-pulse');
 		expect(skeletonCards).toHaveLength(4);
 	});
 
 	test('LoadingSkeleton table variant renders requested rows', async () => {
-		const { default: LoadingSkeleton } = await import(
-			'../components/shared/LoadingSkeleton.js'
-		);
+		const { default: LoadingSkeleton } = await import('../components/shared/LoadingSkeleton.js');
 
 		const { container } = render(<LoadingSkeleton variant="table" rows={4} />);
 
@@ -355,9 +342,7 @@ describe('Skeleton rendering — fixed-size groups and suppression sites', () =>
 	});
 
 	test('LoadingSkeleton text variant renders requested rows', async () => {
-		const { default: LoadingSkeleton } = await import(
-			'../components/shared/LoadingSkeleton.js'
-		);
+		const { default: LoadingSkeleton } = await import('../components/shared/LoadingSkeleton.js');
 
 		const { container } = render(<LoadingSkeleton variant="text" rows={5} />);
 
@@ -370,16 +355,15 @@ describe('Skeleton rendering — fixed-size groups and suppression sites', () =>
 		vi.doMock('../api.js', () => ({
 			api: {
 				getRuns: vi.fn(
-					() => new Promise(() => {
-						/* never resolves — loading stays true */
-					}),
+					() =>
+						new Promise(() => {
+							/* never resolves — loading stays true */
+						}),
 				),
 			},
 		}));
 
-		const { default: RunsPage } = await import(
-			'../components/runs/RunsPage.js'
-		);
+		const { default: RunsPage } = await import('../components/runs/RunsPage.js');
 
 		const { container } = render(
 			<MemoryRouter>
@@ -387,9 +371,7 @@ describe('Skeleton rendering — fixed-size groups and suppression sites', () =>
 			</MemoryRouter>,
 		);
 
-		const skeletonRows = container.querySelectorAll(
-			'.skeleton.h-10',
-		);
+		const skeletonRows = container.querySelectorAll('.skeleton.h-10');
 		expect(skeletonRows).toHaveLength(8);
 	});
 });

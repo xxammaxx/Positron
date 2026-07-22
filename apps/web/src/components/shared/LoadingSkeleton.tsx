@@ -16,7 +16,8 @@ export default function LoadingSkeleton({
 					<div
 						// biome-ignore lint/suspicious/noArrayIndexKey: Skeleton placeholder rows — stateless visual-only elements with no inputs, interactive controls, or local state. Position-only ordering; never sorted or filtered. Replaced wholesale when real data arrives.
 						key={i}
-						className="flex gap-4 animate-pulse">
+						className="flex gap-4 animate-pulse"
+					>
 						<div className="skeleton h-4 w-24 rounded" />
 						<div className="skeleton h-4 w-16 rounded" />
 						<div className="skeleton h-4 flex-1 rounded" />
