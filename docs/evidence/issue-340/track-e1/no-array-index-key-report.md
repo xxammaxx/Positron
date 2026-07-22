@@ -212,6 +212,26 @@ TOOL_GATEWAY_WINDOWS: PASS
 OBSERVABILITY_CONFIG: PASS
 ```
 
+### Third CI Run (#29920495594) — Documentation Finalization Head `ccafbb9`
+
+The third CI workflow on the evidence-only documentation commit `ccafbb9` shows identical results to the second run: format passes, lint fails due to pre-existing backlog.
+
+```text
+WORKFLOW_RUN:       29920495594
+WORKFLOW_CONCLUSION: failure
+FORMAT_CHECK:       PASS
+LINT:               FAIL
+LINT_FAILURE_CLASS: PRE_EXISTING_REPO_BACKLOG
+BUILD:              SKIPPED_AFTER_LINT_FAILURE
+TYPECHECK:          SKIPPED_AFTER_LINT_FAILURE
+UNIT_TESTS:         SKIPPED_AFTER_LINT_FAILURE
+E2E_PLAYWRIGHT:     PASS
+MUTATION_FAST:      PASS
+MUTATION_SAFETY:    PASS
+TOOL_GATEWAY_WINDOWS: PASS
+OBSERVABILITY_CONFIG: PASS
+```
+
 ### Local Gates (verified at `286ce90b`)
 
 | Gate | Exit | Result |
