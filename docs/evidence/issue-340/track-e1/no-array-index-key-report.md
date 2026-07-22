@@ -212,12 +212,12 @@ TOOL_GATEWAY_WINDOWS: PASS
 OBSERVABILITY_CONFIG: PASS
 ```
 
-### Third CI Run (#29920495594) — Documentation Finalization Head `ccafbb9`
+### Third CI Run (#29920957695) — Documentation Finalization Head `ac3ea2c`
 
-The third CI workflow on the evidence-only documentation commit `ccafbb9` shows identical results to the second run: format passes, lint fails due to pre-existing backlog.
+The third CI workflow on the evidence-only documentation commit (`ccafbb9` → `ac3ea2c`) shows identical results: format passes, lint fails due to pre-existing backlog.
 
 ```text
-WORKFLOW_RUN:       29920495594
+WORKFLOW_RUN:       29920957695
 WORKFLOW_CONCLUSION: failure
 FORMAT_CHECK:       PASS
 LINT:               FAIL
