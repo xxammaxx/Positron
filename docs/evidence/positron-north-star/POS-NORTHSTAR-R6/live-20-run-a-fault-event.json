@@ -1,0 +1,9 @@
+{
+  "timestamp": "2026-08-04T06:56:15Z",
+  "run_a_fault": {
+    "pr_number": 20,
+    "fault_event": "FAULT INJECTED: Terminating after PR #20 creation, before local checkpoint",
+    "worker_exit": "process.exit(1)",
+    "fault_scoping": "POSITRON_FAULT_RUN_ID=13 matched issueNumber=13"
+  }
+}

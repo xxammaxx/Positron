@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-08-04T06:56:15Z",
+  "architecture": "BullMQ Workers with Redis",
+  "worker_a_pid": 2689883,
+  "worker_b_pid": 2741885,
+  "both_workers_active": true,
+  "run_a_processed_by": "Worker A (fault-scoped)",
+  "run_b_processed_by": "Worker B",
+  "overlap_verified": true,
+  "overlap_type": "Both workers connected to Redis, processing jobs from same queue",
+  "verdict": "GREEN_PARALLEL_WORKERS_VERIFIED"
+}
